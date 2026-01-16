@@ -3,10 +3,17 @@ import { ChevronDown, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { TreatmentListDialog } from './TreatmentListDialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ToothStatus } from './DentalChart';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 interface Treatment {
   id: string;
   name: string;
@@ -15,6 +22,12 @@ interface Treatment {
   decont?: number;
   co_plata?: number;
   category?: string;
+}
+
+export interface ToothSelection {
+  toothNumber: number;
+  status: ToothStatus;
+  notes?: string;
 }
 
 export interface SelectedIntervention {
@@ -26,6 +39,7 @@ export interface SelectedIntervention {
   coPlata: number;
   duration: number;
   selectedTeeth: number[];
+  teethDetails?: ToothSelection[];
 }
 
 interface InterventionSelectorProps {
@@ -68,6 +82,14 @@ export function InterventionSelector({
 }: InterventionSelectorProps) {
   const [treatmentDialogOpen, setTreatmentDialogOpen] = useState(false);
   const [expandedInterventions, setExpandedInterventions] = useState<Set<string>>(new Set());
+  const [toothDialog, setToothDialog] = useState<{
+    open: boolean;
+    interventionId: string;
+    toothNumber: number;
+    status: ToothStatus;
+    notes: string;
+  } | null>(null);
+  const [hoveredTooth, setHoveredTooth] = useState<{ interventionId: string; toothNumber: number } | null>(null);
 
   const toggleExpanded = (interventionId: string) => {
     setExpandedInterventions(prev => {
@@ -97,6 +119,7 @@ export function InterventionSelector({
       coPlata: treatment.co_plata || 0,
       duration: treatment.default_duration || 30,
       selectedTeeth: [],
+      teethDetails: [],
     };
 
     onInterventionsChange([...interventions, newIntervention]);
@@ -118,40 +141,84 @@ export function InterventionSelector({
     );
   };
 
-  const handleToothToggle = (interventionId: string, toothNumber: number) => {
+  const openToothDialog = (interventionId: string, toothNumber: number) => {
+    const intervention = interventions.find(i => i.id === interventionId);
+    const existingDetail = intervention?.teethDetails?.find(t => t.toothNumber === toothNumber);
+    
+    setToothDialog({
+      open: true,
+      interventionId,
+      toothNumber,
+      status: existingDetail?.status || 'healthy',
+      notes: existingDetail?.notes || '',
+    });
+  };
+
+  const handleSaveToothDialog = () => {
+    if (!toothDialog) return;
+
+    onInterventionsChange(
+      interventions.map(i => {
+        if (i.id !== toothDialog.interventionId) return i;
+        
+        const isAlreadySelected = i.selectedTeeth.includes(toothDialog.toothNumber);
+        const existingDetails = i.teethDetails || [];
+        const otherDetails = existingDetails.filter(t => t.toothNumber !== toothDialog.toothNumber);
+        
+        return {
+          ...i,
+          selectedTeeth: isAlreadySelected 
+            ? i.selectedTeeth 
+            : [...i.selectedTeeth, toothDialog.toothNumber],
+          teethDetails: [
+            ...otherDetails,
+            {
+              toothNumber: toothDialog.toothNumber,
+              status: toothDialog.status,
+              notes: toothDialog.notes || undefined,
+            },
+          ],
+        };
+      })
+    );
+
+    setToothDialog(null);
+  };
+
+  const handleRemoveTooth = (interventionId: string, toothNumber: number) => {
     onInterventionsChange(
       interventions.map(i => {
         if (i.id !== interventionId) return i;
-        const hasSelected = i.selectedTeeth.includes(toothNumber);
         return {
           ...i,
-          selectedTeeth: hasSelected
-            ? i.selectedTeeth.filter(t => t !== toothNumber)
-            : [...i.selectedTeeth, toothNumber],
+          selectedTeeth: i.selectedTeeth.filter(t => t !== toothNumber),
+          teethDetails: (i.teethDetails || []).filter(t => t.toothNumber !== toothNumber),
         };
       })
     );
   };
 
+  const getToothDetails = (intervention: SelectedIntervention, toothNumber: number) => {
+    return intervention.teethDetails?.find(t => t.toothNumber === toothNumber);
+  };
 
-  const [hoveredTooth, setHoveredTooth] = useState<{ interventionId: string; toothNumber: number } | null>(null);
-
-  const renderToothButton = (toothNumber: number, interventionId: string, selectedTeeth: number[]) => {
-    const isSelected = selectedTeeth.includes(toothNumber);
+  const renderToothButton = (toothNumber: number, interventionId: string, intervention: SelectedIntervention) => {
+    const isSelected = intervention.selectedTeeth.includes(toothNumber);
+    const toothDetails = getToothDetails(intervention, toothNumber);
     const isHovered = hoveredTooth?.interventionId === interventionId && hoveredTooth?.toothNumber === toothNumber;
-    const status: ToothStatus = isSelected ? 'filled' : 'healthy';
+    const status: ToothStatus = toothDetails?.status || 'healthy';
     
     return (
       <div key={toothNumber} className="relative">
         <button
           type="button"
-          onClick={() => handleToothToggle(interventionId, toothNumber)}
+          onClick={() => openToothDialog(interventionId, toothNumber)}
           onMouseEnter={() => setHoveredTooth({ interventionId, toothNumber })}
           onMouseLeave={() => setHoveredTooth(null)}
           className={cn(
             'w-8 h-10 sm:w-10 sm:h-12 rounded-lg border-2 flex items-center justify-center text-xs font-medium transition-all hover:scale-110 cursor-pointer',
             isSelected
-              ? 'bg-primary/20 border-primary text-primary'
+              ? statusColors[status]
               : statusColors.healthy,
             isHovered && 'ring-2 ring-primary ring-offset-2'
           )}
@@ -162,7 +229,8 @@ export function InterventionSelector({
         {/* Tooltip */}
         {isHovered && (
           <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded bg-popover border shadow-lg text-xs whitespace-nowrap">
-            <div className="font-medium">{isSelected ? 'Selectat' : 'Sănătos'}</div>
+            <div className="font-medium">{isSelected ? statusLabels[status] : 'Click pentru a selecta'}</div>
+            {toothDetails?.notes && <div className="text-muted-foreground max-w-[150px] truncate">{toothDetails.notes}</div>}
           </div>
         )}
       </div>
@@ -317,7 +385,7 @@ export function InterventionSelector({
                           Maxilar superior
                         </div>
                         <div className="flex justify-center gap-1">
-                          {upperTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention.selectedTeeth))}
+                          {upperTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention))}
                         </div>
                         <div className="flex justify-center">
                           <div className="w-full max-w-md border-b-2 border-muted-foreground/30 my-2" />
@@ -327,7 +395,7 @@ export function InterventionSelector({
                       {/* Lower jaw */}
                       <div className="space-y-1">
                         <div className="flex justify-center gap-1">
-                          {lowerTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention.selectedTeeth))}
+                          {lowerTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention))}
                         </div>
                         <div className="text-xs text-muted-foreground text-center mt-2">
                           Maxilar inferior
@@ -365,6 +433,56 @@ export function InterventionSelector({
         treatments={treatments}
         onSelectTreatment={handleAddTreatment}
       />
+
+      {/* Tooth Selection Dialog */}
+      <Dialog open={!!toothDialog?.open} onOpenChange={() => setToothDialog(null)}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Dinte {toothDialog?.toothNumber}</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <div className="grid grid-cols-4 gap-2">
+                {Object.entries(statusLabels).map(([status, label]) => (
+                  <button
+                    key={status}
+                    type="button"
+                    onClick={() => setToothDialog(prev => prev ? { ...prev, status: status as ToothStatus } : null)}
+                    className={cn(
+                      'px-2 py-2 rounded-lg border-2 text-xs font-medium transition-all',
+                      statusColors[status as ToothStatus],
+                      toothDialog?.status === status && 'ring-2 ring-primary ring-offset-2'
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Note</Label>
+              <Textarea
+                value={toothDialog?.notes || ''}
+                onChange={(e) => setToothDialog(prev => prev ? { ...prev, notes: e.target.value } : null)}
+                placeholder="Adaugă note despre dinte..."
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <Button type="button" variant="outline" onClick={() => setToothDialog(null)}>
+              Anulează
+            </Button>
+            <Button type="button" onClick={handleSaveToothDialog}>
+              Salvează
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
