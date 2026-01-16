@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
-import { Plus, Users, Calendar as CalendarIcon } from 'lucide-react';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { Plus, Users, Calendar as CalendarIcon, BarChart3 } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { DateNavigator } from '@/components/DateNavigator';
 import { CabinetTabs } from '@/components/CabinetTabs';
@@ -9,11 +9,13 @@ import { TodaySummary } from '@/components/TodaySummary';
 import { PatientsList } from '@/components/PatientsList';
 import { PatientForm } from '@/components/PatientForm';
 import { PatientDetails } from '@/components/PatientDetails';
-import { AppointmentForm } from '@/components/AppointmentForm';
+import { AppointmentForm, AppointmentFormData } from '@/components/AppointmentForm';
+import { ReportsDashboard } from '@/components/ReportsDashboard';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePatients, Patient } from '@/hooks/usePatients';
 import { useAppointmentsDB, AppointmentDB } from '@/hooks/useAppointmentsDB';
+import { useTreatments } from '@/hooks/useTreatments';
 import { CABINETS, TIME_SLOTS, Appointment } from '@/types/appointment';
 
 const Index = () => {
@@ -30,14 +32,41 @@ const Index = () => {
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);
   const [selectedTime, setSelectedTime] = useState<string | undefined>();
   const [selectedCabinetForForm, setSelectedCabinetForForm] = useState<number | undefined>();
-  const [editingAppointment, setEditingAppointment] = useState<Appointment | undefined>();
+  const [editingAppointmentData, setEditingAppointmentData] = useState<{
+    id: string;
+    patientId?: string;
+    patientName: string;
+    patientPhone: string;
+    cabinetId: number;
+    time: string;
+    duration: number;
+    treatmentId?: string;
+    treatmentName: string;
+    notes?: string;
+    price?: number;
+  } | undefined>();
 
   const { patients, loading: patientsLoading, addPatient, updatePatient, deletePatient } = usePatients();
-  const { appointments, loading: appointmentsLoading, fetchAppointments, addAppointment } = useAppointmentsDB();
+  const { 
+    appointments, 
+    loading: appointmentsLoading, 
+    fetchAppointments, 
+    fetchAppointmentsRange,
+    addAppointment,
+    updateAppointment,
+    deleteAppointment 
+  } = useAppointmentsDB();
+  const { treatments } = useTreatments();
 
   useEffect(() => {
-    fetchAppointments(format(selectedDate, 'yyyy-MM-dd'));
-  }, [selectedDate]);
+    if (activeTab === 'calendar') {
+      fetchAppointments(format(selectedDate, 'yyyy-MM-dd'));
+    } else if (activeTab === 'reports') {
+      const start = startOfMonth(new Date());
+      const end = endOfMonth(new Date());
+      fetchAppointmentsRange(format(start, 'yyyy-MM-dd'), format(end, 'yyyy-MM-dd'));
+    }
+  }, [selectedDate, activeTab]);
 
   const handlePatientFormSubmit = async (data: any) => {
     if (editingPatient) {
@@ -62,43 +91,97 @@ const Index = () => {
   const handleSlotClick = (time: string, cabinetId: number) => {
     setSelectedTime(time);
     setSelectedCabinetForForm(cabinetId);
-    setEditingAppointment(undefined);
+    setEditingAppointmentData(undefined);
     setShowAppointmentForm(true);
   };
 
   const handleNewAppointment = () => {
     setSelectedTime(undefined);
     setSelectedCabinetForForm(undefined);
-    setEditingAppointment(undefined);
+    setEditingAppointmentData(undefined);
     setShowAppointmentForm(true);
   };
 
   const handleAppointmentClick = (appointment: Appointment) => {
-    setEditingAppointment(appointment);
+    // Find the full appointment data from DB
+    const dbAppointment = appointments.find(a => a.id === appointment.id);
+    
+    setEditingAppointmentData({
+      id: appointment.id,
+      patientId: dbAppointment?.patient_id,
+      patientName: appointment.patientName,
+      patientPhone: appointment.patientPhone,
+      cabinetId: appointment.cabinetId,
+      time: appointment.time,
+      duration: appointment.duration,
+      treatmentId: dbAppointment?.treatment_id || undefined,
+      treatmentName: appointment.treatment,
+      notes: appointment.notes,
+      price: dbAppointment?.price || undefined,
+    });
     setShowAppointmentForm(true);
   };
 
-  const handleAppointmentSubmit = async (appointmentData: Omit<Appointment, 'id'>) => {
-    // Find patient by name or create mapping
-    const patient = patients.find(
-      p => `${p.first_name} ${p.last_name}`.toLowerCase() === appointmentData.patientName.toLowerCase()
-    );
+  const handleAppointmentSubmit = async (formData: AppointmentFormData) => {
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
     
-    await addAppointment({
-      patient_id: patient?.id || '', // Will need patient selection in future
-      cabinet_id: appointmentData.cabinetId,
-      appointment_date: appointmentData.date,
-      start_time: appointmentData.time,
-      duration: appointmentData.duration,
-      notes: appointmentData.notes,
-    });
+    // If it's a new patient, we need to create them first
+    let patientId = formData.patientId;
+    
+    if (!patientId && formData.patientName) {
+      // Try to find existing patient or create new one
+      const nameParts = formData.patientName.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      
+      const newPatient = await addPatient({
+        first_name: firstName,
+        last_name: lastName,
+        phone: formData.patientPhone,
+      });
+      
+      if (newPatient) {
+        patientId = newPatient.id;
+      }
+    }
+    
+    if (!patientId) {
+      return;
+    }
+
+    const appointmentPayload = {
+      patient_id: patientId,
+      cabinet_id: formData.cabinetId,
+      appointment_date: dateStr,
+      start_time: formData.time,
+      duration: formData.duration,
+      treatment_id: formData.treatmentId,
+      notes: formData.notes,
+      price: formData.price,
+    };
+
+    if (editingAppointmentData) {
+      await updateAppointment(editingAppointmentData.id, appointmentPayload);
+    } else {
+      await addAppointment(appointmentPayload);
+    }
     
     setShowAppointmentForm(false);
+    setEditingAppointmentData(undefined);
     fetchAppointments(format(selectedDate, 'yyyy-MM-dd'));
   };
 
+  const handleAppointmentDelete = async () => {
+    if (editingAppointmentData) {
+      await deleteAppointment(editingAppointmentData.id);
+      setShowAppointmentForm(false);
+      setEditingAppointmentData(undefined);
+      fetchAppointments(format(selectedDate, 'yyyy-MM-dd'));
+    }
+  };
+
   // Convert appointments to legacy format for existing components
-  const legacyAppointments = appointments.map((apt) => ({
+  const legacyAppointments: Appointment[] = appointments.map((apt) => ({
     id: apt.id,
     cabinetId: apt.cabinet_id,
     patientName: apt.patients ? `${apt.patients.first_name} ${apt.patients.last_name}` : 'Pacient necunoscut',
@@ -122,7 +205,7 @@ const Index = () => {
 
       <main className="container px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-lg grid-cols-3">
             <TabsTrigger value="calendar" className="gap-2">
               <CalendarIcon className="h-4 w-4" />
               Calendar
@@ -130,6 +213,10 @@ const Index = () => {
             <TabsTrigger value="patients" className="gap-2">
               <Users className="h-4 w-4" />
               Pacienți
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Rapoarte
             </TabsTrigger>
           </TabsList>
 
@@ -175,6 +262,14 @@ const Index = () => {
               onViewDetails={setSelectedPatient}
             />
           </TabsContent>
+
+          <TabsContent value="reports">
+            <ReportsDashboard
+              appointments={appointments}
+              loading={appointmentsLoading}
+              onFetchRange={fetchAppointmentsRange}
+            />
+          </TabsContent>
         </Tabs>
       </main>
 
@@ -197,12 +292,18 @@ const Index = () => {
       {/* Appointment Form */}
       <AppointmentForm
         open={showAppointmentForm}
-        onClose={() => setShowAppointmentForm(false)}
+        onClose={() => {
+          setShowAppointmentForm(false);
+          setEditingAppointmentData(undefined);
+        }}
         onSubmit={handleAppointmentSubmit}
+        onDelete={editingAppointmentData ? handleAppointmentDelete : undefined}
         selectedDate={selectedDate}
         selectedTime={selectedTime}
         selectedCabinet={selectedCabinetForForm}
-        editingAppointment={editingAppointment}
+        editingAppointment={editingAppointmentData}
+        patients={patients}
+        treatments={treatments}
       />
     </div>
   );
