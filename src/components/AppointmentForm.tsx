@@ -35,6 +35,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { TIME_SLOTS } from '@/types/appointment';
 import { Patient } from '@/hooks/usePatients';
 import { Cabinet } from '@/hooks/useCabinets';
+import { Doctor } from '@/hooks/useDoctors';
 import { InterventionSelector, SelectedIntervention } from '@/components/InterventionSelector';
 
 interface Treatment {
@@ -62,6 +63,7 @@ export interface AppointmentFormData {
   patientName: string;
   patientPhone: string;
   cabinetId: number;
+  doctorId?: string;
   time: string;
   duration: number;
   treatmentId?: string;
@@ -88,6 +90,7 @@ interface AppointmentFormProps {
     patientName: string;
     patientPhone: string;
     cabinetId: number;
+    doctorId?: string;
     time: string;
     duration: number;
     treatmentId?: string;
@@ -99,6 +102,7 @@ interface AppointmentFormProps {
   patients: Patient[];
   treatments: Treatment[];
   cabinets: Cabinet[];
+  doctors: Doctor[];
 }
 
 export function AppointmentForm({
@@ -114,6 +118,7 @@ export function AppointmentForm({
   patients,
   treatments,
   cabinets,
+  doctors,
 }: AppointmentFormProps) {
   const [patientSearch, setPatientSearch] = useState('');
   const [patientPopoverOpen, setPatientPopoverOpen] = useState(false);
@@ -126,6 +131,7 @@ export function AppointmentForm({
     patientName: '',
     patientPhone: '',
     cabinetId: 1,
+    doctorId: '',
     time: TIME_SLOTS[0],
     notes: '',
   });

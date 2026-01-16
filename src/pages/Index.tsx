@@ -18,6 +18,7 @@ import { usePatients, Patient } from '@/hooks/usePatients';
 import { useAppointmentsDB, AppointmentDB } from '@/hooks/useAppointmentsDB';
 import { useTreatments } from '@/hooks/useTreatments';
 import { useCabinets } from '@/hooks/useCabinets';
+import { useDoctors } from '@/hooks/useDoctors';
 import { TIME_SLOTS, Appointment } from '@/types/appointment';
 
 const Index = () => {
@@ -73,6 +74,7 @@ const Index = () => {
   } = useAppointmentsDB();
   const { treatments } = useTreatments();
   const { cabinets, updateCabinetDoctor } = useCabinets();
+  const { doctors } = useDoctors();
 
   useEffect(() => {
     if (activeTab === 'calendar') {
@@ -379,6 +381,7 @@ const Index = () => {
         patients={patients}
         treatments={treatments}
         cabinets={cabinets}
+        doctors={doctors}
       />
 
       {/* Cabinet Settings */}
