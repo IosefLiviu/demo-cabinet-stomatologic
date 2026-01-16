@@ -1,20 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Stethoscope, Settings, LogOut, Users, LogIn } from 'lucide-react';
+import { Stethoscope, LogOut, Users, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
 
-interface HeaderProps {
-  onOpenSettings?: () => void;
-}
-
-export function Header({ onOpenSettings }: HeaderProps) {
+export function Header() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
@@ -38,32 +27,18 @@ export function Header({ onOpenSettings }: HeaderProps) {
         
         <div className="flex items-center gap-2">
           {user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Settings className="h-5 w-5" />
+            <>
+              {user.email === 'adreiliviudiablo@gmail.com' && (
+                <Button variant="ghost" size="sm" onClick={() => navigate('/admin')}>
+                  <Users className="h-4 w-4 mr-2" />
+                  Administrare Doctori
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-background border shadow-lg z-50">
-                {user.email === 'adreiliviudiablo@gmail.com' && (
-                  <DropdownMenuItem onClick={() => navigate('/admin')}>
-                    <Users className="h-4 w-4 mr-2" />
-                    Administrare Doctori
-                  </DropdownMenuItem>
-                )}
-                {onOpenSettings && (
-                  <DropdownMenuItem onClick={onOpenSettings}>
-                    <Settings className="h-4 w-4 mr-2" />
-                    Setări Cabinete
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Deconectare
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              )}
+              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Deconectare
+              </Button>
+            </>
           ) : (
             <Button variant="outline" size="sm" onClick={() => navigate('/auth')}>
               <LogIn className="h-4 w-4 mr-2" />
