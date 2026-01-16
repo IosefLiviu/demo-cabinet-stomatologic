@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointment_treatments: {
+        Row: {
+          appointment_id: string
+          co_plata: number | null
+          created_at: string
+          decont: number | null
+          duration: number | null
+          id: string
+          price: number | null
+          tooth_numbers: number[] | null
+          treatment_id: string | null
+          treatment_name: string
+        }
+        Insert: {
+          appointment_id: string
+          co_plata?: number | null
+          created_at?: string
+          decont?: number | null
+          duration?: number | null
+          id?: string
+          price?: number | null
+          tooth_numbers?: number[] | null
+          treatment_id?: string | null
+          treatment_name: string
+        }
+        Update: {
+          appointment_id?: string
+          co_plata?: number | null
+          created_at?: string
+          decont?: number | null
+          duration?: number | null
+          id?: string
+          price?: number | null
+          tooth_numbers?: number[] | null
+          treatment_id?: string | null
+          treatment_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_treatments_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_treatments_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           appointment_date: string

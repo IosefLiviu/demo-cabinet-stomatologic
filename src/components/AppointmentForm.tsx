@@ -53,6 +53,7 @@ export interface SelectedTreatment {
   price: number;
   decont: number;
   coPlata: number;
+  duration: number;
   selectedTeeth?: number[];
 }
 
@@ -94,6 +95,7 @@ interface AppointmentFormProps {
     notes?: string;
     price?: number;
   };
+  existingInterventions?: SelectedIntervention[];
   patients: Patient[];
   treatments: Treatment[];
   cabinets: Cabinet[];
@@ -108,6 +110,7 @@ export function AppointmentForm({
   selectedTime,
   selectedCabinet,
   editingAppointment,
+  existingInterventions,
   patients,
   treatments,
   cabinets,
@@ -131,10 +134,7 @@ export function AppointmentForm({
   const totalPrice = interventions.reduce((sum, i) => sum + i.price, 0);
   const totalDecont = interventions.reduce((sum, i) => sum + i.decont, 0);
   const totalCoPlata = interventions.reduce((sum, i) => sum + i.coPlata, 0);
-  const totalDuration = interventions.reduce((sum, i) => {
-    const treatment = treatments.find(t => t.id === i.treatmentId);
-    return sum + (treatment?.default_duration || 30);
-  }, 0) || 30;
+  const totalDuration = interventions.reduce((sum, i) => sum + i.duration, 0) || 30;
 
   useEffect(() => {
     if (open) {
@@ -147,8 +147,11 @@ export function AppointmentForm({
           time: editingAppointment.time,
           notes: editingAppointment.notes || '',
         });
-        // If editing, try to load existing treatment
-        if (editingAppointment.treatmentId) {
+        // Load existing interventions if provided
+        if (existingInterventions && existingInterventions.length > 0) {
+          setInterventions(existingInterventions);
+        } else if (editingAppointment.treatmentId) {
+          // Fallback: try to load from legacy single treatment
           const treatment = treatments.find(t => t.id === editingAppointment.treatmentId);
           if (treatment) {
             setInterventions([{
@@ -182,7 +185,7 @@ export function AppointmentForm({
       }
       setPatientSearch('');
     }
-  }, [open, editingAppointment, selectedTime, selectedCabinet, treatments]);
+  }, [open, editingAppointment, existingInterventions, selectedTime, selectedCabinet, treatments]);
 
   const handleSelectPatient = (patient: Patient) => {
     setFormData({
@@ -216,6 +219,7 @@ export function AppointmentForm({
       price: i.price,
       decont: i.decont,
       coPlata: i.coPlata,
+      duration: i.duration,
       selectedTeeth: i.selectedTeeth,
     }));
 
