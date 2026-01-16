@@ -77,6 +77,33 @@ export type Database = {
           },
         ]
       }
+      cabinets: {
+        Row: {
+          created_at: string
+          doctor: string
+          id: number
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          doctor: string
+          id?: number
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          doctor?: string
+          id?: number
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dental_status: {
         Row: {
           id: string

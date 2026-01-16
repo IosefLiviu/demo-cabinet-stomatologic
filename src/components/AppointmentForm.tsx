@@ -31,8 +31,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { CABINETS, TIME_SLOTS } from '@/types/appointment';
+import { TIME_SLOTS } from '@/types/appointment';
 import { Patient } from '@/hooks/usePatients';
+import { Cabinet } from '@/hooks/useCabinets';
 import { cn } from '@/lib/utils';
 
 interface Treatment {
@@ -78,6 +79,7 @@ interface AppointmentFormProps {
   };
   patients: Patient[];
   treatments: Treatment[];
+  cabinets: Cabinet[];
 }
 
 export function AppointmentForm({
@@ -91,6 +93,7 @@ export function AppointmentForm({
   editingAppointment,
   patients,
   treatments,
+  cabinets,
 }: AppointmentFormProps) {
   const [patientSearch, setPatientSearch] = useState('');
   const [patientPopoverOpen, setPatientPopoverOpen] = useState(false);
@@ -337,7 +340,7 @@ export function AppointmentForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {CABINETS.map((cabinet) => (
+                  {cabinets.map((cabinet) => (
                     <SelectItem key={cabinet.id} value={String(cabinet.id)}>
                       {cabinet.name} - {cabinet.doctor}
                     </SelectItem>

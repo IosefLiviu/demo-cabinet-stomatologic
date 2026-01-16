@@ -1,9 +1,10 @@
-import { CABINETS } from '@/types/appointment';
 import { cn } from '@/lib/utils';
+import { Cabinet } from '@/hooks/useCabinets';
 
 interface CabinetTabsProps {
   selectedCabinet: number | null;
   onSelectCabinet: (cabinetId: number | null) => void;
+  cabinets: Cabinet[];
 }
 
 const cabinetColors: Record<number, string> = {
@@ -14,7 +15,7 @@ const cabinetColors: Record<number, string> = {
   5: 'bg-cabinet-5',
 };
 
-export function CabinetTabs({ selectedCabinet, onSelectCabinet }: CabinetTabsProps) {
+export function CabinetTabs({ selectedCabinet, onSelectCabinet, cabinets }: CabinetTabsProps) {
   return (
     <div className="flex flex-wrap gap-2">
       <button
@@ -28,7 +29,7 @@ export function CabinetTabs({ selectedCabinet, onSelectCabinet }: CabinetTabsPro
       >
         Toate cabinetele
       </button>
-      {CABINETS.map((cabinet) => (
+      {cabinets.map((cabinet) => (
         <button
           key={cabinet.id}
           onClick={() => onSelectCabinet(cabinet.id)}
@@ -42,7 +43,7 @@ export function CabinetTabs({ selectedCabinet, onSelectCabinet }: CabinetTabsPro
           <span
             className={cn(
               "w-2.5 h-2.5 rounded-full",
-              cabinetColors[cabinet.id]
+              cabinetColors[cabinet.id] || 'bg-gray-400'
             )}
           />
           {cabinet.name}

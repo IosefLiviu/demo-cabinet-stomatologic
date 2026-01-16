@@ -1,12 +1,14 @@
 import { format } from 'date-fns';
 import { Plus, User } from 'lucide-react';
-import { TIME_SLOTS, CABINETS, Appointment } from '@/types/appointment';
+import { TIME_SLOTS, Appointment } from '@/types/appointment';
+import { Cabinet } from '@/hooks/useCabinets';
 import { cn } from '@/lib/utils';
 
 interface TimeSlotGridProps {
   selectedDate: Date;
   selectedCabinet: number | null;
   appointments: Appointment[];
+  cabinets: Cabinet[];
   onSlotClick: (time: string, cabinetId: number) => void;
   onAppointmentClick: (appointment: Appointment) => void;
 }
@@ -31,13 +33,14 @@ export function TimeSlotGrid({
   selectedDate,
   selectedCabinet,
   appointments,
+  cabinets,
   onSlotClick,
   onAppointmentClick,
 }: TimeSlotGridProps) {
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
   const cabinetsToShow = selectedCabinet
-    ? CABINETS.filter((c) => c.id === selectedCabinet)
-    : CABINETS;
+    ? cabinets.filter((c) => c.id === selectedCabinet)
+    : cabinets;
 
   const getAppointmentForSlot = (time: string, cabinetId: number) => {
     return appointments.find(
