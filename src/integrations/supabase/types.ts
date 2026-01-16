@@ -14,7 +14,311 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      appointments: {
+        Row: {
+          appointment_date: string
+          cabinet_id: number
+          created_at: string
+          duration: number
+          id: string
+          is_paid: boolean | null
+          notes: string | null
+          patient_id: string
+          price: number | null
+          start_time: string
+          status: string
+          treatment_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          appointment_date: string
+          cabinet_id: number
+          created_at?: string
+          duration?: number
+          id?: string
+          is_paid?: boolean | null
+          notes?: string | null
+          patient_id: string
+          price?: number | null
+          start_time: string
+          status?: string
+          treatment_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          appointment_date?: string
+          cabinet_id?: number
+          created_at?: string
+          duration?: number
+          id?: string
+          is_paid?: boolean | null
+          notes?: string | null
+          patient_id?: string
+          price?: number | null
+          start_time?: string
+          status?: string
+          treatment_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dental_status: {
+        Row: {
+          id: string
+          notes: string | null
+          patient_id: string
+          status: Database["public"]["Enums"]["tooth_status"]
+          tooth_number: number
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          notes?: string | null
+          patient_id: string
+          status?: Database["public"]["Enums"]["tooth_status"]
+          tooth_number: number
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          status?: Database["public"]["Enums"]["tooth_status"]
+          tooth_number?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dental_status_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_documents: {
+        Row: {
+          description: string | null
+          document_type: string
+          file_path: string
+          file_type: string | null
+          id: string
+          patient_id: string
+          title: string
+          uploaded_at: string
+        }
+        Insert: {
+          description?: string | null
+          document_type: string
+          file_path: string
+          file_type?: string | null
+          id?: string
+          patient_id: string
+          title: string
+          uploaded_at?: string
+        }
+        Update: {
+          description?: string | null
+          document_type?: string
+          file_path?: string
+          file_type?: string | null
+          id?: string
+          patient_id?: string
+          title?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_documents_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patients: {
+        Row: {
+          address: string | null
+          allergies: string[] | null
+          city: string | null
+          cnp: string | null
+          created_at: string
+          date_of_birth: string | null
+          email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          first_name: string
+          gender: string | null
+          id: string
+          last_name: string
+          medical_conditions: string[] | null
+          medications: string[] | null
+          notes: string | null
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          allergies?: string[] | null
+          city?: string | null
+          cnp?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          first_name: string
+          gender?: string | null
+          id?: string
+          last_name: string
+          medical_conditions?: string[] | null
+          medications?: string[] | null
+          notes?: string | null
+          phone: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          allergies?: string[] | null
+          city?: string | null
+          cnp?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          first_name?: string
+          gender?: string | null
+          id?: string
+          last_name?: string
+          medical_conditions?: string[] | null
+          medications?: string[] | null
+          notes?: string | null
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      treatment_records: {
+        Row: {
+          appointment_id: string | null
+          cabinet_id: number | null
+          created_at: string
+          description: string | null
+          diagnosis: string | null
+          id: string
+          notes: string | null
+          patient_id: string
+          performed_at: string
+          price: number | null
+          tooth_numbers: number[] | null
+          treatment_id: string | null
+          treatment_name: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          cabinet_id?: number | null
+          created_at?: string
+          description?: string | null
+          diagnosis?: string | null
+          id?: string
+          notes?: string | null
+          patient_id: string
+          performed_at?: string
+          price?: number | null
+          tooth_numbers?: number[] | null
+          treatment_id?: string | null
+          treatment_name: string
+        }
+        Update: {
+          appointment_id?: string | null
+          cabinet_id?: number | null
+          created_at?: string
+          description?: string | null
+          diagnosis?: string | null
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          performed_at?: string
+          price?: number | null
+          tooth_numbers?: number[] | null
+          treatment_id?: string | null
+          treatment_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_records_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_records_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_records_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatments: {
+        Row: {
+          category: string | null
+          created_at: string
+          default_duration: number
+          default_price: number | null
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          default_duration?: number
+          default_price?: number | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          default_duration?: number
+          default_price?: number | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +327,15 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      tooth_status:
+        | "healthy"
+        | "cavity"
+        | "filled"
+        | "crown"
+        | "missing"
+        | "implant"
+        | "root_canal"
+        | "extraction_needed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +462,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      tooth_status: [
+        "healthy",
+        "cavity",
+        "filled",
+        "crown",
+        "missing",
+        "implant",
+        "root_canal",
+        "extraction_needed",
+      ],
+    },
   },
 } as const
