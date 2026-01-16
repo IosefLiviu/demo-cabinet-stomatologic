@@ -294,14 +294,19 @@ export function InterventionSelector({
                   <div className="space-y-4">
                     <Label className="text-xs">Selectează dinții tratați</Label>
                     
-                    {/* Legend */}
+                    {/* Legend - Full status categories */}
                     <div className="flex flex-wrap gap-2 text-xs">
-                      <div className={cn('px-2 py-1 rounded-md border flex items-center gap-1.5', statusColors.healthy)}>
-                        <span>Neselectat</span>
-                      </div>
-                      <div className="px-2 py-1 rounded-md border flex items-center gap-1.5 bg-primary/20 border-primary text-primary">
-                        <span>Selectat</span>
-                      </div>
+                      {Object.entries(statusLabels).map(([status, label]) => (
+                        <div
+                          key={status}
+                          className={cn(
+                            'px-2 py-1 rounded-md border flex items-center gap-1.5',
+                            statusColors[status as ToothStatus]
+                          )}
+                        >
+                          <span>{label}</span>
+                        </div>
+                      ))}
                     </div>
 
                     {/* Dental Chart */}
