@@ -45,10 +45,12 @@ export function Header({ onOpenSettings }: HeaderProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-background border shadow-lg z-50">
-                <DropdownMenuItem onClick={() => navigate('/admin')}>
-                  <Users className="h-4 w-4 mr-2" />
-                  Administrare Doctori
-                </DropdownMenuItem>
+                {user.email === 'adreiliviudiablo@gmail.com' && (
+                  <DropdownMenuItem onClick={() => navigate('/admin')}>
+                    <Users className="h-4 w-4 mr-2" />
+                    Administrare Doctori
+                  </DropdownMenuItem>
+                )}
                 {onOpenSettings && (
                   <DropdownMenuItem onClick={onOpenSettings}>
                     <Settings className="h-4 w-4 mr-2" />
