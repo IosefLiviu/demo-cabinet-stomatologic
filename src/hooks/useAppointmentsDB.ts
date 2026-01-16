@@ -19,6 +19,7 @@ export interface AppointmentDB {
   patient_id: string;
   cabinet_id: number;
   treatment_id?: string;
+  doctor_id?: string;
   appointment_date: string;
   start_time: string;
   duration: number;
@@ -41,6 +42,11 @@ export interface AppointmentDB {
     name: string;
     default_duration: number;
   };
+  doctors?: {
+    id: string;
+    name: string;
+    color: string;
+  };
   appointment_treatments?: AppointmentTreatment[];
 }
 
@@ -48,6 +54,7 @@ export type AppointmentInsert = {
   patient_id: string;
   cabinet_id: number;
   treatment_id?: string;
+  doctor_id?: string;
   appointment_date: string;
   start_time: string;
   duration: number;
@@ -81,6 +88,7 @@ export function useAppointmentsDB() {
           *,
           patients (id, first_name, last_name, phone, allergies),
           treatments (id, name, default_duration),
+          doctors (id, name, color),
           appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, duration, tooth_numbers)
         `)
         .order('start_time', { ascending: true });
@@ -114,6 +122,7 @@ export function useAppointmentsDB() {
           *,
           patients (id, first_name, last_name, phone, allergies),
           treatments (id, name, default_duration),
+          doctors (id, name, color),
           appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, duration, tooth_numbers)
         `)
         .gte('appointment_date', startDate)

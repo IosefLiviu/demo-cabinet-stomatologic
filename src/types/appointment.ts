@@ -8,6 +8,9 @@ export interface Appointment {
   duration: number; // in minutes
   treatment: string;
   notes?: string;
+  doctorId?: string;
+  doctorName?: string;
+  doctorColor?: string;
 }
 
 export interface Cabinet {

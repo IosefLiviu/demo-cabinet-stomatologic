@@ -73,6 +73,7 @@ export type Database = {
           appointment_date: string
           cabinet_id: number
           created_at: string
+          doctor_id: string | null
           duration: number
           id: string
           is_paid: boolean | null
@@ -88,6 +89,7 @@ export type Database = {
           appointment_date: string
           cabinet_id: number
           created_at?: string
+          doctor_id?: string | null
           duration?: number
           id?: string
           is_paid?: boolean | null
@@ -103,6 +105,7 @@ export type Database = {
           appointment_date?: string
           cabinet_id?: number
           created_at?: string
+          doctor_id?: string | null
           duration?: number
           id?: string
           is_paid?: boolean | null
@@ -115,6 +118,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "appointments_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "appointments_patient_id_fkey"
             columns: ["patient_id"]
@@ -192,6 +202,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      doctors: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          specialization: string | null
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          specialization?: string | null
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          specialization?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       patient_documents: {
         Row: {
