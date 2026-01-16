@@ -80,6 +80,35 @@ export function useAppointmentsDB() {
     }
   };
 
+  const fetchAppointmentsRange = async (startDate: string, endDate: string) => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('appointments')
+        .select(`
+          *,
+          patients (id, first_name, last_name, phone, allergies),
+          treatments (id, name, default_duration)
+        `)
+        .gte('appointment_date', startDate)
+        .lte('appointment_date', endDate)
+        .order('appointment_date', { ascending: true })
+        .order('start_time', { ascending: true });
+
+      if (error) throw error;
+      setAppointments((data as unknown as AppointmentDB[]) || []);
+    } catch (error: any) {
+      console.error('Error fetching appointments range:', error);
+      toast({
+        title: 'Eroare',
+        description: 'Nu s-au putut încărca programările',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const addAppointment = async (appointment: AppointmentInsert) => {
     try {
       const { data, error } = await supabase
@@ -194,6 +223,7 @@ export function useAppointmentsDB() {
     appointments,
     loading,
     fetchAppointments,
+    fetchAppointmentsRange,
     addAppointment,
     updateAppointment,
     deleteAppointment,
