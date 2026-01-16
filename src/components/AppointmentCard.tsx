@@ -45,20 +45,49 @@ export function AppointmentCard({
 }: AppointmentCardProps) {
   const cabinet = CABINETS.find((c) => c.id === appointment.cabinetId);
 
+  // Use doctor color if available, otherwise fall back to cabinet colors
+  const hasDoctorColor = appointment.doctorColor;
+  
+  const cardStyle = hasDoctorColor 
+    ? { 
+        backgroundColor: `${appointment.doctorColor}15`, 
+        borderColor: `${appointment.doctorColor}40`,
+      }
+    : undefined;
+
+  const textColorStyle = hasDoctorColor 
+    ? { color: appointment.doctorColor }
+    : undefined;
+
   return (
     <div
       className={cn(
-        "rounded-lg border p-3 transition-all",
-        cabinetBgColors[appointment.cabinetId]
+        "rounded-lg border p-3 transition-all hover:shadow-md",
+        !hasDoctorColor && cabinetBgColors[appointment.cabinetId]
       )}
+      style={cardStyle}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className={cn("text-xs font-semibold", cabinetTextColors[appointment.cabinetId])}>
+            <span 
+              className={cn("text-xs font-semibold", !hasDoctorColor && cabinetTextColors[appointment.cabinetId])}
+              style={textColorStyle}
+            >
               {appointment.time}
             </span>
             <span className="text-xs text-muted-foreground">• {appointment.duration} min</span>
+            {appointment.doctorName && (
+              <span 
+                className="text-xs font-medium px-1.5 py-0.5 rounded-full"
+                style={{ 
+                  backgroundColor: `${appointment.doctorColor}20`,
+                  color: appointment.doctorColor 
+                }}
+              >
+                {appointment.doctorName}
+              </span>
+            )}
           </div>
           <h4 className="font-semibold text-foreground truncate">
             {appointment.patientName}
@@ -66,7 +95,7 @@ export function AppointmentCard({
           <p className="text-sm text-muted-foreground">{appointment.treatment}</p>
           {showCabinet && cabinet && (
             <p className="text-xs text-muted-foreground mt-1">
-              {cabinet.name} - {cabinet.doctor}
+              {cabinet.name}
             </p>
           )}
           <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">

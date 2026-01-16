@@ -150,6 +150,7 @@ export function AppointmentForm({
           patientName: editingAppointment.patientName,
           patientPhone: editingAppointment.patientPhone,
           cabinetId: editingAppointment.cabinetId,
+          doctorId: editingAppointment.doctorId || '',
           time: editingAppointment.time,
           notes: editingAppointment.notes || '',
         });
@@ -183,6 +184,7 @@ export function AppointmentForm({
           patientName: '',
           patientPhone: '',
           cabinetId: selectedCabinet || 1,
+          doctorId: '',
           time: selectedTime || TIME_SLOTS[0],
           notes: '',
         });
@@ -235,6 +237,7 @@ export function AppointmentForm({
       patientName: formData.patientName,
       patientPhone: formData.patientPhone,
       cabinetId: formData.cabinetId,
+      doctorId: formData.doctorId || undefined,
       time: formData.time,
       notes: formData.notes,
       duration: totalDuration,
@@ -389,7 +392,7 @@ export function AppointmentForm({
               </div>
             )}
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="cabinet">Cabinet *</Label>
                 <Select
@@ -401,10 +404,36 @@ export function AppointmentForm({
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background border shadow-lg z-50">
                     {cabinets.map((cabinet) => (
                       <SelectItem key={cabinet.id} value={String(cabinet.id)}>
-                        {cabinet.name} - {cabinet.doctor}
+                        {cabinet.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="doctor">Doctor</Label>
+                <Select
+                  value={formData.doctorId}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, doctorId: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selectează doctor" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border shadow-lg z-50">
+                    {doctors.map((doctor) => (
+                      <SelectItem key={doctor.id} value={doctor.id}>
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-3 h-3 rounded-full" 
+                            style={{ backgroundColor: doctor.color }}
+                          />
+                          {doctor.name}
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -421,7 +450,7 @@ export function AppointmentForm({
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background border shadow-lg z-50">
                     {TIME_SLOTS.map((time) => (
                       <SelectItem key={time} value={time}>
                         {time}
