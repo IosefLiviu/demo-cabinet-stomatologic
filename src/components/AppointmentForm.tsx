@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Search, Trash2, UserPlus, Plus, X } from 'lucide-react';
+import { Search, Trash2, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,7 +35,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { TIME_SLOTS } from '@/types/appointment';
 import { Patient } from '@/hooks/usePatients';
 import { Cabinet } from '@/hooks/useCabinets';
-import { cn } from '@/lib/utils';
+import { InterventionSelector, SelectedIntervention } from '@/components/InterventionSelector';
 
 interface Treatment {
   id: string;
@@ -53,6 +53,7 @@ export interface SelectedTreatment {
   price: number;
   decont: number;
   coPlata: number;
+  selectedTeeth?: number[];
 }
 
 export interface AppointmentFormData {
@@ -114,30 +115,24 @@ export function AppointmentForm({
   const [patientSearch, setPatientSearch] = useState('');
   const [patientPopoverOpen, setPatientPopoverOpen] = useState(false);
   const [isNewPatient, setIsNewPatient] = useState(false);
-  const [treatmentPopoverOpen, setTreatmentPopoverOpen] = useState(false);
-  const [treatmentSearch, setTreatmentSearch] = useState('');
   
-  const [selectedTreatments, setSelectedTreatments] = useState<SelectedTreatment[]>([]);
+  const [interventions, setInterventions] = useState<SelectedIntervention[]>([]);
   
-  const [formData, setFormData] = useState<Omit<AppointmentFormData, 'selectedTreatments' | 'totalPrice' | 'totalDecont' | 'totalCoPlata'>>({
+  const [formData, setFormData] = useState({
     patientId: '',
     patientName: '',
     patientPhone: '',
     cabinetId: 1,
     time: TIME_SLOTS[0],
-    duration: 30,
-    treatmentId: undefined,
-    treatmentName: '',
     notes: '',
-    price: undefined,
   });
 
-  // Calculate totals
-  const totalPrice = selectedTreatments.reduce((sum, t) => sum + t.price, 0);
-  const totalDecont = selectedTreatments.reduce((sum, t) => sum + t.decont, 0);
-  const totalCoPlata = selectedTreatments.reduce((sum, t) => sum + t.coPlata, 0);
-  const totalDuration = selectedTreatments.reduce((sum, t) => {
-    const treatment = treatments.find(tr => tr.id === t.treatmentId);
+  // Calculate totals from interventions
+  const totalPrice = interventions.reduce((sum, i) => sum + i.price, 0);
+  const totalDecont = interventions.reduce((sum, i) => sum + i.decont, 0);
+  const totalCoPlata = interventions.reduce((sum, i) => sum + i.coPlata, 0);
+  const totalDuration = interventions.reduce((sum, i) => {
+    const treatment = treatments.find(t => t.id === i.treatmentId);
     return sum + (treatment?.default_duration || 30);
   }, 0) || 30;
 
@@ -150,28 +145,26 @@ export function AppointmentForm({
           patientPhone: editingAppointment.patientPhone,
           cabinetId: editingAppointment.cabinetId,
           time: editingAppointment.time,
-          duration: editingAppointment.duration,
-          treatmentId: editingAppointment.treatmentId,
-          treatmentName: editingAppointment.treatmentName,
           notes: editingAppointment.notes || '',
-          price: editingAppointment.price,
         });
         // If editing, try to load existing treatment
         if (editingAppointment.treatmentId) {
           const treatment = treatments.find(t => t.id === editingAppointment.treatmentId);
           if (treatment) {
-            setSelectedTreatments([{
+            setInterventions([{
+              id: `${treatment.id}-${Date.now()}`,
               treatmentId: treatment.id,
               treatmentName: treatment.name,
               price: editingAppointment.price || treatment.default_price || 0,
               decont: treatment.decont || 0,
               coPlata: treatment.co_plata || 0,
+              selectedTeeth: [],
             }]);
           } else {
-            setSelectedTreatments([]);
+            setInterventions([]);
           }
         } else {
-          setSelectedTreatments([]);
+          setInterventions([]);
         }
         setIsNewPatient(false);
       } else {
@@ -181,17 +174,12 @@ export function AppointmentForm({
           patientPhone: '',
           cabinetId: selectedCabinet || 1,
           time: selectedTime || TIME_SLOTS[0],
-          duration: 30,
-          treatmentId: undefined,
-          treatmentName: '',
           notes: '',
-          price: undefined,
         });
-        setSelectedTreatments([]);
+        setInterventions([]);
         setIsNewPatient(false);
       }
       setPatientSearch('');
-      setTreatmentSearch('');
     }
   }, [open, editingAppointment, selectedTime, selectedCabinet, treatments]);
 
@@ -217,43 +205,27 @@ export function AppointmentForm({
     setPatientPopoverOpen(false);
   };
 
-  const handleAddTreatment = (treatment: Treatment) => {
-    // Check if already added
-    if (selectedTreatments.some(t => t.treatmentId === treatment.id)) {
-      return;
-    }
-    
-    setSelectedTreatments([
-      ...selectedTreatments,
-      {
-        treatmentId: treatment.id,
-        treatmentName: treatment.name,
-        price: treatment.default_price || 0,
-        decont: treatment.decont || 0,
-        coPlata: treatment.co_plata || 0,
-      }
-    ]);
-    setTreatmentPopoverOpen(false);
-    setTreatmentSearch('');
-  };
-
-  const handleRemoveTreatment = (treatmentId: string) => {
-    setSelectedTreatments(selectedTreatments.filter(t => t.treatmentId !== treatmentId));
-  };
-
-  const handleUpdateTreatmentPrice = (treatmentId: string, field: 'price' | 'decont' | 'coPlata', value: number) => {
-    setSelectedTreatments(selectedTreatments.map(t => 
-      t.treatmentId === treatmentId 
-        ? { ...t, [field]: value }
-        : t
-    ));
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Convert interventions to selectedTreatments format
+    const selectedTreatments: SelectedTreatment[] = interventions.map(i => ({
+      treatmentId: i.treatmentId,
+      treatmentName: i.treatmentName,
+      price: i.price,
+      decont: i.decont,
+      coPlata: i.coPlata,
+      selectedTeeth: i.selectedTeeth,
+    }));
+
     const firstTreatment = selectedTreatments[0];
     onSubmit({
-      ...formData,
+      patientId: formData.patientId,
+      patientName: formData.patientName,
+      patientPhone: formData.patientPhone,
+      cabinetId: formData.cabinetId,
+      time: formData.time,
+      notes: formData.notes,
       duration: totalDuration,
       treatmentId: firstTreatment?.treatmentId,
       treatmentName: selectedTreatments.map(t => t.treatmentName).join(', '),
@@ -271,20 +243,6 @@ export function AppointmentForm({
     const search = patientSearch.toLowerCase();
     return fullName.includes(search) || phone.includes(search);
   });
-
-  const filteredTreatments = treatments.filter(t => 
-    t.name.toLowerCase().includes(treatmentSearch.toLowerCase())
-  );
-
-  // Group treatments by category
-  const groupedTreatments = filteredTreatments.reduce((acc, treatment) => {
-    const category = treatment.category || 'Alte tratamente';
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(treatment);
-    return acc;
-  }, {} as Record<string, Treatment[]>);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -463,144 +421,12 @@ export function AppointmentForm({
               </div>
             </div>
 
-            {/* Treatments Section */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label>Tratamente *</Label>
-                <span className="text-sm text-muted-foreground">
-                  Durată totală: {totalDuration} min
-                </span>
-              </div>
-              
-              {/* Treatment List */}
-              {selectedTreatments.length > 0 && (
-                <div className="space-y-2 border rounded-lg p-3">
-                  <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-1">
-                    <div className="col-span-5">Tratament</div>
-                    <div className="col-span-2 text-right">Preț</div>
-                    <div className="col-span-2 text-right">Decont</div>
-                    <div className="col-span-2 text-right">Co-plată</div>
-                    <div className="col-span-1"></div>
-                  </div>
-                  
-                  {selectedTreatments.map((treatment) => (
-                    <div key={treatment.treatmentId} className="grid grid-cols-12 gap-2 items-center">
-                      <div className="col-span-5 text-sm font-medium truncate" title={treatment.treatmentName}>
-                        {treatment.treatmentName}
-                      </div>
-                      <div className="col-span-2">
-                        <Input
-                          type="number"
-                          value={treatment.price}
-                          onChange={(e) => handleUpdateTreatmentPrice(treatment.treatmentId, 'price', parseFloat(e.target.value) || 0)}
-                          className="h-8 text-right text-sm"
-                        />
-                      </div>
-                      <div className="col-span-2">
-                        <Input
-                          type="number"
-                          value={treatment.decont}
-                          onChange={(e) => handleUpdateTreatmentPrice(treatment.treatmentId, 'decont', parseFloat(e.target.value) || 0)}
-                          className="h-8 text-right text-sm"
-                        />
-                      </div>
-                      <div className="col-span-2">
-                        <Input
-                          type="number"
-                          value={treatment.coPlata}
-                          onChange={(e) => handleUpdateTreatmentPrice(treatment.treatmentId, 'coPlata', parseFloat(e.target.value) || 0)}
-                          className="h-8 text-right text-sm"
-                        />
-                      </div>
-                      <div className="col-span-1 flex justify-center">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() => handleRemoveTreatment(treatment.treatmentId)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {/* Totals Row */}
-                  <div className="grid grid-cols-12 gap-2 items-center pt-2 border-t mt-2">
-                    <div className="col-span-5 text-sm font-bold">TOTAL</div>
-                    <div className="col-span-2 text-right font-bold text-sm">
-                      {totalPrice.toFixed(2)} lei
-                    </div>
-                    <div className="col-span-2 text-right font-bold text-sm text-green-600">
-                      {totalDecont.toFixed(2)} lei
-                    </div>
-                    <div className="col-span-2 text-right font-bold text-sm text-orange-600">
-                      {totalCoPlata.toFixed(2)} lei
-                    </div>
-                    <div className="col-span-1"></div>
-                  </div>
-                </div>
-              )}
-
-              {/* Add Treatment Button */}
-              <Popover open={treatmentPopoverOpen} onOpenChange={setTreatmentPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full gap-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Adaugă tratament
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[500px] p-0" align="start">
-                  <Command>
-                    <CommandInput 
-                      placeholder="Caută tratament..." 
-                      value={treatmentSearch}
-                      onValueChange={setTreatmentSearch}
-                    />
-                    <CommandList className="max-h-[300px]">
-                      <CommandEmpty>Niciun tratament găsit</CommandEmpty>
-                      {Object.entries(groupedTreatments).map(([category, categoryTreatments]) => (
-                        <CommandGroup key={category} heading={category}>
-                          {categoryTreatments.map((treatment) => {
-                            const isSelected = selectedTreatments.some(t => t.treatmentId === treatment.id);
-                            return (
-                              <CommandItem
-                                key={treatment.id}
-                                value={treatment.name}
-                                onSelect={() => handleAddTreatment(treatment)}
-                                className={cn(
-                                  "cursor-pointer",
-                                  isSelected && "opacity-50"
-                                )}
-                                disabled={isSelected}
-                              >
-                                <div className="flex justify-between w-full items-center">
-                                  <span className="font-medium">{treatment.name}</span>
-                                  <div className="flex gap-3 text-xs text-muted-foreground">
-                                    <span>{treatment.default_price || 0} lei</span>
-                                    {treatment.decont ? (
-                                      <span className="text-green-600">D: {treatment.decont}</span>
-                                    ) : null}
-                                    {treatment.co_plata ? (
-                                      <span className="text-orange-600">C: {treatment.co_plata}</span>
-                                    ) : null}
-                                  </div>
-                                </div>
-                              </CommandItem>
-                            );
-                          })}
-                        </CommandGroup>
-                      ))}
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
+            {/* Interventions Section */}
+            <InterventionSelector
+              treatments={treatments}
+              interventions={interventions}
+              onInterventionsChange={setInterventions}
+            />
 
             <div className="space-y-2">
               <Label htmlFor="notes">Observații</Label>
@@ -635,7 +461,7 @@ export function AppointmentForm({
                 </Button>
                 <Button 
                   type="submit"
-                  disabled={!formData.patientName || selectedTreatments.length === 0}
+                  disabled={!formData.patientName || interventions.length === 0}
                 >
                   {editingAppointment ? 'Salvează' : 'Adaugă programare'}
                 </Button>
