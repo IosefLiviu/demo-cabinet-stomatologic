@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { ChevronDown, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { TreatmentListDialog } from './TreatmentListDialog';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface Treatment {
   id: string;
@@ -42,6 +43,19 @@ export function InterventionSelector({
   onInterventionsChange,
 }: InterventionSelectorProps) {
   const [treatmentDialogOpen, setTreatmentDialogOpen] = useState(false);
+  const [expandedInterventions, setExpandedInterventions] = useState<Set<string>>(new Set());
+
+  const toggleExpanded = (interventionId: string) => {
+    setExpandedInterventions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(interventionId)) {
+        newSet.delete(interventionId);
+      } else {
+        newSet.add(interventionId);
+      }
+      return newSet;
+    });
+  };
 
   // Calculate totals
   const totalPrice = interventions.reduce((sum, i) => sum + i.price, 0);
@@ -142,104 +156,122 @@ export function InterventionSelector({
       {interventions.length > 0 && (
         <div className="space-y-3">
           {interventions.map((intervention) => (
-            <div key={intervention.id} className="border rounded-lg overflow-hidden">
+            <Collapsible 
+              key={intervention.id} 
+              open={expandedInterventions.has(intervention.id)}
+              onOpenChange={() => toggleExpanded(intervention.id)}
+              className="border rounded-lg overflow-hidden"
+            >
               {/* Intervention Header */}
-              <div className="bg-muted/30 p-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm truncate">{intervention.treatmentName}</div>
-                    {intervention.selectedTeeth.length > 0 && (
-                      <div className="text-xs text-muted-foreground">
-                        Dinți: {intervention.selectedTeeth.sort((a, b) => a - b).join(', ')}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm shrink-0">
-                    <span className="font-medium">{intervention.price} lei</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-destructive hover:text-destructive"
-                      onClick={() => handleRemoveIntervention(intervention.id)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+              <CollapsibleTrigger asChild>
+                <div className="bg-muted/30 p-3 cursor-pointer hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <ChevronDown 
+                      className={cn(
+                        "h-4 w-4 shrink-0 transition-transform duration-200",
+                        expandedInterventions.has(intervention.id) ? "rotate-0" : "-rotate-90"
+                      )} 
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm truncate">{intervention.treatmentName}</div>
+                      {intervention.selectedTeeth.length > 0 && (
+                        <div className="text-xs text-muted-foreground">
+                          Dinți: {intervention.selectedTeeth.sort((a, b) => a - b).join(', ')}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm shrink-0">
+                      <span className="font-medium">{intervention.price} lei</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-destructive hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveIntervention(intervention.id);
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </CollapsibleTrigger>
 
-              {/* Content - Always Visible */}
-              <div className="p-3 space-y-4 border-t">
-                {/* Prices Row */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Preț</Label>
-                    <Input
-                      type="number"
-                      value={intervention.price}
-                      onChange={(e) =>
-                        handleUpdateIntervention(intervention.id, 'price', parseFloat(e.target.value) || 0)
-                      }
-                      className="h-8"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs text-green-600">Decont</Label>
-                    <Input
-                      type="number"
-                      value={intervention.decont}
-                      onChange={(e) =>
-                        handleUpdateIntervention(intervention.id, 'decont', parseFloat(e.target.value) || 0)
-                      }
-                      className="h-8"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs text-orange-600">Co-plată</Label>
-                    <Input
-                      type="number"
-                      value={intervention.coPlata}
-                      onChange={(e) =>
-                        handleUpdateIntervention(intervention.id, 'coPlata', parseFloat(e.target.value) || 0)
-                      }
-                      className="h-8"
-                    />
-                  </div>
-                </div>
-
-                {/* Dental Chart for Tooth Selection */}
-                <div className="space-y-2">
-                  <Label className="text-xs">Selectează dinții tratați</Label>
-                  <div className="bg-muted/20 rounded-lg p-3 space-y-3">
-                    {/* Upper jaw */}
+              {/* Collapsible Content */}
+              <CollapsibleContent>
+                <div className="p-3 space-y-4 border-t">
+                  {/* Prices Row */}
+                  <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-1">
-                      <div className="text-[10px] text-muted-foreground text-center">
-                        Maxilar superior
-                      </div>
-                      <div className="flex justify-center gap-0.5 flex-wrap">
-                        {upperTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention.selectedTeeth))}
-                      </div>
+                      <Label className="text-xs">Preț</Label>
+                      <Input
+                        type="number"
+                        value={intervention.price}
+                        onChange={(e) =>
+                          handleUpdateIntervention(intervention.id, 'price', parseFloat(e.target.value) || 0)
+                        }
+                        className="h-8"
+                      />
                     </div>
-
-                    {/* Divider */}
-                    <div className="flex justify-center">
-                      <div className="w-full max-w-sm border-b-2 border-muted-foreground/20" />
-                    </div>
-
-                    {/* Lower jaw */}
                     <div className="space-y-1">
-                      <div className="flex justify-center gap-0.5 flex-wrap">
-                        {lowerTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention.selectedTeeth))}
+                      <Label className="text-xs text-green-600">Decont</Label>
+                      <Input
+                        type="number"
+                        value={intervention.decont}
+                        onChange={(e) =>
+                          handleUpdateIntervention(intervention.id, 'decont', parseFloat(e.target.value) || 0)
+                        }
+                        className="h-8"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-orange-600">Co-plată</Label>
+                      <Input
+                        type="number"
+                        value={intervention.coPlata}
+                        onChange={(e) =>
+                          handleUpdateIntervention(intervention.id, 'coPlata', parseFloat(e.target.value) || 0)
+                        }
+                        className="h-8"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Dental Chart for Tooth Selection */}
+                  <div className="space-y-2">
+                    <Label className="text-xs">Selectează dinții tratați</Label>
+                    <div className="bg-muted/20 rounded-lg p-3 space-y-3">
+                      {/* Upper jaw */}
+                      <div className="space-y-1">
+                        <div className="text-[10px] text-muted-foreground text-center">
+                          Maxilar superior
+                        </div>
+                        <div className="flex justify-center gap-0.5 flex-wrap">
+                          {upperTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention.selectedTeeth))}
+                        </div>
                       </div>
-                      <div className="text-[10px] text-muted-foreground text-center">
-                        Maxilar inferior
+
+                      {/* Divider */}
+                      <div className="flex justify-center">
+                        <div className="w-full max-w-sm border-b-2 border-muted-foreground/20" />
+                      </div>
+
+                      {/* Lower jaw */}
+                      <div className="space-y-1">
+                        <div className="flex justify-center gap-0.5 flex-wrap">
+                          {lowerTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention.selectedTeeth))}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground text-center">
+                          Maxilar inferior
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </CollapsibleContent>
+            </Collapsible>
           ))}
 
           {/* Totals */}
