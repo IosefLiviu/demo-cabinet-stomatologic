@@ -1,9 +1,14 @@
-import { Stethoscope } from 'lucide-react';
+import { Stethoscope, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-export function Header() {
+interface HeaderProps {
+  onOpenSettings?: () => void;
+}
+
+export function Header({ onOpenSettings }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-      <div className="container flex h-16 items-center gap-4 px-4">
+      <div className="container flex h-16 items-center justify-between gap-4 px-4">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
             <Stethoscope className="h-5 w-5 text-primary-foreground" />
@@ -13,6 +18,11 @@ export function Header() {
             <p className="text-xs text-muted-foreground">Sistem de programări</p>
           </div>
         </div>
+        {onOpenSettings && (
+          <Button variant="ghost" size="icon" onClick={onOpenSettings}>
+            <Settings className="h-5 w-5" />
+          </Button>
+        )}
       </div>
     </header>
   );

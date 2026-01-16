@@ -11,17 +11,20 @@ import { PatientForm } from '@/components/PatientForm';
 import { PatientDetails } from '@/components/PatientDetails';
 import { AppointmentForm, AppointmentFormData } from '@/components/AppointmentForm';
 import { ReportsDashboard } from '@/components/ReportsDashboard';
+import { CabinetSettings } from '@/components/CabinetSettings';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePatients, Patient } from '@/hooks/usePatients';
 import { useAppointmentsDB, AppointmentDB } from '@/hooks/useAppointmentsDB';
 import { useTreatments } from '@/hooks/useTreatments';
-import { CABINETS, TIME_SLOTS, Appointment } from '@/types/appointment';
+import { useCabinets } from '@/hooks/useCabinets';
+import { TIME_SLOTS, Appointment } from '@/types/appointment';
 
 const Index = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedCabinet, setSelectedCabinet] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState('calendar');
+  const [showCabinetSettings, setShowCabinetSettings] = useState(false);
 
   // Patient state
   const [showPatientForm, setShowPatientForm] = useState(false);
@@ -57,6 +60,7 @@ const Index = () => {
     deleteAppointment 
   } = useAppointmentsDB();
   const { treatments } = useTreatments();
+  const { cabinets, updateCabinetDoctor } = useCabinets();
 
   useEffect(() => {
     if (activeTab === 'calendar') {
@@ -201,7 +205,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header onOpenSettings={() => setShowCabinetSettings(true)} />
 
       <main className="container px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -237,6 +241,7 @@ const Index = () => {
             <CabinetTabs
               selectedCabinet={selectedCabinet}
               onSelectCabinet={setSelectedCabinet}
+              cabinets={cabinets}
             />
 
             {/* Time Grid */}
@@ -244,6 +249,7 @@ const Index = () => {
               selectedDate={selectedDate}
               selectedCabinet={selectedCabinet}
               appointments={legacyAppointments}
+              cabinets={cabinets}
               onSlotClick={handleSlotClick}
               onAppointmentClick={handleAppointmentClick}
             />
@@ -304,6 +310,15 @@ const Index = () => {
         editingAppointment={editingAppointmentData}
         patients={patients}
         treatments={treatments}
+        cabinets={cabinets}
+      />
+
+      {/* Cabinet Settings */}
+      <CabinetSettings
+        open={showCabinetSettings}
+        onClose={() => setShowCabinetSettings(false)}
+        cabinets={cabinets}
+        onUpdateDoctor={updateCabinetDoctor}
       />
     </div>
   );
