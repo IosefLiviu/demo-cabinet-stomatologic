@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 export function Header() {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
@@ -28,7 +28,7 @@ export function Header() {
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              {user.email === 'adreiliviudiablo@gmail.com' && (
+              {(isAdmin || user.email === 'adreiliviudiablo@gmail.com') && (
                 <Button variant="ghost" size="sm" onClick={() => navigate('/admin')}>
                   <Users className="h-4 w-4 mr-2" />
                   Administrare Doctori
