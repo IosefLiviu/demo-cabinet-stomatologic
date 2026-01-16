@@ -24,6 +24,7 @@ export interface SelectedIntervention {
   price: number;
   decont: number;
   coPlata: number;
+  duration: number;
   selectedTeeth: number[];
 }
 
@@ -61,10 +62,7 @@ export function InterventionSelector({
   const totalPrice = interventions.reduce((sum, i) => sum + i.price, 0);
   const totalDecont = interventions.reduce((sum, i) => sum + i.decont, 0);
   const totalCoPlata = interventions.reduce((sum, i) => sum + i.coPlata, 0);
-  const totalDuration = interventions.reduce((sum, i) => {
-    const treatment = treatments.find(t => t.id === i.treatmentId);
-    return sum + (treatment?.default_duration || 30);
-  }, 0) || 30;
+  const totalDuration = interventions.reduce((sum, i) => sum + i.duration, 0) || 30;
 
   const handleAddTreatment = (treatment: Treatment) => {
     const newIntervention: SelectedIntervention = {
@@ -74,6 +72,7 @@ export function InterventionSelector({
       price: treatment.default_price || 0,
       decont: treatment.decont || 0,
       coPlata: treatment.co_plata || 0,
+      duration: treatment.default_duration || 30,
       selectedTeeth: [],
     };
 
@@ -86,7 +85,7 @@ export function InterventionSelector({
 
   const handleUpdateIntervention = (
     interventionId: string,
-    field: 'price' | 'decont' | 'coPlata',
+    field: 'price' | 'decont' | 'coPlata' | 'duration',
     value: number
   ) => {
     onInterventionsChange(
@@ -202,8 +201,21 @@ export function InterventionSelector({
               {/* Collapsible Content */}
               <CollapsibleContent>
                 <div className="p-3 space-y-4 border-t">
-                  {/* Prices Row */}
-                  <div className="grid grid-cols-3 gap-3">
+                  {/* Duration and Prices Row */}
+                  <div className="grid grid-cols-4 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-blue-600">Durată (min)</Label>
+                      <Input
+                        type="number"
+                        value={intervention.duration}
+                        onChange={(e) =>
+                          handleUpdateIntervention(intervention.id, 'duration', parseInt(e.target.value) || 30)
+                        }
+                        className="h-8"
+                        min={5}
+                        step={5}
+                      />
+                    </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Preț</Label>
                       <Input
