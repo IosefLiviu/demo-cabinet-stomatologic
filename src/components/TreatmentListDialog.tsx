@@ -81,7 +81,7 @@ export function TreatmentListDialog({
         </div>
 
         {/* Treatments List */}
-        <ScrollArea className="flex-1 -mx-6 px-6">
+        <ScrollArea className="flex-1 max-h-[60vh] -mx-6 px-6">
           <div className="space-y-4 pb-4">
             {sortedCategories.map((category) => (
               <div key={category} className="space-y-1">
