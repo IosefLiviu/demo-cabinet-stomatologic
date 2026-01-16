@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { TreatmentListDialog } from './TreatmentListDialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-
+import { ToothStatus } from './DentalChart';
 interface Treatment {
   id: string;
   name: string;
@@ -37,6 +37,29 @@ interface InterventionSelectorProps {
 // FDI notation - permanent teeth
 const upperTeeth = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
 const lowerTeeth = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
+
+// Status colors from DentalChart
+const statusColors: Record<ToothStatus, string> = {
+  healthy: 'bg-success/20 border-success text-success',
+  cavity: 'bg-destructive/20 border-destructive text-destructive',
+  filled: 'bg-cabinet-2/20 border-cabinet-2 text-cabinet-2',
+  crown: 'bg-cabinet-4/20 border-cabinet-4 text-cabinet-4',
+  missing: 'bg-muted border-muted-foreground/30 text-muted-foreground',
+  implant: 'bg-cabinet-3/20 border-cabinet-3 text-cabinet-3',
+  root_canal: 'bg-warning/20 border-warning text-warning',
+  extraction_needed: 'bg-destructive/30 border-destructive text-destructive',
+};
+
+const statusLabels: Record<ToothStatus, string> = {
+  healthy: 'Sănătos',
+  cavity: 'Carie',
+  filled: 'Plombat',
+  crown: 'Coroană',
+  missing: 'Lipsă',
+  implant: 'Implant',
+  root_canal: 'Canal',
+  extraction_needed: 'De extras',
+};
 
 export function InterventionSelector({
   treatments,
@@ -111,22 +134,38 @@ export function InterventionSelector({
   };
 
 
+  const [hoveredTooth, setHoveredTooth] = useState<{ interventionId: string; toothNumber: number } | null>(null);
+
   const renderToothButton = (toothNumber: number, interventionId: string, selectedTeeth: number[]) => {
     const isSelected = selectedTeeth.includes(toothNumber);
+    const isHovered = hoveredTooth?.interventionId === interventionId && hoveredTooth?.toothNumber === toothNumber;
+    const status: ToothStatus = isSelected ? 'filled' : 'healthy';
+    
     return (
-      <button
-        key={toothNumber}
-        type="button"
-        onClick={() => handleToothToggle(interventionId, toothNumber)}
-        className={cn(
-          'w-7 h-9 sm:w-8 sm:h-10 rounded-md border-2 flex items-center justify-center text-xs font-medium transition-all hover:scale-105',
-          isSelected
-            ? 'bg-primary border-primary text-primary-foreground'
-            : 'bg-muted/30 border-border hover:border-primary/50'
+      <div key={toothNumber} className="relative">
+        <button
+          type="button"
+          onClick={() => handleToothToggle(interventionId, toothNumber)}
+          onMouseEnter={() => setHoveredTooth({ interventionId, toothNumber })}
+          onMouseLeave={() => setHoveredTooth(null)}
+          className={cn(
+            'w-8 h-10 sm:w-10 sm:h-12 rounded-lg border-2 flex items-center justify-center text-xs font-medium transition-all hover:scale-110 cursor-pointer',
+            isSelected
+              ? 'bg-primary/20 border-primary text-primary'
+              : statusColors.healthy,
+            isHovered && 'ring-2 ring-primary ring-offset-2'
+          )}
+        >
+          {toothNumber}
+        </button>
+        
+        {/* Tooltip */}
+        {isHovered && (
+          <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded bg-popover border shadow-lg text-xs whitespace-nowrap">
+            <div className="font-medium">{isSelected ? 'Selectat' : 'Sănătos'}</div>
+          </div>
         )}
-      >
-        {toothNumber}
-      </button>
+      </div>
     );
   };
 
@@ -252,30 +291,40 @@ export function InterventionSelector({
                   </div>
 
                   {/* Dental Chart for Tooth Selection */}
-                  <div className="space-y-2">
+                  <div className="space-y-4">
                     <Label className="text-xs">Selectează dinții tratați</Label>
-                    <div className="bg-muted/20 rounded-lg p-3 space-y-3">
+                    
+                    {/* Legend */}
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <div className={cn('px-2 py-1 rounded-md border flex items-center gap-1.5', statusColors.healthy)}>
+                        <span>Neselectat</span>
+                      </div>
+                      <div className="px-2 py-1 rounded-md border flex items-center gap-1.5 bg-primary/20 border-primary text-primary">
+                        <span>Selectat</span>
+                      </div>
+                    </div>
+
+                    {/* Dental Chart */}
+                    <div className="space-y-4">
                       {/* Upper jaw */}
                       <div className="space-y-1">
-                        <div className="text-[10px] text-muted-foreground text-center">
+                        <div className="text-xs text-muted-foreground text-center mb-2">
                           Maxilar superior
                         </div>
-                        <div className="flex justify-center gap-0.5 flex-wrap">
+                        <div className="flex justify-center gap-1">
                           {upperTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention.selectedTeeth))}
                         </div>
-                      </div>
-
-                      {/* Divider */}
-                      <div className="flex justify-center">
-                        <div className="w-full max-w-sm border-b-2 border-muted-foreground/20" />
+                        <div className="flex justify-center">
+                          <div className="w-full max-w-md border-b-2 border-muted-foreground/30 my-2" />
+                        </div>
                       </div>
 
                       {/* Lower jaw */}
                       <div className="space-y-1">
-                        <div className="flex justify-center gap-0.5 flex-wrap">
+                        <div className="flex justify-center gap-1">
                           {lowerTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention.selectedTeeth))}
                         </div>
-                        <div className="text-[10px] text-muted-foreground text-center">
+                        <div className="text-xs text-muted-foreground text-center mt-2">
                           Maxilar inferior
                         </div>
                       </div>
