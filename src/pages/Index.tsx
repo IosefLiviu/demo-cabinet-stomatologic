@@ -42,6 +42,7 @@ const Index = () => {
     patientName: string;
     patientPhone: string;
     cabinetId: number;
+    doctorId?: string;
     time: string;
     duration: number;
     treatmentId?: string;
@@ -132,6 +133,7 @@ const Index = () => {
       patientName: appointment.patientName,
       patientPhone: appointment.patientPhone,
       cabinetId: appointment.cabinetId,
+      doctorId: dbAppointment?.doctor_id || undefined,
       time: appointment.time,
       duration: appointment.duration,
       treatmentId: dbAppointment?.treatment_id || undefined,
@@ -204,6 +206,7 @@ const Index = () => {
     const appointmentPayload = {
       patient_id: patientId,
       cabinet_id: formData.cabinetId,
+      doctor_id: formData.doctorId || undefined,
       appointment_date: dateStr,
       start_time: formData.time,
       duration: formData.duration,
@@ -263,6 +266,9 @@ const Index = () => {
     duration: apt.duration,
     treatment: apt.treatments?.name || 'Consultație',
     notes: apt.notes,
+    doctorId: apt.doctor_id || undefined,
+    doctorName: apt.doctors?.name || undefined,
+    doctorColor: apt.doctors?.color || undefined,
   }));
 
   const todayAppointments = legacyAppointments.filter(
