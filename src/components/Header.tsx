@@ -28,7 +28,7 @@ export function Header() {
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              {(isAdmin || user.email === 'adreiliviudiablo@gmail.com') && (
+              {(isAdmin || user.email === 'andreiliviudiablo@gmail.com') && (
                 <Button variant="ghost" size="sm" onClick={() => navigate('/admin')}>
                   <Users className="h-4 w-4 mr-2" />
                   Administrare Doctori
