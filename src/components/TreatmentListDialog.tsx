@@ -54,15 +54,20 @@ export function TreatmentListDialog({
 
   const handleSelect = (treatment: Treatment) => {
     onSelectTreatment(treatment);
-    onClose();
-    setSearchTerm('');
+    // Don't close dialog - allow adding multiple treatments
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      if (!isOpen) {
+        setSearchTerm('');
+      }
+      onClose();
+    }}>
       <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Lista de Intervenții</DialogTitle>
+          <p className="text-sm text-muted-foreground">Selectează tratamentele dorite, apoi închide fereastra</p>
         </DialogHeader>
 
         {/* Search */}
