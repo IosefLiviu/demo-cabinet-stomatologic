@@ -260,7 +260,7 @@ export function AppointmentForm({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px] h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-[850px] h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>{editingAppointment ? 'Editare programare' : 'Programare nouă'}</span>
