@@ -9,11 +9,12 @@ import { TodaySummary } from '@/components/TodaySummary';
 import { PatientsList } from '@/components/PatientsList';
 import { PatientForm } from '@/components/PatientForm';
 import { PatientDetails } from '@/components/PatientDetails';
+import { AppointmentForm } from '@/components/AppointmentForm';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePatients, Patient } from '@/hooks/usePatients';
 import { useAppointmentsDB, AppointmentDB } from '@/hooks/useAppointmentsDB';
-import { CABINETS, TIME_SLOTS } from '@/types/appointment';
+import { CABINETS, TIME_SLOTS, Appointment } from '@/types/appointment';
 
 const Index = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -25,8 +26,14 @@ const Index = () => {
   const [editingPatient, setEditingPatient] = useState<Patient | undefined>();
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
+  // Appointment form state
+  const [showAppointmentForm, setShowAppointmentForm] = useState(false);
+  const [selectedTime, setSelectedTime] = useState<string | undefined>();
+  const [selectedCabinetForForm, setSelectedCabinetForForm] = useState<number | undefined>();
+  const [editingAppointment, setEditingAppointment] = useState<Appointment | undefined>();
+
   const { patients, loading: patientsLoading, addPatient, updatePatient, deletePatient } = usePatients();
-  const { appointments, loading: appointmentsLoading, fetchAppointments } = useAppointmentsDB();
+  const { appointments, loading: appointmentsLoading, fetchAppointments, addAppointment } = useAppointmentsDB();
 
   useEffect(() => {
     fetchAppointments(format(selectedDate, 'yyyy-MM-dd'));
@@ -49,6 +56,45 @@ const Index = () => {
   const handleClosePatientForm = () => {
     setShowPatientForm(false);
     setEditingPatient(undefined);
+  };
+
+  // Appointment handlers
+  const handleSlotClick = (time: string, cabinetId: number) => {
+    setSelectedTime(time);
+    setSelectedCabinetForForm(cabinetId);
+    setEditingAppointment(undefined);
+    setShowAppointmentForm(true);
+  };
+
+  const handleNewAppointment = () => {
+    setSelectedTime(undefined);
+    setSelectedCabinetForForm(undefined);
+    setEditingAppointment(undefined);
+    setShowAppointmentForm(true);
+  };
+
+  const handleAppointmentClick = (appointment: Appointment) => {
+    setEditingAppointment(appointment);
+    setShowAppointmentForm(true);
+  };
+
+  const handleAppointmentSubmit = async (appointmentData: Omit<Appointment, 'id'>) => {
+    // Find patient by name or create mapping
+    const patient = patients.find(
+      p => `${p.first_name} ${p.last_name}`.toLowerCase() === appointmentData.patientName.toLowerCase()
+    );
+    
+    await addAppointment({
+      patient_id: patient?.id || '', // Will need patient selection in future
+      cabinet_id: appointmentData.cabinetId,
+      appointment_date: appointmentData.date,
+      start_time: appointmentData.time,
+      duration: appointmentData.duration,
+      notes: appointmentData.notes,
+    });
+    
+    setShowAppointmentForm(false);
+    fetchAppointments(format(selectedDate, 'yyyy-MM-dd'));
   };
 
   // Convert appointments to legacy format for existing components
@@ -94,7 +140,7 @@ const Index = () => {
             {/* Controls */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
-              <Button className="gap-2">
+              <Button className="gap-2" onClick={handleNewAppointment}>
                 <Plus className="h-4 w-4" />
                 Programare nouă
               </Button>
@@ -111,8 +157,8 @@ const Index = () => {
               selectedDate={selectedDate}
               selectedCabinet={selectedCabinet}
               appointments={legacyAppointments}
-              onSlotClick={() => {}}
-              onAppointmentClick={() => {}}
+              onSlotClick={handleSlotClick}
+              onAppointmentClick={handleAppointmentClick}
             />
           </TabsContent>
 
@@ -146,6 +192,17 @@ const Index = () => {
         open={selectedPatient !== null}
         onClose={() => setSelectedPatient(null)}
         onEdit={handleEditPatient}
+      />
+
+      {/* Appointment Form */}
+      <AppointmentForm
+        open={showAppointmentForm}
+        onClose={() => setShowAppointmentForm(false)}
+        onSubmit={handleAppointmentSubmit}
+        selectedDate={selectedDate}
+        selectedTime={selectedTime}
+        selectedCabinet={selectedCabinetForForm}
+        editingAppointment={editingAppointment}
       />
     </div>
   );
