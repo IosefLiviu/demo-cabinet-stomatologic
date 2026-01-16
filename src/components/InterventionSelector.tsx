@@ -4,26 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
-import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { TreatmentListDialog } from './TreatmentListDialog';
 
 interface Treatment {
   id: string;
@@ -61,8 +47,6 @@ export function InterventionSelector({
   onInterventionsChange,
 }: InterventionSelectorProps) {
   const [treatmentDialogOpen, setTreatmentDialogOpen] = useState(false);
-  const [treatmentSearch, setTreatmentSearch] = useState('');
-  const [selectedTreatmentForTeeth, setSelectedTreatmentForTeeth] = useState<string | null>(null);
   const [expandedInterventions, setExpandedInterventions] = useState<Set<string>>(new Set());
 
   // Calculate totals
@@ -73,20 +57,6 @@ export function InterventionSelector({
     const treatment = treatments.find(t => t.id === i.treatmentId);
     return sum + (treatment?.default_duration || 30);
   }, 0) || 30;
-
-  const filteredTreatments = treatments.filter(t =>
-    t.name.toLowerCase().includes(treatmentSearch.toLowerCase())
-  );
-
-  // Group treatments by category
-  const groupedTreatments = filteredTreatments.reduce((acc, treatment) => {
-    const category = treatment.category || 'Alte tratamente';
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(treatment);
-    return acc;
-  }, {} as Record<string, Treatment[]>);
 
   const handleAddTreatment = (treatment: Treatment) => {
     const newIntervention: SelectedIntervention = {
@@ -100,18 +70,12 @@ export function InterventionSelector({
     };
 
     onInterventionsChange([...interventions, newIntervention]);
-    setTreatmentDialogOpen(false);
-    setTreatmentSearch('');
-    // Auto-expand and show teeth selector
-    setSelectedTreatmentForTeeth(newIntervention.id);
+    // Auto-expand the new intervention
     setExpandedInterventions(prev => new Set([...prev, newIntervention.id]));
   };
 
   const handleRemoveIntervention = (interventionId: string) => {
     onInterventionsChange(interventions.filter(i => i.id !== interventionId));
-    if (selectedTreatmentForTeeth === interventionId) {
-      setSelectedTreatmentForTeeth(null);
-    }
   };
 
   const handleUpdateIntervention = (
@@ -176,9 +140,21 @@ export function InterventionSelector({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <Label>Intervenții *</Label>
-        <span className="text-sm text-muted-foreground">
-          Durată totală: {totalDuration} min
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-muted-foreground">
+            Durată totală: {totalDuration} min
+          </span>
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            className="gap-1"
+            onClick={() => setTreatmentDialogOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            Intervenții
+          </Button>
+        </div>
       </div>
 
       {/* Interventions List */}
@@ -317,62 +293,19 @@ export function InterventionSelector({
         </div>
       )}
 
-      {/* Add Intervention Button */}
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full gap-2"
-        onClick={() => setTreatmentDialogOpen(true)}
-      >
-        <Plus className="h-4 w-4" />
-        Adaugă intervenție
-      </Button>
+      {interventions.length === 0 && (
+        <div className="text-center py-4 text-sm text-muted-foreground border border-dashed rounded-lg">
+          Apasă butonul "Intervenții" pentru a adăuga tratamente
+        </div>
+      )}
 
-      {/* Treatment Selection Dialog */}
-      <Dialog open={treatmentDialogOpen} onOpenChange={setTreatmentDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle>Selectează tratamentul</DialogTitle>
-          </DialogHeader>
-          <Command className="flex-1">
-            <CommandInput
-              placeholder="Caută tratament..."
-              value={treatmentSearch}
-              onValueChange={setTreatmentSearch}
-            />
-            <CommandList className="max-h-[400px]">
-              <CommandEmpty>Niciun tratament găsit</CommandEmpty>
-              <ScrollArea className="h-[400px]">
-                {Object.entries(groupedTreatments).map(([category, categoryTreatments]) => (
-                  <CommandGroup key={category} heading={category}>
-                    {categoryTreatments.map((treatment) => (
-                      <CommandItem
-                        key={treatment.id}
-                        value={treatment.name}
-                        onSelect={() => handleAddTreatment(treatment)}
-                        className="cursor-pointer py-3"
-                      >
-                        <div className="flex justify-between w-full items-center">
-                          <span className="font-medium">{treatment.name}</span>
-                          <div className="flex gap-3 text-xs text-muted-foreground">
-                            <span className="font-medium">{treatment.default_price || 0} lei</span>
-                            {treatment.decont ? (
-                              <span className="text-green-600">D: {treatment.decont}</span>
-                            ) : null}
-                            {treatment.co_plata ? (
-                              <span className="text-orange-600">C: {treatment.co_plata}</span>
-                            ) : null}
-                          </div>
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                ))}
-              </ScrollArea>
-            </CommandList>
-          </Command>
-        </DialogContent>
-      </Dialog>
+      {/* Treatment List Dialog */}
+      <TreatmentListDialog
+        open={treatmentDialogOpen}
+        onClose={() => setTreatmentDialogOpen(false)}
+        treatments={treatments}
+        onSelectTreatment={handleAddTreatment}
+      />
     </div>
   );
 }
