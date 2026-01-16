@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, ArrowLeft, Save, X } from 'lucide-react';
+import { Plus, Edit, Trash2, ArrowLeft, Save, X, Users, Stethoscope, Shield, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -35,22 +43,26 @@ interface Doctor {
   is_active: boolean;
 }
 
+interface UserWithRole {
+  id: string;
+  user_id: string;
+  full_name: string | null;
+  email: string;
+  role: 'admin' | 'user';
+  created_at: string;
+}
+
 const PRESET_COLORS = [
-  '#3B82F6', // Blue
-  '#10B981', // Green
-  '#F59E0B', // Amber
-  '#EF4444', // Red
-  '#8B5CF6', // Purple
-  '#EC4899', // Pink
-  '#06B6D4', // Cyan
-  '#F97316', // Orange
+  '#3B82F6', '#10B981', '#F59E0B', '#EF4444',
+  '#8B5CF6', '#EC4899', '#06B6D4', '#F97316',
 ];
 
 export default function Admin() {
   const navigate = useNavigate();
-  const { user, loading, isAdmin } = useAuth();
+  const { user, loading } = useAuth();
   const { toast } = useToast();
   
+  // Doctors state
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loadingDoctors, setLoadingDoctors] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -61,6 +73,18 @@ export default function Admin() {
     specialization: '',
   });
 
+  // Users state
+  const [users, setUsers] = useState<UserWithRole[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [newUserDialogOpen, setNewUserDialogOpen] = useState(false);
+  const [newUserData, setNewUserData] = useState({
+    email: '',
+    password: '',
+    fullName: '',
+    role: 'user' as 'admin' | 'user',
+  });
+  const [creatingUser, setCreatingUser] = useState(false);
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
@@ -69,8 +93,10 @@ export default function Admin() {
 
   useEffect(() => {
     fetchDoctors();
+    fetchUsers();
   }, []);
 
+  // ============ DOCTORS FUNCTIONS ============
   const fetchDoctors = async () => {
     try {
       setLoadingDoctors(true);
@@ -112,7 +138,7 @@ export default function Admin() {
     setDialogOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSaveDoctor = async () => {
     if (!formData.name.trim()) {
       toast({
         title: 'Eroare',
@@ -160,13 +186,9 @@ export default function Admin() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDeleteDoctor = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('doctors')
-        .delete()
-        .eq('id', id);
-
+      const { error } = await supabase.from('doctors').delete().eq('id', id);
       if (error) throw error;
       toast({ title: 'Succes', description: 'Doctorul a fost șters' });
       fetchDoctors();
@@ -194,6 +216,165 @@ export default function Admin() {
     }
   };
 
+  // ============ USERS FUNCTIONS ============
+  const fetchUsers = async () => {
+    try {
+      setLoadingUsers(true);
+      
+      // Fetch profiles with their roles
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, user_id, full_name, created_at');
+
+      if (profilesError) throw profilesError;
+
+      // Fetch all user roles
+      const { data: roles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+
+      if (rolesError) throw rolesError;
+
+      // Combine the data
+      const usersWithRoles: UserWithRole[] = (profiles || []).map((profile) => {
+        const userRole = roles?.find(r => r.user_id === profile.user_id);
+        return {
+          id: profile.id,
+          user_id: profile.user_id,
+          full_name: profile.full_name,
+          email: '', // We'll need to get this from a different source
+          role: (userRole?.role as 'admin' | 'user') || 'user',
+          created_at: profile.created_at,
+        };
+      });
+
+      setUsers(usersWithRoles);
+    } catch (error: any) {
+      console.error('Error fetching users:', error);
+      toast({
+        title: 'Eroare',
+        description: 'Nu s-au putut încărca utilizatorii',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const handleChangeRole = async (userId: string, newRole: 'admin' | 'user') => {
+    try {
+      // First check if user has a role entry
+      const { data: existingRole, error: checkError } = await supabase
+        .from('user_roles')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+
+      if (existingRole) {
+        // Update existing role
+        const { error } = await supabase
+          .from('user_roles')
+          .update({ role: newRole })
+          .eq('user_id', userId);
+
+        if (error) throw error;
+      } else {
+        // Insert new role
+        const { error } = await supabase
+          .from('user_roles')
+          .insert({ user_id: userId, role: newRole });
+
+        if (error) throw error;
+      }
+
+      toast({ 
+        title: 'Succes', 
+        description: `Rolul a fost schimbat la ${newRole === 'admin' ? 'Administrator' : 'Utilizator'}` 
+      });
+      fetchUsers();
+    } catch (error: any) {
+      console.error('Error changing role:', error);
+      toast({
+        title: 'Eroare',
+        description: 'Nu s-a putut schimba rolul',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleCreateUser = async () => {
+    if (!newUserData.email || !newUserData.password) {
+      toast({
+        title: 'Eroare',
+        description: 'Email și parola sunt obligatorii',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (newUserData.password.length < 6) {
+      toast({
+        title: 'Eroare',
+        description: 'Parola trebuie să aibă minim 6 caractere',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setCreatingUser(true);
+      
+      // Create user via Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: newUserData.email,
+        password: newUserData.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            full_name: newUserData.fullName,
+          },
+        },
+      });
+
+      if (authError) throw authError;
+
+      // If we need to set admin role and user was created
+      if (authData.user && newUserData.role === 'admin') {
+        // Wait a bit for the trigger to create the user_roles entry
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .update({ role: 'admin' })
+          .eq('user_id', authData.user.id);
+
+        if (roleError) {
+          console.error('Error setting admin role:', roleError);
+        }
+      }
+
+      toast({ 
+        title: 'Succes', 
+        description: 'Utilizatorul a fost creat. Va primi un email de confirmare.' 
+      });
+      
+      setNewUserDialogOpen(false);
+      setNewUserData({ email: '', password: '', fullName: '', role: 'user' });
+      fetchUsers();
+    } catch (error: any) {
+      console.error('Error creating user:', error);
+      toast({
+        title: 'Eroare',
+        description: error.message || 'Nu s-a putut crea utilizatorul',
+        variant: 'destructive',
+      });
+    } finally {
+      setCreatingUser(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -205,104 +386,185 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container px-4 py-6 max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold">Administrare Doctori</h1>
-              <p className="text-muted-foreground">Gestionează lista de doctori și culorile lor</p>
-            </div>
-          </div>
-          <Button onClick={() => handleOpenDialog()} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Adaugă Doctor
+        <div className="flex items-center gap-4 mb-6">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+            <ArrowLeft className="h-5 w-5" />
           </Button>
+          <div>
+            <h1 className="text-2xl font-bold">Administrare</h1>
+            <p className="text-muted-foreground">Gestionează doctori și utilizatori</p>
+          </div>
         </div>
 
-        {loadingDoctors ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {doctors.map((doctor) => (
-              <Card key={doctor.id} className={!doctor.is_active ? 'opacity-50' : ''}>
-                <CardContent className="flex items-center justify-between py-4">
-                  <div className="flex items-center gap-4">
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
-                      style={{ backgroundColor: doctor.color }}
-                    >
-                      {doctor.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">{doctor.name}</h3>
-                      {doctor.specialization && (
-                        <p className="text-sm text-muted-foreground">{doctor.specialization}</p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleToggleActive(doctor)}
-                    >
-                      {doctor.is_active ? 'Activ' : 'Inactiv'}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleOpenDialog(doctor)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                          <Trash2 className="h-4 w-4" />
+        <Tabs defaultValue="doctors" className="space-y-6">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="doctors" className="gap-2">
+              <Stethoscope className="h-4 w-4" />
+              Doctori
+            </TabsTrigger>
+            <TabsTrigger value="users" className="gap-2">
+              <Users className="h-4 w-4" />
+              Utilizatori
+            </TabsTrigger>
+          </TabsList>
+
+          {/* ============ DOCTORS TAB ============ */}
+          <TabsContent value="doctors" className="space-y-4">
+            <div className="flex justify-end">
+              <Button onClick={() => handleOpenDialog()} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Adaugă Doctor
+              </Button>
+            </div>
+
+            {loadingDoctors ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {doctors.map((doctor) => (
+                  <Card key={doctor.id} className={!doctor.is_active ? 'opacity-50' : ''}>
+                    <CardContent className="flex items-center justify-between py-4">
+                      <div className="flex items-center gap-4">
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
+                          style={{ backgroundColor: doctor.color }}
+                        >
+                          {doctor.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold">{doctor.name}</h3>
+                          {doctor.specialization && (
+                            <p className="text-sm text-muted-foreground">{doctor.specialization}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleToggleActive(doctor)}
+                        >
+                          {doctor.is_active ? 'Activ' : 'Inactiv'}
                         </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Ștergeți doctorul?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Această acțiune nu poate fi anulată. Doctorul {doctor.name} va fi șters definitiv.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Anulează</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDelete(doctor.id)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            Șterge
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(doctor)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Ștergeți doctorul?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Această acțiune nu poate fi anulată. Doctorul {doctor.name} va fi șters definitiv.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Anulează</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteDoctor(doctor.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Șterge
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
 
-            {doctors.length === 0 && (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                  <p className="text-muted-foreground mb-4">Nu există doctori înregistrați</p>
-                  <Button onClick={() => handleOpenDialog()}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Adaugă primul doctor
-                  </Button>
-                </CardContent>
-              </Card>
+                {doctors.length === 0 && (
+                  <Card>
+                    <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                      <p className="text-muted-foreground mb-4">Nu există doctori înregistrați</p>
+                      <Button onClick={() => handleOpenDialog()}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Adaugă primul doctor
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             )}
-          </div>
-        )}
+          </TabsContent>
 
-        {/* Add/Edit Dialog */}
+          {/* ============ USERS TAB ============ */}
+          <TabsContent value="users" className="space-y-4">
+            <div className="flex justify-end">
+              <Button onClick={() => setNewUserDialogOpen(true)} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Creează Utilizator
+              </Button>
+            </div>
+
+            {loadingUsers ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {users.map((userItem) => (
+                  <Card key={userItem.id}>
+                    <CardContent className="flex items-center justify-between py-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          {userItem.role === 'admin' ? (
+                            <ShieldCheck className="h-5 w-5 text-primary" />
+                          ) : (
+                            <Shield className="h-5 w-5 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold">
+                            {userItem.full_name || 'Fără nume'}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            {userItem.role === 'admin' ? 'Administrator' : 'Utilizator'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Select
+                          value={userItem.role}
+                          onValueChange={(value: 'admin' | 'user') => handleChangeRole(userItem.user_id, value)}
+                        >
+                          <SelectTrigger className="w-[140px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="user">Utilizator</SelectItem>
+                            <SelectItem value="admin">Administrator</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+
+                {users.length === 0 && (
+                  <Card>
+                    <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                      <p className="text-muted-foreground mb-4">Nu există utilizatori înregistrați</p>
+                      <Button onClick={() => setNewUserDialogOpen(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Creează primul utilizator
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        {/* Doctor Add/Edit Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
@@ -361,9 +623,74 @@ export default function Admin() {
                 <X className="h-4 w-4 mr-2" />
                 Anulează
               </Button>
-              <Button onClick={handleSave}>
+              <Button onClick={handleSaveDoctor}>
                 <Save className="h-4 w-4 mr-2" />
                 {editingDoctor ? 'Salvează' : 'Adaugă'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* New User Dialog */}
+        <Dialog open={newUserDialogOpen} onOpenChange={setNewUserDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Creează Utilizator Nou</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="user-name">Nume complet</Label>
+                <Input
+                  id="user-name"
+                  value={newUserData.fullName}
+                  onChange={(e) => setNewUserData({ ...newUserData, fullName: e.target.value })}
+                  placeholder="Ion Popescu"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="user-email">Email *</Label>
+                <Input
+                  id="user-email"
+                  type="email"
+                  value={newUserData.email}
+                  onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })}
+                  placeholder="email@exemplu.ro"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="user-password">Parolă *</Label>
+                <Input
+                  id="user-password"
+                  type="password"
+                  value={newUserData.password}
+                  onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
+                  placeholder="Minim 6 caractere"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Rol</Label>
+                <Select
+                  value={newUserData.role}
+                  onValueChange={(value: 'admin' | 'user') => setNewUserData({ ...newUserData, role: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">Utilizator</SelectItem>
+                    <SelectItem value="admin">Administrator</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setNewUserDialogOpen(false)}>
+                <X className="h-4 w-4 mr-2" />
+                Anulează
+              </Button>
+              <Button onClick={handleCreateUser} disabled={creatingUser}>
+                <Save className="h-4 w-4 mr-2" />
+                {creatingUser ? 'Se creează...' : 'Creează'}
               </Button>
             </DialogFooter>
           </DialogContent>
