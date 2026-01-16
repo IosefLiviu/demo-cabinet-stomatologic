@@ -279,7 +279,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header onOpenSettings={() => setShowCabinetSettings(true)} />
+      <Header />
 
       <main className="container px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
