@@ -64,7 +64,7 @@ export function TreatmentListDialog({
         onClose();
       }
     }}>
-      <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-[700px] h-[85vh] overflow-hidden flex flex-col min-h-0">
         <DialogHeader>
           <DialogTitle>Lista de Intervenții</DialogTitle>
         </DialogHeader>
@@ -81,7 +81,7 @@ export function TreatmentListDialog({
         </div>
 
         {/* Treatments List */}
-        <ScrollArea className="flex-1 max-h-[60vh] -mx-6 px-6">
+        <ScrollArea className="flex-1 min-h-0 -mx-6 px-6">
           <div className="space-y-4 pb-4">
             {sortedCategories.map((category) => (
               <div key={category} className="space-y-1">
