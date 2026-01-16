@@ -158,6 +158,7 @@ export function AppointmentForm({
               price: editingAppointment.price || treatment.default_price || 0,
               decont: treatment.decont || 0,
               coPlata: treatment.co_plata || 0,
+              duration: editingAppointment.duration || treatment.default_duration || 30,
               selectedTeeth: [],
             }]);
           } else {
