@@ -2,6 +2,18 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+export interface AppointmentTreatment {
+  id: string;
+  appointment_id: string;
+  treatment_id?: string;
+  treatment_name: string;
+  price: number;
+  decont: number;
+  co_plata: number;
+  duration: number;
+  tooth_numbers: number[];
+}
+
 export interface AppointmentDB {
   id: string;
   patient_id: string;
@@ -29,6 +41,7 @@ export interface AppointmentDB {
     name: string;
     default_duration: number;
   };
+  appointment_treatments?: AppointmentTreatment[];
 }
 
 export type AppointmentInsert = {
@@ -41,6 +54,17 @@ export type AppointmentInsert = {
   status?: string;
   notes?: string;
   price?: number;
+};
+
+export type AppointmentTreatmentInsert = {
+  appointment_id: string;
+  treatment_id?: string;
+  treatment_name: string;
+  price: number;
+  decont: number;
+  co_plata: number;
+  duration: number;
+  tooth_numbers: number[];
 };
 
 export function useAppointmentsDB() {
@@ -56,7 +80,8 @@ export function useAppointmentsDB() {
         .select(`
           *,
           patients (id, first_name, last_name, phone, allergies),
-          treatments (id, name, default_duration)
+          treatments (id, name, default_duration),
+          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, duration, tooth_numbers)
         `)
         .order('start_time', { ascending: true });
 
@@ -88,7 +113,8 @@ export function useAppointmentsDB() {
         .select(`
           *,
           patients (id, first_name, last_name, phone, allergies),
-          treatments (id, name, default_duration)
+          treatments (id, name, default_duration),
+          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, duration, tooth_numbers)
         `)
         .gte('appointment_date', startDate)
         .lte('appointment_date', endDate)
@@ -219,6 +245,64 @@ export function useAppointmentsDB() {
     );
   };
 
+  const saveAppointmentTreatments = async (appointmentId: string, treatments: AppointmentTreatmentInsert[]) => {
+    try {
+      // First delete existing treatments for this appointment
+      await supabase
+        .from('appointment_treatments')
+        .delete()
+        .eq('appointment_id', appointmentId);
+
+      // Then insert new treatments
+      if (treatments.length > 0) {
+        const treatmentsWithAppointmentId = treatments.map(t => ({
+          ...t,
+          appointment_id: appointmentId,
+        }));
+
+        const { error } = await supabase
+          .from('appointment_treatments')
+          .insert(treatmentsWithAppointmentId);
+
+        if (error) throw error;
+      }
+      return true;
+    } catch (error: any) {
+      console.error('Error saving appointment treatments:', error);
+      toast({
+        title: 'Eroare',
+        description: 'Nu s-au putut salva intervențiile',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
+  const fetchAppointmentTreatments = async (appointmentId: string): Promise<AppointmentTreatment[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('appointment_treatments')
+        .select('*')
+        .eq('appointment_id', appointmentId);
+
+      if (error) throw error;
+      return (data || []).map(t => ({
+        id: t.id,
+        appointment_id: t.appointment_id,
+        treatment_id: t.treatment_id || undefined,
+        treatment_name: t.treatment_name,
+        price: Number(t.price) || 0,
+        decont: Number(t.decont) || 0,
+        co_plata: Number(t.co_plata) || 0,
+        duration: t.duration || 30,
+        tooth_numbers: t.tooth_numbers || [],
+      }));
+    } catch (error: any) {
+      console.error('Error fetching appointment treatments:', error);
+      return [];
+    }
+  };
+
   return {
     appointments,
     loading,
@@ -229,5 +313,7 @@ export function useAppointmentsDB() {
     deleteAppointment,
     getAppointmentsForDate,
     isSlotOccupied,
+    saveAppointmentTreatments,
+    fetchAppointmentTreatments,
   };
 }

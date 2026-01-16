@@ -48,6 +48,16 @@ const Index = () => {
     notes?: string;
     price?: number;
   } | undefined>();
+  const [existingInterventions, setExistingInterventions] = useState<{
+    id: string;
+    treatmentId: string;
+    treatmentName: string;
+    price: number;
+    decont: number;
+    coPlata: number;
+    duration: number;
+    selectedTeeth: number[];
+  }[]>([]);
 
   const { patients, loading: patientsLoading, addPatient, updatePatient, deletePatient } = usePatients();
   const { 
@@ -57,7 +67,9 @@ const Index = () => {
     fetchAppointmentsRange,
     addAppointment,
     updateAppointment,
-    deleteAppointment 
+    deleteAppointment,
+    saveAppointmentTreatments,
+    fetchAppointmentTreatments 
   } = useAppointmentsDB();
   const { treatments } = useTreatments();
   const { cabinets, updateCabinetDoctor } = useCabinets();
@@ -96,6 +108,7 @@ const Index = () => {
     setSelectedTime(time);
     setSelectedCabinetForForm(cabinetId);
     setEditingAppointmentData(undefined);
+    setExistingInterventions([]);
     setShowAppointmentForm(true);
   };
 
@@ -103,10 +116,11 @@ const Index = () => {
     setSelectedTime(undefined);
     setSelectedCabinetForForm(undefined);
     setEditingAppointmentData(undefined);
+    setExistingInterventions([]);
     setShowAppointmentForm(true);
   };
 
-  const handleAppointmentClick = (appointment: Appointment) => {
+  const handleAppointmentClick = async (appointment: Appointment) => {
     // Find the full appointment data from DB
     const dbAppointment = appointments.find(a => a.id === appointment.id);
     
@@ -123,6 +137,38 @@ const Index = () => {
       notes: appointment.notes,
       price: dbAppointment?.price || undefined,
     });
+
+    // Load existing interventions from DB
+    if (dbAppointment?.appointment_treatments && dbAppointment.appointment_treatments.length > 0) {
+      setExistingInterventions(dbAppointment.appointment_treatments.map(t => ({
+        id: t.id,
+        treatmentId: t.treatment_id || '',
+        treatmentName: t.treatment_name,
+        price: t.price,
+        decont: t.decont,
+        coPlata: t.co_plata,
+        duration: t.duration,
+        selectedTeeth: t.tooth_numbers || [],
+      })));
+    } else {
+      // Fallback: fetch from DB if not included
+      const treatmentsData = await fetchAppointmentTreatments(appointment.id);
+      if (treatmentsData.length > 0) {
+        setExistingInterventions(treatmentsData.map(t => ({
+          id: t.id,
+          treatmentId: t.treatment_id || '',
+          treatmentName: t.treatment_name,
+          price: t.price,
+          decont: t.decont,
+          coPlata: t.co_plata,
+          duration: t.duration,
+          selectedTeeth: t.tooth_numbers || [],
+        })));
+      } else {
+        setExistingInterventions([]);
+      }
+    }
+    
     setShowAppointmentForm(true);
   };
 
@@ -164,14 +210,34 @@ const Index = () => {
       price: formData.price,
     };
 
+    let appointmentId: string | undefined;
+    
     if (editingAppointmentData) {
       await updateAppointment(editingAppointmentData.id, appointmentPayload);
+      appointmentId = editingAppointmentData.id;
     } else {
-      await addAppointment(appointmentPayload);
+      const newAppointment = await addAppointment(appointmentPayload);
+      appointmentId = newAppointment?.id;
+    }
+
+    // Save appointment treatments
+    if (appointmentId && formData.selectedTreatments.length > 0) {
+      const treatmentsToSave = formData.selectedTreatments.map(t => ({
+        appointment_id: appointmentId!,
+        treatment_id: t.treatmentId || undefined,
+        treatment_name: t.treatmentName,
+        price: t.price,
+        decont: t.decont,
+        co_plata: t.coPlata,
+        duration: t.duration,
+        tooth_numbers: t.selectedTeeth || [],
+      }));
+      await saveAppointmentTreatments(appointmentId, treatmentsToSave);
     }
     
     setShowAppointmentForm(false);
     setEditingAppointmentData(undefined);
+    setExistingInterventions([]);
     fetchAppointments(format(selectedDate, 'yyyy-MM-dd'));
   };
 
@@ -301,6 +367,7 @@ const Index = () => {
         onClose={() => {
           setShowAppointmentForm(false);
           setEditingAppointmentData(undefined);
+          setExistingInterventions([]);
         }}
         onSubmit={handleAppointmentSubmit}
         onDelete={editingAppointmentData ? handleAppointmentDelete : undefined}
@@ -308,6 +375,7 @@ const Index = () => {
         selectedTime={selectedTime}
         selectedCabinet={selectedCabinetForForm}
         editingAppointment={editingAppointmentData}
+        existingInterventions={existingInterventions}
         patients={patients}
         treatments={treatments}
         cabinets={cabinets}
