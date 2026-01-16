@@ -7,6 +7,8 @@ export interface Treatment {
   description?: string;
   default_duration: number;
   default_price?: number;
+  decont?: number;
+  co_plata?: number;
   category?: string;
   is_active: boolean;
   created_at: string;
