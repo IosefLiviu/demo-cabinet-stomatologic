@@ -316,7 +316,9 @@ export type Database = {
       treatments: {
         Row: {
           category: string | null
+          co_plata: number | null
           created_at: string
+          decont: number | null
           default_duration: number
           default_price: number | null
           description: string | null
@@ -326,7 +328,9 @@ export type Database = {
         }
         Insert: {
           category?: string | null
+          co_plata?: number | null
           created_at?: string
+          decont?: number | null
           default_duration?: number
           default_price?: number | null
           description?: string | null
@@ -336,7 +340,9 @@ export type Database = {
         }
         Update: {
           category?: string | null
+          co_plata?: number | null
           created_at?: string
+          decont?: number | null
           default_duration?: number
           default_price?: number | null
           description?: string | null
