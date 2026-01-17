@@ -16,6 +16,7 @@ export interface AppointmentTreatment {
   price: number;
   decont: number;
   co_plata: number;
+  laborator: number;
   duration: number;
   tooth_numbers: number[];
   tooth_data?: ToothDataEntry[];
@@ -83,6 +84,7 @@ export type AppointmentTreatmentInsert = {
   price: number;
   decont: number;
   co_plata: number;
+  laborator: number;
   duration: number;
   tooth_numbers: number[];
   tooth_data?: ToothDataItem[];
@@ -103,7 +105,7 @@ export function useAppointmentsDB() {
           patients (id, first_name, last_name, phone, allergies),
           treatments (id, name, default_duration),
           doctors (id, name, color),
-          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, duration, tooth_numbers, tooth_data)
+          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, laborator, duration, tooth_numbers, tooth_data)
         `)
         .order('start_time', { ascending: true });
 
@@ -137,7 +139,7 @@ export function useAppointmentsDB() {
           patients (id, first_name, last_name, phone, allergies),
           treatments (id, name, default_duration),
           doctors (id, name, color),
-          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, duration, tooth_numbers)
+          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, laborator, duration, tooth_numbers, tooth_data)
         `)
         .gte('appointment_date', startDate)
         .lte('appointment_date', endDate)
@@ -285,6 +287,7 @@ export function useAppointmentsDB() {
           price: t.price,
           decont: t.decont,
           co_plata: t.co_plata,
+          laborator: t.laborator || 0,
           duration: t.duration,
           tooth_numbers: t.tooth_numbers,
           tooth_data: t.tooth_data ? JSON.parse(JSON.stringify(t.tooth_data)) : [],
@@ -324,6 +327,7 @@ export function useAppointmentsDB() {
         price: Number(t.price) || 0,
         decont: Number(t.decont) || 0,
         co_plata: Number(t.co_plata) || 0,
+        laborator: Number(t.laborator) || 0,
         duration: t.duration || 30,
         tooth_numbers: t.tooth_numbers || [],
         tooth_data: (t.tooth_data as unknown as ToothDataEntry[]) || [],

@@ -22,6 +22,7 @@ export type Database = {
           decont: number | null
           duration: number | null
           id: string
+          laborator: number | null
           price: number | null
           tooth_data: Json | null
           tooth_numbers: number[] | null
@@ -35,6 +36,7 @@ export type Database = {
           decont?: number | null
           duration?: number | null
           id?: string
+          laborator?: number | null
           price?: number | null
           tooth_data?: Json | null
           tooth_numbers?: number[] | null
@@ -48,6 +50,7 @@ export type Database = {
           decont?: number | null
           duration?: number | null
           id?: string
+          laborator?: number | null
           price?: number | null
           tooth_data?: Json | null
           tooth_numbers?: number[] | null

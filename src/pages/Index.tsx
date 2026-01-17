@@ -149,13 +149,13 @@ const Index = () => {
 
     // Load existing interventions from DB
     if (dbAppointment?.appointment_treatments && dbAppointment.appointment_treatments.length > 0) {
-      setExistingInterventions(dbAppointment.appointment_treatments.map(t => ({
+      setExistingInterventions(dbAppointment.appointment_treatments.map((t: any) => ({
         id: t.id,
         treatmentId: t.treatment_id || '',
         treatmentName: t.treatment_name,
         price: t.price,
         cas: (t.decont || 0) + (t.co_plata || 0),
-        laborator: 0,
+        laborator: t.laborator || 0,
         duration: t.duration,
         selectedTeeth: t.tooth_numbers || [],
         teethDetails: (t.tooth_data || []).map((td: any) => ({
@@ -174,7 +174,7 @@ const Index = () => {
           treatmentName: t.treatment_name,
           price: t.price,
           cas: (t.decont || 0) + (t.co_plata || 0),
-          laborator: 0,
+          laborator: t.laborator || 0,
           duration: t.duration,
           selectedTeeth: t.tooth_numbers || [],
           teethDetails: (t.tooth_data || []).map(td => ({
@@ -249,6 +249,7 @@ const Index = () => {
         price: t.price,
         decont: t.cas,
         co_plata: 0,
+        laborator: t.laborator || 0,
         duration: t.duration,
         tooth_numbers: t.selectedTeeth || [],
         tooth_data: t.teethDetails || [],
