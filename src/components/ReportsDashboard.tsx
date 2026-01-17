@@ -136,11 +136,9 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       .sort((a, b) => b.value - a.value);
   }, [filteredAppointments]);
 
-  // Doctor revenue data
+  // Doctor revenue data - includes all appointments (scheduled shows as "planificat", completed as "încasat/restant")
   const doctorRevenueData = useMemo(() => {
-    const doctorStats = appointments.reduce((acc, a) => {
-      if (a.status !== 'completed') return acc;
-      
+    const doctorStats = filteredAppointments.reduce((acc, a) => {
       const doctorName = a.doctors?.name || 'Fără doctor';
       const doctorColor = a.doctors?.color || '#6B7280';
       
@@ -150,26 +148,31 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
           revenue: 0, 
           paid: 0, 
           unpaid: 0, 
+          scheduled: 0,
           appointments: 0,
           color: doctorColor 
         };
       }
       
       const price = a.price || 0;
-      acc[doctorName].revenue += price;
       acc[doctorName].appointments += 1;
       
-      if (a.is_paid) {
-        acc[doctorName].paid += price;
-      } else {
-        acc[doctorName].unpaid += price;
+      if (a.status === 'completed') {
+        acc[doctorName].revenue += price;
+        if (a.is_paid) {
+          acc[doctorName].paid += price;
+        } else {
+          acc[doctorName].unpaid += price;
+        }
+      } else if (a.status === 'scheduled') {
+        acc[doctorName].scheduled += price;
       }
       
       return acc;
-    }, {} as Record<string, { name: string; revenue: number; paid: number; unpaid: number; appointments: number; color: string }>);
+    }, {} as Record<string, { name: string; revenue: number; paid: number; unpaid: number; scheduled: number; appointments: number; color: string }>);
 
-    return Object.values(doctorStats).sort((a, b) => b.revenue - a.revenue);
-  }, [appointments]);
+    return Object.values(doctorStats).sort((a, b) => (b.revenue + b.scheduled) - (a.revenue + a.scheduled));
+  }, [filteredAppointments]);
 
   return (
     <div className="space-y-6">
@@ -389,58 +392,81 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
             <p className="text-sm text-muted-foreground text-center py-4">Nu există date pentru perioada selectată</p>
           ) : (
             <div className="space-y-4">
-              {doctorRevenueData.map((doctor) => (
-                <div key={doctor.name} className="p-4 rounded-lg border bg-card">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: doctor.color }}
-                      />
-                      <span className="font-medium">{doctor.name}</span>
-                      <span className="text-sm text-muted-foreground">({doctor.appointments} programări)</span>
+              {doctorRevenueData.map((doctor) => {
+                const totalValue = doctor.revenue + doctor.scheduled;
+                return (
+                  <div key={doctor.name} className="p-4 rounded-lg border bg-card">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: doctor.color }}
+                        />
+                        <span className="font-medium">{doctor.name}</span>
+                        <span className="text-sm text-muted-foreground">({doctor.appointments} programări)</span>
+                      </div>
+                      <span className="text-lg font-bold">{totalValue.toLocaleString()} RON</span>
                     </div>
-                    <span className="text-lg font-bold">{doctor.revenue.toLocaleString()} RON</span>
+                    <div className="flex flex-wrap gap-4 text-sm">
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-green-500" />
+                        <span className="text-muted-foreground">Încasat:</span>
+                        <span className="font-medium text-green-600">{doctor.paid.toLocaleString()} RON</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-orange-500" />
+                        <span className="text-muted-foreground">Restant:</span>
+                        <span className="font-medium text-orange-600">{doctor.unpaid.toLocaleString()} RON</span>
+                      </div>
+                      {doctor.scheduled > 0 && (
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-blue-500" />
+                          <span className="text-muted-foreground">Planificat:</span>
+                          <span className="font-medium text-blue-600">{doctor.scheduled.toLocaleString()} RON</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-2">
+                      <div className="h-2 rounded-full bg-muted overflow-hidden flex">
+                        {totalValue > 0 && (
+                          <>
+                            <div 
+                              className="h-full bg-green-500 transition-all"
+                              style={{ width: `${(doctor.paid / totalValue) * 100}%` }}
+                            />
+                            <div 
+                              className="h-full bg-orange-500 transition-all"
+                              style={{ width: `${(doctor.unpaid / totalValue) * 100}%` }}
+                            />
+                            <div 
+                              className="h-full bg-blue-500 transition-all"
+                              style={{ width: `${(doctor.scheduled / totalValue) * 100}%` }}
+                            />
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex gap-4 text-sm">
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-green-500" />
-                      <span className="text-muted-foreground">Încasat:</span>
-                      <span className="font-medium text-green-600">{doctor.paid.toLocaleString()} RON</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-orange-500" />
-                      <span className="text-muted-foreground">Restant:</span>
-                      <span className="font-medium text-orange-600">{doctor.unpaid.toLocaleString()} RON</span>
-                    </div>
-                  </div>
-                  <div className="mt-2">
-                    <div className="h-2 rounded-full bg-muted overflow-hidden flex">
-                      <div 
-                        className="h-full bg-green-500 transition-all"
-                        style={{ width: doctor.revenue > 0 ? `${(doctor.paid / doctor.revenue) * 100}%` : '0%' }}
-                      />
-                      <div 
-                        className="h-full bg-orange-500 transition-all"
-                        style={{ width: doctor.revenue > 0 ? `${(doctor.unpaid / doctor.revenue) * 100}%` : '0%' }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               
               {/* Total Summary */}
               <div className="p-4 rounded-lg border-2 border-primary/20 bg-primary/5">
                 <div className="flex items-center justify-between">
                   <span className="font-semibold">Total</span>
-                  <span className="text-xl font-bold">{doctorRevenueData.reduce((sum, d) => sum + d.revenue, 0).toLocaleString()} RON</span>
+                  <span className="text-xl font-bold">
+                    {doctorRevenueData.reduce((sum, d) => sum + d.revenue + d.scheduled, 0).toLocaleString()} RON
+                  </span>
                 </div>
-                <div className="flex gap-4 text-sm mt-1">
+                <div className="flex flex-wrap gap-4 text-sm mt-1">
                   <span className="text-green-600 font-medium">
                     Încasat: {doctorRevenueData.reduce((sum, d) => sum + d.paid, 0).toLocaleString()} RON
                   </span>
                   <span className="text-orange-600 font-medium">
                     Restant: {doctorRevenueData.reduce((sum, d) => sum + d.unpaid, 0).toLocaleString()} RON
+                  </span>
+                  <span className="text-blue-600 font-medium">
+                    Planificat: {doctorRevenueData.reduce((sum, d) => sum + d.scheduled, 0).toLocaleString()} RON
                   </span>
                 </div>
               </div>
