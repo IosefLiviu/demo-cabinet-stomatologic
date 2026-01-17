@@ -219,8 +219,8 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         acc[doctorName].scheduled += price;
       }
       
-      // Calculate totalWithNetLab: paid + netLabRevenue
-      acc[doctorName].totalWithNetLab = acc[doctorName].paid + acc[doctorName].netLabRevenue;
+      // Calculate totalWithNetLab: paid - laborator (real income after lab costs)
+      acc[doctorName].totalWithNetLab = acc[doctorName].paid - acc[doctorName].laborator;
       
       return acc;
     }, {} as Record<string, { name: string; revenue: number; paid: number; paidCard: number; paidCash: number; unpaid: number; scheduled: number; cas: number; laborator: number; netLabRevenue: number; totalWithNetLab: number; appointments: number; color: string }>);
