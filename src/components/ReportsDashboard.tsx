@@ -76,6 +76,16 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     const completed = filteredAppointments.filter(a => a.status === 'completed');
     const totalRevenue = completed.reduce((sum, a) => sum + (a.price || 0), 0);
     
+    // Calculate CAS from appointment treatments
+    let totalCas = 0;
+    completed.forEach(a => {
+      if (a.appointment_treatments && a.appointment_treatments.length > 0) {
+        a.appointment_treatments.forEach(t => {
+          totalCas += (t.decont || 0);
+        });
+      }
+    });
+    
     // Separate by payment method
     let cardRevenue = 0;
     let cashRevenue = 0;
@@ -123,6 +133,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       cashRevenue,
       unpaidRevenue,
       scheduledRevenue,
+      totalCas,
       avgDuration: Math.round(avgDuration),
       uniquePatients,
     };
@@ -173,7 +184,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       .sort((a, b) => b.value - a.value);
   }, [filteredAppointments]);
 
-  // Doctor revenue data - includes all appointments with cash/card breakdown
+  // Doctor revenue data - includes all appointments with cash/card breakdown and CAS
   const doctorRevenueData = useMemo(() => {
     const doctorStats = filteredAppointments.reduce((acc, a) => {
       const doctorName = a.doctors?.name || 'Fără doctor';
@@ -188,6 +199,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
           paidCash: 0,
           unpaid: 0, 
           scheduled: 0,
+          cas: 0,
           appointments: 0,
           color: doctorColor 
         };
@@ -198,6 +210,14 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       
       if (a.status === 'completed') {
         acc[doctorName].revenue += price;
+        
+        // Calculate CAS from appointment treatments
+        if (a.appointment_treatments && a.appointment_treatments.length > 0) {
+          a.appointment_treatments.forEach(t => {
+            acc[doctorName].cas += (t.decont || 0);
+          });
+        }
+        
         const method = getPaymentMethod(a.notes);
         if (method === 'card') {
           acc[doctorName].paidCard += price;
@@ -217,7 +237,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       }
       
       return acc;
-    }, {} as Record<string, { name: string; revenue: number; paid: number; paidCard: number; paidCash: number; unpaid: number; scheduled: number; appointments: number; color: string }>);
+    }, {} as Record<string, { name: string; revenue: number; paid: number; paidCard: number; paidCash: number; unpaid: number; scheduled: number; cas: number; appointments: number; color: string }>);
 
     return Object.values(doctorStats).sort((a, b) => (b.revenue + b.scheduled) - (a.revenue + a.scheduled));
   }, [filteredAppointments]);
@@ -243,6 +263,8 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       ['Cash (RON)', stats.cashRevenue],
       ['Neachitat (RON)', stats.unpaidRevenue],
       ['Planificat (RON)', stats.scheduledRevenue],
+      ['', ''],
+      ['CAS Decontat (RON)', stats.totalCas],
     ];
     const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
     summarySheet['!cols'] = [{ wch: 25 }, { wch: 30 }];
@@ -250,7 +272,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     
     // Sheet 2: Doctor Revenue
     const doctorData = [
-      ['Doctor', 'Programări', 'Card (RON)', 'Cash (RON)', 'Neachitat (RON)', 'Planificat (RON)', 'Total (RON)'],
+      ['Doctor', 'Programări', 'Card (RON)', 'Cash (RON)', 'Neachitat (RON)', 'Planificat (RON)', 'CAS (RON)', 'Total (RON)'],
       ...doctorRevenueData.map(d => [
         d.name,
         d.appointments,
@@ -258,20 +280,22 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         d.paidCash,
         d.unpaid,
         d.scheduled,
+        d.cas,
         d.revenue + d.scheduled
       ]),
-      ['', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', ''],
       ['TOTAL', 
         doctorRevenueData.reduce((sum, d) => sum + d.appointments, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.paidCard, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.paidCash, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.unpaid, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.scheduled, 0),
+        doctorRevenueData.reduce((sum, d) => sum + d.cas, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.revenue + d.scheduled, 0)
       ]
     ];
     const doctorSheet = XLSX.utils.aoa_to_sheet(doctorData);
-    doctorSheet['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+    doctorSheet['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }];
     XLSX.utils.book_append_sheet(workbook, doctorSheet, 'Încasări Doctori');
     
     // Sheet 3: Detailed Appointments
@@ -383,7 +407,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       </div>
 
       {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Programări</CardTitle>
@@ -406,6 +430,19 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
             <div className="text-2xl font-bold">{stats.totalRevenue.toLocaleString()} RON</div>
             <p className="text-xs text-muted-foreground">
               {stats.paidRevenue.toLocaleString()} încasați, {stats.unpaidRevenue.toLocaleString()} restanți
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-cyan-200 bg-cyan-50/50 dark:border-cyan-800 dark:bg-cyan-950/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-cyan-700 dark:text-cyan-400">CAS Decontat</CardTitle>
+            <TrendingUp className="h-4 w-4 text-cyan-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-cyan-700 dark:text-cyan-400">{stats.totalCas.toLocaleString()} RON</div>
+            <p className="text-xs text-muted-foreground">
+              din tratamente finalizate
             </p>
           </CardContent>
         </Card>
@@ -581,6 +618,13 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                           <span className="font-medium text-purple-600">{doctor.scheduled.toLocaleString()} RON</span>
                         </div>
                       )}
+                      {doctor.cas > 0 && (
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-cyan-500" />
+                          <span className="text-muted-foreground">CAS:</span>
+                          <span className="font-medium text-cyan-600">{doctor.cas.toLocaleString()} RON</span>
+                        </div>
+                      )}
                     </div>
                     <div className="mt-2">
                       <div className="h-2 rounded-full bg-muted overflow-hidden flex">
@@ -630,6 +674,9 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                   </span>
                   <span className="text-purple-600 font-medium">
                     Planificat: {doctorRevenueData.reduce((sum, d) => sum + d.scheduled, 0).toLocaleString()} RON
+                  </span>
+                  <span className="text-cyan-600 font-medium">
+                    CAS: {doctorRevenueData.reduce((sum, d) => sum + d.cas, 0).toLocaleString()} RON
                   </span>
                 </div>
               </div>
