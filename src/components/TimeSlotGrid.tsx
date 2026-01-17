@@ -88,21 +88,21 @@ export function TimeSlotGrid({
             </div>
             {cabinetsToShow.map((cabinet) => {
               const appointment = getAppointmentForSlot(time, cabinet.id);
-              return (
+                return (
                 <div
                   key={cabinet.id}
-                  className="p-1.5 border-r border-border last:border-r-0 min-h-[60px]"
+                  className="p-1.5 border-r border-border last:border-r-0 h-[60px]"
                 >
                   {appointment ? (
                     <button
                       onClick={() => onAppointmentClick(appointment)}
                       className={cn(
-                        "w-full h-full rounded-md p-2 text-left transition-all cursor-pointer",
+                        "w-full h-full rounded-md p-2 text-left transition-all cursor-pointer overflow-hidden",
                         cabinetBgLightColors[cabinet.id]
                       )}
                     >
-                      <div className="flex items-center gap-1.5">
-                        <User className="h-3 w-3 text-foreground/70" />
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <User className="h-3 w-3 flex-shrink-0 text-foreground/70" />
                         <span className="text-xs font-medium text-foreground truncate">
                           {appointment.patientName}
                         </span>
