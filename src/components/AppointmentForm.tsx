@@ -273,21 +273,21 @@ export function AppointmentForm({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[850px] h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>{editingAppointment ? 'Editare programare' : 'Programare nouă'}</span>
-            <span className="text-sm font-normal text-muted-foreground">
+      <DialogContent className="w-[95vw] max-w-[850px] h-[90vh] max-h-[90vh] overflow-hidden flex flex-col p-3 sm:p-6">
+        <DialogHeader className="pb-2 sm:pb-4">
+          <DialogTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+            <span className="text-base sm:text-lg">{editingAppointment ? 'Editare programare' : 'Programare nouă'}</span>
+            <span className="text-xs sm:text-sm font-normal text-muted-foreground">
               {format(selectedDate, 'dd.MM.yyyy')}
             </span>
           </DialogTitle>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 pr-4">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <ScrollArea className="flex-1 -mx-3 sm:-mx-6 px-3 sm:px-6">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 pb-4">
             {/* Patient Selection */}
             <div className="space-y-2">
-              <Label>Pacient *</Label>
+              <Label className="text-sm">Pacient *</Label>
               {!isNewPatient && !formData.patientId ? (
                 <Popover open={patientPopoverOpen} onOpenChange={setPatientPopoverOpen}>
                   <PopoverTrigger asChild>
@@ -295,29 +295,30 @@ export function AppointmentForm({
                       type="button"
                       variant="outline"
                       role="combobox"
-                      className="w-full justify-between"
+                      className="w-full justify-between text-sm h-9 sm:h-10"
                     >
                       <span className="text-muted-foreground">Caută pacient...</span>
                       <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[400px] p-0" align="start">
+                  <PopoverContent className="w-[calc(100vw-2rem)] sm:w-[400px] p-0" align="start">
                     <Command>
                       <CommandInput 
                         placeholder="Caută după nume sau telefon..." 
                         value={patientSearch}
                         onValueChange={setPatientSearch}
+                        className="text-sm"
                       />
                       <CommandList>
                         <CommandEmpty>
                           <div className="p-2 text-center">
-                            <p className="text-sm text-muted-foreground mb-2">Niciun pacient găsit</p>
+                            <p className="text-xs sm:text-sm text-muted-foreground mb-2">Niciun pacient găsit</p>
                             <Button 
                               type="button" 
                               variant="outline" 
                               size="sm" 
                               onClick={handleNewPatient}
-                              className="gap-2"
+                              className="gap-2 text-xs sm:text-sm"
                             >
                               <UserPlus className="h-4 w-4" />
                               Adaugă pacient nou
@@ -333,10 +334,10 @@ export function AppointmentForm({
                               className="cursor-pointer"
                             >
                               <div className="flex flex-col">
-                                <span className="font-medium">
+                                <span className="font-medium text-sm">
                                   {patient.first_name} {patient.last_name}
                                 </span>
-                                <span className="text-sm text-muted-foreground">
+                                <span className="text-xs text-muted-foreground">
                                   {patient.phone}
                                 </span>
                               </div>
@@ -346,7 +347,7 @@ export function AppointmentForm({
                         <CommandGroup>
                           <CommandItem 
                             onSelect={handleNewPatient}
-                            className="cursor-pointer text-primary"
+                            className="cursor-pointer text-primary text-sm"
                           >
                             <UserPlus className="h-4 w-4 mr-2" />
                             Adaugă pacient nou
@@ -358,16 +359,17 @@ export function AppointmentForm({
                 </Popover>
               ) : (
                 <div className="flex gap-2">
-                  <div className="flex-1 p-3 rounded-md border bg-muted/50">
-                    <div className="font-medium">{formData.patientName || 'Pacient nou'}</div>
+                  <div className="flex-1 p-2 sm:p-3 rounded-md border bg-muted/50">
+                    <div className="font-medium text-sm">{formData.patientName || 'Pacient nou'}</div>
                     {formData.patientPhone && (
-                      <div className="text-sm text-muted-foreground">{formData.patientPhone}</div>
+                      <div className="text-xs text-muted-foreground">{formData.patientPhone}</div>
                     )}
                   </div>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
+                    className="text-xs sm:text-sm"
                     onClick={() => {
                       setFormData({ ...formData, patientId: '', patientName: '', patientPhone: '' });
                       setIsNewPatient(false);
@@ -381,96 +383,101 @@ export function AppointmentForm({
 
             {/* New Patient Fields */}
             {isNewPatient && (
-              <div className="grid gap-4 sm:grid-cols-2 p-3 rounded-md border border-dashed">
-                <div className="space-y-2">
-                  <Label htmlFor="patientName">Nume complet *</Label>
+              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 p-2 sm:p-3 rounded-md border border-dashed">
+                <div className="space-y-1.5">
+                  <Label htmlFor="patientName" className="text-sm">Nume complet *</Label>
                   <Input
                     id="patientName"
                     value={formData.patientName}
                     onChange={(e) => setFormData({ ...formData, patientName: e.target.value })}
                     placeholder="Popescu Ion"
                     required
+                    className="h-9 sm:h-10 text-sm"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="patientPhone">Telefon *</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="patientPhone" className="text-sm">Telefon *</Label>
                   <Input
                     id="patientPhone"
                     value={formData.patientPhone}
                     onChange={(e) => setFormData({ ...formData, patientPhone: e.target.value })}
                     placeholder="07xx xxx xxx"
                     required
+                    className="h-9 sm:h-10 text-sm"
                   />
                 </div>
               </div>
             )}
 
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="cabinet">Cabinet *</Label>
-                <Select
-                  value={String(formData.cabinetId)}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, cabinetId: parseInt(value) })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border shadow-lg z-50">
-                    {cabinets.map((cabinet) => (
-                      <SelectItem key={cabinet.id} value={String(cabinet.id)}>
-                        {cabinet.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="doctor">Doctor</Label>
-                <Select
-                  value={formData.doctorId}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, doctorId: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selectează doctor" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border shadow-lg z-50">
-                    {doctors.map((doctor) => (
-                      <SelectItem key={doctor.id} value={doctor.id}>
-                        <div className="flex items-center gap-2">
-                          <div 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: doctor.color }}
-                          />
-                          {doctor.name}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="time">Ora *</Label>
-                <Select
-                  value={formData.time}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, time: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border shadow-lg z-50">
-                    {TIME_SLOTS.map((time) => (
-                      <SelectItem key={time} value={time}>
-                        {time}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {/* Cabinet, Doctor, Time - Horizontal scroll on mobile */}
+            <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+              <div className="grid gap-3 sm:gap-4 grid-cols-3 min-w-[400px] sm:min-w-0">
+                <div className="space-y-1.5">
+                  <Label htmlFor="cabinet" className="text-xs sm:text-sm">Cabinet *</Label>
+                  <Select
+                    value={String(formData.cabinetId)}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, cabinetId: parseInt(value) })
+                    }
+                  >
+                    <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border shadow-lg z-50">
+                      {cabinets.map((cabinet) => (
+                        <SelectItem key={cabinet.id} value={String(cabinet.id)} className="text-sm">
+                          {cabinet.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="doctor" className="text-xs sm:text-sm">Doctor</Label>
+                  <Select
+                    value={formData.doctorId}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, doctorId: value })
+                    }
+                  >
+                    <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
+                      <SelectValue placeholder="Selectează" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border shadow-lg z-50">
+                      {doctors.map((doctor) => (
+                        <SelectItem key={doctor.id} value={doctor.id} className="text-sm">
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0" 
+                              style={{ backgroundColor: doctor.color }}
+                            />
+                            <span className="truncate">{doctor.name}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="time" className="text-xs sm:text-sm">Ora *</Label>
+                  <Select
+                    value={formData.time}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, time: value })
+                    }
+                  >
+                    <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border shadow-lg z-50">
+                      {TIME_SLOTS.map((time) => (
+                        <SelectItem key={time} value={time} className="text-sm">
+                          {time}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
@@ -482,8 +489,8 @@ export function AppointmentForm({
               isCasDisabled={isCasDisabled}
             />
 
-            <div className="space-y-2">
-              <Label htmlFor="notes">Observații</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="notes" className="text-sm">Observații</Label>
               <Textarea
                 id="notes"
                 value={formData.notes}
@@ -491,11 +498,13 @@ export function AppointmentForm({
                   setFormData({ ...formData, notes: e.target.value })
                 }
                 placeholder="Note adiționale..."
-                rows={3}
+                rows={2}
+                className="text-sm resize-none"
               />
             </div>
 
-            <div className="flex justify-between gap-3 pt-4">
+            {/* Action buttons - stacked on mobile */}
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2 sm:gap-3 pt-2 sm:pt-4">
               <div>
                 {editingAppointment && onDelete && (
                   // Only show delete button if not completed OR if user is admin
@@ -504,7 +513,7 @@ export function AppointmentForm({
                       type="button" 
                       variant="destructive" 
                       onClick={onDelete}
-                      className="gap-2"
+                      className="gap-2 w-full sm:w-auto text-sm h-9 sm:h-10"
                     >
                       <Trash2 className="h-4 w-4" />
                       Șterge
@@ -512,15 +521,16 @@ export function AppointmentForm({
                   )
                 )}
               </div>
-              <div className="flex gap-3">
-                <Button type="button" variant="outline" onClick={onClose}>
+              <div className="flex gap-2 sm:gap-3">
+                <Button type="button" variant="outline" onClick={onClose} className="flex-1 sm:flex-none text-sm h-9 sm:h-10">
                   Anulează
                 </Button>
                 <Button 
                   type="submit"
                   disabled={!formData.patientName || interventions.length === 0}
+                  className="flex-1 sm:flex-none text-sm h-9 sm:h-10"
                 >
-                  {editingAppointment ? 'Salvează' : 'Adaugă programare'}
+                  {editingAppointment ? 'Salvează' : 'Adaugă'}
                 </Button>
               </div>
             </div>
