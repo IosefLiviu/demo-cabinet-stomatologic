@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChart, UserCircle, Filter, Download } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { AppointmentDB } from '@/hooks/useAppointmentsDB';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RePieChart, Pie, Cell, Legend } from 'recharts';
+import { Tooltip } from 'recharts';
 import { useDoctors } from '@/hooks/useDoctors';
 import * as XLSX from 'xlsx';
 
@@ -19,7 +19,7 @@ interface ReportsDashboardProps {
   onFetchRange: (startDate: string, endDate: string) => Promise<void>;
 }
 
-const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
 export function ReportsDashboard({ appointments, loading, onFetchRange }: ReportsDashboardProps) {
   const { doctors } = useDoctors();
@@ -139,37 +139,6 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     };
   }, [filteredAppointments]);
 
-  // Treatment popularity data
-  const treatmentData = useMemo(() => {
-    const counts = filteredAppointments.reduce((acc, a) => {
-      const name = a.treatments?.name || 'Necunoscut';
-      acc[name] = (acc[name] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    return Object.entries(counts)
-      .map(([name, count]) => ({ name, value: count }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 8);
-  }, [filteredAppointments]);
-
-  // Daily appointments data
-  const dailyData = useMemo(() => {
-    const days = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
-    
-    return days.map(day => {
-      const dayStr = format(day, 'yyyy-MM-dd');
-      const dayAppointments = filteredAppointments.filter(a => a.appointment_date === dayStr);
-      const completed = dayAppointments.filter(a => a.status === 'completed');
-      
-      return {
-        date: format(day, 'dd MMM', { locale: ro }),
-        programări: dayAppointments.length,
-        finalizate: completed.length,
-        venituri: completed.reduce((sum, a) => sum + (a.price || 0), 0),
-      };
-    });
-  }, [filteredAppointments, dateRange]);
 
   // Cabinet data
   const cabinetData = useMemo(() => {
@@ -321,15 +290,6 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     ];
     XLSX.utils.book_append_sheet(workbook, appointmentsSheet, 'Programări Detaliate');
     
-    // Sheet 4: Daily Revenue (using dailyData which already exists)
-    const dailyExportData = [
-      ['Data', 'Programări', 'Finalizate', 'Venituri (RON)'],
-      ...dailyData.map(d => [d.date, d.programări, d.finalizate, d.venituri])
-    ];
-    const dailySheet = XLSX.utils.aoa_to_sheet(dailyExportData);
-    dailySheet['!cols'] = [{ wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 15 }];
-    XLSX.utils.book_append_sheet(workbook, dailySheet, 'Venituri Zilnice');
-    
     // Generate filename with date range
     const filename = `Raport_Financiar_${format(dateRange.from, 'dd-MM-yyyy')}_${format(dateRange.to, 'dd-MM-yyyy')}.xlsx`;
     
@@ -474,91 +434,6 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         </Card>
       </div>
 
-      {/* Charts */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Daily Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Programări pe zile</CardTitle>
-            <CardDescription>Evoluția programărilor în perioada selectată</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dailyData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis 
-                    dataKey="date" 
-                    fontSize={12} 
-                    tickLine={false} 
-                    axisLine={false}
-                  />
-                  <YAxis 
-                    fontSize={12} 
-                    tickLine={false} 
-                    axisLine={false}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))', 
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                  />
-                  <Bar 
-                    dataKey="programări" 
-                    fill="hsl(var(--primary))" 
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar 
-                    dataKey="finalizate" 
-                    fill="hsl(var(--secondary))" 
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Treatment Pie Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Tratamente populare</CardTitle>
-            <CardDescription>Distribuția pe tipuri de tratamente</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <RePieChart>
-                  <Pie
-                    data={treatmentData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={2}
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                    labelLine={false}
-                  >
-                    {treatmentData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))', 
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                  />
-                </RePieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Doctor Revenue */}
       <Card>
