@@ -174,6 +174,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
           scheduled: 0,
           cas: 0,
           laborator: 0,
+          netLabRevenue: 0, // Price - laborator only for treatments with laborator > 0
           appointments: 0,
           color: doctorColor 
         };
@@ -189,7 +190,13 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         if (a.appointment_treatments && a.appointment_treatments.length > 0) {
           a.appointment_treatments.forEach(t => {
             acc[doctorName].cas += (t.decont || 0);
-            acc[doctorName].laborator += (Number((t as any).laborator) || 0);
+            const labCost = Number((t as any).laborator) || 0;
+            acc[doctorName].laborator += labCost;
+            // Add to netLabRevenue only if laborator is set (> 0)
+            if (labCost > 0) {
+              const treatmentPrice = t.price || 0;
+              acc[doctorName].netLabRevenue += (treatmentPrice - labCost);
+            }
           });
         }
         
@@ -212,7 +219,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       }
       
       return acc;
-    }, {} as Record<string, { name: string; revenue: number; paid: number; paidCard: number; paidCash: number; unpaid: number; scheduled: number; cas: number; laborator: number; appointments: number; color: string }>);
+    }, {} as Record<string, { name: string; revenue: number; paid: number; paidCard: number; paidCash: number; unpaid: number; scheduled: number; cas: number; laborator: number; netLabRevenue: number; appointments: number; color: string }>);
 
     return Object.values(doctorStats).sort((a, b) => (b.revenue + b.scheduled) - (a.revenue + a.scheduled));
   }, [filteredAppointments]);
@@ -249,7 +256,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     
     // Sheet 2: Doctor Revenue
     const doctorData = [
-      ['Doctor', 'Programări', 'Card (RON)', 'Cash (RON)', 'Neachitat (RON)', 'Planificat (RON)', 'CAS (RON)', 'Laborator (RON)', 'Total (RON)'],
+      ['Doctor', 'Programări', 'Card (RON)', 'Cash (RON)', 'Neachitat (RON)', 'Planificat (RON)', 'CAS (RON)', 'Laborator (RON)', 'Venit Net Lab. (RON)', 'Total (RON)'],
       ...doctorRevenueData.map(d => [
         d.name,
         d.appointments,
@@ -259,9 +266,10 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         d.scheduled,
         d.cas,
         d.laborator,
+        d.netLabRevenue,
         d.revenue + d.scheduled
       ]),
-      ['', '', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', '', '', ''],
       ['TOTAL', 
         doctorRevenueData.reduce((sum, d) => sum + d.appointments, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.paidCard, 0),
@@ -270,11 +278,12 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         doctorRevenueData.reduce((sum, d) => sum + d.scheduled, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.cas, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.laborator, 0),
+        doctorRevenueData.reduce((sum, d) => sum + d.netLabRevenue, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.revenue + d.scheduled, 0)
       ]
     ];
     const doctorSheet = XLSX.utils.aoa_to_sheet(doctorData);
-    doctorSheet['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 15 }];
+    doctorSheet['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 18 }, { wch: 15 }];
     XLSX.utils.book_append_sheet(workbook, doctorSheet, 'Încasări Doctori');
     
     // Sheet 3: Detailed Appointments
@@ -530,6 +539,13 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                           <span className="font-medium text-fuchsia-600">{doctor.laborator.toLocaleString()} RON</span>
                         </div>
                       )}
+                      {doctor.netLabRevenue !== 0 && (
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-indigo-500" />
+                          <span className="text-muted-foreground">Venit Net Lab.:</span>
+                          <span className="font-medium text-indigo-600">{doctor.netLabRevenue.toLocaleString()} RON</span>
+                        </div>
+                      )}
                     </div>
                     <div className="mt-2">
                       <div className="h-2 rounded-full bg-muted overflow-hidden flex">
@@ -585,6 +601,9 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                   </span>
                   <span className="text-fuchsia-600 font-medium">
                     Laborator: {doctorRevenueData.reduce((sum, d) => sum + d.laborator, 0).toLocaleString()} RON
+                  </span>
+                  <span className="text-indigo-600 font-medium">
+                    Venit Net Lab.: {doctorRevenueData.reduce((sum, d) => sum + d.netLabRevenue, 0).toLocaleString()} RON
                   </span>
                 </div>
               </div>
