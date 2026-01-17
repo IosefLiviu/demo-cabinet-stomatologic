@@ -106,16 +106,9 @@ export function TreatmentListDialog({
                             Durată: {treatment.default_duration} min
                           </div>
                         </div>
-                        <div className="flex flex-col items-end gap-0.5 shrink-0">
-                          <span className="font-bold text-sm">
-                            {treatment.default_price?.toFixed(2) || '0.00'} lei
-                          </span>
-                          {treatment.cas && treatment.cas > 0 ? (
-                            <span className="text-xs text-green-600 font-medium">
-                              CAS: {treatment.cas.toFixed(2)} lei
-                            </span>
-                          ) : null}
-                        </div>
+                        <span className="font-bold text-sm shrink-0">
+                          {treatment.default_price?.toFixed(2) || '0.00'} lei
+                        </span>
                       </div>
                     </button>
                   ))}
