@@ -334,11 +334,23 @@ export function useAppointmentsDB() {
     }
   };
 
-  const completeAppointment = async (id: string) => {
+  const completeAppointment = async (id: string, paymentMethod: 'card' | 'cash' | 'unpaid') => {
     try {
+      const isPaid = paymentMethod !== 'unpaid';
+      
+      // First get the appointment with its treatments
+      const appointment = appointments.find(a => a.id === id);
+      
+      // Update the appointment status and payment info
       const { data, error } = await supabase
         .from('appointments')
-        .update({ status: 'completed' })
+        .update({ 
+          status: 'completed',
+          is_paid: isPaid,
+          notes: appointment?.notes 
+            ? `${appointment.notes}\n[Plată: ${paymentMethod === 'card' ? 'Card' : paymentMethod === 'cash' ? 'Cash' : 'Neachitat'}]`
+            : `[Plată: ${paymentMethod === 'card' ? 'Card' : paymentMethod === 'cash' ? 'Cash' : 'Neachitat'}]`
+        })
         .eq('id', id)
         .select(`
           *,
@@ -351,12 +363,39 @@ export function useAppointmentsDB() {
 
       if (error) throw error;
 
+      const completedAppointment = data as unknown as AppointmentDB;
+
+      // Add treatments to patient's treatment_records (fișa pacientului)
+      if (completedAppointment.appointment_treatments && completedAppointment.appointment_treatments.length > 0) {
+        const treatmentRecords = completedAppointment.appointment_treatments.map(t => ({
+          patient_id: completedAppointment.patient_id,
+          appointment_id: completedAppointment.id,
+          treatment_id: t.treatment_id || null,
+          treatment_name: t.treatment_name,
+          price: t.price,
+          tooth_numbers: t.tooth_numbers,
+          cabinet_id: completedAppointment.cabinet_id,
+          performed_at: new Date().toISOString(),
+          notes: `Metodă plată: ${paymentMethod === 'card' ? 'Card' : paymentMethod === 'cash' ? 'Cash' : 'Neachitat'}`,
+        }));
+
+        const { error: recordsError } = await supabase
+          .from('treatment_records')
+          .insert(treatmentRecords);
+
+        if (recordsError) {
+          console.error('Error saving treatment records:', recordsError);
+          // Don't throw - the appointment was completed, just log the error
+        }
+      }
+
       setAppointments((prev) =>
-        prev.map((a) => (a.id === id ? (data as unknown as AppointmentDB) : a))
+        prev.map((a) => (a.id === id ? completedAppointment : a))
       );
+      
       toast({
         title: 'Succes',
-        description: 'Programarea a fost marcată ca finalizată',
+        description: `Programarea a fost finalizată - ${paymentMethod === 'card' ? 'Plată cu card' : paymentMethod === 'cash' ? 'Plată cash' : 'Neachitat'}`,
       });
       return data;
     } catch (error: any) {

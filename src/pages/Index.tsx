@@ -12,6 +12,7 @@ import { PatientDetails } from '@/components/PatientDetails';
 import { AppointmentForm, AppointmentFormData } from '@/components/AppointmentForm';
 import { ReportsDashboard } from '@/components/ReportsDashboard';
 import { CabinetSettings } from '@/components/CabinetSettings';
+import { CompleteAppointmentDialog, PaymentMethod } from '@/components/CompleteAppointmentDialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePatients, Patient } from '@/hooks/usePatients';
@@ -60,6 +61,12 @@ const Index = () => {
     duration: number;
     selectedTeeth: number[];
   }[]>([]);
+
+  // Complete appointment dialog state
+  const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
+  const [completingAppointmentId, setCompletingAppointmentId] = useState<string | null>(null);
+  const [completingAppointmentName, setCompletingAppointmentName] = useState<string>('');
+  const [isCompleting, setIsCompleting] = useState(false);
 
   const { patients, loading: patientsLoading, addPatient, updatePatient, deletePatient } = usePatients();
   const { 
@@ -268,8 +275,26 @@ const Index = () => {
     }
   };
 
-  const handleAppointmentComplete = async (id: string) => {
-    await completeAppointment(id);
+  const handleAppointmentComplete = (id: string) => {
+    // Find appointment from DB appointments
+    const dbAppointment = appointments.find(a => a.id === id);
+    const patientName = dbAppointment?.patients 
+      ? `${dbAppointment.patients.first_name} ${dbAppointment.patients.last_name}`
+      : '';
+    setCompletingAppointmentId(id);
+    setCompletingAppointmentName(patientName);
+    setCompleteDialogOpen(true);
+  };
+
+  const handleConfirmComplete = async (paymentMethod: PaymentMethod) => {
+    if (!completingAppointmentId) return;
+    
+    setIsCompleting(true);
+    await completeAppointment(completingAppointmentId, paymentMethod);
+    setIsCompleting(false);
+    setCompleteDialogOpen(false);
+    setCompletingAppointmentId(null);
+    setCompletingAppointmentName('');
   };
 
   const handleAppointmentCancel = async (id: string) => {
@@ -420,6 +445,15 @@ const Index = () => {
         onClose={() => setShowCabinetSettings(false)}
         cabinets={cabinets}
         onUpdateDoctor={updateCabinetDoctor}
+      />
+
+      {/* Complete Appointment Dialog */}
+      <CompleteAppointmentDialog
+        open={completeDialogOpen}
+        onOpenChange={setCompleteDialogOpen}
+        onConfirm={handleConfirmComplete}
+        patientName={completingAppointmentName}
+        isLoading={isCompleting}
       />
     </div>
   );
