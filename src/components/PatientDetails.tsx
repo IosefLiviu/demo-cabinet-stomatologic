@@ -49,6 +49,7 @@ interface TreatmentRecord {
   appointment_id: string;
   treatment_name: string;
   price: number | null;
+  cas: number | null;
   tooth_numbers: number[] | null;
   tooth_data: ToothDataRecord[];
   duration: number | null;
@@ -156,6 +157,7 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
           id,
           treatment_name,
           price,
+          decont,
           tooth_numbers,
           tooth_data,
           duration
@@ -196,6 +198,7 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
             appointment_id: appointment.id,
             treatment_name: treatment.treatment_name,
             price: treatment.price,
+            cas: treatment.decont || 0,
             tooth_numbers: treatment.tooth_numbers,
             tooth_data: (treatment.tooth_data || []) as ToothDataRecord[],
             duration: treatment.duration,
@@ -522,6 +525,8 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
                       return sortedDates.map((dateKey) => {
                         const records = groupedByDate[dateKey];
                         const totalPrice = records.reduce((sum, r) => sum + (r.price || 0), 0);
+                        const totalCas = records.reduce((sum, r) => sum + (r.cas || 0), 0);
+                        const totalDePlata = totalPrice - totalCas;
                         const totalDuration = records.reduce((sum, r) => sum + (r.duration || 0), 0);
 
                         return (
@@ -543,9 +548,14 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
                                     <span>{totalDuration} min</span>
                                   )}
                                   {totalPrice > 0 && (
-                                    <Badge variant="outline" className="font-medium">
-                                      {totalPrice} RON
-                                    </Badge>
+                                    <div className="flex items-center gap-2">
+                                      {totalCas > 0 && (
+                                        <span className="text-cyan-600 text-xs">CAS: {totalCas} RON</span>
+                                      )}
+                                      <Badge variant="outline" className="font-medium">
+                                        {totalCas > 0 ? `${totalDePlata} RON` : `${totalPrice} RON`}
+                                      </Badge>
+                                    </div>
                                   )}
                                   <ChevronDown className="h-4 w-4 transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
                                 </div>
@@ -593,9 +603,16 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
                                     <div className="flex flex-col items-end gap-1 shrink-0">
                                       {record.payment_method && getPaymentBadge(record.payment_method, record.appointment_id)}
                                       {record.price !== null && record.price > 0 && (
-                                        <Badge variant="outline" className="text-xs">
-                                          {record.price} RON
-                                        </Badge>
+                                        <div className="flex flex-col items-end gap-0.5">
+                                          {record.cas && record.cas > 0 && (
+                                            <span className="text-[10px] text-cyan-600">CAS: {record.cas} RON</span>
+                                          )}
+                                          <Badge variant="outline" className="text-xs">
+                                            {record.cas && record.cas > 0 
+                                              ? `${record.price - record.cas} RON` 
+                                              : `${record.price} RON`}
+                                          </Badge>
+                                        </div>
                                       )}
                                     </div>
                                   </div>
