@@ -1,15 +1,16 @@
 import { useState, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, subMonths } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChart, UserCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChart, UserCircle, Filter } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { AppointmentDB } from '@/hooks/useAppointmentsDB';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RePieChart, Pie, Cell, Legend } from 'recharts';
+import { useDoctors } from '@/hooks/useDoctors';
 
 interface ReportsDashboardProps {
   appointments: AppointmentDB[];
@@ -20,11 +21,19 @@ interface ReportsDashboardProps {
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
 export function ReportsDashboard({ appointments, loading, onFetchRange }: ReportsDashboardProps) {
+  const { doctors } = useDoctors();
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
     from: startOfMonth(new Date()),
     to: endOfMonth(new Date()),
   });
   const [period, setPeriod] = useState<'week' | 'month' | 'custom'>('month');
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>('all');
+
+  // Filter appointments by selected doctor
+  const filteredAppointments = useMemo(() => {
+    if (selectedDoctorId === 'all') return appointments;
+    return appointments.filter(a => a.doctor_id === selectedDoctorId);
+  }, [appointments, selectedDoctorId]);
 
   const handlePeriodChange = async (newPeriod: 'week' | 'month' | 'custom') => {
     setPeriod(newPeriod);
@@ -54,23 +63,23 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
 
   // Calculate statistics
   const stats = useMemo(() => {
-    const completed = appointments.filter(a => a.status === 'completed');
+    const completed = filteredAppointments.filter(a => a.status === 'completed');
     const totalRevenue = completed.reduce((sum, a) => sum + (a.price || 0), 0);
     const paidRevenue = completed.filter(a => a.is_paid).reduce((sum, a) => sum + (a.price || 0), 0);
     const unpaidRevenue = totalRevenue - paidRevenue;
-    const avgDuration = appointments.length > 0 
-      ? appointments.reduce((sum, a) => sum + a.duration, 0) / appointments.length 
+    const avgDuration = filteredAppointments.length > 0 
+      ? filteredAppointments.reduce((sum, a) => sum + a.duration, 0) / filteredAppointments.length 
       : 0;
     
-    const uniquePatients = new Set(appointments.map(a => a.patient_id)).size;
+    const uniquePatients = new Set(filteredAppointments.map(a => a.patient_id)).size;
     
-    const statusCounts = appointments.reduce((acc, a) => {
+    const statusCounts = filteredAppointments.reduce((acc, a) => {
       acc[a.status] = (acc[a.status] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
     return {
-      total: appointments.length,
+      total: filteredAppointments.length,
       completed: completed.length,
       cancelled: statusCounts['cancelled'] || 0,
       noShow: statusCounts['no_show'] || 0,
@@ -80,11 +89,11 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       avgDuration: Math.round(avgDuration),
       uniquePatients,
     };
-  }, [appointments]);
+  }, [filteredAppointments]);
 
   // Treatment popularity data
   const treatmentData = useMemo(() => {
-    const counts = appointments.reduce((acc, a) => {
+    const counts = filteredAppointments.reduce((acc, a) => {
       const name = a.treatments?.name || 'Necunoscut';
       acc[name] = (acc[name] || 0) + 1;
       return acc;
@@ -94,7 +103,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       .map(([name, count]) => ({ name, value: count }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 8);
-  }, [appointments]);
+  }, [filteredAppointments]);
 
   // Daily appointments data
   const dailyData = useMemo(() => {
@@ -102,7 +111,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     
     return days.map(day => {
       const dayStr = format(day, 'yyyy-MM-dd');
-      const dayAppointments = appointments.filter(a => a.appointment_date === dayStr);
+      const dayAppointments = filteredAppointments.filter(a => a.appointment_date === dayStr);
       const completed = dayAppointments.filter(a => a.status === 'completed');
       
       return {
@@ -112,11 +121,11 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         venituri: completed.reduce((sum, a) => sum + (a.price || 0), 0),
       };
     });
-  }, [appointments, dateRange]);
+  }, [filteredAppointments, dateRange]);
 
   // Cabinet data
   const cabinetData = useMemo(() => {
-    const counts = appointments.reduce((acc, a) => {
+    const counts = filteredAppointments.reduce((acc, a) => {
       const cabinet = `Cabinet ${a.cabinet_id}`;
       acc[cabinet] = (acc[cabinet] || 0) + 1;
       return acc;
@@ -125,7 +134,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     return Object.entries(counts)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);
-  }, [appointments]);
+  }, [filteredAppointments]);
 
   // Doctor revenue data
   const doctorRevenueData = useMemo(() => {
@@ -199,6 +208,30 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
             />
           </PopoverContent>
         </Popover>
+
+        {/* Doctor Filter */}
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select value={selectedDoctorId} onValueChange={setSelectedDoctorId}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Toți doctorii" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toți doctorii</SelectItem>
+              {doctors.map((doctor) => (
+                <SelectItem key={doctor.id} value={doctor.id}>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-2 h-2 rounded-full" 
+                      style={{ backgroundColor: doctor.color }}
+                    />
+                    {doctor.name}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* KPI Cards */}
