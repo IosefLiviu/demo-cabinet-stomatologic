@@ -80,7 +80,7 @@ export function TimeSlotGrid({
         {TIME_SLOTS.map((time) => (
           <div
             key={time}
-            className="grid border-b border-border last:border-b-0 h-[60px]"
+            className="grid border-b border-border last:border-b-0 h-[60px] overflow-hidden"
             style={{ gridTemplateColumns: `80px repeat(${cabinetsToShow.length}, 1fr)` }}
           >
             <div className="h-full flex items-center justify-center text-sm font-medium text-muted-foreground border-r border-border bg-muted/30">
@@ -88,26 +88,26 @@ export function TimeSlotGrid({
             </div>
             {cabinetsToShow.map((cabinet) => {
               const appointment = getAppointmentForSlot(time, cabinet.id);
-                return (
+              return (
                 <div
                   key={cabinet.id}
-                  className="p-1.5 border-r border-border last:border-r-0 h-[60px]"
+                  className="p-1.5 border-r border-border last:border-r-0 h-[60px] min-w-0 overflow-hidden"
                 >
                   {appointment ? (
                     <button
                       onClick={() => onAppointmentClick(appointment)}
                       className={cn(
-                        "w-full h-full rounded-md p-2 text-left transition-all cursor-pointer overflow-hidden",
+                        "w-full h-full rounded-md p-2 text-left transition-all cursor-pointer overflow-hidden min-w-0 flex flex-col justify-center",
                         cabinetBgLightColors[cabinet.id]
                       )}
                     >
                       <div className="flex items-center gap-1.5 min-w-0">
                         <User className="h-3 w-3 flex-shrink-0 text-foreground/70" />
-                        <span className="text-xs font-medium text-foreground truncate">
+                        <span className="text-xs font-medium text-foreground truncate leading-tight">
                           {appointment.patientName}
                         </span>
                       </div>
-                      <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                      <p className="text-[10px] text-muted-foreground mt-0.5 truncate leading-tight">
                         {appointment.treatment}
                       </p>
                     </button>
