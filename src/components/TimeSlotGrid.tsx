@@ -80,10 +80,10 @@ export function TimeSlotGrid({
         {TIME_SLOTS.map((time) => (
           <div
             key={time}
-            className="grid border-b border-border last:border-b-0"
+            className="grid border-b border-border last:border-b-0 h-[60px]"
             style={{ gridTemplateColumns: `80px repeat(${cabinetsToShow.length}, 1fr)` }}
           >
-            <div className="p-3 text-center text-sm font-medium text-muted-foreground border-r border-border bg-muted/30">
+            <div className="h-full flex items-center justify-center text-sm font-medium text-muted-foreground border-r border-border bg-muted/30">
               {time}
             </div>
             {cabinetsToShow.map((cabinet) => {
