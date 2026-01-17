@@ -198,6 +198,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       ['', ''],
       ['Venituri Totale (RON)', stats.totalRevenue],
       ['Încasat (RON)', stats.paidRevenue],
+      ['Neachitat (RON)', stats.unpaidRevenue],
       ['Planificat (RON)', stats.scheduledRevenue],
     ];
     const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
@@ -206,24 +207,26 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     
     // Sheet 2: Doctor Revenue
     const doctorData = [
-      ['Doctor', 'Programări', 'Încasat (RON)', 'Planificat (RON)', 'Total (RON)'],
+      ['Doctor', 'Programări', 'Încasat (RON)', 'Neachitat (RON)', 'Planificat (RON)', 'Total (RON)'],
       ...doctorRevenueData.map(d => [
         d.name,
         d.appointments,
         d.paid,
+        d.unpaid,
         d.scheduled,
         d.revenue + d.scheduled
       ]),
-      ['', '', '', '', ''],
+      ['', '', '', '', '', ''],
       ['TOTAL', 
         doctorRevenueData.reduce((sum, d) => sum + d.appointments, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.paid, 0),
+        doctorRevenueData.reduce((sum, d) => sum + d.unpaid, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.scheduled, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.revenue + d.scheduled, 0)
       ]
     ];
     const doctorSheet = XLSX.utils.aoa_to_sheet(doctorData);
-    doctorSheet['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+    doctorSheet['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
     XLSX.utils.book_append_sheet(workbook, doctorSheet, 'Încasări Doctori');
     
     // Sheet 3: Detailed Appointments
