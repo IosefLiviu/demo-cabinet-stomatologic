@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/sheet';
 import { Patient } from '@/hooks/usePatients';
 import { supabase } from '@/integrations/supabase/client';
+import { MiniDentalChart } from './MiniDentalChart';
 
 interface TreatmentRecord {
   id: string;
@@ -296,15 +297,8 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
                             </div>
                           )}
                           {record.tooth_numbers && record.tooth_numbers.length > 0 && (
-                            <div className="flex items-center gap-1.5 mt-2">
-                              <span className="text-xs text-muted-foreground">Dinți:</span>
-                              <div className="flex flex-wrap gap-1">
-                                {record.tooth_numbers.map((tooth) => (
-                                  <Badge key={tooth} variant="secondary" className="text-xs px-1.5 py-0">
-                                    {tooth}
-                                  </Badge>
-                                ))}
-                              </div>
+                            <div className="mt-3">
+                              <MiniDentalChart treatedTeeth={record.tooth_numbers} />
                             </div>
                           )}
                         </div>
