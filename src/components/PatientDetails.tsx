@@ -275,42 +275,105 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
                 <p>Nu există tratamente înregistrate</p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {treatmentHistory.map((record) => (
-                  <div
-                    key={record.id}
-                    className="p-4 rounded-lg border bg-card hover:bg-accent/30 transition-colors"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 mt-0.5">
-                          <Stethoscope className="h-4 w-4 text-primary" />
-                        </div>
-                        <div className="space-y-1">
-                          <h4 className="font-medium text-sm">{record.treatment_name}</h4>
-                          <div className="text-xs text-muted-foreground">
-                            {format(new Date(record.appointment_date), 'd MMMM yyyy', { locale: ro })} la {record.start_time.slice(0, 5)}
+              <div className="space-y-6">
+                {/* Group treatments by date */}
+                {(() => {
+                  const groupedByDate = treatmentHistory.reduce((acc, record) => {
+                    const dateKey = record.appointment_date;
+                    if (!acc[dateKey]) {
+                      acc[dateKey] = [];
+                    }
+                    acc[dateKey].push(record);
+                    return acc;
+                  }, {} as Record<string, typeof treatmentHistory>);
+
+                  const sortedDates = Object.keys(groupedByDate).sort((a, b) => 
+                    new Date(b).getTime() - new Date(a).getTime()
+                  );
+
+                  return sortedDates.map((dateKey) => {
+                    const records = groupedByDate[dateKey];
+                    const totalPrice = records.reduce((sum, r) => sum + (r.price || 0), 0);
+                    const totalDuration = records.reduce((sum, r) => sum + (r.duration || 0), 0);
+
+                    return (
+                      <div key={dateKey} className="space-y-3">
+                        {/* Date header with summary */}
+                        <div className="flex items-center justify-between bg-muted/50 rounded-lg px-4 py-2.5">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-primary" />
+                            <span className="font-medium text-sm">
+                              {format(new Date(dateKey), 'd MMMM yyyy', { locale: ro })}
+                            </span>
+                            <Badge variant="secondary" className="text-xs">
+                              {records.length} {records.length === 1 ? 'intervenție' : 'intervenții'}
+                            </Badge>
                           </div>
-                          {record.duration && (
-                            <div className="text-xs text-muted-foreground">
-                              Durată: {record.duration} min
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            {totalDuration > 0 && (
+                              <span>{totalDuration} min</span>
+                            )}
+                            {totalPrice > 0 && (
+                              <Badge variant="outline" className="font-medium">
+                                {totalPrice} RON
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Treatments for this date */}
+                        <div className="space-y-2 pl-2">
+                          {records.map((record) => (
+                            <div
+                              key={record.id}
+                              className="p-3 rounded-lg border bg-card hover:bg-accent/30 transition-colors"
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-start gap-3">
+                                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 mt-0.5">
+                                    <Stethoscope className="h-3.5 w-3.5 text-primary" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <h4 className="font-medium text-sm">{record.treatment_name}</h4>
+                                    <div className="text-xs text-muted-foreground">
+                                      Ora {record.start_time.slice(0, 5)}
+                                      {record.duration && ` • ${record.duration} min`}
+                                    </div>
+                                    {record.tooth_numbers && record.tooth_numbers.length > 0 && (
+                                      <div className="mt-3">
+                                        <MiniDentalChart treatedTeeth={record.tooth_numbers} />
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                {record.price !== null && record.price > 0 && (
+                                  <Badge variant="outline" className="shrink-0 text-xs">
+                                    {record.price} RON
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
-                          )}
-                          {record.tooth_numbers && record.tooth_numbers.length > 0 && (
-                            <div className="mt-3">
-                              <MiniDentalChart treatedTeeth={record.tooth_numbers} />
-                            </div>
-                          )}
+                          ))}
                         </div>
                       </div>
-                      {record.price !== null && record.price > 0 && (
-                        <Badge variant="outline" className="shrink-0">
-                          {record.price} RON
-                        </Badge>
-                      )}
+                    );
+                  });
+                })()}
+
+                {/* Grand total */}
+                <div className="border-t pt-4 mt-6">
+                  <div className="flex items-center justify-between bg-primary/5 rounded-lg px-4 py-3">
+                    <span className="font-medium text-sm">Total general</span>
+                    <div className="flex items-center gap-3">
+                      <Badge variant="secondary">
+                        {treatmentHistory.length} intervenții
+                      </Badge>
+                      <Badge className="font-medium">
+                        {treatmentHistory.reduce((sum, r) => sum + (r.price || 0), 0)} RON
+                      </Badge>
                     </div>
                   </div>
-                ))}
+                </div>
               </div>
             )}
           </TabsContent>
