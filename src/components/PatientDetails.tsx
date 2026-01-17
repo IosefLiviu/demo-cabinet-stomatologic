@@ -54,6 +54,7 @@ interface TreatmentRecord {
   appointment_date: string;
   start_time: string;
   payment_method: 'card' | 'cash' | 'unpaid' | null;
+  doctor_name: string | null;
 }
 
 type PaymentMethod = 'card' | 'cash' | 'unpaid';
@@ -141,6 +142,10 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
         status,
         is_paid,
         notes,
+        doctors (
+          id,
+          name
+        ),
         appointment_treatments (
           id,
           treatment_name,
@@ -177,6 +182,8 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
           paymentMethod = appointment.is_paid ? 'cash' : 'unpaid';
         }
 
+        const doctorName = appointment.doctors?.name || null;
+
         appointment.appointment_treatments?.forEach((treatment: any) => {
           records.push({
             id: treatment.id,
@@ -188,6 +195,7 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
             appointment_date: appointment.appointment_date,
             start_time: appointment.start_time,
             payment_method: paymentMethod,
+            doctor_name: doctorName,
           });
         });
       });
@@ -494,6 +502,12 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
                                         <div className="text-xs text-muted-foreground">
                                           Ora {record.start_time.slice(0, 5)}
                                           {record.duration && ` • ${record.duration} min`}
+                                          {record.doctor_name && (
+                                            <>
+                                              {' • '}
+                                              <span className="text-primary font-medium">Dr. {record.doctor_name}</span>
+                                            </>
+                                          )}
                                         </div>
                                         {record.tooth_numbers && record.tooth_numbers.length > 0 && (
                                           <div className="mt-3">
@@ -527,7 +541,25 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
                     })()}
 
                     {/* Grand total for filtered results */}
-                    <div className="border-t pt-4 mt-6">
+                    <div className="border-t pt-4 mt-6 space-y-3">
+                      {/* Unpaid total - show only if there are unpaid items */}
+                      {filteredHistory.filter(r => r.payment_method === 'unpaid').length > 0 && (
+                        <div className="flex items-center justify-between bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4 text-orange-600" />
+                            <span className="font-medium text-sm text-orange-700 dark:text-orange-400">
+                              Total neachitat
+                            </span>
+                          </div>
+                          <Badge className="bg-orange-500 hover:bg-orange-600 font-medium">
+                            {filteredHistory
+                              .filter(r => r.payment_method === 'unpaid')
+                              .reduce((sum, r) => sum + (r.price || 0), 0)} RON
+                          </Badge>
+                        </div>
+                      )}
+                      
+                      {/* General total */}
                       <div className="flex items-center justify-between bg-primary/5 rounded-lg px-4 py-3">
                         <span className="font-medium text-sm">
                           Total {periodFilter !== 'all' ? 'perioadă' : 'general'}
