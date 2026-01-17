@@ -175,6 +175,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
           cas: 0,
           laborator: 0,
           netLabRevenue: 0, // Price - laborator only for treatments with laborator > 0
+          totalWithNetLab: 0, // paid + netLabRevenue
           appointments: 0,
           color: doctorColor 
         };
@@ -218,8 +219,11 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         acc[doctorName].scheduled += price;
       }
       
+      // Calculate totalWithNetLab: paid + netLabRevenue
+      acc[doctorName].totalWithNetLab = acc[doctorName].paid + acc[doctorName].netLabRevenue;
+      
       return acc;
-    }, {} as Record<string, { name: string; revenue: number; paid: number; paidCard: number; paidCash: number; unpaid: number; scheduled: number; cas: number; laborator: number; netLabRevenue: number; appointments: number; color: string }>);
+    }, {} as Record<string, { name: string; revenue: number; paid: number; paidCard: number; paidCash: number; unpaid: number; scheduled: number; cas: number; laborator: number; netLabRevenue: number; totalWithNetLab: number; appointments: number; color: string }>);
 
     return Object.values(doctorStats).sort((a, b) => (b.revenue + b.scheduled) - (a.revenue + a.scheduled));
   }, [filteredAppointments]);
@@ -256,7 +260,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     
     // Sheet 2: Doctor Revenue
     const doctorData = [
-      ['Doctor', 'Programări', 'Card (RON)', 'Cash (RON)', 'Neachitat (RON)', 'Planificat (RON)', 'CAS (RON)', 'Laborator (RON)', 'Venit Net Lab. (RON)', 'Total (RON)'],
+      ['Doctor', 'Programări', 'Card (RON)', 'Cash (RON)', 'Neachitat (RON)', 'Planificat (RON)', 'CAS (RON)', 'Laborator (RON)', 'Venit Net Lab. (RON)', 'Încasări + Net Lab. (RON)', 'Total (RON)'],
       ...doctorRevenueData.map(d => [
         d.name,
         d.appointments,
@@ -267,9 +271,10 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         d.cas,
         d.laborator,
         d.netLabRevenue,
+        d.totalWithNetLab,
         d.revenue + d.scheduled
       ]),
-      ['', '', '', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', '', '', '', ''],
       ['TOTAL', 
         doctorRevenueData.reduce((sum, d) => sum + d.appointments, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.paidCard, 0),
@@ -279,11 +284,12 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         doctorRevenueData.reduce((sum, d) => sum + d.cas, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.laborator, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.netLabRevenue, 0),
+        doctorRevenueData.reduce((sum, d) => sum + d.totalWithNetLab, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.revenue + d.scheduled, 0)
       ]
     ];
     const doctorSheet = XLSX.utils.aoa_to_sheet(doctorData);
-    doctorSheet['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 18 }, { wch: 15 }];
+    doctorSheet['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 18 }, { wch: 22 }, { wch: 15 }];
     XLSX.utils.book_append_sheet(workbook, doctorSheet, 'Încasări Doctori');
     
     // Sheet 3: Detailed Appointments
@@ -546,6 +552,13 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                           <span className="font-medium text-indigo-600">{doctor.netLabRevenue.toLocaleString()} RON</span>
                         </div>
                       )}
+                      {doctor.totalWithNetLab !== 0 && (
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-teal-500" />
+                          <span className="text-muted-foreground">Încasări + Net Lab.:</span>
+                          <span className="font-medium text-teal-600">{doctor.totalWithNetLab.toLocaleString()} RON</span>
+                        </div>
+                      )}
                     </div>
                     <div className="mt-2">
                       <div className="h-2 rounded-full bg-muted overflow-hidden flex">
@@ -604,6 +617,9 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                   </span>
                   <span className="text-indigo-600 font-medium">
                     Venit Net Lab.: {doctorRevenueData.reduce((sum, d) => sum + d.netLabRevenue, 0).toLocaleString()} RON
+                  </span>
+                  <span className="text-teal-600 font-medium">
+                    Încasări + Net Lab.: {doctorRevenueData.reduce((sum, d) => sum + d.totalWithNetLab, 0).toLocaleString()} RON
                   </span>
                 </div>
               </div>
