@@ -16,6 +16,9 @@ import {
   Stethoscope,
   Filter,
   ChevronDown,
+  CreditCard,
+  Banknote,
+  AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -50,7 +53,10 @@ interface TreatmentRecord {
   duration: number | null;
   appointment_date: string;
   start_time: string;
+  payment_method: 'card' | 'cash' | 'unpaid' | null;
 }
+
+type PaymentMethod = 'card' | 'cash' | 'unpaid';
 
 interface PatientDetailsProps {
   patient: Patient | null;
@@ -134,6 +140,7 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
         start_time,
         status,
         is_paid,
+        notes,
         appointment_treatments (
           id,
           treatment_name,
@@ -154,6 +161,22 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
       // Flatten the data
       const records: TreatmentRecord[] = [];
       data?.forEach((appointment: any) => {
+        // Parse payment method from notes
+        let paymentMethod: PaymentMethod | null = null;
+        if (appointment.notes) {
+          if (appointment.notes.includes('[Plată: Card]')) {
+            paymentMethod = 'card';
+          } else if (appointment.notes.includes('[Plată: Cash]')) {
+            paymentMethod = 'cash';
+          } else if (appointment.notes.includes('[Plată: Neachitat]')) {
+            paymentMethod = 'unpaid';
+          }
+        }
+        // Fallback to is_paid if no explicit payment method
+        if (!paymentMethod && appointment.is_paid !== null) {
+          paymentMethod = appointment.is_paid ? 'cash' : 'unpaid';
+        }
+
         appointment.appointment_treatments?.forEach((treatment: any) => {
           records.push({
             id: treatment.id,
@@ -164,12 +187,41 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
             duration: treatment.duration,
             appointment_date: appointment.appointment_date,
             start_time: appointment.start_time,
+            payment_method: paymentMethod,
           });
         });
       });
       setTreatmentHistory(records);
     }
     setLoadingHistory(false);
+  };
+
+  const getPaymentBadge = (method: PaymentMethod | null) => {
+    switch (method) {
+      case 'card':
+        return (
+          <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 gap-1">
+            <CreditCard className="h-3 w-3" />
+            Card
+          </Badge>
+        );
+      case 'cash':
+        return (
+          <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 gap-1">
+            <Banknote className="h-3 w-3" />
+            Cash
+          </Badge>
+        );
+      case 'unpaid':
+        return (
+          <Badge className="bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 gap-1">
+            <AlertCircle className="h-3 w-3" />
+            Neachitat
+          </Badge>
+        );
+      default:
+        return null;
+    }
   };
 
   const calculateAge = (dateOfBirth?: string) => {
@@ -457,11 +509,14 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
                                         )}
                                       </div>
                                     </div>
-                                    {record.price !== null && record.price > 0 && (
-                                      <Badge variant="outline" className="shrink-0 text-xs">
-                                        {record.price} RON
-                                      </Badge>
-                                    )}
+                                    <div className="flex flex-col items-end gap-1 shrink-0">
+                                      {record.payment_method && getPaymentBadge(record.payment_method)}
+                                      {record.price !== null && record.price > 0 && (
+                                        <Badge variant="outline" className="text-xs">
+                                          {record.price} RON
+                                        </Badge>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               ))}
