@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+export interface ToothDataEntry {
+  toothNumber: number;
+  status: string;
+  notes?: string;
+}
+
 export interface AppointmentTreatment {
   id: string;
   appointment_id: string;
@@ -12,6 +18,7 @@ export interface AppointmentTreatment {
   co_plata: number;
   duration: number;
   tooth_numbers: number[];
+  tooth_data?: ToothDataEntry[];
 }
 
 export interface AppointmentDB {
@@ -63,6 +70,12 @@ export type AppointmentInsert = {
   price?: number;
 };
 
+export interface ToothDataItem {
+  toothNumber: number;
+  status: string;
+  notes?: string;
+}
+
 export type AppointmentTreatmentInsert = {
   appointment_id: string;
   treatment_id?: string;
@@ -72,6 +85,7 @@ export type AppointmentTreatmentInsert = {
   co_plata: number;
   duration: number;
   tooth_numbers: number[];
+  tooth_data?: ToothDataItem[];
 };
 
 export function useAppointmentsDB() {
@@ -265,8 +279,15 @@ export function useAppointmentsDB() {
       // Then insert new treatments
       if (treatments.length > 0) {
         const treatmentsWithAppointmentId = treatments.map(t => ({
-          ...t,
           appointment_id: appointmentId,
+          treatment_id: t.treatment_id,
+          treatment_name: t.treatment_name,
+          price: t.price,
+          decont: t.decont,
+          co_plata: t.co_plata,
+          duration: t.duration,
+          tooth_numbers: t.tooth_numbers,
+          tooth_data: t.tooth_data ? JSON.parse(JSON.stringify(t.tooth_data)) : [],
         }));
 
         const { error } = await supabase
@@ -305,6 +326,7 @@ export function useAppointmentsDB() {
         co_plata: Number(t.co_plata) || 0,
         duration: t.duration || 30,
         tooth_numbers: t.tooth_numbers || [],
+        tooth_data: (t.tooth_data as unknown as ToothDataEntry[]) || [],
       }));
     } catch (error: any) {
       console.error('Error fetching appointment treatments:', error);

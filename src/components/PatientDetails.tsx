@@ -35,11 +35,18 @@ import { Patient } from '@/hooks/usePatients';
 import { supabase } from '@/integrations/supabase/client';
 import { MiniDentalChart, ToothData } from './MiniDentalChart';
 
+interface ToothDataRecord {
+  toothNumber: number;
+  status: string;
+  notes?: string;
+}
+
 interface TreatmentRecord {
   id: string;
   treatment_name: string;
   price: number | null;
   tooth_numbers: number[] | null;
+  tooth_data: ToothDataRecord[];
   duration: number | null;
   appointment_date: string;
   start_time: string;
@@ -130,6 +137,7 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
           treatment_name,
           price,
           tooth_numbers,
+          tooth_data,
           duration
         )
       `)
@@ -149,6 +157,7 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
             treatment_name: treatment.treatment_name,
             price: treatment.price,
             tooth_numbers: treatment.tooth_numbers,
+            tooth_data: (treatment.tooth_data || []) as ToothDataRecord[],
             duration: treatment.duration,
             appointment_date: appointment.appointment_date,
             start_time: appointment.start_time,
@@ -435,7 +444,11 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
                                           <div className="mt-3">
                                             <MiniDentalChart 
                                               treatedTeeth={record.tooth_numbers} 
-                                              teethData={dentalStatus}
+                                              teethData={record.tooth_data.map(td => ({
+                                                tooth_number: td.toothNumber,
+                                                status: td.status as any,
+                                                notes: td.notes,
+                                              }))}
                                             />
                                           </div>
                                         )}

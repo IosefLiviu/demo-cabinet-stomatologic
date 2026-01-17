@@ -23,6 +23,7 @@ export type Database = {
           duration: number | null
           id: string
           price: number | null
+          tooth_data: Json | null
           tooth_numbers: number[] | null
           treatment_id: string | null
           treatment_name: string
@@ -35,6 +36,7 @@ export type Database = {
           duration?: number | null
           id?: string
           price?: number | null
+          tooth_data?: Json | null
           tooth_numbers?: number[] | null
           treatment_id?: string | null
           treatment_name: string
@@ -47,6 +49,7 @@ export type Database = {
           duration?: number | null
           id?: string
           price?: number | null
+          tooth_data?: Json | null
           tooth_numbers?: number[] | null
           treatment_id?: string | null
           treatment_name?: string
