@@ -20,8 +20,8 @@ export function Header() {
             <Stethoscope className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-foreground">DentalCare</h1>
-            <p className="text-xs text-muted-foreground">Soft Administrare Cabinet </p>
+            <h1 className="text-lg font-bold text-foreground">Perfect Smile Glim </h1>
+            <p className="text-xs text-muted-foreground">Sistem de programări</p>
           </div>
         </Link>
         
