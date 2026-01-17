@@ -71,6 +71,7 @@ const Index = () => {
     updateAppointment,
     deleteAppointment,
     completeAppointment,
+    cancelAppointment,
     saveAppointmentTreatments,
     fetchAppointmentTreatments 
   } = useAppointmentsDB();
@@ -271,6 +272,10 @@ const Index = () => {
     await completeAppointment(id);
   };
 
+  const handleAppointmentCancel = async (id: string) => {
+    await cancelAppointment(id);
+  };
+
   // Convert appointments to legacy format for existing components
   const legacyAppointments: Appointment[] = appointments.map((apt) => ({
     id: apt.id,
@@ -344,6 +349,7 @@ const Index = () => {
               onSlotClick={handleSlotClick}
               onAppointmentClick={handleAppointmentClick}
               onAppointmentComplete={handleAppointmentComplete}
+              onAppointmentCancel={handleAppointmentCancel}
             />
           </TabsContent>
 
