@@ -125,13 +125,15 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
     if (!patient) return;
     setLoadingHistory(true);
 
-    // Fetch from appointment_treatments joined with appointments
+    // Fetch from appointment_treatments joined with appointments - ONLY completed appointments
     const { data, error } = await supabase
       .from('appointments')
       .select(`
         id,
         appointment_date,
         start_time,
+        status,
+        is_paid,
         appointment_treatments (
           id,
           treatment_name,
@@ -142,6 +144,7 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
         )
       `)
       .eq('patient_id', patient.id)
+      .eq('status', 'completed')
       .order('appointment_date', { ascending: false });
 
     if (error) {
