@@ -510,6 +510,13 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                         <span className="text-muted-foreground">Încasat:</span>
                         <span className="font-medium text-green-600">{doctor.paid.toLocaleString()} RON</span>
                       </div>
+                      {doctor.unpaid > 0 && (
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-orange-500" />
+                          <span className="text-muted-foreground">Neachitat:</span>
+                          <span className="font-medium text-orange-600">{doctor.unpaid.toLocaleString()} RON</span>
+                        </div>
+                      )}
                       {doctor.scheduled > 0 && (
                         <div className="flex items-center gap-1">
                           <div className="w-2 h-2 rounded-full bg-blue-500" />
@@ -525,6 +532,10 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                             <div 
                               className="h-full bg-green-500 transition-all"
                               style={{ width: `${(doctor.paid / totalValue) * 100}%` }}
+                            />
+                            <div 
+                              className="h-full bg-orange-500 transition-all"
+                              style={{ width: `${(doctor.unpaid / totalValue) * 100}%` }}
                             />
                             <div 
                               className="h-full bg-blue-500 transition-all"
@@ -549,6 +560,9 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                 <div className="flex flex-wrap gap-4 text-sm mt-1">
                   <span className="text-green-600 font-medium">
                     Încasat: {doctorRevenueData.reduce((sum, d) => sum + d.paid, 0).toLocaleString()} RON
+                  </span>
+                  <span className="text-orange-600 font-medium">
+                    Neachitat: {doctorRevenueData.reduce((sum, d) => sum + d.unpaid, 0).toLocaleString()} RON
                   </span>
                   <span className="text-blue-600 font-medium">
                     Planificat: {doctorRevenueData.reduce((sum, d) => sum + d.scheduled, 0).toLocaleString()} RON
