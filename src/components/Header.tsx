@@ -3,6 +3,7 @@ import { Stethoscope, LogOut, Users, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { CasBudgetDisplay } from './CasBudgetDisplay';
+import { ThemeToggle } from './ThemeToggle';
 
 export function Header() {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ export function Header() {
         </Link>
         
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           {user ? <>
               {(isAdmin || user.email === 'andreiliviudiablo@gmail.com') && <Button variant="ghost" size="sm" onClick={() => navigate('/admin')}>
                   <Users className="h-4 w-4 mr-2" />
