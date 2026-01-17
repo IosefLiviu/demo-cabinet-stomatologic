@@ -15,6 +15,7 @@ import {
   Loader2,
   Stethoscope,
   Filter,
+  ChevronDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,11 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { Patient } from '@/hooks/usePatients';
 import { supabase } from '@/integrations/supabase/client';
 import { MiniDentalChart } from './MiniDentalChart';
@@ -358,32 +364,35 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
                         const totalDuration = records.reduce((sum, r) => sum + (r.duration || 0), 0);
 
                         return (
-                          <div key={dateKey} className="space-y-3">
-                            {/* Date header with summary */}
-                            <div className="flex items-center justify-between bg-muted/50 rounded-lg px-4 py-2.5">
-                              <div className="flex items-center gap-2">
-                                <Calendar className="h-4 w-4 text-primary" />
-                                <span className="font-medium text-sm">
-                                  {format(new Date(dateKey), 'd MMMM yyyy', { locale: ro })}
-                                </span>
-                                <Badge variant="secondary" className="text-xs">
-                                  {records.length} {records.length === 1 ? 'intervenție' : 'intervenții'}
-                                </Badge>
-                              </div>
-                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                {totalDuration > 0 && (
-                                  <span>{totalDuration} min</span>
-                                )}
-                                {totalPrice > 0 && (
-                                  <Badge variant="outline" className="font-medium">
-                                    {totalPrice} RON
+                          <Collapsible key={dateKey} defaultOpen={true}>
+                            {/* Date header with summary - clickable */}
+                            <CollapsibleTrigger asChild>
+                              <button className="w-full flex items-center justify-between bg-muted/50 hover:bg-muted/70 rounded-lg px-4 py-2.5 transition-colors cursor-pointer">
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="h-4 w-4 text-primary" />
+                                  <span className="font-medium text-sm">
+                                    {format(new Date(dateKey), 'd MMMM yyyy', { locale: ro })}
+                                  </span>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {records.length} {records.length === 1 ? 'intervenție' : 'intervenții'}
                                   </Badge>
-                                )}
-                              </div>
-                            </div>
+                                </div>
+                                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                  {totalDuration > 0 && (
+                                    <span>{totalDuration} min</span>
+                                  )}
+                                  {totalPrice > 0 && (
+                                    <Badge variant="outline" className="font-medium">
+                                      {totalPrice} RON
+                                    </Badge>
+                                  )}
+                                  <ChevronDown className="h-4 w-4 transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
+                                </div>
+                              </button>
+                            </CollapsibleTrigger>
 
-                            {/* Treatments for this date */}
-                            <div className="space-y-2 pl-2">
+                            {/* Treatments for this date - collapsible */}
+                            <CollapsibleContent className="space-y-2 pl-2 mt-3">
                               {records.map((record) => (
                                 <div
                                   key={record.id}
@@ -415,8 +424,8 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
                                   </div>
                                 </div>
                               ))}
-                            </div>
-                          </div>
+                            </CollapsibleContent>
+                          </Collapsible>
                         );
                       });
                     })()}
