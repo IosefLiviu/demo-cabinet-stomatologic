@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, subMonths } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChart, UserCircle, Filter } from 'lucide-react';
+import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChart, UserCircle, Filter, Download } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { AppointmentDB } from '@/hooks/useAppointmentsDB';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RePieChart, Pie, Cell, Legend } from 'recharts';
 import { useDoctors } from '@/hooks/useDoctors';
+import * as XLSX from 'xlsx';
 
 interface ReportsDashboardProps {
   appointments: AppointmentDB[];
@@ -78,14 +79,19 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       return acc;
     }, {} as Record<string, number>);
 
+    const scheduled = filteredAppointments.filter(a => a.status === 'scheduled');
+    const scheduledRevenue = scheduled.reduce((sum, a) => sum + (a.price || 0), 0);
+
     return {
       total: filteredAppointments.length,
       completed: completed.length,
       cancelled: statusCounts['cancelled'] || 0,
+      scheduled: scheduled.length,
       noShow: statusCounts['no_show'] || 0,
       totalRevenue,
       paidRevenue,
       unpaidRevenue,
+      scheduledRevenue,
       avgDuration: Math.round(avgDuration),
       uniquePatients,
     };
@@ -174,6 +180,91 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     return Object.values(doctorStats).sort((a, b) => (b.revenue + b.scheduled) - (a.revenue + a.scheduled));
   }, [filteredAppointments]);
 
+  // Export to Excel function
+  const exportToExcel = () => {
+    const workbook = XLSX.utils.book_new();
+    
+    // Sheet 1: Summary
+    const summaryData = [
+      ['Raport Financiar', ''],
+      ['Perioadă', `${format(dateRange.from, 'dd.MM.yyyy')} - ${format(dateRange.to, 'dd.MM.yyyy')}`],
+      ['Doctor', selectedDoctorId === 'all' ? 'Toți doctorii' : doctors.find(d => d.id === selectedDoctorId)?.name || ''],
+      ['', ''],
+      ['Indicator', 'Valoare'],
+      ['Total Programări', stats.total],
+      ['Finalizate', stats.completed],
+      ['Anulate', stats.cancelled],
+      ['Programate', stats.scheduled],
+      ['', ''],
+      ['Venituri Totale (RON)', stats.totalRevenue],
+      ['Încasat (RON)', stats.paidRevenue],
+      ['Planificat (RON)', stats.scheduledRevenue],
+    ];
+    const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+    summarySheet['!cols'] = [{ wch: 25 }, { wch: 30 }];
+    XLSX.utils.book_append_sheet(workbook, summarySheet, 'Sumar');
+    
+    // Sheet 2: Doctor Revenue
+    const doctorData = [
+      ['Doctor', 'Programări', 'Încasat (RON)', 'Planificat (RON)', 'Total (RON)'],
+      ...doctorRevenueData.map(d => [
+        d.name,
+        d.appointments,
+        d.paid,
+        d.scheduled,
+        d.revenue + d.scheduled
+      ]),
+      ['', '', '', '', ''],
+      ['TOTAL', 
+        doctorRevenueData.reduce((sum, d) => sum + d.appointments, 0),
+        doctorRevenueData.reduce((sum, d) => sum + d.paid, 0),
+        doctorRevenueData.reduce((sum, d) => sum + d.scheduled, 0),
+        doctorRevenueData.reduce((sum, d) => sum + d.revenue + d.scheduled, 0)
+      ]
+    ];
+    const doctorSheet = XLSX.utils.aoa_to_sheet(doctorData);
+    doctorSheet['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+    XLSX.utils.book_append_sheet(workbook, doctorSheet, 'Încasări Doctori');
+    
+    // Sheet 3: Detailed Appointments
+    const appointmentsData = [
+      ['Data', 'Ora', 'Pacient', 'Doctor', 'Tratament', 'Status', 'Preț (RON)', 'Achitat'],
+      ...filteredAppointments.map(a => [
+        format(new Date(a.appointment_date), 'dd.MM.yyyy'),
+        a.start_time.substring(0, 5),
+        a.patients ? `${a.patients.first_name} ${a.patients.last_name}` : 'N/A',
+        a.doctors?.name || 'N/A',
+        a.treatments?.name || 'N/A',
+        a.status === 'completed' ? 'Finalizat' : 
+          a.status === 'cancelled' ? 'Anulat' : 
+          a.status === 'scheduled' ? 'Programat' : a.status,
+        a.price || 0,
+        a.is_paid ? 'Da' : 'Nu'
+      ])
+    ];
+    const appointmentsSheet = XLSX.utils.aoa_to_sheet(appointmentsData);
+    appointmentsSheet['!cols'] = [
+      { wch: 12 }, { wch: 8 }, { wch: 25 }, { wch: 20 }, 
+      { wch: 25 }, { wch: 12 }, { wch: 12 }, { wch: 10 }
+    ];
+    XLSX.utils.book_append_sheet(workbook, appointmentsSheet, 'Programări Detaliate');
+    
+    // Sheet 4: Daily Revenue (using dailyData which already exists)
+    const dailyExportData = [
+      ['Data', 'Programări', 'Finalizate', 'Venituri (RON)'],
+      ...dailyData.map(d => [d.date, d.programări, d.finalizate, d.venituri])
+    ];
+    const dailySheet = XLSX.utils.aoa_to_sheet(dailyExportData);
+    dailySheet['!cols'] = [{ wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 15 }];
+    XLSX.utils.book_append_sheet(workbook, dailySheet, 'Venituri Zilnice');
+    
+    // Generate filename with date range
+    const filename = `Raport_Financiar_${format(dateRange.from, 'dd-MM-yyyy')}_${format(dateRange.to, 'dd-MM-yyyy')}.xlsx`;
+    
+    // Download
+    XLSX.writeFile(workbook, filename);
+  };
+
   return (
     <div className="space-y-6">
       {/* Period Selector */}
@@ -235,6 +326,12 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
             </SelectContent>
           </Select>
         </div>
+
+        {/* Export Button */}
+        <Button variant="outline" size="sm" className="gap-2 ml-auto" onClick={exportToExcel}>
+          <Download className="h-4 w-4" />
+          Export Excel
+        </Button>
       </div>
 
       {/* KPI Cards */}
