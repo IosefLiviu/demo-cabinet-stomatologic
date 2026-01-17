@@ -322,31 +322,31 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="container px-4 py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-lg grid-cols-3">
-            <TabsTrigger value="calendar" className="gap-2">
-              <CalendarIcon className="h-4 w-4" />
-              Calendar
+      <main className="container px-2 sm:px-4 py-4 sm:py-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full max-w-lg grid-cols-3 h-auto">
+            <TabsTrigger value="calendar" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+              <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Calendar</span>
             </TabsTrigger>
-            <TabsTrigger value="patients" className="gap-2">
-              <Users className="h-4 w-4" />
-              Pacienți
+            <TabsTrigger value="patients" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+              <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Pacienți</span>
             </TabsTrigger>
-            <TabsTrigger value="reports" className="gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Rapoarte
+            <TabsTrigger value="reports" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+              <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Rapoarte</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="calendar" className="space-y-6">
+          <TabsContent value="calendar" className="space-y-4 sm:space-y-6">
             {/* Summary */}
             <TodaySummary selectedDate={selectedDate} appointments={legacyAppointments} />
 
             {/* Controls */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
               <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
-              <Button className="gap-2" onClick={handleNewAppointment}>
+              <Button className="gap-2 w-full sm:w-auto" onClick={handleNewAppointment}>
                 <Plus className="h-4 w-4" />
                 Programare nouă
               </Button>
