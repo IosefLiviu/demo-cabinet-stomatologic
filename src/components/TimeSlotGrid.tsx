@@ -1,8 +1,14 @@
 import { format } from 'date-fns';
-import { Plus, User } from 'lucide-react';
+import { Plus, User, CheckCircle2 } from 'lucide-react';
 import { TIME_SLOTS, Appointment } from '@/types/appointment';
 import { Cabinet } from '@/hooks/useCabinets';
 import { cn } from '@/lib/utils';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface TimeSlotGridProps {
   selectedDate: Date;
@@ -11,6 +17,7 @@ interface TimeSlotGridProps {
   cabinets: Cabinet[];
   onSlotClick: (time: string, cabinetId: number) => void;
   onAppointmentClick: (appointment: Appointment) => void;
+  onAppointmentComplete?: (id: string) => void;
 }
 
 const cabinetBgColors: Record<number, string> = {
@@ -36,6 +43,7 @@ export function TimeSlotGrid({
   cabinets,
   onSlotClick,
   onAppointmentClick,
+  onAppointmentComplete,
 }: TimeSlotGridProps) {
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
   const cabinetsToShow = selectedCabinet
@@ -101,23 +109,52 @@ export function TimeSlotGrid({
                   className="p-1.5 border-r border-border last:border-r-0 h-[60px] min-w-0 overflow-hidden"
                 >
                   {appointment ? (
-                    <button
-                      onClick={() => onAppointmentClick(appointment)}
+                    <div
                       className={cn(
-                        "w-full h-full rounded-md p-2 text-left transition-all cursor-pointer overflow-hidden min-w-0 flex flex-col justify-center",
-                        cabinetBgLightColors[cabinet.id]
+                        "w-full h-full rounded-md p-2 text-left transition-all overflow-hidden min-w-0 flex items-center gap-1",
+                        appointment.status === 'completed' 
+                          ? "bg-green-100 dark:bg-green-950/30 border border-green-300 dark:border-green-800"
+                          : cabinetBgLightColors[cabinet.id]
                       )}
                     >
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <User className="h-3 w-3 flex-shrink-0 text-foreground/70" />
-                        <span className="text-xs font-medium text-foreground truncate leading-tight">
-                          {appointment.patientName}
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground mt-0.5 truncate leading-tight">
-                        {appointment.treatment}
-                      </p>
-                    </button>
+                      <button
+                        onClick={() => onAppointmentClick(appointment)}
+                        className="flex-1 min-w-0 h-full flex flex-col justify-center cursor-pointer"
+                      >
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <User className="h-3 w-3 flex-shrink-0 text-foreground/70" />
+                          <span className="text-xs font-medium text-foreground truncate leading-tight">
+                            {appointment.patientName}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-0.5 truncate leading-tight">
+                          {appointment.treatment}
+                        </p>
+                      </button>
+                      {onAppointmentComplete && appointment.status !== 'completed' && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onAppointmentComplete(appointment.id);
+                                }}
+                                className="p-1 rounded hover:bg-green-200 dark:hover:bg-green-800 transition-colors flex-shrink-0"
+                              >
+                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Marchează ca finalizată</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                      {appointment.status === 'completed' && (
+                        <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                      )}
+                    </div>
                   ) : (
                     <button
                       onClick={() => onSlotClick(time, cabinet.id)}
