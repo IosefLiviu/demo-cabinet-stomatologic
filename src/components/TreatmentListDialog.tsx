@@ -111,17 +111,8 @@ export function TreatmentListDialog({
                           <span className="font-bold text-sm">
                             {treatment.default_price?.toFixed(2) || '0.00'} lei
                           </span>
-                          <div className="flex gap-2 text-xs">
-                            {treatment.decont ? (
-                              <span className="text-green-600 font-medium">
-                                Decont: {treatment.decont.toFixed(2)}
-                              </span>
-                            ) : null}
-                            {treatment.co_plata ? (
-                              <span className="text-orange-600 font-medium">
-                                Co-plată: {treatment.co_plata.toFixed(2)}
-                              </span>
-                            ) : null}
+                          <div className="flex gap-2 text-xs text-muted-foreground">
+                            {treatment.default_duration} min
                           </div>
                         </div>
                       </div>

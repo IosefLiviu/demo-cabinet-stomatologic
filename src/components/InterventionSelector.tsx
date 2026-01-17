@@ -35,8 +35,7 @@ export interface SelectedIntervention {
   treatmentId: string;
   treatmentName: string;
   price: number;
-  decont: number;
-  coPlata: number;
+  cas: number;
   duration: number;
   selectedTeeth: number[];
   teethDetails?: ToothSelection[];
@@ -105,8 +104,8 @@ export function InterventionSelector({
 
   // Calculate totals
   const totalPrice = interventions.reduce((sum, i) => sum + i.price, 0);
-  const totalDecont = interventions.reduce((sum, i) => sum + i.decont, 0);
-  const totalCoPlata = interventions.reduce((sum, i) => sum + i.coPlata, 0);
+  const totalCas = interventions.reduce((sum, i) => sum + i.cas, 0);
+  const totalDePlata = totalPrice - totalCas;
   const totalDuration = interventions.reduce((sum, i) => sum + i.duration, 0) || 30;
 
   const handleAddTreatment = (treatment: Treatment) => {
@@ -115,8 +114,7 @@ export function InterventionSelector({
       treatmentId: treatment.id,
       treatmentName: treatment.name,
       price: treatment.default_price || 0,
-      decont: treatment.decont || 0,
-      coPlata: treatment.co_plata || 0,
+      cas: 0,
       duration: treatment.default_duration || 30,
       selectedTeeth: [],
       teethDetails: [],
@@ -131,7 +129,7 @@ export function InterventionSelector({
 
   const handleUpdateIntervention = (
     interventionId: string,
-    field: 'price' | 'decont' | 'coPlata' | 'duration',
+    field: 'price' | 'cas' | 'duration',
     value: number
   ) => {
     onInterventionsChange(
@@ -335,25 +333,24 @@ export function InterventionSelector({
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs text-green-600">Decont</Label>
+                      <Label className="text-xs text-green-600">CAS</Label>
                       <Input
                         type="number"
-                        value={intervention.decont}
+                        value={intervention.cas}
                         onChange={(e) =>
-                          handleUpdateIntervention(intervention.id, 'decont', parseFloat(e.target.value) || 0)
+                          handleUpdateIntervention(intervention.id, 'cas', parseFloat(e.target.value) || 0)
                         }
                         className="h-8"
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs text-orange-600">Co-plată</Label>
+                      <Label className="text-xs text-orange-600">De plată</Label>
                       <Input
                         type="number"
-                        value={intervention.coPlata}
-                        onChange={(e) =>
-                          handleUpdateIntervention(intervention.id, 'coPlata', parseFloat(e.target.value) || 0)
-                        }
-                        className="h-8"
+                        value={intervention.price - intervention.cas}
+                        readOnly
+                        disabled
+                        className="h-8 bg-muted"
                       />
                     </div>
                   </div>
@@ -413,8 +410,8 @@ export function InterventionSelector({
             <div className="grid grid-cols-4 gap-2 text-sm">
               <div className="font-bold">TOTAL</div>
               <div className="text-right font-bold">{totalPrice.toFixed(2)} lei</div>
-              <div className="text-right font-bold text-green-600">{totalDecont.toFixed(2)} lei</div>
-              <div className="text-right font-bold text-orange-600">{totalCoPlata.toFixed(2)} lei</div>
+              <div className="text-right font-bold text-green-600">{totalCas.toFixed(2)} lei</div>
+              <div className="text-right font-bold text-orange-600">{totalDePlata.toFixed(2)} lei</div>
             </div>
           </div>
         </div>

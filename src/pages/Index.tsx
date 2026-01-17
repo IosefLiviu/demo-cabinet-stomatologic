@@ -10,6 +10,7 @@ import { PatientsList } from '@/components/PatientsList';
 import { PatientForm } from '@/components/PatientForm';
 import { PatientDetails } from '@/components/PatientDetails';
 import { AppointmentForm, AppointmentFormData } from '@/components/AppointmentForm';
+import { SelectedIntervention } from '@/components/InterventionSelector';
 import { ReportsDashboard } from '@/components/ReportsDashboard';
 import { CabinetSettings } from '@/components/CabinetSettings';
 import { CompleteAppointmentDialog, PaymentMethod } from '@/components/CompleteAppointmentDialog';
@@ -51,16 +52,7 @@ const Index = () => {
     notes?: string;
     price?: number;
   } | undefined>();
-  const [existingInterventions, setExistingInterventions] = useState<{
-    id: string;
-    treatmentId: string;
-    treatmentName: string;
-    price: number;
-    decont: number;
-    coPlata: number;
-    duration: number;
-    selectedTeeth: number[];
-  }[]>([]);
+  const [existingInterventions, setExistingInterventions] = useState<SelectedIntervention[]>([]);
 
   // Complete appointment dialog state
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
@@ -158,13 +150,12 @@ const Index = () => {
         treatmentId: t.treatment_id || '',
         treatmentName: t.treatment_name,
         price: t.price,
-        decont: t.decont,
-        coPlata: t.co_plata,
+        cas: (t.decont || 0) + (t.co_plata || 0),
         duration: t.duration,
         selectedTeeth: t.tooth_numbers || [],
         teethDetails: (t.tooth_data || []).map((td: any) => ({
           toothNumber: td.toothNumber,
-          status: td.status,
+          status: td.status as any,
           notes: td.notes,
         })),
       })));
@@ -177,13 +168,12 @@ const Index = () => {
           treatmentId: t.treatment_id || '',
           treatmentName: t.treatment_name,
           price: t.price,
-          decont: t.decont,
-          coPlata: t.co_plata,
+          cas: (t.decont || 0) + (t.co_plata || 0),
           duration: t.duration,
           selectedTeeth: t.tooth_numbers || [],
           teethDetails: (t.tooth_data || []).map(td => ({
             toothNumber: td.toothNumber,
-            status: td.status,
+            status: td.status as any,
             notes: td.notes,
           })),
         })));
@@ -251,8 +241,8 @@ const Index = () => {
         treatment_id: t.treatmentId || undefined,
         treatment_name: t.treatmentName,
         price: t.price,
-        decont: t.decont,
-        co_plata: t.coPlata,
+        decont: t.cas,
+        co_plata: 0,
         duration: t.duration,
         tooth_numbers: t.selectedTeeth || [],
         tooth_data: t.teethDetails || [],
