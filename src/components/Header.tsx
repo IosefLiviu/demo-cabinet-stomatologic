@@ -2,6 +2,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Stethoscope, LogOut, Users, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { CasBudgetDisplay } from './CasBudgetDisplay';
+
 export function Header() {
   const navigate = useNavigate();
   const {
@@ -31,6 +33,7 @@ export function Header() {
                   <Users className="h-4 w-4 mr-2" />
                   Administrare Doctori
                 </Button>}
+              <CasBudgetDisplay />
               <Button variant="ghost" size="sm" onClick={handleSignOut}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Deconectare

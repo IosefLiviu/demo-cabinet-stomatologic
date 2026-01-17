@@ -387,6 +387,36 @@ export function useAppointmentsDB() {
           console.error('Error saving treatment records:', recordsError);
           // Don't throw - the appointment was completed, just log the error
         }
+
+        // Deduct CAS discount from monthly budget
+        const totalCas = completedAppointment.appointment_treatments.reduce(
+          (sum, t) => sum + (Number(t.decont) || 0), 
+          0
+        );
+        
+        if (totalCas > 0) {
+          const currentMonthYear = new Date().toISOString().slice(0, 7); // Format: YYYY-MM
+          
+          // Get current budget
+          const { data: budgetData } = await supabase
+            .from('cas_budget')
+            .select('*')
+            .eq('month_year', currentMonthYear)
+            .maybeSingle();
+
+          if (budgetData) {
+            // Update existing budget
+            await supabase
+              .from('cas_budget')
+              .update({ used_budget: (budgetData.used_budget || 0) + totalCas })
+              .eq('month_year', currentMonthYear);
+          } else {
+            // Create new budget entry with used amount
+            await supabase
+              .from('cas_budget')
+              .insert({ month_year: currentMonthYear, initial_budget: 0, used_budget: totalCas });
+          }
+        }
       }
 
       setAppointments((prev) =>
