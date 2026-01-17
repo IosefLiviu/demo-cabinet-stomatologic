@@ -46,6 +46,7 @@ interface ToothDataRecord {
 
 interface TreatmentRecord {
   id: string;
+  appointment_id: string;
   treatment_name: string;
   price: number | null;
   tooth_numbers: number[] | null;
@@ -73,6 +74,11 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
   const [dentalStatus, setDentalStatus] = useState<ToothData[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all');
+  
+  // Payment dialog state
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
+  const [isUpdatingPayment, setIsUpdatingPayment] = useState(false);
 
   const getFilteredHistory = () => {
     if (periodFilter === 'all') return treatmentHistory;
@@ -187,6 +193,7 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
         appointment.appointment_treatments?.forEach((treatment: any) => {
           records.push({
             id: treatment.id,
+            appointment_id: appointment.id,
             treatment_name: treatment.treatment_name,
             price: treatment.price,
             tooth_numbers: treatment.tooth_numbers,
@@ -204,7 +211,59 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
     setLoadingHistory(false);
   };
 
-  const getPaymentBadge = (method: PaymentMethod | null) => {
+  const handleMarkAsPaid = (appointmentId: string) => {
+    setSelectedAppointmentId(appointmentId);
+    setPaymentDialogOpen(true);
+  };
+
+  const handleConfirmPayment = async (method: 'card' | 'cash') => {
+    if (!selectedAppointmentId) return;
+    
+    setIsUpdatingPayment(true);
+    try {
+      // Get current appointment notes
+      const { data: appointment } = await supabase
+        .from('appointments')
+        .select('notes')
+        .eq('id', selectedAppointmentId)
+        .maybeSingle();
+
+      // Update notes to reflect new payment method
+      let newNotes = appointment?.notes || '';
+      // Remove old payment info
+      newNotes = newNotes.replace(/\[Plată: (Card|Cash|Neachitat)\]/g, '').trim();
+      // Add new payment info
+      newNotes = newNotes ? `${newNotes}\n[Plată: ${method === 'card' ? 'Card' : 'Cash'}]` : `[Plată: ${method === 'card' ? 'Card' : 'Cash'}]`;
+
+      const { error } = await supabase
+        .from('appointments')
+        .update({ 
+          is_paid: true,
+          notes: newNotes
+        })
+        .eq('id', selectedAppointmentId);
+
+      if (error) throw error;
+
+      // Update local state
+      setTreatmentHistory(prev => 
+        prev.map(record => 
+          record.appointment_id === selectedAppointmentId 
+            ? { ...record, payment_method: method }
+            : record
+        )
+      );
+
+      setPaymentDialogOpen(false);
+      setSelectedAppointmentId(null);
+    } catch (error) {
+      console.error('Error updating payment:', error);
+    } finally {
+      setIsUpdatingPayment(false);
+    }
+  };
+
+  const getPaymentBadge = (method: PaymentMethod | null, appointmentId?: string) => {
     switch (method) {
       case 'card':
         return (
@@ -222,10 +281,18 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
         );
       case 'unpaid':
         return (
-          <Badge className="bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 gap-1">
-            <AlertCircle className="h-3 w-3" />
-            Neachitat
-          </Badge>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (appointmentId) handleMarkAsPaid(appointmentId);
+            }}
+            className="cursor-pointer hover:scale-105 transition-transform"
+          >
+            <Badge className="bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 gap-1 hover:bg-orange-200 dark:hover:bg-orange-900/50">
+              <AlertCircle className="h-3 w-3" />
+              Neachitat
+            </Badge>
+          </button>
         );
       default:
         return null;
@@ -524,7 +591,7 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
                                       </div>
                                     </div>
                                     <div className="flex flex-col items-end gap-1 shrink-0">
-                                      {record.payment_method && getPaymentBadge(record.payment_method)}
+                                      {record.payment_method && getPaymentBadge(record.payment_method, record.appointment_id)}
                                       {record.price !== null && record.price > 0 && (
                                         <Badge variant="outline" className="text-xs">
                                           {record.price} RON
@@ -580,6 +647,53 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
             )}
           </TabsContent>
         </Tabs>
+
+        {/* Payment Dialog */}
+        {paymentDialogOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center">
+            <div 
+              className="absolute inset-0 bg-black/50" 
+              onClick={() => {
+                setPaymentDialogOpen(false);
+                setSelectedAppointmentId(null);
+              }}
+            />
+            <div className="relative bg-background rounded-lg p-6 shadow-xl max-w-sm w-full mx-4 z-10">
+              <h3 className="text-lg font-semibold mb-2">Marchează ca achitat</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Selectați metoda de plată utilizată:
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => handleConfirmPayment('card')}
+                  disabled={isUpdatingPayment}
+                  className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-border hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all disabled:opacity-50"
+                >
+                  <CreditCard className="h-6 w-6 text-blue-600" />
+                  <span className="text-sm font-medium">Card</span>
+                </button>
+                <button
+                  onClick={() => handleConfirmPayment('cash')}
+                  disabled={isUpdatingPayment}
+                  className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-border hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950/30 transition-all disabled:opacity-50"
+                >
+                  <Banknote className="h-6 w-6 text-green-600" />
+                  <span className="text-sm font-medium">Cash</span>
+                </button>
+              </div>
+              <button
+                onClick={() => {
+                  setPaymentDialogOpen(false);
+                  setSelectedAppointmentId(null);
+                }}
+                disabled={isUpdatingPayment}
+                className="w-full mt-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Anulează
+              </button>
+            </div>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );
