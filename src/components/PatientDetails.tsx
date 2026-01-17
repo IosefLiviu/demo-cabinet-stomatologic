@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/collapsible';
 import { Patient } from '@/hooks/usePatients';
 import { supabase } from '@/integrations/supabase/client';
-import { MiniDentalChart } from './MiniDentalChart';
+import { MiniDentalChart, ToothData } from './MiniDentalChart';
 
 interface TreatmentRecord {
   id: string;
@@ -56,6 +56,7 @@ type PeriodFilter = 'all' | '30days' | '3months' | '1year';
 
 export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetailsProps) {
   const [treatmentHistory, setTreatmentHistory] = useState<TreatmentRecord[]>([]);
+  const [dentalStatus, setDentalStatus] = useState<ToothData[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all');
 
@@ -89,8 +90,29 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
   useEffect(() => {
     if (patient && open) {
       fetchTreatmentHistory();
+      fetchDentalStatus();
     }
   }, [patient, open]);
+
+  const fetchDentalStatus = async () => {
+    if (!patient) return;
+
+    const { data, error } = await supabase
+      .from('dental_status')
+      .select('tooth_number, status, notes')
+      .eq('patient_id', patient.id);
+
+    if (error) {
+      console.error('Error fetching dental status:', error);
+      return;
+    }
+
+    setDentalStatus((data || []).map(d => ({
+      tooth_number: d.tooth_number,
+      status: d.status as ToothData['status'],
+      notes: d.notes || undefined,
+    })));
+  };
 
   const fetchTreatmentHistory = async () => {
     if (!patient) return;
@@ -411,7 +433,10 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
                                         </div>
                                         {record.tooth_numbers && record.tooth_numbers.length > 0 && (
                                           <div className="mt-3">
-                                            <MiniDentalChart treatedTeeth={record.tooth_numbers} />
+                                            <MiniDentalChart 
+                                              treatedTeeth={record.tooth_numbers} 
+                                              teethData={dentalStatus}
+                                            />
                                           </div>
                                         )}
                                       </div>
