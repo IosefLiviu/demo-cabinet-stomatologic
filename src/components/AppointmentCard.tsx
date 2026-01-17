@@ -27,6 +27,7 @@ interface AppointmentCardProps {
   onComplete?: (id: string) => void;
   showCabinet?: boolean;
   isCompleted?: boolean;
+  canDeleteCompleted?: boolean;
 }
 
 const cabinetBgColors: Record<number, string> = {
@@ -52,6 +53,7 @@ export function AppointmentCard({
   onComplete,
   showCabinet = true,
   isCompleted = false,
+  canDeleteCompleted = false,
 }: AppointmentCardProps) {
   const cabinet = CABINETS.find((c) => c.id === appointment.cabinetId);
 
@@ -161,31 +163,33 @@ export function AppointmentCard({
           >
             <Edit className="h-3.5 w-3.5" />
           </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive">
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Ștergeți programarea?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Această acțiune nu poate fi anulată. Programarea pentru {appointment.patientName} 
-                  la ora {appointment.time} va fi ștearsă definitiv.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Anulează</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => onDelete(appointment.id)}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  Șterge
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          {(!isCompleted || canDeleteCompleted) && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Ștergeți programarea?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Această acțiune nu poate fi anulată. Programarea pentru {appointment.patientName} 
+                    la ora {appointment.time} va fi ștearsă definitiv.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Anulează</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => onDelete(appointment.id)}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Șterge
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
       </div>
     </div>

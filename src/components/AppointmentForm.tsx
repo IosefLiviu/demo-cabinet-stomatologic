@@ -102,12 +102,14 @@ interface AppointmentFormProps {
     treatmentName: string;
     notes?: string;
     price?: number;
+    status?: string;
   };
   existingInterventions?: SelectedIntervention[];
   patients: Patient[];
   treatments: Treatment[];
   cabinets: Cabinet[];
   doctors: Doctor[];
+  isAdmin?: boolean;
 }
 
 export function AppointmentForm({
@@ -124,6 +126,7 @@ export function AppointmentForm({
   treatments,
   cabinets,
   doctors,
+  isAdmin = false,
 }: AppointmentFormProps) {
   const [patientSearch, setPatientSearch] = useState('');
   const [patientPopoverOpen, setPatientPopoverOpen] = useState(false);
@@ -490,15 +493,18 @@ export function AppointmentForm({
             <div className="flex justify-between gap-3 pt-4">
               <div>
                 {editingAppointment && onDelete && (
-                  <Button 
-                    type="button" 
-                    variant="destructive" 
-                    onClick={onDelete}
-                    className="gap-2"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Șterge
-                  </Button>
+                  // Only show delete button if not completed OR if user is admin
+                  (editingAppointment.status !== 'completed' || isAdmin) && (
+                    <Button 
+                      type="button" 
+                      variant="destructive" 
+                      onClick={onDelete}
+                      className="gap-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Șterge
+                    </Button>
+                  )
                 )}
               </div>
               <div className="flex gap-3">
