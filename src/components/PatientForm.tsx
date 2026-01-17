@@ -43,6 +43,7 @@ export function PatientForm({
     address: '',
     city: '',
     cnp: '',
+    registration_number: '',
     allergies: [],
     medical_conditions: [],
     medications: [],
@@ -68,6 +69,7 @@ export function PatientForm({
         address: editingPatient.address || '',
         city: editingPatient.city || '',
         cnp: editingPatient.cnp || '',
+        registration_number: editingPatient.registration_number || '',
         allergies: editingPatient.allergies || [],
         medical_conditions: editingPatient.medical_conditions || [],
         medications: editingPatient.medications || [],
@@ -86,6 +88,7 @@ export function PatientForm({
         address: '',
         city: '',
         cnp: '',
+        registration_number: '',
         allergies: [],
         medical_conditions: [],
         medications: [],
@@ -241,6 +244,20 @@ export function PatientForm({
                   }
                   placeholder="1234567890123"
                   maxLength={13}
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="registration_number">Nr. Înregistrare</Label>
+                <Input
+                  id="registration_number"
+                  value={formData.registration_number}
+                  onChange={(e) =>
+                    setFormData({ ...formData, registration_number: e.target.value })
+                  }
+                  placeholder="Nr. înregistrare"
                 />
               </div>
             </div>

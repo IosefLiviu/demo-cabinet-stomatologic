@@ -323,6 +323,7 @@ export type Database = {
           medications: string[] | null
           notes: string | null
           phone: string
+          registration_number: string | null
           updated_at: string
         }
         Insert: {
@@ -343,6 +344,7 @@ export type Database = {
           medications?: string[] | null
           notes?: string | null
           phone: string
+          registration_number?: string | null
           updated_at?: string
         }
         Update: {
@@ -363,6 +365,7 @@ export type Database = {
           medications?: string[] | null
           notes?: string | null
           phone?: string
+          registration_number?: string | null
           updated_at?: string
         }
         Relationships: []
