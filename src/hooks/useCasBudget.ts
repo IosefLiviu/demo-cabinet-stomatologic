@@ -98,7 +98,28 @@ export function useCasBudget() {
 
   useEffect(() => {
     fetchCurrentBudget();
-  }, [fetchCurrentBudget]);
+    
+    // Subscribe to realtime changes on cas_budget table
+    const channel = supabase
+      .channel('cas_budget_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'cas_budget',
+          filter: `month_year=eq.${currentMonthYear}`,
+        },
+        () => {
+          fetchCurrentBudget();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchCurrentBudget, currentMonthYear]);
 
   return {
     currentBudget,
