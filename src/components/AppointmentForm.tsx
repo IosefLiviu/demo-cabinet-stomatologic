@@ -58,8 +58,7 @@ export interface SelectedTreatment {
   treatmentId: string;
   treatmentName: string;
   price: number;
-  decont: number;
-  coPlata: number;
+  cas: number;
   duration: number;
   selectedTeeth?: number[];
   teethDetails?: ToothDetail[];
@@ -79,8 +78,7 @@ export interface AppointmentFormData {
   price?: number;
   selectedTreatments: SelectedTreatment[];
   totalPrice: number;
-  totalDecont: number;
-  totalCoPlata: number;
+  totalCas: number;
 }
 
 interface AppointmentFormProps {
@@ -145,8 +143,7 @@ export function AppointmentForm({
 
   // Calculate totals from interventions
   const totalPrice = interventions.reduce((sum, i) => sum + i.price, 0);
-  const totalDecont = interventions.reduce((sum, i) => sum + i.decont, 0);
-  const totalCoPlata = interventions.reduce((sum, i) => sum + i.coPlata, 0);
+  const totalCas = interventions.reduce((sum, i) => sum + i.cas, 0);
   const totalDuration = interventions.reduce((sum, i) => sum + i.duration, 0) || 30;
 
   useEffect(() => {
@@ -173,8 +170,7 @@ export function AppointmentForm({
               treatmentId: treatment.id,
               treatmentName: treatment.name,
               price: editingAppointment.price || treatment.default_price || 0,
-              decont: treatment.decont || 0,
-              coPlata: treatment.co_plata || 0,
+              cas: 0,
               duration: editingAppointment.duration || treatment.default_duration || 30,
               selectedTeeth: [],
             }]);
@@ -232,8 +228,7 @@ export function AppointmentForm({
       treatmentId: i.treatmentId,
       treatmentName: i.treatmentName,
       price: i.price,
-      decont: i.decont,
-      coPlata: i.coPlata,
+      cas: i.cas,
       duration: i.duration,
       selectedTeeth: i.selectedTeeth,
       teethDetails: i.teethDetails?.map(td => ({
@@ -258,8 +253,7 @@ export function AppointmentForm({
       price: totalPrice,
       selectedTreatments,
       totalPrice,
-      totalDecont,
-      totalCoPlata,
+      totalCas,
     });
   };
 
