@@ -153,6 +153,11 @@ const Index = () => {
         coPlata: t.co_plata,
         duration: t.duration,
         selectedTeeth: t.tooth_numbers || [],
+        teethDetails: (t.tooth_data || []).map((td: any) => ({
+          toothNumber: td.toothNumber,
+          status: td.status,
+          notes: td.notes,
+        })),
       })));
     } else {
       // Fallback: fetch from DB if not included
@@ -167,6 +172,11 @@ const Index = () => {
           coPlata: t.co_plata,
           duration: t.duration,
           selectedTeeth: t.tooth_numbers || [],
+          teethDetails: (t.tooth_data || []).map(td => ({
+            toothNumber: td.toothNumber,
+            status: td.status,
+            notes: td.notes,
+          })),
         })));
       } else {
         setExistingInterventions([]);
@@ -236,6 +246,7 @@ const Index = () => {
         co_plata: t.coPlata,
         duration: t.duration,
         tooth_numbers: t.selectedTeeth || [],
+        tooth_data: t.teethDetails || [],
       }));
       await saveAppointmentTreatments(appointmentId, treatmentsToSave);
     }

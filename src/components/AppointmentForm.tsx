@@ -48,6 +48,12 @@ interface Treatment {
   category?: string;
 }
 
+export interface ToothDetail {
+  toothNumber: number;
+  status: string;
+  notes?: string;
+}
+
 export interface SelectedTreatment {
   treatmentId: string;
   treatmentName: string;
@@ -56,6 +62,7 @@ export interface SelectedTreatment {
   coPlata: number;
   duration: number;
   selectedTeeth?: number[];
+  teethDetails?: ToothDetail[];
 }
 
 export interface AppointmentFormData {
@@ -229,6 +236,11 @@ export function AppointmentForm({
       coPlata: i.coPlata,
       duration: i.duration,
       selectedTeeth: i.selectedTeeth,
+      teethDetails: i.teethDetails?.map(td => ({
+        toothNumber: td.toothNumber,
+        status: td.status,
+        notes: td.notes,
+      })),
     }));
 
     const firstTreatment = selectedTreatments[0];
