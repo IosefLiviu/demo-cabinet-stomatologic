@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import {
@@ -11,6 +12,8 @@ import {
   User,
   FileText,
   Edit,
+  Loader2,
+  Stethoscope,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +25,17 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Patient } from '@/hooks/usePatients';
+import { supabase } from '@/integrations/supabase/client';
+
+interface TreatmentRecord {
+  id: string;
+  treatment_name: string;
+  performed_at: string;
+  price: number | null;
+  tooth_numbers: number[] | null;
+  notes: string | null;
+  diagnosis: string | null;
+}
 
 interface PatientDetailsProps {
   patient: Patient | null;
@@ -31,6 +45,33 @@ interface PatientDetailsProps {
 }
 
 export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetailsProps) {
+  const [treatmentHistory, setTreatmentHistory] = useState<TreatmentRecord[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  useEffect(() => {
+    if (patient && open) {
+      fetchTreatmentHistory();
+    }
+  }, [patient, open]);
+
+  const fetchTreatmentHistory = async () => {
+    if (!patient) return;
+    setLoadingHistory(true);
+
+    const { data, error } = await supabase
+      .from('treatment_records')
+      .select('id, treatment_name, performed_at, price, tooth_numbers, notes, diagnosis')
+      .eq('patient_id', patient.id)
+      .order('performed_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching treatment history:', error);
+    } else {
+      setTreatmentHistory(data || []);
+    }
+    setLoadingHistory(false);
+  };
+
   const calculateAge = (dateOfBirth?: string) => {
     if (!dateOfBirth) return null;
     const today = new Date();
@@ -195,10 +236,66 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
           </TabsContent>
 
           <TabsContent value="history" className="mt-6">
-            <div className="text-center py-8 text-muted-foreground">
-              <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Istoricul tratamentelor va fi disponibil în curând</p>
-            </div>
+            {loadingHistory ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : treatmentHistory.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Nu există tratamente înregistrate</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {treatmentHistory.map((record) => (
+                  <div
+                    key={record.id}
+                    className="p-4 rounded-lg border bg-card hover:bg-accent/30 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 mt-0.5">
+                          <Stethoscope className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="font-medium text-sm">{record.treatment_name}</h4>
+                          <div className="text-xs text-muted-foreground">
+                            {format(new Date(record.performed_at), 'd MMMM yyyy, HH:mm', { locale: ro })}
+                          </div>
+                          {record.tooth_numbers && record.tooth_numbers.length > 0 && (
+                            <div className="flex items-center gap-1.5 mt-2">
+                              <span className="text-xs text-muted-foreground">Dinți:</span>
+                              <div className="flex flex-wrap gap-1">
+                                {record.tooth_numbers.map((tooth) => (
+                                  <Badge key={tooth} variant="secondary" className="text-xs px-1.5 py-0">
+                                    {tooth}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {record.diagnosis && (
+                            <p className="text-xs text-muted-foreground mt-2">
+                              <span className="font-medium">Diagnostic:</span> {record.diagnosis}
+                            </p>
+                          )}
+                          {record.notes && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              <span className="font-medium">Note:</span> {record.notes}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      {record.price !== null && record.price > 0 && (
+                        <Badge variant="outline" className="shrink-0">
+                          {record.price} RON
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </SheetContent>
