@@ -13,6 +13,7 @@ export interface Patient {
   address?: string;
   city?: string;
   cnp?: string;
+  registration_number?: string;
   allergies?: string[];
   medical_conditions?: string[];
   medications?: string[];
