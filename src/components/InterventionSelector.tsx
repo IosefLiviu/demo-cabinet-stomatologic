@@ -105,10 +105,11 @@ export function InterventionSelector({
   };
 
   // Calculate totals
-  const totalPrice = interventions.reduce((sum, i) => sum + i.price, 0);
-  const totalCas = interventions.reduce((sum, i) => sum + i.cas, 0);
+  const totalPretInitial = interventions.reduce((sum, i) => sum + i.price, 0);
   const totalLaborator = interventions.reduce((sum, i) => sum + (i.laborator || 0), 0);
-  const totalDePlata = totalPrice - totalCas;
+  const totalPret = totalPretInitial - totalLaborator;
+  const totalCas = interventions.reduce((sum, i) => sum + i.cas, 0);
+  const totalDePlata = totalPretInitial - totalCas;
   const totalDuration = interventions.reduce((sum, i) => sum + i.duration, 0) || 30;
 
   const handleAddTreatment = (treatment: Treatment) => {
@@ -311,7 +312,7 @@ export function InterventionSelector({
               <CollapsibleContent>
                 <div className="p-3 space-y-4 border-t">
                   {/* Duration and Prices Row */}
-                  <div className="grid grid-cols-5 gap-3">
+                  <div className="grid grid-cols-6 gap-2">
                     <div className="space-y-1">
                       <Label className="text-xs text-blue-600">Durată (min)</Label>
                       <Input
@@ -326,7 +327,7 @@ export function InterventionSelector({
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs">Preț</Label>
+                      <Label className="text-xs">Preț inițial</Label>
                       <Input
                         type="number"
                         value={intervention.price}
@@ -345,6 +346,16 @@ export function InterventionSelector({
                           handleUpdateIntervention(intervention.id, 'laborator', parseFloat(e.target.value) || 0)
                         }
                         className="h-8"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Preț</Label>
+                      <Input
+                        type="number"
+                        value={intervention.price - (intervention.laborator || 0)}
+                        readOnly
+                        disabled
+                        className="h-8 bg-muted"
                       />
                     </div>
                     <div className="space-y-1">
@@ -423,10 +434,11 @@ export function InterventionSelector({
 
           {/* Totals */}
           <div className="bg-muted/50 rounded-lg p-3">
-            <div className="grid grid-cols-5 gap-2 text-sm">
+            <div className="grid grid-cols-6 gap-2 text-sm">
               <div className="font-bold">TOTAL</div>
-              <div className="text-right font-bold">{totalPrice.toFixed(2)} lei</div>
+              <div className="text-right font-bold">{totalPretInitial.toFixed(2)} lei</div>
               <div className="text-right font-bold text-purple-600">{totalLaborator.toFixed(2)} lei</div>
+              <div className="text-right font-bold">{totalPret.toFixed(2)} lei</div>
               <div className="text-right font-bold text-green-600">{totalCas.toFixed(2)} lei</div>
               <div className="text-right font-bold text-orange-600">{totalDePlata.toFixed(2)} lei</div>
             </div>
