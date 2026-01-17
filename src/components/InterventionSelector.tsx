@@ -35,6 +35,7 @@ export interface SelectedIntervention {
   treatmentName: string;
   price: number;
   cas: number;
+  laborator: number;
   duration: number;
   selectedTeeth: number[];
   teethDetails?: ToothSelection[];
@@ -106,6 +107,7 @@ export function InterventionSelector({
   // Calculate totals
   const totalPrice = interventions.reduce((sum, i) => sum + i.price, 0);
   const totalCas = interventions.reduce((sum, i) => sum + i.cas, 0);
+  const totalLaborator = interventions.reduce((sum, i) => sum + (i.laborator || 0), 0);
   const totalDePlata = totalPrice - totalCas;
   const totalDuration = interventions.reduce((sum, i) => sum + i.duration, 0) || 30;
 
@@ -116,6 +118,7 @@ export function InterventionSelector({
       treatmentName: treatment.name,
       price: treatment.default_price || 0,
       cas: 0,
+      laborator: 0,
       duration: treatment.default_duration || 30,
       selectedTeeth: [],
       teethDetails: [],
@@ -130,7 +133,7 @@ export function InterventionSelector({
 
   const handleUpdateIntervention = (
     interventionId: string,
-    field: 'price' | 'cas' | 'duration',
+    field: 'price' | 'cas' | 'duration' | 'laborator',
     value: number
   ) => {
     onInterventionsChange(
@@ -308,7 +311,7 @@ export function InterventionSelector({
               <CollapsibleContent>
                 <div className="p-3 space-y-4 border-t">
                   {/* Duration and Prices Row */}
-                  <div className="grid grid-cols-4 gap-3">
+                  <div className="grid grid-cols-5 gap-3">
                     <div className="space-y-1">
                       <Label className="text-xs text-blue-600">Durată (min)</Label>
                       <Input
@@ -329,6 +332,17 @@ export function InterventionSelector({
                         value={intervention.price}
                         onChange={(e) =>
                           handleUpdateIntervention(intervention.id, 'price', parseFloat(e.target.value) || 0)
+                        }
+                        className="h-8"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-purple-600">Laborator</Label>
+                      <Input
+                        type="number"
+                        value={intervention.laborator || 0}
+                        onChange={(e) =>
+                          handleUpdateIntervention(intervention.id, 'laborator', parseFloat(e.target.value) || 0)
                         }
                         className="h-8"
                       />
@@ -409,9 +423,10 @@ export function InterventionSelector({
 
           {/* Totals */}
           <div className="bg-muted/50 rounded-lg p-3">
-            <div className="grid grid-cols-4 gap-2 text-sm">
+            <div className="grid grid-cols-5 gap-2 text-sm">
               <div className="font-bold">TOTAL</div>
               <div className="text-right font-bold">{totalPrice.toFixed(2)} lei</div>
+              <div className="text-right font-bold text-purple-600">{totalLaborator.toFixed(2)} lei</div>
               <div className="text-right font-bold text-green-600">{totalCas.toFixed(2)} lei</div>
               <div className="text-right font-bold text-orange-600">{totalDePlata.toFixed(2)} lei</div>
             </div>
