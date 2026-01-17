@@ -30,11 +30,11 @@ import { supabase } from '@/integrations/supabase/client';
 interface TreatmentRecord {
   id: string;
   treatment_name: string;
-  performed_at: string;
   price: number | null;
   tooth_numbers: number[] | null;
-  notes: string | null;
-  diagnosis: string | null;
+  duration: number | null;
+  appointment_date: string;
+  start_time: string;
 }
 
 interface PatientDetailsProps {
@@ -58,16 +58,44 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
     if (!patient) return;
     setLoadingHistory(true);
 
+    // Fetch from appointment_treatments joined with appointments
     const { data, error } = await supabase
-      .from('treatment_records')
-      .select('id, treatment_name, performed_at, price, tooth_numbers, notes, diagnosis')
+      .from('appointments')
+      .select(`
+        id,
+        appointment_date,
+        start_time,
+        appointment_treatments (
+          id,
+          treatment_name,
+          price,
+          tooth_numbers,
+          duration
+        )
+      `)
       .eq('patient_id', patient.id)
-      .order('performed_at', { ascending: false });
+      .order('appointment_date', { ascending: false });
 
     if (error) {
       console.error('Error fetching treatment history:', error);
+      setTreatmentHistory([]);
     } else {
-      setTreatmentHistory(data || []);
+      // Flatten the data
+      const records: TreatmentRecord[] = [];
+      data?.forEach((appointment: any) => {
+        appointment.appointment_treatments?.forEach((treatment: any) => {
+          records.push({
+            id: treatment.id,
+            treatment_name: treatment.treatment_name,
+            price: treatment.price,
+            tooth_numbers: treatment.tooth_numbers,
+            duration: treatment.duration,
+            appointment_date: appointment.appointment_date,
+            start_time: appointment.start_time,
+          });
+        });
+      });
+      setTreatmentHistory(records);
     }
     setLoadingHistory(false);
   };
@@ -260,8 +288,13 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
                         <div className="space-y-1">
                           <h4 className="font-medium text-sm">{record.treatment_name}</h4>
                           <div className="text-xs text-muted-foreground">
-                            {format(new Date(record.performed_at), 'd MMMM yyyy, HH:mm', { locale: ro })}
+                            {format(new Date(record.appointment_date), 'd MMMM yyyy', { locale: ro })} la {record.start_time.slice(0, 5)}
                           </div>
+                          {record.duration && (
+                            <div className="text-xs text-muted-foreground">
+                              Durată: {record.duration} min
+                            </div>
+                          )}
                           {record.tooth_numbers && record.tooth_numbers.length > 0 && (
                             <div className="flex items-center gap-1.5 mt-2">
                               <span className="text-xs text-muted-foreground">Dinți:</span>
@@ -273,16 +306,6 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
                                 ))}
                               </div>
                             </div>
-                          )}
-                          {record.diagnosis && (
-                            <p className="text-xs text-muted-foreground mt-2">
-                              <span className="font-medium">Diagnostic:</span> {record.diagnosis}
-                            </p>
-                          )}
-                          {record.notes && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              <span className="font-medium">Note:</span> {record.notes}
-                            </p>
                           )}
                         </div>
                       </div>
