@@ -21,6 +21,7 @@ import { useAppointmentsDB, AppointmentDB } from '@/hooks/useAppointmentsDB';
 import { useTreatments } from '@/hooks/useTreatments';
 import { useCabinets } from '@/hooks/useCabinets';
 import { useDoctors } from '@/hooks/useDoctors';
+import { useAuth } from '@/hooks/useAuth';
 import { TIME_SLOTS, Appointment } from '@/types/appointment';
 
 const Index = () => {
@@ -51,6 +52,7 @@ const Index = () => {
     treatmentName: string;
     notes?: string;
     price?: number;
+    status?: string;
   } | undefined>();
   const [existingInterventions, setExistingInterventions] = useState<SelectedIntervention[]>([]);
 
@@ -77,6 +79,7 @@ const Index = () => {
   const { treatments } = useTreatments();
   const { cabinets, updateCabinetDoctor } = useCabinets();
   const { doctors } = useDoctors();
+  const { isAdmin } = useAuth();
 
   useEffect(() => {
     if (activeTab === 'calendar') {
@@ -141,6 +144,7 @@ const Index = () => {
       treatmentName: appointment.treatment,
       notes: appointment.notes,
       price: dbAppointment?.price || undefined,
+      status: dbAppointment?.status || appointment.status,
     });
 
     // Load existing interventions from DB
@@ -427,6 +431,7 @@ const Index = () => {
         treatments={treatments}
         cabinets={cabinets}
         doctors={doctors}
+        isAdmin={isAdmin}
       />
 
       {/* Cabinet Settings */}
