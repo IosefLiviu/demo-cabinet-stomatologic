@@ -103,7 +103,7 @@ export function useAppointmentsDB() {
           patients (id, first_name, last_name, phone, allergies),
           treatments (id, name, default_duration),
           doctors (id, name, color),
-          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, duration, tooth_numbers)
+          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, duration, tooth_numbers, tooth_data)
         `)
         .order('start_time', { ascending: true });
 
