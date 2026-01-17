@@ -44,6 +44,7 @@ interface InterventionSelectorProps {
   treatments: Treatment[];
   interventions: SelectedIntervention[];
   onInterventionsChange: (interventions: SelectedIntervention[]) => void;
+  isCasDisabled?: boolean;
 }
 
 // FDI notation - permanent teeth
@@ -77,6 +78,7 @@ export function InterventionSelector({
   treatments,
   interventions,
   onInterventionsChange,
+  isCasDisabled = false,
 }: InterventionSelectorProps) {
   const [treatmentDialogOpen, setTreatmentDialogOpen] = useState(false);
   const [expandedInterventions, setExpandedInterventions] = useState<Set<string>>(new Set());
@@ -332,14 +334,15 @@ export function InterventionSelector({
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs text-green-600">CAS</Label>
+                      <Label className={`text-xs ${isCasDisabled ? 'text-muted-foreground' : 'text-green-600'}`}>CAS</Label>
                       <Input
                         type="number"
                         value={intervention.cas}
                         onChange={(e) =>
                           handleUpdateIntervention(intervention.id, 'cas', parseFloat(e.target.value) || 0)
                         }
-                        className="h-8"
+                        className={`h-8 ${isCasDisabled ? 'bg-muted cursor-not-allowed opacity-50' : ''}`}
+                        disabled={isCasDisabled}
                       />
                     </div>
                     <div className="space-y-1">
