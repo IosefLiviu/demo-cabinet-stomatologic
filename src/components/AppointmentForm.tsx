@@ -37,6 +37,7 @@ import { Patient } from '@/hooks/usePatients';
 import { Cabinet } from '@/hooks/useCabinets';
 import { Doctor } from '@/hooks/useDoctors';
 import { InterventionSelector, SelectedIntervention } from '@/components/InterventionSelector';
+import { useCasBudget } from '@/hooks/useCasBudget';
 
 interface Treatment {
   id: string;
@@ -133,6 +134,9 @@ export function AppointmentForm({
   const [isNewPatient, setIsNewPatient] = useState(false);
   
   const [interventions, setInterventions] = useState<SelectedIntervention[]>([]);
+  
+  const { remainingBudget } = useCasBudget();
+  const isCasDisabled = remainingBudget <= 0;
   
   const [formData, setFormData] = useState({
     patientId: '',
@@ -475,6 +479,7 @@ export function AppointmentForm({
               treatments={treatments}
               interventions={interventions}
               onInterventionsChange={setInterventions}
+              isCasDisabled={isCasDisabled}
             />
 
             <div className="space-y-2">
