@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChart, UserCircle, Filter, Download } from 'lucide-react';
+import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChart, UserCircle, Filter, Download, FlaskConical } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -76,12 +76,14 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     const completed = filteredAppointments.filter(a => a.status === 'completed');
     const totalRevenue = completed.reduce((sum, a) => sum + (a.price || 0), 0);
     
-    // Calculate CAS from appointment treatments
+    // Calculate CAS and Laborator from appointment treatments
     let totalCas = 0;
+    let totalLaborator = 0;
     completed.forEach(a => {
       if (a.appointment_treatments && a.appointment_treatments.length > 0) {
         a.appointment_treatments.forEach(t => {
           totalCas += (t.decont || 0);
+          totalLaborator += (Number((t as any).laborator) || 0);
         });
       }
     });
@@ -134,6 +136,8 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       unpaidRevenue,
       scheduledRevenue,
       totalCas,
+      totalLaborator,
+      netRevenue: totalRevenue - totalLaborator,
       avgDuration: Math.round(avgDuration),
       uniquePatients,
     };
@@ -153,7 +157,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       .sort((a, b) => b.value - a.value);
   }, [filteredAppointments]);
 
-  // Doctor revenue data - includes all appointments with cash/card breakdown and CAS
+  // Doctor revenue data - includes all appointments with cash/card breakdown, CAS and Laborator
   const doctorRevenueData = useMemo(() => {
     const doctorStats = filteredAppointments.reduce((acc, a) => {
       const doctorName = a.doctors?.name || 'Fără doctor';
@@ -169,6 +173,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
           unpaid: 0, 
           scheduled: 0,
           cas: 0,
+          laborator: 0,
           appointments: 0,
           color: doctorColor 
         };
@@ -180,10 +185,11 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       if (a.status === 'completed') {
         acc[doctorName].revenue += price;
         
-        // Calculate CAS from appointment treatments
+        // Calculate CAS and Laborator from appointment treatments
         if (a.appointment_treatments && a.appointment_treatments.length > 0) {
           a.appointment_treatments.forEach(t => {
             acc[doctorName].cas += (t.decont || 0);
+            acc[doctorName].laborator += (Number((t as any).laborator) || 0);
           });
         }
         
@@ -206,7 +212,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       }
       
       return acc;
-    }, {} as Record<string, { name: string; revenue: number; paid: number; paidCard: number; paidCash: number; unpaid: number; scheduled: number; cas: number; appointments: number; color: string }>);
+    }, {} as Record<string, { name: string; revenue: number; paid: number; paidCard: number; paidCash: number; unpaid: number; scheduled: number; cas: number; laborator: number; appointments: number; color: string }>);
 
     return Object.values(doctorStats).sort((a, b) => (b.revenue + b.scheduled) - (a.revenue + a.scheduled));
   }, [filteredAppointments]);
@@ -234,6 +240,8 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       ['Planificat (RON)', stats.scheduledRevenue],
       ['', ''],
       ['CAS Decontat (RON)', stats.totalCas],
+      ['Laborator (RON)', stats.totalLaborator],
+      ['Venit Net (RON)', stats.netRevenue],
     ];
     const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
     summarySheet['!cols'] = [{ wch: 25 }, { wch: 30 }];
@@ -241,7 +249,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     
     // Sheet 2: Doctor Revenue
     const doctorData = [
-      ['Doctor', 'Programări', 'Card (RON)', 'Cash (RON)', 'Neachitat (RON)', 'Planificat (RON)', 'CAS (RON)', 'Total (RON)'],
+      ['Doctor', 'Programări', 'Card (RON)', 'Cash (RON)', 'Neachitat (RON)', 'Planificat (RON)', 'CAS (RON)', 'Laborator (RON)', 'Total (RON)'],
       ...doctorRevenueData.map(d => [
         d.name,
         d.appointments,
@@ -250,9 +258,10 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         d.unpaid,
         d.scheduled,
         d.cas,
+        d.laborator,
         d.revenue + d.scheduled
       ]),
-      ['', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', '', ''],
       ['TOTAL', 
         doctorRevenueData.reduce((sum, d) => sum + d.appointments, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.paidCard, 0),
@@ -260,11 +269,12 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         doctorRevenueData.reduce((sum, d) => sum + d.unpaid, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.scheduled, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.cas, 0),
+        doctorRevenueData.reduce((sum, d) => sum + d.laborator, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.revenue + d.scheduled, 0)
       ]
     ];
     const doctorSheet = XLSX.utils.aoa_to_sheet(doctorData);
-    doctorSheet['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }];
+    doctorSheet['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 15 }];
     XLSX.utils.book_append_sheet(workbook, doctorSheet, 'Încasări Doctori');
     
     // Sheet 3: Detailed Appointments
@@ -367,7 +377,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       </div>
 
       {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Programări</CardTitle>
@@ -383,13 +393,39 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Venituri</CardTitle>
+            <CardTitle className="text-sm font-medium">Venituri Brute</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalRevenue.toLocaleString()} RON</div>
             <p className="text-xs text-muted-foreground">
               {stats.paidRevenue.toLocaleString()} încasați, {stats.unpaidRevenue.toLocaleString()} restanți
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-purple-200 bg-purple-50/50 dark:border-purple-800 dark:bg-purple-950/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-400">Costuri Laborator</CardTitle>
+            <FlaskConical className="h-4 w-4 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-purple-700 dark:text-purple-400">{stats.totalLaborator.toLocaleString()} RON</div>
+            <p className="text-xs text-muted-foreground">
+              cheltuieli laborator
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-green-700 dark:text-green-400">Venit Net</CardTitle>
+            <TrendingUp className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-700 dark:text-green-400">{stats.netRevenue.toLocaleString()} RON</div>
+            <p className="text-xs text-muted-foreground">
+              după laborator
             </p>
           </CardContent>
         </Card>
@@ -416,19 +452,6 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
             <div className="text-2xl font-bold">{stats.uniquePatients}</div>
             <p className="text-xs text-muted-foreground">
               în perioada selectată
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Durată Medie</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.avgDuration} min</div>
-            <p className="text-xs text-muted-foreground">
-              per programare
             </p>
           </CardContent>
         </Card>
@@ -500,6 +523,13 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                           <span className="font-medium text-cyan-600">{doctor.cas.toLocaleString()} RON</span>
                         </div>
                       )}
+                      {doctor.laborator > 0 && (
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-fuchsia-500" />
+                          <span className="text-muted-foreground">Laborator:</span>
+                          <span className="font-medium text-fuchsia-600">{doctor.laborator.toLocaleString()} RON</span>
+                        </div>
+                      )}
                     </div>
                     <div className="mt-2">
                       <div className="h-2 rounded-full bg-muted overflow-hidden flex">
@@ -552,6 +582,9 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                   </span>
                   <span className="text-cyan-600 font-medium">
                     CAS: {doctorRevenueData.reduce((sum, d) => sum + d.cas, 0).toLocaleString()} RON
+                  </span>
+                  <span className="text-fuchsia-600 font-medium">
+                    Laborator: {doctorRevenueData.reduce((sum, d) => sum + d.laborator, 0).toLocaleString()} RON
                   </span>
                 </div>
               </div>
