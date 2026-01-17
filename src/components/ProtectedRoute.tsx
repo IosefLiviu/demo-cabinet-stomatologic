@@ -21,7 +21,7 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
     return <Navigate to="/auth" replace />;
   }
 
-  if (requireAdmin && !isAdmin && user.email !== 'andreiliviudiablo@gmail.com') {
+  if (requireAdmin && !isAdmin) {
     return <Navigate to="/" replace />;
   }
 

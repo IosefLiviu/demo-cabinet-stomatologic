@@ -42,7 +42,7 @@ export function Header() {
           <ThemeToggle />
           {user ? (
             <>
-              {(isAdmin || user.email === 'andreiliviudiablo@gmail.com') && (
+              {isAdmin && (
                 <Button variant="ghost" size="sm" onClick={() => navigate('/admin')}>
                   <Users className="h-4 w-4 mr-2" />
                   Administrare Doctori
@@ -75,7 +75,7 @@ export function Header() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  {(isAdmin || user.email === 'andreiliviudiablo@gmail.com') && (
+                  {isAdmin && (
                     <DropdownMenuItem onClick={() => navigate('/admin')}>
                       <Users className="h-4 w-4 mr-2" />
                       Administrare Doctori
