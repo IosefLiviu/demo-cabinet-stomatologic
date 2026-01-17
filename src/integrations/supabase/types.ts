@@ -439,6 +439,7 @@ export type Database = {
       }
       treatments: {
         Row: {
+          cas: number | null
           category: string | null
           co_plata: number | null
           created_at: string
@@ -451,6 +452,7 @@ export type Database = {
           name: string
         }
         Insert: {
+          cas?: number | null
           category?: string | null
           co_plata?: number | null
           created_at?: string
@@ -463,6 +465,7 @@ export type Database = {
           name: string
         }
         Update: {
+          cas?: number | null
           category?: string | null
           co_plata?: number | null
           created_at?: string

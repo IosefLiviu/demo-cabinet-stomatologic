@@ -15,8 +15,7 @@ interface Treatment {
   name: string;
   default_duration: number;
   default_price?: number;
-  decont?: number;
-  co_plata?: number;
+  cas?: number;
   category?: string;
 }
 
@@ -111,9 +110,11 @@ export function TreatmentListDialog({
                           <span className="font-bold text-sm">
                             {treatment.default_price?.toFixed(2) || '0.00'} lei
                           </span>
-                          <div className="flex gap-2 text-xs text-muted-foreground">
-                            {treatment.default_duration} min
-                          </div>
+                          {treatment.cas && treatment.cas > 0 ? (
+                            <span className="text-xs text-green-600 font-medium">
+                              CAS: {treatment.cas.toFixed(2)} lei
+                            </span>
+                          ) : null}
                         </div>
                       </div>
                     </button>

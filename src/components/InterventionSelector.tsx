@@ -19,8 +19,7 @@ interface Treatment {
   name: string;
   default_duration: number;
   default_price?: number;
-  decont?: number;
-  co_plata?: number;
+  cas?: number;
   category?: string;
 }
 
@@ -114,7 +113,7 @@ export function InterventionSelector({
       treatmentId: treatment.id,
       treatmentName: treatment.name,
       price: treatment.default_price || 0,
-      cas: 0,
+      cas: treatment.cas || 0,
       duration: treatment.default_duration || 30,
       selectedTeeth: [],
       teethDetails: [],
