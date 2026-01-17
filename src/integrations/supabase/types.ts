@@ -171,6 +171,33 @@ export type Database = {
         }
         Relationships: []
       }
+      cas_budget: {
+        Row: {
+          created_at: string
+          id: string
+          initial_budget: number
+          month_year: string
+          updated_at: string
+          used_budget: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          initial_budget?: number
+          month_year: string
+          updated_at?: string
+          used_budget?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          initial_budget?: number
+          month_year?: string
+          updated_at?: string
+          used_budget?: number
+        }
+        Relationships: []
+      }
       dental_status: {
         Row: {
           id: string
