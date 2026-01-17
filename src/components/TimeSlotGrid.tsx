@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { Plus, User, CheckCircle2 } from 'lucide-react';
+import { Plus, User, CheckCircle2, XCircle } from 'lucide-react';
 import { TIME_SLOTS, Appointment } from '@/types/appointment';
 import { Cabinet } from '@/hooks/useCabinets';
 import { cn } from '@/lib/utils';
@@ -18,6 +18,7 @@ interface TimeSlotGridProps {
   onSlotClick: (time: string, cabinetId: number) => void;
   onAppointmentClick: (appointment: Appointment) => void;
   onAppointmentComplete?: (id: string) => void;
+  onAppointmentCancel?: (id: string) => void;
 }
 
 const cabinetBgColors: Record<number, string> = {
@@ -44,6 +45,7 @@ export function TimeSlotGrid({
   onSlotClick,
   onAppointmentClick,
   onAppointmentComplete,
+  onAppointmentCancel,
 }: TimeSlotGridProps) {
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
   const cabinetsToShow = selectedCabinet
@@ -114,6 +116,8 @@ export function TimeSlotGrid({
                         "w-full h-full rounded-md p-2 text-left transition-all overflow-hidden min-w-0 flex items-center gap-1",
                         appointment.status === 'completed' 
                           ? "bg-green-100 dark:bg-green-950/30 border border-green-300 dark:border-green-800"
+                          : appointment.status === 'cancelled'
+                          ? "bg-red-100 dark:bg-red-950/30 border border-red-300 dark:border-red-800 opacity-60"
                           : cabinetBgLightColors[cabinet.id]
                       )}
                     >
@@ -123,36 +127,69 @@ export function TimeSlotGrid({
                       >
                         <div className="flex items-center gap-1.5 min-w-0">
                           <User className="h-3 w-3 flex-shrink-0 text-foreground/70" />
-                          <span className="text-xs font-medium text-foreground truncate leading-tight">
+                          <span className={cn(
+                            "text-xs font-medium text-foreground truncate leading-tight",
+                            appointment.status === 'cancelled' && "line-through"
+                          )}>
                             {appointment.patientName}
                           </span>
                         </div>
-                        <p className="text-[10px] text-muted-foreground mt-0.5 truncate leading-tight">
+                        <p className={cn(
+                          "text-[10px] text-muted-foreground mt-0.5 truncate leading-tight",
+                          appointment.status === 'cancelled' && "line-through"
+                        )}>
                           {appointment.treatment}
                         </p>
                       </button>
-                      {onAppointmentComplete && appointment.status !== 'completed' && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onAppointmentComplete(appointment.id);
-                                }}
-                                className="p-1 rounded hover:bg-green-200 dark:hover:bg-green-800 transition-colors flex-shrink-0"
-                              >
-                                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Marchează ca finalizată</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                      {appointment.status !== 'completed' && appointment.status !== 'cancelled' && (
+                        <div className="flex flex-col gap-0.5 flex-shrink-0">
+                          {onAppointmentComplete && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onAppointmentComplete(appointment.id);
+                                    }}
+                                    className="p-0.5 rounded hover:bg-green-200 dark:hover:bg-green-800 transition-colors"
+                                  >
+                                    <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Finalizează</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                          {onAppointmentCancel && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onAppointmentCancel(appointment.id);
+                                    }}
+                                    className="p-0.5 rounded hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
+                                  >
+                                    <XCircle className="h-3.5 w-3.5 text-red-500" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Anulează</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                        </div>
                       )}
                       {appointment.status === 'completed' && (
                         <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                      )}
+                      {appointment.status === 'cancelled' && (
+                        <XCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
                       )}
                     </div>
                   ) : (

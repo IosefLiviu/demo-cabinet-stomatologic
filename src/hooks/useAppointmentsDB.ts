@@ -370,6 +370,42 @@ export function useAppointmentsDB() {
     }
   };
 
+  const cancelAppointment = async (id: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('appointments')
+        .update({ status: 'cancelled' })
+        .eq('id', id)
+        .select(`
+          *,
+          patients (id, first_name, last_name, phone, allergies),
+          treatments (id, name, default_duration),
+          doctors (id, name, color),
+          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, duration, tooth_numbers, tooth_data)
+        `)
+        .single();
+
+      if (error) throw error;
+
+      setAppointments((prev) =>
+        prev.map((a) => (a.id === id ? (data as unknown as AppointmentDB) : a))
+      );
+      toast({
+        title: 'Succes',
+        description: 'Programarea a fost anulată',
+      });
+      return data;
+    } catch (error: any) {
+      console.error('Error cancelling appointment:', error);
+      toast({
+        title: 'Eroare',
+        description: 'Nu s-a putut anula programarea',
+        variant: 'destructive',
+      });
+      return null;
+    }
+  };
+
   return {
     appointments,
     loading,
@@ -379,6 +415,7 @@ export function useAppointmentsDB() {
     updateAppointment,
     deleteAppointment,
     completeAppointment,
+    cancelAppointment,
     getAppointmentsForDate,
     isSlotOccupied,
     saveAppointmentTreatments,
