@@ -1,4 +1,4 @@
-import { Phone, Clock, FileText, Trash2, Edit } from 'lucide-react';
+import { Phone, Clock, FileText, Trash2, Edit, CheckCircle2 } from 'lucide-react';
 import { Appointment, CABINETS } from '@/types/appointment';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -13,12 +13,20 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface AppointmentCardProps {
   appointment: Appointment;
   onEdit: (appointment: Appointment) => void;
   onDelete: (id: string) => void;
+  onComplete?: (id: string) => void;
   showCabinet?: boolean;
+  isCompleted?: boolean;
 }
 
 const cabinetBgColors: Record<number, string> = {
@@ -41,7 +49,9 @@ export function AppointmentCard({
   appointment,
   onEdit,
   onDelete,
+  onComplete,
   showCabinet = true,
+  isCompleted = false,
 }: AppointmentCardProps) {
   const cabinet = CABINETS.find((c) => c.id === appointment.cabinetId);
 
@@ -63,9 +73,10 @@ export function AppointmentCard({
     <div
       className={cn(
         "rounded-lg border p-3 transition-all hover:shadow-md",
-        !hasDoctorColor && cabinetBgColors[appointment.cabinetId]
+        !hasDoctorColor && cabinetBgColors[appointment.cabinetId],
+        isCompleted && "opacity-60 bg-green-50 dark:bg-green-950/20 border-green-300 dark:border-green-800"
       )}
-      style={cardStyle}
+      style={!isCompleted ? cardStyle : undefined}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
@@ -110,6 +121,38 @@ export function AppointmentCard({
           )}
         </div>
         <div className="flex flex-col gap-1">
+          {isCompleted ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="h-7 w-7 flex items-center justify-center text-green-600">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Finalizată</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : onComplete && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-100"
+                    onClick={() => onComplete(appointment.id)}
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Marchează ca finalizată</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           <Button
             variant="ghost"
             size="icon"

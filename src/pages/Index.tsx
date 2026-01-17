@@ -70,6 +70,7 @@ const Index = () => {
     addAppointment,
     updateAppointment,
     deleteAppointment,
+    completeAppointment,
     saveAppointmentTreatments,
     fetchAppointmentTreatments 
   } = useAppointmentsDB();
@@ -266,6 +267,10 @@ const Index = () => {
     }
   };
 
+  const handleAppointmentComplete = async (id: string) => {
+    await completeAppointment(id);
+  };
+
   // Convert appointments to legacy format for existing components
   const legacyAppointments: Appointment[] = appointments.map((apt) => ({
     id: apt.id,
@@ -280,6 +285,7 @@ const Index = () => {
     doctorId: apt.doctor_id || undefined,
     doctorName: apt.doctors?.name || undefined,
     doctorColor: apt.doctors?.color || undefined,
+    status: apt.status,
   }));
 
   const todayAppointments = legacyAppointments.filter(
@@ -337,6 +343,7 @@ const Index = () => {
               cabinets={cabinets}
               onSlotClick={handleSlotClick}
               onAppointmentClick={handleAppointmentClick}
+              onAppointmentComplete={handleAppointmentComplete}
             />
           </TabsContent>
 
