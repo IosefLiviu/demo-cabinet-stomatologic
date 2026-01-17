@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { CasBudgetDisplay } from './CasBudgetDisplay';
 import { ThemeToggle } from './ThemeToggle';
-
 export function Header() {
   const navigate = useNavigate();
   const {
@@ -24,7 +23,7 @@ export function Header() {
           </div>
           <div>
             <h1 className="text-lg font-bold text-foreground">Perfect Smile Glim </h1>
-            <p className="text-xs text-muted-foreground">Sistem de programări</p>
+            <p className="text-xs text-muted-foreground">​Sistem Management Cabinet Stomatologic          </p>
           </div>
         </Link>
         
