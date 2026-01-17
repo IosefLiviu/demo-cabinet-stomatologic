@@ -155,6 +155,7 @@ const Index = () => {
         treatmentName: t.treatment_name,
         price: t.price,
         cas: (t.decont || 0) + (t.co_plata || 0),
+        laborator: 0,
         duration: t.duration,
         selectedTeeth: t.tooth_numbers || [],
         teethDetails: (t.tooth_data || []).map((td: any) => ({
@@ -173,6 +174,7 @@ const Index = () => {
           treatmentName: t.treatment_name,
           price: t.price,
           cas: (t.decont || 0) + (t.co_plata || 0),
+          laborator: 0,
           duration: t.duration,
           selectedTeeth: t.tooth_numbers || [],
           teethDetails: (t.tooth_data || []).map(td => ({
