@@ -304,6 +304,39 @@ export default function Admin() {
     }
   };
 
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      // Delete user role first
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId);
+
+      if (roleError) throw roleError;
+
+      // Delete user profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('user_id', userId);
+
+      if (profileError) throw profileError;
+
+      toast({ 
+        title: 'Succes', 
+        description: 'Utilizatorul a fost șters' 
+      });
+      fetchUsers();
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: 'Eroare',
+        description: 'Nu s-a putut șterge utilizatorul',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleCreateUser = async () => {
     if (!newUserData.email || !newUserData.password) {
       toast({
@@ -543,6 +576,35 @@ export default function Admin() {
                             <SelectItem value="admin">Administrator</SelectItem>
                           </SelectContent>
                         </Select>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="text-destructive hover:text-destructive"
+                              disabled={userItem.user_id === user?.id}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Ștergeți utilizatorul?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Această acțiune nu poate fi anulată. Utilizatorul {userItem.full_name || 'Fără nume'} va fi șters definitiv din sistem.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Anulează</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteUser(userItem.user_id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Șterge
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </CardContent>
                   </Card>
