@@ -62,12 +62,41 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     }
   };
 
+  // Helper to parse payment method from notes
+  const getPaymentMethod = (notes: string | null | undefined): 'card' | 'cash' | 'unpaid' | null => {
+    if (!notes) return null;
+    if (notes.includes('[Plată: Card]')) return 'card';
+    if (notes.includes('[Plată: Cash]')) return 'cash';
+    if (notes.includes('[Plată: Neachitat]')) return 'unpaid';
+    return null;
+  };
+
   // Calculate statistics
   const stats = useMemo(() => {
     const completed = filteredAppointments.filter(a => a.status === 'completed');
     const totalRevenue = completed.reduce((sum, a) => sum + (a.price || 0), 0);
-    const paidRevenue = completed.filter(a => a.is_paid).reduce((sum, a) => sum + (a.price || 0), 0);
-    const unpaidRevenue = totalRevenue - paidRevenue;
+    
+    // Separate by payment method
+    let cardRevenue = 0;
+    let cashRevenue = 0;
+    let unpaidRevenue = 0;
+    
+    completed.forEach(a => {
+      const price = a.price || 0;
+      const method = getPaymentMethod(a.notes);
+      if (method === 'card') {
+        cardRevenue += price;
+      } else if (method === 'cash') {
+        cashRevenue += price;
+      } else if (method === 'unpaid' || !a.is_paid) {
+        unpaidRevenue += price;
+      } else if (a.is_paid) {
+        // Fallback for old data without explicit method
+        cashRevenue += price;
+      }
+    });
+    
+    const paidRevenue = cardRevenue + cashRevenue;
     const avgDuration = filteredAppointments.length > 0 
       ? filteredAppointments.reduce((sum, a) => sum + a.duration, 0) / filteredAppointments.length 
       : 0;
@@ -90,6 +119,8 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       noShow: statusCounts['no_show'] || 0,
       totalRevenue,
       paidRevenue,
+      cardRevenue,
+      cashRevenue,
       unpaidRevenue,
       scheduledRevenue,
       avgDuration: Math.round(avgDuration),
@@ -142,7 +173,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       .sort((a, b) => b.value - a.value);
   }, [filteredAppointments]);
 
-  // Doctor revenue data - includes all appointments (scheduled shows as "planificat", completed as "încasat/restant")
+  // Doctor revenue data - includes all appointments with cash/card breakdown
   const doctorRevenueData = useMemo(() => {
     const doctorStats = filteredAppointments.reduce((acc, a) => {
       const doctorName = a.doctors?.name || 'Fără doctor';
@@ -152,7 +183,9 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         acc[doctorName] = { 
           name: doctorName, 
           revenue: 0, 
-          paid: 0, 
+          paid: 0,
+          paidCard: 0,
+          paidCash: 0,
           unpaid: 0, 
           scheduled: 0,
           appointments: 0,
@@ -165,17 +198,26 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       
       if (a.status === 'completed') {
         acc[doctorName].revenue += price;
-        if (a.is_paid) {
+        const method = getPaymentMethod(a.notes);
+        if (method === 'card') {
+          acc[doctorName].paidCard += price;
           acc[doctorName].paid += price;
-        } else {
+        } else if (method === 'cash') {
+          acc[doctorName].paidCash += price;
+          acc[doctorName].paid += price;
+        } else if (method === 'unpaid' || !a.is_paid) {
           acc[doctorName].unpaid += price;
+        } else if (a.is_paid) {
+          // Fallback for old data
+          acc[doctorName].paidCash += price;
+          acc[doctorName].paid += price;
         }
       } else if (a.status === 'scheduled') {
         acc[doctorName].scheduled += price;
       }
       
       return acc;
-    }, {} as Record<string, { name: string; revenue: number; paid: number; unpaid: number; scheduled: number; appointments: number; color: string }>);
+    }, {} as Record<string, { name: string; revenue: number; paid: number; paidCard: number; paidCash: number; unpaid: number; scheduled: number; appointments: number; color: string }>);
 
     return Object.values(doctorStats).sort((a, b) => (b.revenue + b.scheduled) - (a.revenue + a.scheduled));
   }, [filteredAppointments]);
@@ -197,7 +239,8 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       ['Programate', stats.scheduled],
       ['', ''],
       ['Venituri Totale (RON)', stats.totalRevenue],
-      ['Încasat (RON)', stats.paidRevenue],
+      ['Card (RON)', stats.cardRevenue],
+      ['Cash (RON)', stats.cashRevenue],
       ['Neachitat (RON)', stats.unpaidRevenue],
       ['Planificat (RON)', stats.scheduledRevenue],
     ];
@@ -207,26 +250,28 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     
     // Sheet 2: Doctor Revenue
     const doctorData = [
-      ['Doctor', 'Programări', 'Încasat (RON)', 'Neachitat (RON)', 'Planificat (RON)', 'Total (RON)'],
+      ['Doctor', 'Programări', 'Card (RON)', 'Cash (RON)', 'Neachitat (RON)', 'Planificat (RON)', 'Total (RON)'],
       ...doctorRevenueData.map(d => [
         d.name,
         d.appointments,
-        d.paid,
+        d.paidCard,
+        d.paidCash,
         d.unpaid,
         d.scheduled,
         d.revenue + d.scheduled
       ]),
-      ['', '', '', '', '', ''],
+      ['', '', '', '', '', '', ''],
       ['TOTAL', 
         doctorRevenueData.reduce((sum, d) => sum + d.appointments, 0),
-        doctorRevenueData.reduce((sum, d) => sum + d.paid, 0),
+        doctorRevenueData.reduce((sum, d) => sum + d.paidCard, 0),
+        doctorRevenueData.reduce((sum, d) => sum + d.paidCash, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.unpaid, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.scheduled, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.revenue + d.scheduled, 0)
       ]
     ];
     const doctorSheet = XLSX.utils.aoa_to_sheet(doctorData);
-    doctorSheet['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+    doctorSheet['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
     XLSX.utils.book_append_sheet(workbook, doctorSheet, 'Încasări Doctori');
     
     // Sheet 3: Detailed Appointments
@@ -508,11 +553,20 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                       <span className="text-lg font-bold">{totalValue.toLocaleString()} RON</span>
                     </div>
                     <div className="flex flex-wrap gap-4 text-sm">
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-green-500" />
-                        <span className="text-muted-foreground">Încasat:</span>
-                        <span className="font-medium text-green-600">{doctor.paid.toLocaleString()} RON</span>
-                      </div>
+                      {doctor.paidCard > 0 && (
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-blue-500" />
+                          <span className="text-muted-foreground">Card:</span>
+                          <span className="font-medium text-blue-600">{doctor.paidCard.toLocaleString()} RON</span>
+                        </div>
+                      )}
+                      {doctor.paidCash > 0 && (
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-green-500" />
+                          <span className="text-muted-foreground">Cash:</span>
+                          <span className="font-medium text-green-600">{doctor.paidCash.toLocaleString()} RON</span>
+                        </div>
+                      )}
                       {doctor.unpaid > 0 && (
                         <div className="flex items-center gap-1">
                           <div className="w-2 h-2 rounded-full bg-orange-500" />
@@ -522,9 +576,9 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                       )}
                       {doctor.scheduled > 0 && (
                         <div className="flex items-center gap-1">
-                          <div className="w-2 h-2 rounded-full bg-blue-500" />
+                          <div className="w-2 h-2 rounded-full bg-purple-500" />
                           <span className="text-muted-foreground">Planificat:</span>
-                          <span className="font-medium text-blue-600">{doctor.scheduled.toLocaleString()} RON</span>
+                          <span className="font-medium text-purple-600">{doctor.scheduled.toLocaleString()} RON</span>
                         </div>
                       )}
                     </div>
@@ -533,15 +587,19 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                         {totalValue > 0 && (
                           <>
                             <div 
+                              className="h-full bg-blue-500 transition-all"
+                              style={{ width: `${(doctor.paidCard / totalValue) * 100}%` }}
+                            />
+                            <div 
                               className="h-full bg-green-500 transition-all"
-                              style={{ width: `${(doctor.paid / totalValue) * 100}%` }}
+                              style={{ width: `${(doctor.paidCash / totalValue) * 100}%` }}
                             />
                             <div 
                               className="h-full bg-orange-500 transition-all"
                               style={{ width: `${(doctor.unpaid / totalValue) * 100}%` }}
                             />
                             <div 
-                              className="h-full bg-blue-500 transition-all"
+                              className="h-full bg-purple-500 transition-all"
                               style={{ width: `${(doctor.scheduled / totalValue) * 100}%` }}
                             />
                           </>
@@ -561,13 +619,16 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-4 text-sm mt-1">
+                  <span className="text-blue-600 font-medium">
+                    Card: {doctorRevenueData.reduce((sum, d) => sum + d.paidCard, 0).toLocaleString()} RON
+                  </span>
                   <span className="text-green-600 font-medium">
-                    Încasat: {doctorRevenueData.reduce((sum, d) => sum + d.paid, 0).toLocaleString()} RON
+                    Cash: {doctorRevenueData.reduce((sum, d) => sum + d.paidCash, 0).toLocaleString()} RON
                   </span>
                   <span className="text-orange-600 font-medium">
                     Neachitat: {doctorRevenueData.reduce((sum, d) => sum + d.unpaid, 0).toLocaleString()} RON
                   </span>
-                  <span className="text-blue-600 font-medium">
+                  <span className="text-purple-600 font-medium">
                     Planificat: {doctorRevenueData.reduce((sum, d) => sum + d.scheduled, 0).toLocaleString()} RON
                   </span>
                 </div>
