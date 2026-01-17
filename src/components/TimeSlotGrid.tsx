@@ -51,32 +51,39 @@ export function TimeSlotGrid({
 
   return (
     <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
-      {/* Header */}
-      <div className="grid border-b border-border bg-muted/50" style={{ gridTemplateColumns: `80px repeat(${cabinetsToShow.length}, 1fr)` }}>
-        <div className="p-3 text-center text-xs font-medium text-muted-foreground border-r border-border">
-          Ora
-        </div>
-        {cabinetsToShow.map((cabinet) => (
-          <div
-            key={cabinet.id}
-            className="p-3 text-center border-r border-border last:border-r-0"
-          >
-            <div className="flex items-center justify-center gap-2">
-              <span
-                className={cn(
-                  "w-2.5 h-2.5 rounded-full",
-                  cabinetBgColors[cabinet.id]
-                )}
-              />
-              <span className="text-sm font-semibold text-foreground">{cabinet.name}</span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5">{cabinet.doctor}</p>
+      {/* Scroll container (keeps header + rows aligned even with vertical scrollbar) */}
+      <div
+        className="max-h-[calc(100vh-320px)] overflow-y-auto"
+        style={{ scrollbarGutter: 'stable' }}
+      >
+        {/* Header */}
+        <div
+          className="grid border-b border-border bg-muted/50 sticky top-0 z-10"
+          style={{ gridTemplateColumns: `80px repeat(${cabinetsToShow.length}, 1fr)` }}
+        >
+          <div className="p-3 text-center text-xs font-medium text-muted-foreground border-r border-border">
+            Ora
           </div>
-        ))}
-      </div>
+          {cabinetsToShow.map((cabinet) => (
+            <div
+              key={cabinet.id}
+              className="p-3 text-center border-r border-border last:border-r-0"
+            >
+              <div className="flex items-center justify-center gap-2">
+                <span
+                  className={cn(
+                    "w-2.5 h-2.5 rounded-full",
+                    cabinetBgColors[cabinet.id]
+                  )}
+                />
+                <span className="text-sm font-semibold text-foreground">{cabinet.name}</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">{cabinet.doctor}</p>
+            </div>
+          ))}
+        </div>
 
-      {/* Time slots */}
-      <div className="max-h-[calc(100vh-320px)] overflow-y-auto">
+        {/* Time slots */}
         {TIME_SLOTS.map((time) => (
           <div
             key={time}
