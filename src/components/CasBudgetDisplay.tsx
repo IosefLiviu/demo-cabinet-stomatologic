@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Wallet, Edit2, Check, X } from 'lucide-react';
+import { Wallet, Edit2, Check, X, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -7,9 +7,10 @@ import { useCasBudget } from '@/hooks/useCasBudget';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 export function CasBudgetDisplay() {
-  const { remainingBudget, initialBudget, usedBudget, setMonthlyBudget, loading } = useCasBudget();
+  const { remainingBudget, initialBudget, usedBudget, setMonthlyBudget, resetBudget, loading } = useCasBudget();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -33,6 +34,17 @@ export function CasBudgetDisplay() {
   const handleCancel = () => {
     setIsEditing(false);
     setEditValue('');
+  };
+
+  const handleReset = async () => {
+    if (confirm('Sigur doriți să resetați bugetul CAS utilizat la 0?')) {
+      const success = await resetBudget();
+      if (success) {
+        toast.success('Bugetul CAS a fost resetat');
+      } else {
+        toast.error('Eroare la resetarea bugetului');
+      }
+    }
   };
 
   const percentageUsed = initialBudget > 0 ? (usedBudget / initialBudget) * 100 : 0;
@@ -70,9 +82,14 @@ export function CasBudgetDisplay() {
           <div className="flex items-center justify-between">
             <h4 className="font-semibold text-sm">Buget CAS - {currentMonth}</h4>
             {!isEditing && (
-              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleStartEdit}>
-                <Edit2 className="h-3 w-3" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleReset} title="Resetare buget utilizat">
+                  <RotateCcw className="h-3 w-3" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleStartEdit} title="Editare buget inițial">
+                  <Edit2 className="h-3 w-3" />
+                </Button>
+              </div>
             )}
           </div>
 

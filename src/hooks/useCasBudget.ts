@@ -92,6 +92,21 @@ export function useCasBudget() {
     }
   };
 
+  const resetBudget = async () => {
+    try {
+      const { error } = await supabase
+        .from('cas_budget')
+        .update({ used_budget: 0 })
+        .eq('month_year', currentMonthYear);
+      if (error) throw error;
+      await fetchCurrentBudget();
+      return true;
+    } catch (error) {
+      console.error('Error resetting CAS budget:', error);
+      return false;
+    }
+  };
+
   const remainingBudget = currentBudget 
     ? (currentBudget.initial_budget || 0) - (currentBudget.used_budget || 0)
     : 0;
@@ -129,6 +144,7 @@ export function useCasBudget() {
     usedBudget: currentBudget?.used_budget || 0,
     setMonthlyBudget,
     deductFromBudget,
+    resetBudget,
     refetch: fetchCurrentBudget,
   };
 }
