@@ -73,6 +73,7 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
   const [planItems, setPlanItems] = useState<LocalTreatmentPlanItem[]>([]);
   const [treatmentDialogOpen, setTreatmentDialogOpen] = useState(false);
   const [patientSearch, setPatientSearch] = useState('');
+  const [discountPercent, setDiscountPercent] = useState<number>(0);
 
   const { loading, saveTreatmentPlan } = useTreatmentPlans();
 
@@ -94,6 +95,7 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
     setNextAppointmentDate('');
     setNextAppointmentTime('');
     setPlanItems([]);
+    setDiscountPercent(0);
   };
 
   const handleAddTreatment = (treatment: Treatment) => {
@@ -119,7 +121,9 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
     ));
   };
 
-  const total = planItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const subtotal = planItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const discountAmount = subtotal * (discountPercent / 100);
+  const total = subtotal - discountAmount;
 
   const handleSave = async () => {
     if (!selectedPatientId) return;
@@ -390,8 +394,33 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
                   ))}
                 </TableBody>
               </Table>
-              <div className="bg-muted/50 p-3 text-right font-bold text-lg">
-                TOTAL: {total.toFixed(2)} LEI
+              <div className="bg-muted/50 p-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Label className="text-sm font-medium">Discount %</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={discountPercent}
+                    onChange={(e) => setDiscountPercent(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
+                    className="w-20 h-8"
+                  />
+                  {discountPercent > 0 && (
+                    <span className="text-sm text-muted-foreground">
+                      (-{discountAmount.toFixed(2)} LEI)
+                    </span>
+                  )}
+                </div>
+                <div className="text-right">
+                  {discountPercent > 0 && (
+                    <div className="text-sm text-muted-foreground line-through">
+                      {subtotal.toFixed(2)} LEI
+                    </div>
+                  )}
+                  <div className="font-bold text-lg">
+                    TOTAL: {total.toFixed(2)} LEI
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -482,7 +511,12 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
                 })}
               </tbody>
             </table>
-            <p className="total" style={{ textAlign: 'right' }}>{total.toFixed(2)}</p>
+            {discountPercent > 0 && (
+              <>
+                <p className="total" style={{ textAlign: 'right' }}>Subtotal: {subtotal.toFixed(2)} LEI</p>
+                <p className="total" style={{ textAlign: 'right' }}>Discount ({discountPercent}%): -{discountAmount.toFixed(2)} LEI</p>
+              </>
+            )}
           </div>
 
           <div className="total">TOTAL: {total.toFixed(2)} LEI</div>
