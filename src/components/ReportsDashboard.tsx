@@ -270,6 +270,39 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     return Object.values(doctorStats).sort((a, b) => (b.revenue + b.scheduled) - (a.revenue + a.scheduled));
   }, [filteredAppointments]);
 
+  // Unpaid amounts by patient report
+  const unpaidByPatientData = useMemo(() => {
+    const unpaidAppointments = filteredAppointments.filter(a => {
+      const method = getPaymentMethod(a);
+      const paidAmount = a.paid_amount ?? (a.is_paid ? (a.price || 0) : 0);
+      const price = a.price || 0;
+      
+      // Include if payment method is unpaid, partial payment with remaining balance, or not paid
+      if (method === 'unpaid') return true;
+      if ((method === 'partial_card' || method === 'partial_cash') && paidAmount < price) return true;
+      if (!a.is_paid && a.status === 'completed') return true;
+      return false;
+    });
+
+    return unpaidAppointments.map(a => {
+      const price = a.price || 0;
+      const paidAmount = a.paid_amount ?? (a.is_paid ? price : 0);
+      const unpaidAmount = price - paidAmount;
+      
+      return {
+        id: a.id,
+        patientName: a.patients ? `${a.patients.first_name} ${a.patients.last_name}` : 'N/A',
+        patientPhone: a.patients?.phone || 'N/A',
+        date: a.appointment_date,
+        treatment: a.treatments?.name || 'N/A',
+        doctor: a.doctors?.name || 'N/A',
+        totalPrice: price,
+        paidAmount: paidAmount,
+        unpaidAmount: unpaidAmount
+      };
+    }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [filteredAppointments]);
+
   // Export to Excel function
   const exportToExcel = () => {
     const workbook = XLSX.utils.book_new();
@@ -338,7 +371,37 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     doctorSheet['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 18 }, { wch: 22 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
     XLSX.utils.book_append_sheet(workbook, doctorSheet, 'Încasări Doctori');
     
-    // Sheet 3: Detailed Appointments
+    // Sheet 3: Unpaid by Patient
+    const unpaidData = [
+      ['Sume Neachitate pe Pacienți', '', '', '', '', '', ''],
+      ['Perioadă', `${format(dateRange.from, 'dd.MM.yyyy')} - ${format(dateRange.to, 'dd.MM.yyyy')}`, '', '', '', '', ''],
+      ['', '', '', '', '', '', ''],
+      ['Data', 'Pacient', 'Telefon', 'Tratament', 'Doctor', 'Preț Total (RON)', 'Achitat (RON)', 'Neachitat (RON)'],
+      ...unpaidByPatientData.map(u => [
+        format(new Date(u.date), 'dd.MM.yyyy'),
+        u.patientName,
+        u.patientPhone,
+        u.treatment,
+        u.doctor,
+        u.totalPrice,
+        u.paidAmount,
+        u.unpaidAmount
+      ]),
+      ['', '', '', '', '', '', '', ''],
+      ['TOTAL', '', '', '', '', 
+        unpaidByPatientData.reduce((sum, u) => sum + u.totalPrice, 0),
+        unpaidByPatientData.reduce((sum, u) => sum + u.paidAmount, 0),
+        unpaidByPatientData.reduce((sum, u) => sum + u.unpaidAmount, 0)
+      ]
+    ];
+    const unpaidSheet = XLSX.utils.aoa_to_sheet(unpaidData);
+    unpaidSheet['!cols'] = [
+      { wch: 12 }, { wch: 25 }, { wch: 15 }, { wch: 25 }, 
+      { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }
+    ];
+    XLSX.utils.book_append_sheet(workbook, unpaidSheet, 'Sume Neachitate');
+    
+    // Sheet 4: Detailed Appointments
     const appointmentsData = [
       ['Data', 'Ora', 'Pacient', 'Doctor', 'Tratament', 'Status', 'Preț (RON)', 'Laborator (RON)', 'Achitat'],
       ...filteredAppointments.map(a => {
@@ -692,6 +755,76 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                   <span className="text-lime-600 font-medium">
                     Medic: {doctorRevenueData.reduce((sum, d) => sum + d.fortyPercentTotal, 0).toLocaleString()} RON
                   </span>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Unpaid Amounts by Patient */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-orange-500" />
+            Sume Neachitate pe Pacienți
+          </CardTitle>
+          <CardDescription>
+            Lista pacienților cu sume restante ({unpaidByPatientData.length} înregistrări)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {unpaidByPatientData.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">
+              Nu există sume neachitate în perioada selectată
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {unpaidByPatientData.map((item) => (
+                <div 
+                  key={item.id} 
+                  className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold">{item.patientName}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(item.date), 'dd.MM.yyyy', { locale: ro })}
+                        </span>
+                      </div>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        {item.treatment} • {item.doctor}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Tel: {item.patientPhone}
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-lg font-bold text-orange-600">
+                        {item.unpaidAmount.toLocaleString()} RON
+                      </div>
+                      {item.paidAmount > 0 && (
+                        <div className="text-xs text-muted-foreground">
+                          din {item.totalPrice.toLocaleString()} RON (achitat: {item.paidAmount.toLocaleString()})
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {/* Total Summary */}
+              <div className="p-4 rounded-lg border-2 border-orange-500/20 bg-orange-500/5 mt-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold">Total Neachitat</span>
+                  <span className="text-xl font-bold text-orange-600">
+                    {unpaidByPatientData.reduce((sum, u) => sum + u.unpaidAmount, 0).toLocaleString()} RON
+                  </span>
+                </div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  din {unpaidByPatientData.reduce((sum, u) => sum + u.totalPrice, 0).toLocaleString()} RON total 
+                  ({unpaidByPatientData.length} programări)
                 </div>
               </div>
             </div>
