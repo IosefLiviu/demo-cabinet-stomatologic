@@ -214,18 +214,16 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
             {/* Next Appointment */}
             <div className="space-y-2">
               <Label>Următoarea programare</Label>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <Input
                   type="date"
                   value={nextAppointmentDate}
                   onChange={(e) => setNextAppointmentDate(e.target.value)}
-                  className="flex-1"
                 />
                 <Input
                   type="time"
                   value={nextAppointmentTime}
                   onChange={(e) => setNextAppointmentTime(e.target.value)}
-                  className="w-24"
                 />
               </div>
             </div>
