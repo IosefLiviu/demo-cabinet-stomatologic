@@ -373,14 +373,16 @@ const Index = () => {
                   Rapoarte
                   {activeTab === 'reports' && <span className="ml-auto text-primary">✓</span>}
                 </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => setActiveTab('expenses')} 
-                  className={`gap-2 ${activeTab === 'expenses' ? 'bg-accent font-semibold' : ''}`}
-                >
-                  <Wallet className="h-4 w-4" />
-                  Cheltuieli
-                  {activeTab === 'expenses' && <span className="ml-auto text-primary">✓</span>}
-                </DropdownMenuItem>
+                {isAdmin && (
+                  <DropdownMenuItem 
+                    onClick={() => setActiveTab('expenses')} 
+                    className={`gap-2 ${activeTab === 'expenses' ? 'bg-accent font-semibold' : ''}`}
+                  >
+                    <Wallet className="h-4 w-4" />
+                    Cheltuieli
+                    {activeTab === 'expenses' && <span className="ml-auto text-primary">✓</span>}
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem 
                   onClick={() => setActiveTab('treatment-plan')} 
                   className={`gap-2 ${activeTab === 'treatment-plan' ? 'bg-accent font-semibold' : ''}`}
@@ -480,9 +482,11 @@ const Index = () => {
             />
           </TabsContent>
 
-          <TabsContent value="expenses">
-            <MonthlyExpenses />
-          </TabsContent>
+          {isAdmin && (
+            <TabsContent value="expenses">
+              <MonthlyExpenses />
+            </TabsContent>
+          )}
 
           <TabsContent value="radiology-referral">
             <RadiologyReferral
