@@ -171,7 +171,9 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
           <title>Plan de Tratament</title>
           <style>
             body { font-family: Arial, sans-serif; padding: 20px; color: #000; }
-            .header { text-align: center; margin-bottom: 20px; }
+            .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #999; padding-bottom: 10px; }
+            .logo-section { display: flex; align-items: center; gap: 10px; }
+            .logo { width: 60px; height: 60px; object-fit: contain; }
             .header h1 { font-size: 18px; margin: 0; color: #b8860b; }
             .clinic-name { font-weight: bold; font-size: 14px; }
             .section { margin: 15px 0; }
@@ -180,17 +182,25 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
             th, td { border: 1px solid #333; padding: 6px; text-align: left; }
             th { background: #333; color: #fff; }
             .total { font-weight: bold; text-align: right; margin-top: 10px; font-size: 14px; }
+            .clinic-contact { text-align: right; font-size: 11px; }
+            .clinic-contact p { margin: 2px 0; }
           </style>
         </head>
         <body>
           <div class="header">
-            <div style="text-align: right; font-size: 11px;">
+            <div class="logo-section">
+              <img src="/images/perfect-smile-logo.png" alt="Perfect Smile Logo" class="logo" />
+              <div style="font-weight: bold; font-size: 14px;">
+                PERFECT SMILE GLIM
+              </div>
+            </div>
+            <div class="clinic-contact">
               <p>0721.702.820</p>
               <p>perfectsmilevarteju@gmail.com</p>
               <p>www.perfectsmileglim.ro</p>
             </div>
-            <h1>Plan de Tratament</h1>
           </div>
+          <h1 style="text-align: center; color: #b8860b; font-size: 18px;">Plan de Tratament</h1>
           <div class="section">
             <p class="clinic-name">PERFECT SMILE GLIM</p>
             <p>Str. București, Nr 68-70, Vârteju, Ilfov</p>

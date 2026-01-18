@@ -163,7 +163,9 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
           <title>Plan de Tratament</title>
           <style>
             body { font-family: Arial, sans-serif; padding: 20px; color: #000; }
-            .header { text-align: center; margin-bottom: 20px; }
+            .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #999; padding-bottom: 10px; }
+            .logo-section { display: flex; align-items: center; gap: 10px; }
+            .logo { width: 60px; height: 60px; object-fit: contain; }
             .header h1 { font-size: 18px; margin: 0; color: #b8860b; }
             .header p { margin: 2px 0; font-size: 12px; }
             .clinic-name { font-weight: bold; font-size: 14px; }
@@ -178,6 +180,8 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
             th { background: #333; color: #fff; }
             .total { font-weight: bold; text-align: right; margin-top: 10px; font-size: 14px; }
             .disclaimer { font-size: 10px; color: #666; margin-top: 5px; }
+            .clinic-contact { text-align: right; font-size: 11px; }
+            .clinic-contact p { margin: 2px 0; }
           </style>
         </head>
         <body>
@@ -398,13 +402,18 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
       <div className="hidden">
         <div ref={printRef}>
           <div className="header">
-            <div style={{ textAlign: 'right', fontSize: '11px' }}>
+            <div className="logo-section">
+              <img src="/images/perfect-smile-logo.png" alt="Perfect Smile Logo" className="logo" />
+              <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
+                PERFECT SMILE GLIM
+              </div>
+            </div>
+            <div className="clinic-contact">
               <p>0721.702.820</p>
               <p>perfectsmilevarteju@gmail.com</p>
               <p>www.perfectsmileglim.ro</p>
               <p>Str. București 68-70, Varteju, Magurele</p>
             </div>
-            <h1 style={{ marginTop: '20px' }}>Chirurgie</h1>
           </div>
 
           <div className="section">
