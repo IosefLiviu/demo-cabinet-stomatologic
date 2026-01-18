@@ -458,13 +458,15 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
                             {record.tooth_numbers?.join(', ') || '-'}
                           </td>
                           <td className="px-3 py-2">{record.treatment_name}</td>
-                          <td className="px-3 py-2 text-right">
-                            <Input
-                              type="number"
-                              value={record.editedPrice ?? 0}
-                              onChange={(e) => handlePriceChange(record.id, parseFloat(e.target.value) || 0)}
-                              className="w-24 text-right h-8"
-                            />
+                          <td className="px-3 py-2">
+                            <div className="flex justify-end">
+                              <Input
+                                type="number"
+                                value={record.editedPrice ?? 0}
+                                onChange={(e) => handlePriceChange(record.id, parseFloat(e.target.value) || 0)}
+                                className="w-24 text-center h-8"
+                              />
+                            </div>
                           </td>
                         </tr>
                       ))}
