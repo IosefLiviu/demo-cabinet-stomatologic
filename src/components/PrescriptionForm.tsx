@@ -78,6 +78,44 @@ interface PrescriptionFormProps {
   doctors: Doctor[];
 }
 
+// Lista predefinită de medicamente
+const PREDEFINED_MEDICATIONS = [
+  // Antibiotice
+  { name: 'Augmentin cp. 1000mg', category: 'Antibiotice' },
+  { name: 'Augmentin bis 400mg/57mg/5ml (copii 2-8 ani)', category: 'Antibiotice' },
+  { name: 'Augmentin ES 600mg/42,9mg/5ml 100ml', category: 'Antibiotice' },
+  { name: 'Augmentin ES 400mg', category: 'Antibiotice' },
+  { name: 'Ampicilină cp. 500mg', category: 'Antibiotice' },
+  { name: 'Flagyl cp. 250mg', category: 'Antibiotice' },
+  { name: 'Metronidazol cp. 500mg', category: 'Antibiotice' },
+  { name: 'Zinnat cp. 500mg', category: 'Antibiotice' },
+  { name: 'Doxiciclină cp. 100mg', category: 'Antibiotice' },
+  { name: 'Klabax cp. 500mg', category: 'Antibiotice' },
+  { name: 'Ospamox 1000mg', category: 'Antibiotice' },
+  { name: 'Cefort cp. 500mg', category: 'Antibiotice' },
+  { name: 'Nolicin 400mg', category: 'Antibiotice' },
+  { name: 'Ospen cp. 500mg', category: 'Antibiotice' },
+  { name: 'Cuminal cp. 500mg', category: 'Antibiotice' },
+  { name: 'Clindamycin cpr. 600mg', category: 'Antibiotice' },
+  // Antiinflamatoare / Analgezice
+  { name: 'Dexametazonă cp. 4mg', category: 'Antiinflamatoare' },
+  { name: 'Doreta cp. 75mg/650mg', category: 'Analgezice' },
+  { name: 'Doreta cp. 37,5mg/325mg', category: 'Analgezice' },
+  { name: 'Arcoxia cp. 90mg', category: 'Antiinflamatoare' },
+  { name: 'Ketonal cp. 150mg', category: 'Analgezice' },
+  { name: 'Algocalmin cp. 500mg', category: 'Analgezice' },
+  { name: 'Algocalmin fiole 1g/2ml soluție injectabilă', category: 'Analgezice' },
+  { name: 'Nimesulid 100mg', category: 'Antiinflamatoare' },
+  { name: 'Aulin cp. 100mg', category: 'Antiinflamatoare' },
+  { name: 'Tadol 25mg', category: 'Analgezice' },
+  // Alte medicamente
+  { name: 'Colutoriu', category: 'Alte' },
+  { name: 'Sinupret', category: 'Alte' },
+  { name: 'Sinupret acut', category: 'Alte' },
+  { name: 'Masorex Spray', category: 'Alte' },
+  { name: 'Olynth', category: 'Alte' },
+];
+
 const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
   const printRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -626,12 +664,59 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
 
               {/* Prescription Items */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <Label className="text-base font-semibold">Medicamente (Rp.)</Label>
-                  <Button variant="outline" size="sm" onClick={addPrescriptionItem}>
-                    <Plus className="h-4 w-4 mr-1" />
-                    Adaugă medicament
-                  </Button>
+                  <div className="flex gap-2">
+                    <Select onValueChange={(value) => {
+                      const med = PREDEFINED_MEDICATIONS.find(m => m.name === value);
+                      if (med) {
+                        // Find first empty item or add new one
+                        const emptyItem = prescriptionItems.find(i => !i.medication.trim());
+                        if (emptyItem) {
+                          updatePrescriptionItem(emptyItem.id, 'medication', med.name);
+                        } else {
+                          setPrescriptionItems([
+                            ...prescriptionItems,
+                            { id: crypto.randomUUID(), medication: med.name, quantity: '', dosage: '' }
+                          ]);
+                        }
+                      }
+                    }}>
+                      <SelectTrigger className="w-[280px]">
+                        <SelectValue placeholder="Selectează medicament predefinit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <div className="text-xs font-semibold text-muted-foreground px-2 py-1 bg-muted">Antibiotice</div>
+                        {PREDEFINED_MEDICATIONS.filter(m => m.category === 'Antibiotice').map(med => (
+                          <SelectItem key={med.name} value={med.name}>
+                            {med.name}
+                          </SelectItem>
+                        ))}
+                        <div className="text-xs font-semibold text-muted-foreground px-2 py-1 bg-muted mt-1">Antiinflamatoare</div>
+                        {PREDEFINED_MEDICATIONS.filter(m => m.category === 'Antiinflamatoare').map(med => (
+                          <SelectItem key={med.name} value={med.name}>
+                            {med.name}
+                          </SelectItem>
+                        ))}
+                        <div className="text-xs font-semibold text-muted-foreground px-2 py-1 bg-muted mt-1">Analgezice</div>
+                        {PREDEFINED_MEDICATIONS.filter(m => m.category === 'Analgezice').map(med => (
+                          <SelectItem key={med.name} value={med.name}>
+                            {med.name}
+                          </SelectItem>
+                        ))}
+                        <div className="text-xs font-semibold text-muted-foreground px-2 py-1 bg-muted mt-1">Alte</div>
+                        {PREDEFINED_MEDICATIONS.filter(m => m.category === 'Alte').map(med => (
+                          <SelectItem key={med.name} value={med.name}>
+                            {med.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button variant="outline" size="sm" onClick={addPrescriptionItem}>
+                      <Plus className="h-4 w-4 mr-1" />
+                      Manual
+                    </Button>
+                  </div>
                 </div>
                 
                 <div className="space-y-3">
@@ -643,7 +728,13 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
                           value={item.medication}
                           onChange={(e) => updatePrescriptionItem(item.id, 'medication', e.target.value)}
                           placeholder={`${index + 1}) Denumire medicament`}
+                          list={`medications-${item.id}`}
                         />
+                        <datalist id={`medications-${item.id}`}>
+                          {PREDEFINED_MEDICATIONS.map(med => (
+                            <option key={med.name} value={med.name} />
+                          ))}
+                        </datalist>
                       </div>
                       <div className="col-span-6 md:col-span-2 space-y-1">
                         <Label className="text-xs">Cantitate (Nr.)</Label>
@@ -710,7 +801,7 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
               </div>
 
               {/* Table */}
-              <div className="border rounded-lg">
+              <div className="border rounded-lg overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
