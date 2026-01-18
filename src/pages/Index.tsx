@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
-import { Plus, Users, Calendar as CalendarIcon, BarChart3 } from 'lucide-react';
+import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { DateNavigator } from '@/components/DateNavigator';
 import { CabinetTabs } from '@/components/CabinetTabs';
@@ -12,6 +12,7 @@ import { PatientDetails } from '@/components/PatientDetails';
 import { AppointmentForm, AppointmentFormData } from '@/components/AppointmentForm';
 import { SelectedIntervention } from '@/components/InterventionSelector';
 import { ReportsDashboard } from '@/components/ReportsDashboard';
+import { MonthlyExpenses } from '@/components/MonthlyExpenses';
 import { CabinetSettings } from '@/components/CabinetSettings';
 import { CompleteAppointmentDialog, PaymentData } from '@/components/CompleteAppointmentDialog';
 import { Button } from '@/components/ui/button';
@@ -330,7 +331,7 @@ const Index = () => {
 
       <main className="container px-2 sm:px-4 py-4 sm:py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full max-w-lg grid-cols-3 h-auto">
+          <TabsList className="grid w-full max-w-xl grid-cols-4 h-auto">
             <TabsTrigger value="calendar" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
               <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden xs:inline">Calendar</span>
@@ -342,6 +343,10 @@ const Index = () => {
             <TabsTrigger value="reports" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
               <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden xs:inline">Rapoarte</span>
+            </TabsTrigger>
+            <TabsTrigger value="expenses" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+              <Wallet className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Cheltuieli</span>
             </TabsTrigger>
           </TabsList>
 
@@ -398,6 +403,10 @@ const Index = () => {
               loading={appointmentsLoading}
               onFetchRange={fetchAppointmentsRange}
             />
+          </TabsContent>
+
+          <TabsContent value="expenses">
+            <MonthlyExpenses />
           </TabsContent>
         </Tabs>
       </main>

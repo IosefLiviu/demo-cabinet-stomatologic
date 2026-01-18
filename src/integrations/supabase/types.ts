@@ -272,6 +272,39 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_expenses: {
+        Row: {
+          amount: number | null
+          created_at: string
+          expense_name: string
+          id: string
+          is_paid: boolean | null
+          month_year: string
+          paid_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          expense_name: string
+          id?: string
+          is_paid?: boolean | null
+          month_year: string
+          paid_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          expense_name?: string
+          id?: string
+          is_paid?: boolean | null
+          month_year?: string
+          paid_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       patient_documents: {
         Row: {
           description: string | null
