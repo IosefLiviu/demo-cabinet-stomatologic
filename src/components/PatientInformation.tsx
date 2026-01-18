@@ -36,8 +36,15 @@ interface TreatmentRecord {
   price: number | null;
   performed_at: string;
   treatment_id: string | null;
+  appointment_id: string | null;
   treatments?: {
     category: string | null;
+  } | null;
+  appointments?: {
+    doctor_id: string | null;
+    doctors?: {
+      name: string;
+    } | null;
   } | null;
 }
 
@@ -82,8 +89,15 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
             price,
             performed_at,
             treatment_id,
+            appointment_id,
             treatments (
               category
+            ),
+            appointments (
+              doctor_id,
+              doctors (
+                name
+              )
             )
           `)
           .eq('patient_id', selectedPatientId)
@@ -97,7 +111,7 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
           ...record,
           editedPrice: record.price
         }));
-        setTreatmentRecords(recordsWithEditedPrice);
+        setTreatmentRecords(recordsWithEditedPrice as EditableTreatmentRecord[]);
       } catch (error) {
         console.error('Error fetching treatment records:', error);
       } finally {
@@ -307,6 +321,12 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
   const getTreatmentCode = (record: TreatmentRecord, index: number) => {
     // Simple code generation - you can customize this
     return String(index + 1).padStart(3, '0');
+  };
+
+  // Get doctor name from record
+  const getDoctorName = (record: EditableTreatmentRecord) => {
+    const doctorName = record.appointments?.doctors?.name;
+    return doctorName ? `Dr. ${doctorName}` : '-';
   };
 
   return (
@@ -546,7 +566,7 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
                       <td className="text-center">{getTreatmentCode(record, index)}</td>
                       <td>{record.tooth_numbers?.join(', ') || '-'}</td>
                       <td>{record.treatment_name}</td>
-                      <td>Dr. Chirurgie</td>
+                      <td>{getDoctorName(record)}</td>
                       <td className="text-right">{(record.editedPrice ?? record.price)?.toLocaleString('ro-RO')} LEI</td>
                     </tr>
                   ))}
