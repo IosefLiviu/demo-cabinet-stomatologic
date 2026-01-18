@@ -1,11 +1,12 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { format, parseISO, isSameDay } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Printer, Search, User } from 'lucide-react';
+import { Printer, Search, User, CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Calendar } from '@/components/ui/calendar';
 import {
   Command,
   CommandEmpty,
@@ -40,6 +41,10 @@ interface TreatmentRecord {
   } | null;
 }
 
+interface EditableTreatmentRecord extends TreatmentRecord {
+  editedPrice: number | null;
+}
+
 interface PatientInformationProps {
   patients: Patient[];
   doctors: Doctor[];
@@ -50,12 +55,14 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
   const [selectedPatientId, setSelectedPatientId] = useState<string>('');
   const [patientSearch, setPatientSearch] = useState('');
   const [patientOpen, setPatientOpen] = useState(false);
-  const [treatmentRecords, setTreatmentRecords] = useState<TreatmentRecord[]>([]);
+  const [treatmentRecords, setTreatmentRecords] = useState<EditableTreatmentRecord[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [dateOpen, setDateOpen] = useState(false);
 
   const selectedPatient = patients.find(p => p.id === selectedPatientId);
 
-  // Fetch treatment records for selected patient
+  // Fetch treatment records for selected patient and date
   useEffect(() => {
     const fetchTreatmentRecords = async () => {
       if (!selectedPatientId) {
@@ -65,6 +72,7 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
 
       setLoading(true);
       try {
+        const dateStr = format(selectedDate, 'yyyy-MM-dd');
         const { data, error } = await supabase
           .from('treatment_records')
           .select(`
@@ -79,10 +87,17 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
             )
           `)
           .eq('patient_id', selectedPatientId)
+          .gte('performed_at', `${dateStr}T00:00:00`)
+          .lte('performed_at', `${dateStr}T23:59:59`)
           .order('performed_at', { ascending: false });
 
         if (error) throw error;
-        setTreatmentRecords(data || []);
+        // Add editedPrice field to each record
+        const recordsWithEditedPrice = (data || []).map(record => ({
+          ...record,
+          editedPrice: record.price
+        }));
+        setTreatmentRecords(recordsWithEditedPrice);
       } catch (error) {
         console.error('Error fetching treatment records:', error);
       } finally {
@@ -91,7 +106,18 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
     };
 
     fetchTreatmentRecords();
-  }, [selectedPatientId]);
+  }, [selectedPatientId, selectedDate]);
+
+  // Handle price change
+  const handlePriceChange = (recordId: string, newPrice: number) => {
+    setTreatmentRecords(prev => 
+      prev.map(record => 
+        record.id === recordId 
+          ? { ...record, editedPrice: newPrice }
+          : record
+      )
+    );
+  };
 
   const filteredPatients = patients.filter(p =>
     `${p.first_name} ${p.last_name}`.toLowerCase().includes(patientSearch.toLowerCase()) ||
@@ -253,7 +279,7 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
     }
   };
 
-  const totalPrice = treatmentRecords.reduce((sum, record) => sum + (record.price || 0), 0);
+  const totalPrice = treatmentRecords.reduce((sum, record) => sum + (record.editedPrice || 0), 0);
 
   const formatDate = (dateString: string) => {
     try {
@@ -347,6 +373,35 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
             </Popover>
           </div>
 
+          {/* Date Selection */}
+          <div className="space-y-2">
+            <Label>Selectează Data</Label>
+            <Popover open={dateOpen} onOpenChange={setDateOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {format(selectedDate, 'dd MMMM yyyy', { locale: ro })}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => {
+                    if (date) {
+                      setSelectedDate(date);
+                      setDateOpen(false);
+                    }
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
           {/* Treatment Records Preview */}
           {selectedPatient && (
             <div className="space-y-4">
@@ -384,7 +439,12 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
                           </td>
                           <td className="px-3 py-2">{record.treatment_name}</td>
                           <td className="px-3 py-2 text-right">
-                            {record.price?.toLocaleString('ro-RO')} LEI
+                            <Input
+                              type="number"
+                              value={record.editedPrice ?? 0}
+                              onChange={(e) => handlePriceChange(record.id, parseFloat(e.target.value) || 0)}
+                              className="w-24 text-right h-8"
+                            />
                           </td>
                         </tr>
                       ))}
@@ -401,7 +461,7 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
                 </div>
               ) : (
                 <div className="text-center py-4 text-muted-foreground">
-                  Nu există intervenții înregistrate pentru acest pacient.
+                  Nu există intervenții pentru data selectată ({format(selectedDate, 'dd.MM.yyyy')}).
                 </div>
               )}
 
@@ -466,7 +526,7 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
               </div>
 
               <div className="section-title">Intervenții realizate</div>
-              <div className="date-label">({format(new Date(), 'dd MMM', { locale: ro })})</div>
+              <div className="date-label">({format(selectedDate, 'dd MMM yyyy', { locale: ro })})</div>
 
               <table>
                 <thead>
@@ -487,7 +547,7 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
                       <td>{record.tooth_numbers?.join(', ') || '-'}</td>
                       <td>{record.treatment_name}</td>
                       <td>Dr. Chirurgie</td>
-                      <td className="text-right">{record.price?.toLocaleString('ro-RO')} LEI</td>
+                      <td className="text-right">{(record.editedPrice ?? record.price)?.toLocaleString('ro-RO')} LEI</td>
                     </tr>
                   ))}
                 </tbody>
