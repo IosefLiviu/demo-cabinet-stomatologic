@@ -447,7 +447,7 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
                         <th className="px-3 py-2 text-left">Dată</th>
                         <th className="px-3 py-2 text-left">Dinți</th>
                         <th className="px-3 py-2 text-left">Denumire</th>
-                        <th className="px-3 py-2 text-center">Preț</th>
+                        <th className="px-3 py-2 text-right pr-6">Preț</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -458,15 +458,13 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
                             {record.tooth_numbers?.join(', ') || '-'}
                           </td>
                           <td className="px-3 py-2">{record.treatment_name}</td>
-                          <td className="px-3 py-2">
-                            <div className="flex justify-end">
-                              <Input
-                                type="number"
-                                value={record.editedPrice ?? 0}
-                                onChange={(e) => handlePriceChange(record.id, parseFloat(e.target.value) || 0)}
-                                className="w-24 text-center h-8"
-                              />
-                            </div>
+                          <td className="px-3 py-2 text-right">
+                            <Input
+                              type="number"
+                              value={record.editedPrice ?? 0}
+                              onChange={(e) => handlePriceChange(record.id, parseFloat(e.target.value) || 0)}
+                              className="w-24 text-center h-8 ml-auto"
+                            />
                           </td>
                         </tr>
                       ))}
