@@ -239,17 +239,19 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
     
     setIsUpdatingPayment(true);
     try {
-      // Get current appointment notes
+      // Get current appointment data including price
       const { data: appointment } = await supabase
         .from('appointments')
-        .select('notes')
+        .select('notes, price')
         .eq('id', selectedAppointmentId)
         .maybeSingle();
 
+      const totalPrice = appointment?.price || 0;
+
       // Update notes to reflect new payment method
       let newNotes = appointment?.notes || '';
-      // Remove old payment info
-      newNotes = newNotes.replace(/\[Plată: (Card|Cash|Neachitat)\]/g, '').trim();
+      // Remove old payment info (including partial payments)
+      newNotes = newNotes.replace(/\[Plată: [^\]]+\]/g, '').trim();
       // Add new payment info
       newNotes = newNotes ? `${newNotes}\n[Plată: ${method === 'card' ? 'Card' : 'Cash'}]` : `[Plată: ${method === 'card' ? 'Card' : 'Cash'}]`;
 
@@ -257,6 +259,8 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
         .from('appointments')
         .update({ 
           is_paid: true,
+          paid_amount: totalPrice,
+          payment_method: method,
           notes: newNotes
         })
         .eq('id', selectedAppointmentId);
@@ -267,7 +271,7 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
       setTreatmentHistory(prev => 
         prev.map(record => 
           record.appointment_id === selectedAppointmentId 
-            ? { ...record, payment_method: method }
+            ? { ...record, payment_method: method, paid_amount: totalPrice }
             : record
         )
       );
