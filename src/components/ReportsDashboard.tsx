@@ -200,7 +200,6 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
           netLabRevenue: 0, // Price - laborator only for treatments with laborator > 0
           totalWithNetLab: 0, // paid - laborator (real income after lab costs)
           totalWithNetLabAndUnpaid: 0, // paid - laborator + unpaid (total potential income)
-          totalMinus40Percent: 0, // totalWithNetLabAndUnpaid - 40%
           appointments: 0,
           color: doctorColor 
         };
@@ -258,11 +257,9 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       acc[doctorName].totalWithNetLab = acc[doctorName].paid - acc[doctorName].laborator;
       // Calculate totalWithNetLabAndUnpaid: paid - laborator + unpaid (total potential income)
       acc[doctorName].totalWithNetLabAndUnpaid = acc[doctorName].paid - acc[doctorName].laborator + acc[doctorName].unpaid;
-      // Calculate totalMinus40Percent: totalWithNetLabAndUnpaid - 40% (60% of total)
-      acc[doctorName].totalMinus40Percent = acc[doctorName].totalWithNetLabAndUnpaid * 0.6;
       
       return acc;
-    }, {} as Record<string, { name: string; revenue: number; paid: number; paidCard: number; paidCash: number; unpaid: number; scheduled: number; cas: number; laborator: number; netLabRevenue: number; totalWithNetLab: number; totalWithNetLabAndUnpaid: number; totalMinus40Percent: number; appointments: number; color: string }>);
+    }, {} as Record<string, { name: string; revenue: number; paid: number; paidCard: number; paidCash: number; unpaid: number; scheduled: number; cas: number; laborator: number; netLabRevenue: number; totalWithNetLab: number; totalWithNetLabAndUnpaid: number; appointments: number; color: string }>);
 
     return Object.values(doctorStats).sort((a, b) => (b.revenue + b.scheduled) - (a.revenue + a.scheduled));
   }, [filteredAppointments]);
@@ -299,7 +296,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     
     // Sheet 2: Doctor Revenue
     const doctorData = [
-      ['Doctor', 'Programări', 'Card (RON)', 'Cash (RON)', 'Neachitat (RON)', 'Planificat (RON)', 'CAS (RON)', 'Laborator (RON)', 'Venit Net Lab. (RON)', 'Încasări + Net Lab. (RON)', 'Încasări + Net Lab. + Neachitat (RON)', 'Minus 40% (RON)', 'Total (RON)'],
+      ['Doctor', 'Programări', 'Card (RON)', 'Cash (RON)', 'Neachitat (RON)', 'Planificat (RON)', 'CAS (RON)', 'Laborator (RON)', 'Venit Net Lab. (RON)', 'Încasări + Net Lab. (RON)', 'Încasări + Net Lab. + Neachitat (RON)', 'Total (RON)'],
       ...doctorRevenueData.map(d => [
         d.name,
         d.appointments,
@@ -312,10 +309,9 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         d.netLabRevenue,
         d.totalWithNetLab,
         d.totalWithNetLabAndUnpaid,
-        Math.round(d.totalMinus40Percent * 100) / 100,
         d.revenue + d.scheduled
       ]),
-      ['', '', '', '', '', '', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', '', '', '', '', ''],
       ['TOTAL', 
         doctorRevenueData.reduce((sum, d) => sum + d.appointments, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.paidCard, 0),
@@ -327,12 +323,11 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         doctorRevenueData.reduce((sum, d) => sum + d.netLabRevenue, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.totalWithNetLab, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.totalWithNetLabAndUnpaid, 0),
-        Math.round(doctorRevenueData.reduce((sum, d) => sum + d.totalMinus40Percent, 0) * 100) / 100,
         doctorRevenueData.reduce((sum, d) => sum + d.revenue + d.scheduled, 0)
       ]
     ];
     const doctorSheet = XLSX.utils.aoa_to_sheet(doctorData);
-    doctorSheet['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 18 }, { wch: 22 }, { wch: 30 }, { wch: 15 }, { wch: 15 }];
+    doctorSheet['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 18 }, { wch: 22 }, { wch: 30 }, { wch: 15 }];
     XLSX.utils.book_append_sheet(workbook, doctorSheet, 'Încasări Doctori');
     
     // Sheet 3: Detailed Appointments
@@ -612,13 +607,6 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                           <div className="w-2 h-2 rounded-full bg-rose-500" />
                           <span className="text-muted-foreground">Încasări + Net Lab. + Neachitat:</span>
                           <span className="font-medium text-rose-600">{doctor.totalWithNetLabAndUnpaid.toLocaleString()} RON</span>
-                        </div>
-                      )}
-                      {doctor.totalMinus40Percent !== 0 && (
-                        <div className="flex items-center gap-1">
-                          <div className="w-2 h-2 rounded-full bg-amber-500" />
-                          <span className="text-muted-foreground">Minus 40%:</span>
-                          <span className="font-medium text-amber-600">{Math.round(doctor.totalMinus40Percent).toLocaleString()} RON</span>
                         </div>
                       )}
                     </div>
