@@ -439,6 +439,115 @@ export type Database = {
         }
         Relationships: []
       }
+      treatment_plan_items: {
+        Row: {
+          created_at: string
+          doctor_id: string | null
+          id: string
+          price: number | null
+          quantity: number | null
+          sort_order: number | null
+          tooth_number: number | null
+          treatment_id: string | null
+          treatment_name: string
+          treatment_plan_id: string
+        }
+        Insert: {
+          created_at?: string
+          doctor_id?: string | null
+          id?: string
+          price?: number | null
+          quantity?: number | null
+          sort_order?: number | null
+          tooth_number?: number | null
+          treatment_id?: string | null
+          treatment_name: string
+          treatment_plan_id: string
+        }
+        Update: {
+          created_at?: string
+          doctor_id?: string | null
+          id?: string
+          price?: number | null
+          quantity?: number | null
+          sort_order?: number | null
+          tooth_number?: number | null
+          treatment_id?: string | null
+          treatment_name?: string
+          treatment_plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_plan_items_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_plan_items_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_plan_items_treatment_plan_id_fkey"
+            columns: ["treatment_plan_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatment_plans: {
+        Row: {
+          created_at: string
+          doctor_id: string | null
+          id: string
+          next_appointment_date: string | null
+          next_appointment_time: string | null
+          notes: string | null
+          patient_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          doctor_id?: string | null
+          id?: string
+          next_appointment_date?: string | null
+          next_appointment_time?: string | null
+          notes?: string | null
+          patient_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          doctor_id?: string | null
+          id?: string
+          next_appointment_date?: string | null
+          next_appointment_time?: string | null
+          notes?: string | null
+          patient_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_plans_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_plans_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       treatment_records: {
         Row: {
           appointment_id: string | null
