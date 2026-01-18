@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Plus, Trash2, Printer, FileText } from 'lucide-react';
 import {
   Select,
@@ -14,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useTreatments } from '@/hooks/useTreatments';
 
 interface Patient {
   id: string;
@@ -40,6 +40,7 @@ interface BillingInvoiceProps {
 
 const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients }) => {
   const printRef = useRef<HTMLDivElement>(null);
+  const { treatments } = useTreatments();
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [invoiceDate, setInvoiceDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -392,12 +393,28 @@ const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients }) => {
               {items.map((item, index) => (
                 <div key={item.id} className="grid grid-cols-12 gap-2 items-end p-3 border rounded-lg bg-muted/30">
                   <div className="col-span-12 md:col-span-5 space-y-1">
-                    <Label className="text-xs">Denumire</Label>
-                    <Input
+                    <Label className="text-xs">Denumire serviciu</Label>
+                    <Select
                       value={item.description}
-                      onChange={(e) => updateItem(item.id, 'description', e.target.value)}
-                      placeholder="Denumirea serviciului"
-                    />
+                      onValueChange={(value) => {
+                        const treatment = treatments.find(t => t.name === value);
+                        updateItem(item.id, 'description', value);
+                        if (treatment?.default_price) {
+                          updateItem(item.id, 'unitPrice', treatment.default_price);
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selectează serviciul" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {treatments.map((treatment) => (
+                          <SelectItem key={treatment.id} value={treatment.name}>
+                            {treatment.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="col-span-4 md:col-span-2 space-y-1">
                     <Label className="text-xs">Cantitate</Label>
