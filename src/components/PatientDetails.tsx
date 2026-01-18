@@ -520,12 +520,16 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>{patient.phone}</span>
+                  <a href={`tel:${patient.phone}`} className="text-foreground hover:text-primary underline-offset-2 hover:underline">
+                    {patient.phone}
+                  </a>
                 </div>
                 {patient.email && (
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span>{patient.email}</span>
+                    <a href={`mailto:${patient.email}`} className="text-foreground hover:text-primary underline-offset-2 hover:underline">
+                      {patient.email}
+                    </a>
                   </div>
                 )}
                 {(patient.address || patient.city) && (
