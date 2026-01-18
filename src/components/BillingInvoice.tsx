@@ -63,9 +63,9 @@ const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients }) => {
   };
 
   const updateItem = (id: string, field: keyof InvoiceItem, value: string | number) => {
-    setItems(items.map(item => 
-      item.id === id ? { ...item, [field]: value } : item
-    ));
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+    );
   };
 
   const calculateItemTotal = (item: InvoiceItem) => {
