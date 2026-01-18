@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
-import { Stethoscope, LogIn } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
+import perfectSmileLogo from '@/assets/perfect-smile-logo.png';
 
 const emailSchema = z.string().email('Email invalid');
 const passwordSchema = z.string().min(6, 'Parola trebuie să aibă minim 6 caractere');
@@ -68,11 +69,13 @@ export default function Auth() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Stethoscope className="h-6 w-6 text-primary" />
-            </div>
+            <img 
+              src={perfectSmileLogo} 
+              alt="Perfect Smile Logo" 
+              className="h-20 w-20 object-contain"
+            />
           </div>
-          <CardTitle className="text-2xl">DentalCare</CardTitle>
+          <CardTitle className="text-2xl">Perfect Smile Glim</CardTitle>
           <CardDescription>
             Sistem de management pentru cabinetul stomatologic
           </CardDescription>
