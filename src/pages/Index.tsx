@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
-import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, ClipboardList, Printer, ChevronDown, Radio, FileText } from 'lucide-react';
+import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, ClipboardList, Printer, ChevronDown, Radio, FileText, Pill } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { DateNavigator } from '@/components/DateNavigator';
 import { CabinetTabs } from '@/components/CabinetTabs';
@@ -16,6 +16,7 @@ import { MonthlyExpenses } from '@/components/MonthlyExpenses';
 import { TreatmentPlan } from '@/components/TreatmentPlan';
 import { RadiologyReferral } from '@/components/RadiologyReferral';
 import BillingInvoice from '@/components/BillingInvoice';
+import PrescriptionForm from '@/components/PrescriptionForm';
 import { CabinetSettings } from '@/components/CabinetSettings';
 import { CompleteAppointmentDialog, PaymentData } from '@/components/CompleteAppointmentDialog';
 import { Button } from '@/components/ui/button';
@@ -353,7 +354,7 @@ const Index = () => {
               <DropdownMenuTrigger asChild>
                 <button 
                 className={`inline-flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm py-2 px-3 rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-                    ['reports', 'expenses', 'treatment-plan', 'radiology-referral', 'billing'].includes(activeTab) 
+                    ['reports', 'expenses', 'treatment-plan', 'radiology-referral', 'billing', 'prescription'].includes(activeTab)
                       ? 'bg-background text-foreground shadow-sm' 
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
@@ -403,6 +404,14 @@ const Index = () => {
                   <FileText className="h-4 w-4" />
                   Facturare
                   {activeTab === 'billing' && <span className="ml-auto text-primary">✓</span>}
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => setActiveTab('prescription')} 
+                  className={`gap-2 ${activeTab === 'prescription' ? 'bg-accent font-semibold' : ''}`}
+                >
+                  <Pill className="h-4 w-4" />
+                  Eliberare Rețetă
+                  {activeTab === 'prescription' && <span className="ml-auto text-primary">✓</span>}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -484,6 +493,10 @@ const Index = () => {
 
           <TabsContent value="billing">
             <BillingInvoice patients={patients} />
+          </TabsContent>
+
+          <TabsContent value="prescription">
+            <PrescriptionForm patients={patients} doctors={doctors} />
           </TabsContent>
         </Tabs>
       </main>
