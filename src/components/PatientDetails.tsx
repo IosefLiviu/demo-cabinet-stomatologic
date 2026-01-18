@@ -96,6 +96,7 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
   const [isUpdatingPayment, setIsUpdatingPayment] = useState(false);
+  const [partialPaymentAmount, setPartialPaymentAmount] = useState<string>('');
 
   // Treatment plans
   const [treatmentPlans, setTreatmentPlans] = useState<TreatmentPlan[]>([]);
@@ -357,33 +358,54 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
     setPaymentDialogOpen(true);
   };
 
-  const handleConfirmPayment = async (method: 'card' | 'cash') => {
+  const handleConfirmPayment = async (method: 'card' | 'cash' | 'partial_card' | 'partial_cash', partialAmount?: number) => {
     if (!selectedAppointmentId) return;
     
     setIsUpdatingPayment(true);
     try {
-      // Get current appointment data including price
+      // Get current appointment data including price and paid_amount
       const { data: appointment } = await supabase
         .from('appointments')
-        .select('notes, price')
+        .select('notes, price, paid_amount')
         .eq('id', selectedAppointmentId)
         .maybeSingle();
 
       const totalPrice = appointment?.price || 0;
+      const currentPaidAmount = appointment?.paid_amount || 0;
+      
+      const isPartial = method === 'partial_card' || method === 'partial_cash';
+      const newPaidAmount = isPartial ? currentPaidAmount + (partialAmount || 0) : totalPrice;
+      const isFullyPaid = newPaidAmount >= totalPrice;
+
+      // Determine final payment method
+      let finalMethod: PaymentMethod = method;
+      if (isPartial && isFullyPaid) {
+        // If partial payment completes the total, convert to full payment
+        finalMethod = method === 'partial_card' ? 'card' : 'cash';
+      }
 
       // Update notes to reflect new payment method
       let newNotes = appointment?.notes || '';
       // Remove old payment info (including partial payments)
       newNotes = newNotes.replace(/\[Plată: [^\]]+\]/g, '').trim();
+      
       // Add new payment info
-      newNotes = newNotes ? `${newNotes}\n[Plată: ${method === 'card' ? 'Card' : 'Cash'}]` : `[Plată: ${method === 'card' ? 'Card' : 'Cash'}]`;
+      let paymentLabel = '';
+      if (isFullyPaid) {
+        paymentLabel = finalMethod === 'card' ? 'Card' : 'Cash';
+      } else {
+        paymentLabel = method === 'partial_card' 
+          ? `Parțial Card ${newPaidAmount} RON` 
+          : `Parțial Cash ${newPaidAmount} RON`;
+      }
+      newNotes = newNotes ? `${newNotes}\n[Plată: ${paymentLabel}]` : `[Plată: ${paymentLabel}]`;
 
       const { error } = await supabase
         .from('appointments')
         .update({ 
-          is_paid: true,
-          paid_amount: totalPrice,
-          payment_method: method,
+          is_paid: isFullyPaid,
+          paid_amount: newPaidAmount,
+          payment_method: isFullyPaid ? finalMethod : method,
           notes: newNotes
         })
         .eq('id', selectedAppointmentId);
@@ -394,13 +416,14 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
       setTreatmentHistory(prev => 
         prev.map(record => 
           record.appointment_id === selectedAppointmentId 
-            ? { ...record, payment_method: method, paid_amount: totalPrice }
+            ? { ...record, payment_method: isFullyPaid ? finalMethod : method, paid_amount: newPaidAmount }
             : record
         )
       );
 
       setPaymentDialogOpen(false);
       setSelectedAppointmentId(null);
+      setPartialPaymentAmount('');
     } catch (error) {
       console.error('Error updating payment:', error);
     } finally {
@@ -959,10 +982,8 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
             />
             <div className="relative bg-background rounded-lg p-6 shadow-xl max-w-sm w-full mx-4 z-10">
               <h3 className="text-lg font-semibold mb-2">Marchează ca achitat</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Selectați metoda de plată utilizată:
-              </p>
-              <div className="grid grid-cols-2 gap-3">
+              <p className="text-sm font-medium mb-2">Plată integrală:</p>
+              <div className="grid grid-cols-2 gap-3 mb-4">
                 <button
                   onClick={() => handleConfirmPayment('card')}
                   disabled={isUpdatingPayment}
@@ -980,10 +1001,43 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
                   <span className="text-sm font-medium">Cash</span>
                 </button>
               </div>
+              
+              <div className="border-t pt-4">
+                <p className="text-sm font-medium mb-2">Plată parțială:</p>
+                <div className="flex gap-2 mb-3">
+                  <input
+                    type="number"
+                    placeholder="Sumă plătită (RON)"
+                    value={partialPaymentAmount}
+                    onChange={(e) => setPartialPaymentAmount(e.target.value)}
+                    className="flex-1 px-3 py-2 border rounded-lg text-sm bg-background"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => handleConfirmPayment('partial_card', parseFloat(partialPaymentAmount) || 0)}
+                    disabled={isUpdatingPayment || !partialPaymentAmount || parseFloat(partialPaymentAmount) <= 0}
+                    className="flex flex-col items-center justify-center gap-2 p-3 rounded-lg border-2 border-border hover:border-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-950/30 transition-all disabled:opacity-50"
+                  >
+                    <CreditCard className="h-5 w-5 text-cyan-600" />
+                    <span className="text-xs font-medium">Parțial Card</span>
+                  </button>
+                  <button
+                    onClick={() => handleConfirmPayment('partial_cash', parseFloat(partialPaymentAmount) || 0)}
+                    disabled={isUpdatingPayment || !partialPaymentAmount || parseFloat(partialPaymentAmount) <= 0}
+                    className="flex flex-col items-center justify-center gap-2 p-3 rounded-lg border-2 border-border hover:border-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-950/30 transition-all disabled:opacity-50"
+                  >
+                    <Banknote className="h-5 w-5 text-cyan-600" />
+                    <span className="text-xs font-medium">Parțial Cash</span>
+                  </button>
+                </div>
+              </div>
+              
               <button
                 onClick={() => {
                   setPaymentDialogOpen(false);
                   setSelectedAppointmentId(null);
+                  setPartialPaymentAmount('');
                 }}
                 disabled={isUpdatingPayment}
                 className="w-full mt-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
