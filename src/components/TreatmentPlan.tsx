@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { format, differenceInYears } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Plus, Printer, X, Search, Save, Trash2, FileText, ChevronDown } from 'lucide-react';
+import { Plus, Printer, X, Search, Save } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,25 +21,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { TreatmentListDialog } from './TreatmentListDialog';
 import { Patient } from '@/hooks/usePatients';
-import { useTreatmentPlans, TreatmentPlan as TreatmentPlanType, TreatmentPlanItem as TreatmentPlanItemType } from '@/hooks/useTreatmentPlans';
+import { useTreatmentPlans, TreatmentPlanItem as TreatmentPlanItemType } from '@/hooks/useTreatmentPlans';
 
 interface Treatment {
   id: string;
@@ -89,12 +73,8 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
   const [planItems, setPlanItems] = useState<LocalTreatmentPlanItem[]>([]);
   const [treatmentDialogOpen, setTreatmentDialogOpen] = useState(false);
   const [patientSearch, setPatientSearch] = useState('');
-  const [savedPlans, setSavedPlans] = useState<TreatmentPlanType[]>([]);
-  const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [planToDelete, setPlanToDelete] = useState<string | null>(null);
 
-  const { loading, fetchPatientTreatmentPlans, saveTreatmentPlan, deleteTreatmentPlan } = useTreatmentPlans();
+  const { loading, saveTreatmentPlan } = useTreatmentPlans();
 
   const selectedPatient = patients.find(p => p.id === selectedPatientId);
   const selectedDoctor = doctors.find(d => d.id === selectedDoctorId);
@@ -109,44 +89,11 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
     return fullName.includes(patientSearch.toLowerCase());
   });
 
-  // Load patient's saved plans when patient changes
-  useEffect(() => {
-    if (selectedPatientId) {
-      loadPatientPlans();
-    } else {
-      setSavedPlans([]);
-      resetForm();
-    }
-  }, [selectedPatientId]);
-
-  const loadPatientPlans = async () => {
-    if (!selectedPatientId) return;
-    const plans = await fetchPatientTreatmentPlans(selectedPatientId);
-    setSavedPlans(plans);
-  };
-
   const resetForm = () => {
-    setCurrentPlanId(null);
     setSelectedDoctorId('');
     setNextAppointmentDate('');
     setNextAppointmentTime('');
     setPlanItems([]);
-  };
-
-  const loadPlan = (plan: TreatmentPlanType) => {
-    setCurrentPlanId(plan.id);
-    setSelectedDoctorId(plan.doctorId || '');
-    setNextAppointmentDate(plan.nextAppointmentDate || '');
-    setNextAppointmentTime(plan.nextAppointmentTime || '');
-    setPlanItems(plan.items.map(item => ({
-      id: item.id || `${Date.now()}-${Math.random()}`,
-      treatmentId: item.treatmentId,
-      toothNumber: item.toothNumber,
-      treatmentName: item.treatmentName,
-      doctorId: item.doctorId,
-      quantity: item.quantity,
-      price: item.price,
-    })));
   };
 
   const handleAddTreatment = (treatment: Treatment) => {
@@ -191,37 +138,16 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
       selectedDoctorId || undefined,
       nextAppointmentDate || undefined,
       nextAppointmentTime || undefined,
-      itemsToSave,
-      currentPlanId || undefined
+      itemsToSave
     );
 
     if (savedPlanId) {
-      setCurrentPlanId(savedPlanId);
-      await loadPatientPlans();
+      resetForm();
     }
   };
 
   const handleNewPlan = () => {
     resetForm();
-  };
-
-  const handleDeletePlan = async () => {
-    if (!planToDelete) return;
-    
-    const success = await deleteTreatmentPlan(planToDelete);
-    if (success) {
-      if (currentPlanId === planToDelete) {
-        resetForm();
-      }
-      await loadPatientPlans();
-    }
-    setDeleteDialogOpen(false);
-    setPlanToDelete(null);
-  };
-
-  const confirmDeletePlan = (planId: string) => {
-    setPlanToDelete(planId);
-    setDeleteDialogOpen(true);
   };
 
   const handlePrint = () => {
@@ -302,7 +228,7 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Selection Row */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Patient Selection */}
             <div className="space-y-2">
               <Label>Pacient</Label>
@@ -331,62 +257,6 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
                   </div>
                 </SelectContent>
               </Select>
-            </div>
-
-            {/* Saved Plans Dropdown */}
-            <div className="space-y-2">
-              <Label>Planuri salvate</Label>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-between"
-                    disabled={!selectedPatientId || savedPlans.length === 0}
-                  >
-                    <span className="truncate">
-                      {currentPlanId 
-                        ? `Plan din ${format(new Date(savedPlans.find(p => p.id === currentPlanId)?.createdAt || new Date()), 'dd.MM.yyyy')}`
-                        : savedPlans.length > 0 ? `${savedPlans.length} planuri` : 'Niciun plan'
-                      }
-                    </span>
-                    <ChevronDown className="h-4 w-4 ml-2 shrink-0" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-64">
-                  {savedPlans.map(plan => (
-                    <DropdownMenuItem 
-                      key={plan.id} 
-                      className={`flex items-center justify-between gap-2 ${currentPlanId === plan.id ? 'bg-accent' : ''}`}
-                    >
-                      <button
-                        className="flex-1 text-left flex items-center gap-2"
-                        onClick={() => loadPlan(plan)}
-                      >
-                        <FileText className="h-4 w-4" />
-                        <div>
-                          <div className="font-medium">
-                            {format(new Date(plan.createdAt), 'dd.MM.yyyy HH:mm')}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {plan.items.length} tratamente
-                          </div>
-                        </div>
-                      </button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-destructive hover:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          confirmDeletePlan(plan.id);
-                        }}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
 
             {/* Doctor Selection */}
@@ -618,23 +488,6 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
         onSelectTreatment={handleAddTreatment}
       />
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Șterge planul de tratament?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Această acțiune nu poate fi anulată. Planul de tratament va fi șters definitiv.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Anulează</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeletePlan} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Șterge
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
