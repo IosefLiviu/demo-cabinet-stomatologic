@@ -127,6 +127,93 @@ export const useMonthlyExpenses = () => {
     }
   };
 
+  const updateExpenseName = async (id: string, expenseName: string) => {
+    try {
+      const { error } = await supabase
+        .from('monthly_expenses')
+        .update({ expense_name: expenseName })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setExpenses((prev) =>
+        prev.map((exp) => (exp.id === id ? { ...exp, expense_name: expenseName } : exp))
+      );
+
+      toast({
+        title: 'Actualizat',
+        description: 'Denumirea a fost actualizată',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Eroare',
+        description: 'Nu s-a putut actualiza denumirea',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const addExpense = async (monthYear: string, expenseName: string, amount: number = 0) => {
+    try {
+      const { data, error } = await supabase
+        .from('monthly_expenses')
+        .insert({
+          month_year: monthYear,
+          expense_name: expenseName,
+          amount,
+          is_paid: false,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setExpenses((prev) => [...prev, data as MonthlyExpense].sort((a, b) => 
+        a.expense_name.localeCompare(b.expense_name)
+      ));
+
+      toast({
+        title: 'Adăugat',
+        description: `Cheltuiala "${expenseName}" a fost adăugată`,
+      });
+
+      return data;
+    } catch (error: any) {
+      toast({
+        title: 'Eroare',
+        description: error.message?.includes('duplicate') 
+          ? 'Această cheltuială există deja pentru luna selectată'
+          : 'Nu s-a putut adăuga cheltuiala',
+        variant: 'destructive',
+      });
+      return null;
+    }
+  };
+
+  const deleteExpense = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('monthly_expenses')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setExpenses((prev) => prev.filter((exp) => exp.id !== id));
+
+      toast({
+        title: 'Șters',
+        description: 'Cheltuiala a fost ștearsă',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Eroare',
+        description: 'Nu s-a putut șterge cheltuiala',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const togglePaid = async (id: string, isPaid: boolean) => {
     try {
       const { error } = await supabase
@@ -165,6 +252,9 @@ export const useMonthlyExpenses = () => {
     loading,
     fetchExpenses,
     updateExpense,
+    updateExpenseName,
+    addExpense,
+    deleteExpense,
     togglePaid,
     categories: EXPENSE_CATEGORIES,
   };
