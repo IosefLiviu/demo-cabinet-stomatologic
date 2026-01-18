@@ -447,7 +447,7 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
                         <th className="px-3 py-2 text-left">Dată</th>
                         <th className="px-3 py-2 text-left">Dinți</th>
                         <th className="px-3 py-2 text-left">Denumire</th>
-                        <th className="px-3 py-2 text-right">Preț</th>
+                        <th className="px-3 py-2 text-center">Preț</th>
                       </tr>
                     </thead>
                     <tbody>
