@@ -362,17 +362,29 @@ const Index = () => {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="center">
-                <DropdownMenuItem onClick={() => setActiveTab('reports')} className="gap-2">
+                <DropdownMenuItem 
+                  onClick={() => setActiveTab('reports')} 
+                  className={`gap-2 ${activeTab === 'reports' ? 'bg-accent font-semibold' : ''}`}
+                >
                   <BarChart3 className="h-4 w-4" />
                   Rapoarte
+                  {activeTab === 'reports' && <span className="ml-auto text-primary">✓</span>}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setActiveTab('expenses')} className="gap-2">
+                <DropdownMenuItem 
+                  onClick={() => setActiveTab('expenses')} 
+                  className={`gap-2 ${activeTab === 'expenses' ? 'bg-accent font-semibold' : ''}`}
+                >
                   <Wallet className="h-4 w-4" />
                   Cheltuieli
+                  {activeTab === 'expenses' && <span className="ml-auto text-primary">✓</span>}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setActiveTab('treatment-plan')} className="gap-2">
+                <DropdownMenuItem 
+                  onClick={() => setActiveTab('treatment-plan')} 
+                  className={`gap-2 ${activeTab === 'treatment-plan' ? 'bg-accent font-semibold' : ''}`}
+                >
                   <ClipboardList className="h-4 w-4" />
                   Plan Tratament
+                  {activeTab === 'treatment-plan' && <span className="ml-auto text-primary">✓</span>}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
