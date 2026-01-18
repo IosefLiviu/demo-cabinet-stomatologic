@@ -302,7 +302,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     
     // Sheet 2: Doctor Revenue
     const doctorData = [
-      ['Doctor', 'Programări', 'Card (RON)', 'Cash (RON)', 'Neachitat (RON)', 'Planificat (RON)', 'CAS (RON)', 'Laborator (RON)', 'Venit Net Lab. (RON)', 'Încasări + Net Lab. (RON)', 'Încasări + Net Lab. + Neachitat (RON)', 'Clinică (RON)', 'Medic (RON)', 'Total (RON)'],
+      ['Doctor', 'Programări', 'Card (RON)', 'Cash (RON)', 'Neachitat (RON)', 'Planificat (RON)', 'CAS (RON)', 'Laborator (RON)', 'Venit Net Lab. (RON)', 'Încasări + Net Lab. (RON)', 'Clinică (RON)', 'Medic (RON)', 'Total (RON)'],
       ...doctorRevenueData.map(d => [
         d.name,
         d.appointments,
@@ -314,12 +314,11 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         d.laborator,
         d.netLabRevenue,
         d.totalWithNetLab,
-        d.totalWithNetLabAndUnpaid,
         d.sixtPercentTotal,
         d.fortyPercentTotal,
         d.revenue + d.scheduled
       ]),
-      ['', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', '', '', '', '', '', ''],
       ['TOTAL', 
         doctorRevenueData.reduce((sum, d) => sum + d.appointments, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.paidCard, 0),
@@ -330,14 +329,13 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         doctorRevenueData.reduce((sum, d) => sum + d.laborator, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.netLabRevenue, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.totalWithNetLab, 0),
-        doctorRevenueData.reduce((sum, d) => sum + d.totalWithNetLabAndUnpaid, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.sixtPercentTotal, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.fortyPercentTotal, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.revenue + d.scheduled, 0)
       ]
     ];
     const doctorSheet = XLSX.utils.aoa_to_sheet(doctorData);
-    doctorSheet['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 18 }, { wch: 22 }, { wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+    doctorSheet['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 18 }, { wch: 22 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
     XLSX.utils.book_append_sheet(workbook, doctorSheet, 'Încasări Doctori');
     
     // Sheet 3: Detailed Appointments
@@ -612,13 +610,6 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                           <span className="font-medium text-teal-600">{doctor.totalWithNetLab.toLocaleString()} RON</span>
                         </div>
                       )}
-                      {doctor.totalWithNetLabAndUnpaid !== 0 && (
-                        <div className="flex items-center gap-1">
-                          <div className="w-2 h-2 rounded-full bg-rose-500" />
-                          <span className="text-muted-foreground">Încasări + Net Lab. + Neachitat:</span>
-                          <span className="font-medium text-rose-600">{doctor.totalWithNetLabAndUnpaid.toLocaleString()} RON</span>
-                        </div>
-                      )}
                       {doctor.sixtPercentTotal !== 0 && (
                         <div className="flex items-center gap-1">
                           <div className="w-2 h-2 rounded-full bg-amber-500" />
@@ -694,9 +685,6 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                   </span>
                   <span className="text-teal-600 font-medium">
                     Încasări + Net Lab.: {doctorRevenueData.reduce((sum, d) => sum + d.totalWithNetLab, 0).toLocaleString()} RON
-                  </span>
-                  <span className="text-rose-600 font-medium">
-                    Încasări + Net Lab. + Neachitat: {doctorRevenueData.reduce((sum, d) => sum + d.totalWithNetLabAndUnpaid, 0).toLocaleString()} RON
                   </span>
                   <span className="text-amber-600 font-medium">
                     Clinică: {doctorRevenueData.reduce((sum, d) => sum + d.sixtPercentTotal, 0).toLocaleString()} RON
