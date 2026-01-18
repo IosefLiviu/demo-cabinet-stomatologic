@@ -19,6 +19,9 @@ import {
   CreditCard,
   Banknote,
   AlertCircle,
+  ClipboardList,
+  Printer,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,9 +37,20 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Patient } from '@/hooks/usePatients';
 import { supabase } from '@/integrations/supabase/client';
 import { MiniDentalChart, ToothData } from './MiniDentalChart';
+import { useTreatmentPlans, TreatmentPlan } from '@/hooks/useTreatmentPlans';
 
 interface ToothDataRecord {
   toothNumber: number;
@@ -83,6 +97,12 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
   const [isUpdatingPayment, setIsUpdatingPayment] = useState(false);
 
+  // Treatment plans
+  const [treatmentPlans, setTreatmentPlans] = useState<TreatmentPlan[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [planToDelete, setPlanToDelete] = useState<string | null>(null);
+  const { loading: loadingPlans, fetchPatientTreatmentPlans, deleteTreatmentPlan } = useTreatmentPlans();
+
   const getFilteredHistory = () => {
     if (periodFilter === 'all') return treatmentHistory;
     
@@ -114,8 +134,101 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
     if (patient && open) {
       fetchTreatmentHistory();
       fetchDentalStatus();
+      loadTreatmentPlans();
     }
   }, [patient, open]);
+
+  const loadTreatmentPlans = async () => {
+    if (!patient) return;
+    const plans = await fetchPatientTreatmentPlans(patient.id);
+    setTreatmentPlans(plans);
+  };
+
+  const handleDeletePlan = async () => {
+    if (!planToDelete) return;
+    const success = await deleteTreatmentPlan(planToDelete);
+    if (success) {
+      setTreatmentPlans(prev => prev.filter(p => p.id !== planToDelete));
+    }
+    setDeleteDialogOpen(false);
+    setPlanToDelete(null);
+  };
+
+  const confirmDeletePlan = (planId: string) => {
+    setPlanToDelete(planId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handlePrintPlan = (plan: TreatmentPlan) => {
+    const total = plan.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    
+    const printWindow = window.open('', '', 'width=800,height=600');
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Plan de Tratament</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; color: #000; }
+            .header { text-align: center; margin-bottom: 20px; }
+            .header h1 { font-size: 18px; margin: 0; color: #b8860b; }
+            .clinic-name { font-weight: bold; font-size: 14px; }
+            .section { margin: 15px 0; }
+            .section-title { font-weight: bold; margin-bottom: 5px; }
+            table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px; }
+            th, td { border: 1px solid #333; padding: 6px; text-align: left; }
+            th { background: #333; color: #fff; }
+            .total { font-weight: bold; text-align: right; margin-top: 10px; font-size: 14px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div style="text-align: right; font-size: 11px;">
+              <p>0721.702.820</p>
+              <p>perfectsmilevarteju@gmail.com</p>
+              <p>www.perfectsmileglim.ro</p>
+            </div>
+            <h1>Plan de Tratament</h1>
+          </div>
+          <div class="section">
+            <p class="clinic-name">PERFECT SMILE GLIM</p>
+            <p>Str. București, Nr 68-70, Vârteju, Ilfov</p>
+          </div>
+          <div class="section">
+            <p><strong>Pacient:</strong> ${patient?.first_name} ${patient?.last_name}</p>
+            <p><strong>Data:</strong> ${format(new Date(plan.createdAt), 'dd.MM.yyyy', { locale: ro })}</p>
+            ${plan.nextAppointmentDate ? `<p><strong>Următoarea programare:</strong> ${format(new Date(plan.nextAppointmentDate), 'dd.MM.yyyy', { locale: ro })} ${plan.nextAppointmentTime || ''}</p>` : ''}
+          </div>
+          <div class="section">
+            <table>
+              <thead>
+                <tr>
+                  <th>Dinte</th>
+                  <th>Tratament</th>
+                  <th>Cant.</th>
+                  <th>Preț</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${plan.items.map(item => `
+                  <tr>
+                    <td>${item.toothNumber || '-'}</td>
+                    <td>${item.treatmentName}</td>
+                    <td style="text-align: center">${item.quantity}</td>
+                    <td style="text-align: right">${item.price} RON</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="total">TOTAL: ${total.toFixed(2)} LEI</div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  };
 
   const fetchDentalStatus = async () => {
     if (!patient) return;
@@ -381,9 +494,13 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
         </SheetHeader>
 
         <Tabs defaultValue="info" className="w-full">
-          <TabsList className="w-full grid grid-cols-2">
+          <TabsList className="w-full grid grid-cols-3">
             <TabsTrigger value="info">Informații</TabsTrigger>
             <TabsTrigger value="history">Istoric</TabsTrigger>
+            <TabsTrigger value="plans" className="gap-1">
+              <ClipboardList className="h-3 w-3" />
+              Planuri
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="info" className="mt-6 space-y-6">
@@ -700,6 +817,120 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
               </div>
             )}
           </TabsContent>
+
+          {/* Treatment Plans Tab */}
+          <TabsContent value="plans" className="mt-6">
+            {loadingPlans ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : treatmentPlans.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <ClipboardList className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Nu există planuri de tratament salvate</p>
+                <p className="text-sm mt-2">Creați un plan din tab-ul "Plan Tratament"</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {treatmentPlans.map((plan) => {
+                  const total = plan.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                  
+                  return (
+                    <Collapsible key={plan.id} defaultOpen={false}>
+                      <div className="border rounded-lg overflow-hidden">
+                        <CollapsibleTrigger asChild>
+                          <button className="w-full flex items-center justify-between bg-muted/50 hover:bg-muted/70 px-4 py-3 transition-colors cursor-pointer">
+                            <div className="flex items-center gap-3">
+                              <ClipboardList className="h-4 w-4 text-primary" />
+                              <div className="text-left">
+                                <div className="font-medium text-sm">
+                                  {format(new Date(plan.createdAt), 'd MMMM yyyy', { locale: ro })}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {plan.items.length} tratamente
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <Badge variant="outline" className="font-medium">
+                                {total.toFixed(0)} RON
+                              </Badge>
+                              <ChevronDown className="h-4 w-4 transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
+                            </div>
+                          </button>
+                        </CollapsibleTrigger>
+
+                        <CollapsibleContent>
+                          <div className="p-4 border-t space-y-3">
+                            {/* Plan details */}
+                            {plan.nextAppointmentDate && (
+                              <div className="text-sm text-muted-foreground">
+                                <Calendar className="h-3 w-3 inline mr-1" />
+                                Următoarea programare: {format(new Date(plan.nextAppointmentDate), 'd MMMM yyyy', { locale: ro })}
+                                {plan.nextAppointmentTime && ` la ${plan.nextAppointmentTime}`}
+                              </div>
+                            )}
+
+                            {/* Items table */}
+                            <div className="border rounded-lg overflow-hidden">
+                              <table className="w-full text-sm">
+                                <thead>
+                                  <tr className="bg-muted/50">
+                                    <th className="px-3 py-2 text-left font-medium">Dinte</th>
+                                    <th className="px-3 py-2 text-left font-medium">Tratament</th>
+                                    <th className="px-3 py-2 text-center font-medium">Cant.</th>
+                                    <th className="px-3 py-2 text-right font-medium">Preț</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {plan.items.map((item, idx) => (
+                                    <tr key={item.id || idx} className="border-t">
+                                      <td className="px-3 py-2">{item.toothNumber || '-'}</td>
+                                      <td className="px-3 py-2">{item.treatmentName}</td>
+                                      <td className="px-3 py-2 text-center">{item.quantity}</td>
+                                      <td className="px-3 py-2 text-right">{item.price} RON</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                                <tfoot>
+                                  <tr className="border-t bg-muted/30">
+                                    <td colSpan={3} className="px-3 py-2 text-right font-medium">Total:</td>
+                                    <td className="px-3 py-2 text-right font-bold">{total.toFixed(0)} RON</td>
+                                  </tr>
+                                </tfoot>
+                              </table>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex justify-end gap-2 pt-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePrintPlan(plan)}
+                                className="gap-1"
+                              >
+                                <Printer className="h-3 w-3" />
+                                Printează
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => confirmDeletePlan(plan.id)}
+                                className="gap-1 text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                                Șterge
+                              </Button>
+                            </div>
+                          </div>
+                        </CollapsibleContent>
+                      </div>
+                    </Collapsible>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
 
         {/* Payment Dialog */}
@@ -748,6 +979,24 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
             </div>
           </div>
         )}
+
+        {/* Delete Plan Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Șterge planul de tratament?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Această acțiune nu poate fi anulată. Planul de tratament va fi șters definitiv.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Anulează</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeletePlan} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Șterge
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </SheetContent>
     </Sheet>
   );
