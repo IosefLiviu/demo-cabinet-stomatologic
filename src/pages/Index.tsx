@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
-import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, ClipboardList } from 'lucide-react';
+import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, ClipboardList, Printer, ChevronDown } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { DateNavigator } from '@/components/DateNavigator';
 import { CabinetTabs } from '@/components/CabinetTabs';
@@ -18,6 +18,12 @@ import { CabinetSettings } from '@/components/CabinetSettings';
 import { CompleteAppointmentDialog, PaymentData } from '@/components/CompleteAppointmentDialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { usePatients, Patient } from '@/hooks/usePatients';
 import { useAppointmentsDB, AppointmentDB } from '@/hooks/useAppointmentsDB';
 import { useTreatments } from '@/hooks/useTreatments';
@@ -332,7 +338,7 @@ const Index = () => {
 
       <main className="container px-2 sm:px-4 py-4 sm:py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-5 h-auto">
+          <TabsList className="grid w-full max-w-md grid-cols-3 h-auto">
             <TabsTrigger value="calendar" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
               <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden xs:inline">Calendar</span>
@@ -341,18 +347,35 @@ const Index = () => {
               <Users className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden xs:inline">Pacienți</span>
             </TabsTrigger>
-            <TabsTrigger value="treatment-plan" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-              <ClipboardList className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden xs:inline">Plan Tratament</span>
-            </TabsTrigger>
-            <TabsTrigger value="reports" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-              <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden xs:inline">Rapoarte</span>
-            </TabsTrigger>
-            <TabsTrigger value="expenses" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-              <Wallet className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden xs:inline">Cheltuieli</span>
-            </TabsTrigger>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button 
+                  className={`inline-flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm py-2 px-3 rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                    ['reports', 'expenses', 'treatment-plan'].includes(activeTab) 
+                      ? 'bg-background text-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Printer className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Printabile</span>
+                  <ChevronDown className="h-3 w-3" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center">
+                <DropdownMenuItem onClick={() => setActiveTab('reports')} className="gap-2">
+                  <BarChart3 className="h-4 w-4" />
+                  Rapoarte
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('expenses')} className="gap-2">
+                  <Wallet className="h-4 w-4" />
+                  Cheltuieli
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('treatment-plan')} className="gap-2">
+                  <ClipboardList className="h-4 w-4" />
+                  Plan Tratament
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </TabsList>
 
           <TabsContent value="calendar" className="space-y-4 sm:space-y-6">
