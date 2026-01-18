@@ -302,7 +302,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     
     // Sheet 2: Doctor Revenue
     const doctorData = [
-      ['Doctor', 'Programări', 'Card (RON)', 'Cash (RON)', 'Neachitat (RON)', 'Planificat (RON)', 'CAS (RON)', 'Laborator (RON)', 'Venit Net Lab. (RON)', 'Încasări + Net Lab. (RON)', 'Încasări + Net Lab. + Neachitat (RON)', 'Clinică (RON)', '40% Total (RON)', 'Total (RON)'],
+      ['Doctor', 'Programări', 'Card (RON)', 'Cash (RON)', 'Neachitat (RON)', 'Planificat (RON)', 'CAS (RON)', 'Laborator (RON)', 'Venit Net Lab. (RON)', 'Încasări + Net Lab. (RON)', 'Încasări + Net Lab. + Neachitat (RON)', 'Clinică (RON)', 'Medic (RON)', 'Total (RON)'],
       ...doctorRevenueData.map(d => [
         d.name,
         d.appointments,
@@ -629,7 +629,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                       {doctor.fortyPercentTotal !== 0 && (
                         <div className="flex items-center gap-1">
                           <div className="w-2 h-2 rounded-full bg-lime-500" />
-                          <span className="text-muted-foreground">40% Total:</span>
+                          <span className="text-muted-foreground">Medic:</span>
                           <span className="font-medium text-lime-600">{doctor.fortyPercentTotal.toLocaleString()} RON</span>
                         </div>
                       )}
@@ -702,7 +702,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                     Clinică: {doctorRevenueData.reduce((sum, d) => sum + d.sixtPercentTotal, 0).toLocaleString()} RON
                   </span>
                   <span className="text-lime-600 font-medium">
-                    40% Total: {doctorRevenueData.reduce((sum, d) => sum + d.fortyPercentTotal, 0).toLocaleString()} RON
+                    Medic: {doctorRevenueData.reduce((sum, d) => sum + d.fortyPercentTotal, 0).toLocaleString()} RON
                   </span>
                 </div>
               </div>
