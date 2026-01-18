@@ -332,24 +332,29 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     
     // Sheet 3: Detailed Appointments
     const appointmentsData = [
-      ['Data', 'Ora', 'Pacient', 'Doctor', 'Tratament', 'Status', 'Preț (RON)', 'Achitat'],
-      ...filteredAppointments.map(a => [
-        format(new Date(a.appointment_date), 'dd.MM.yyyy'),
-        a.start_time.substring(0, 5),
-        a.patients ? `${a.patients.first_name} ${a.patients.last_name}` : 'N/A',
-        a.doctors?.name || 'N/A',
-        a.treatments?.name || 'N/A',
-        a.status === 'completed' ? 'Finalizat' : 
-          a.status === 'cancelled' ? 'Anulat' : 
-          a.status === 'scheduled' ? 'Programat' : a.status,
-        a.price || 0,
-        a.is_paid ? 'Da' : 'Nu'
-      ])
+      ['Data', 'Ora', 'Pacient', 'Doctor', 'Tratament', 'Status', 'Preț (RON)', 'Laborator (RON)', 'Achitat'],
+      ...filteredAppointments.map(a => {
+        // Calculate laborator total from appointment treatments
+        const laboratorTotal = a.appointment_treatments?.reduce((sum, t) => sum + (Number((t as any).laborator) || 0), 0) || 0;
+        return [
+          format(new Date(a.appointment_date), 'dd.MM.yyyy'),
+          a.start_time.substring(0, 5),
+          a.patients ? `${a.patients.first_name} ${a.patients.last_name}` : 'N/A',
+          a.doctors?.name || 'N/A',
+          a.treatments?.name || 'N/A',
+          a.status === 'completed' ? 'Finalizat' : 
+            a.status === 'cancelled' ? 'Anulat' : 
+            a.status === 'scheduled' ? 'Programat' : a.status,
+          a.price || 0,
+          laboratorTotal,
+          a.is_paid ? 'Da' : 'Nu'
+        ];
+      })
     ];
     const appointmentsSheet = XLSX.utils.aoa_to_sheet(appointmentsData);
     appointmentsSheet['!cols'] = [
       { wch: 12 }, { wch: 8 }, { wch: 25 }, { wch: 20 }, 
-      { wch: 25 }, { wch: 12 }, { wch: 12 }, { wch: 10 }
+      { wch: 25 }, { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 10 }
     ];
     XLSX.utils.book_append_sheet(workbook, appointmentsSheet, 'Programări Detaliate');
     
