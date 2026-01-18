@@ -395,7 +395,7 @@ const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients }) => {
                   <div className="col-span-12 md:col-span-5 space-y-1">
                     <Label className="text-xs">Denumire serviciu</Label>
                     <Select
-                      value={item.description}
+                      value={item.description || undefined}
                       onValueChange={(value) => {
                         const treatment = treatments.find(t => t.name === value);
                         updateItem(item.id, 'description', value);
@@ -405,7 +405,9 @@ const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients }) => {
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Selectează serviciul" />
+                        <SelectValue placeholder="Selectează serviciul">
+                          {item.description || "Selectează serviciul"}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {treatments.map((treatment) => (
