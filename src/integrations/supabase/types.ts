@@ -84,7 +84,9 @@ export type Database = {
           id: string
           is_paid: boolean | null
           notes: string | null
+          paid_amount: number | null
           patient_id: string
+          payment_method: string | null
           price: number | null
           start_time: string
           status: string
@@ -100,7 +102,9 @@ export type Database = {
           id?: string
           is_paid?: boolean | null
           notes?: string | null
+          paid_amount?: number | null
           patient_id: string
+          payment_method?: string | null
           price?: number | null
           start_time: string
           status?: string
@@ -116,7 +120,9 @@ export type Database = {
           id?: string
           is_paid?: boolean | null
           notes?: string | null
+          paid_amount?: number | null
           patient_id?: string
+          payment_method?: string | null
           price?: number | null
           start_time?: string
           status?: string

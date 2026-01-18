@@ -62,16 +62,24 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     }
   };
 
-  // Helper to parse payment method from notes
-  const getPaymentMethod = (notes: string | null | undefined): 'card' | 'cash' | 'unpaid' | null => {
+  // Helper to parse payment method - now uses payment_method column primarily
+  const getPaymentMethod = (apt: AppointmentDB): 'card' | 'cash' | 'partial_card' | 'partial_cash' | 'unpaid' | null => {
+    // Check payment_method column first (new data)
+    if (apt.payment_method) {
+      return apt.payment_method as 'card' | 'cash' | 'partial_card' | 'partial_cash' | 'unpaid';
+    }
+    // Fallback to notes parsing (old data)
+    const notes = apt.notes;
     if (!notes) return null;
     if (notes.includes('[Plată: Card]')) return 'card';
     if (notes.includes('[Plată: Cash]')) return 'cash';
     if (notes.includes('[Plată: Neachitat]')) return 'unpaid';
+    if (notes.includes('[Plată: Parțial Card')) return 'partial_card';
+    if (notes.includes('[Plată: Parțial Cash')) return 'partial_cash';
     return null;
   };
 
-  // Calculate statistics
+  // Calculate statistics with partial payment support
   const stats = useMemo(() => {
     const completed = filteredAppointments.filter(a => a.status === 'completed');
     const totalRevenue = completed.reduce((sum, a) => sum + (a.price || 0), 0);
@@ -88,27 +96,39 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       }
     });
     
-    // Separate by payment method
+    // Separate by payment method - use paid_amount for accurate tracking
     let cardRevenue = 0;
     let cashRevenue = 0;
     let unpaidRevenue = 0;
+    let partialCardRevenue = 0;
+    let partialCashRevenue = 0;
+    let remainingDebt = 0; // Total outstanding balance
     
     completed.forEach(a => {
       const price = a.price || 0;
-      const method = getPaymentMethod(a.notes);
+      const paidAmount = a.paid_amount ?? (a.is_paid ? price : 0);
+      const method = getPaymentMethod(a);
+      
       if (method === 'card') {
         cardRevenue += price;
       } else if (method === 'cash') {
         cashRevenue += price;
+      } else if (method === 'partial_card') {
+        partialCardRevenue += paidAmount;
+        remainingDebt += (price - paidAmount);
+      } else if (method === 'partial_cash') {
+        partialCashRevenue += paidAmount;
+        remainingDebt += (price - paidAmount);
       } else if (method === 'unpaid' || !a.is_paid) {
         unpaidRevenue += price;
+        remainingDebt += price;
       } else if (a.is_paid) {
         // Fallback for old data without explicit method
         cashRevenue += price;
       }
     });
     
-    const paidRevenue = cardRevenue + cashRevenue;
+    const paidRevenue = cardRevenue + cashRevenue + partialCardRevenue + partialCashRevenue;
     const avgDuration = filteredAppointments.length > 0 
       ? filteredAppointments.reduce((sum, a) => sum + a.duration, 0) / filteredAppointments.length 
       : 0;
@@ -133,7 +153,10 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       paidRevenue,
       cardRevenue,
       cashRevenue,
+      partialCardRevenue,
+      partialCashRevenue,
       unpaidRevenue,
+      remainingDebt,
       scheduledRevenue,
       totalCas,
       totalLaborator,
@@ -201,13 +224,23 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
           });
         }
         
-        const method = getPaymentMethod(a.notes);
+        const method = getPaymentMethod(a);
+        const paidAmount = a.paid_amount ?? (a.is_paid ? price : 0);
+        
         if (method === 'card') {
           acc[doctorName].paidCard += price;
           acc[doctorName].paid += price;
         } else if (method === 'cash') {
           acc[doctorName].paidCash += price;
           acc[doctorName].paid += price;
+        } else if (method === 'partial_card') {
+          acc[doctorName].paidCard += paidAmount;
+          acc[doctorName].paid += paidAmount;
+          acc[doctorName].unpaid += (price - paidAmount);
+        } else if (method === 'partial_cash') {
+          acc[doctorName].paidCash += paidAmount;
+          acc[doctorName].paid += paidAmount;
+          acc[doctorName].unpaid += (price - paidAmount);
         } else if (method === 'unpaid' || !a.is_paid) {
           acc[doctorName].unpaid += price;
         } else if (a.is_paid) {
