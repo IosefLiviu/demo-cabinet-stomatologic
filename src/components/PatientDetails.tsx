@@ -55,11 +55,13 @@ interface TreatmentRecord {
   duration: number | null;
   appointment_date: string;
   start_time: string;
-  payment_method: 'card' | 'cash' | 'unpaid' | null;
+  payment_method: 'card' | 'cash' | 'unpaid' | 'partial_card' | 'partial_cash' | null;
+  paid_amount: number | null;
+  total_price: number | null;
   doctor_name: string | null;
 }
 
-type PaymentMethod = 'card' | 'cash' | 'unpaid';
+type PaymentMethod = 'card' | 'cash' | 'unpaid' | 'partial_card' | 'partial_cash';
 
 interface PatientDetailsProps {
   patient: Patient | null;
@@ -149,6 +151,9 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
         status,
         is_paid,
         notes,
+        price,
+        paid_amount,
+        payment_method,
         doctors (
           id,
           name
@@ -174,15 +179,21 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
       // Flatten the data
       const records: TreatmentRecord[] = [];
       data?.forEach((appointment: any) => {
-        // Parse payment method from notes
-        let paymentMethod: PaymentMethod | null = null;
-        if (appointment.notes) {
+        // Use payment_method column first, fallback to notes parsing
+        let paymentMethod: PaymentMethod | null = appointment.payment_method || null;
+        
+        // Fallback to notes parsing for old data
+        if (!paymentMethod && appointment.notes) {
           if (appointment.notes.includes('[Plată: Card]')) {
             paymentMethod = 'card';
           } else if (appointment.notes.includes('[Plată: Cash]')) {
             paymentMethod = 'cash';
           } else if (appointment.notes.includes('[Plată: Neachitat]')) {
             paymentMethod = 'unpaid';
+          } else if (appointment.notes.includes('[Plată: Parțial Card')) {
+            paymentMethod = 'partial_card';
+          } else if (appointment.notes.includes('[Plată: Parțial Cash')) {
+            paymentMethod = 'partial_cash';
           }
         }
         // Fallback to is_paid if no explicit payment method
@@ -191,6 +202,8 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
         }
 
         const doctorName = appointment.doctors?.name || null;
+        const appointmentPrice = appointment.price || 0;
+        const paidAmount = appointment.paid_amount ?? (appointment.is_paid ? appointmentPrice : 0);
 
         appointment.appointment_treatments?.forEach((treatment: any) => {
           records.push({
@@ -205,6 +218,8 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
             appointment_date: appointment.appointment_date,
             start_time: appointment.start_time,
             payment_method: paymentMethod,
+            paid_amount: paidAmount,
+            total_price: appointmentPrice,
             doctor_name: doctorName,
           });
         });
@@ -266,7 +281,9 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
     }
   };
 
-  const getPaymentBadge = (method: PaymentMethod | null, appointmentId?: string) => {
+  const getPaymentBadge = (method: PaymentMethod | null, appointmentId?: string, paidAmount?: number | null, totalPrice?: number | null) => {
+    const remaining = (totalPrice || 0) - (paidAmount || 0);
+    
     switch (method) {
       case 'card':
         return (
@@ -281,6 +298,22 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
             <Banknote className="h-3 w-3" />
             Cash
           </Badge>
+        );
+      case 'partial_card':
+      case 'partial_cash':
+        return (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (appointmentId) handleMarkAsPaid(appointmentId);
+            }}
+            className="cursor-pointer hover:scale-105 transition-transform"
+          >
+            <Badge className="bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400 gap-1 hover:bg-cyan-200">
+              {method === 'partial_card' ? <CreditCard className="h-3 w-3" /> : <Banknote className="h-3 w-3" />}
+              Parțial ({paidAmount?.toLocaleString()} RON) - Rest: {remaining.toLocaleString()} RON
+            </Badge>
+          </button>
         );
       case 'unpaid':
         return (
@@ -601,7 +634,7 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
                                       </div>
                                     </div>
                                     <div className="flex flex-col items-end gap-1 shrink-0">
-                                      {record.payment_method && getPaymentBadge(record.payment_method, record.appointment_id)}
+                                      {record.payment_method && getPaymentBadge(record.payment_method, record.appointment_id, record.paid_amount, record.total_price)}
                                       {record.price !== null && record.price > 0 && (
                                         <div className="flex flex-col items-end gap-0.5">
                                           {record.cas && record.cas > 0 && (

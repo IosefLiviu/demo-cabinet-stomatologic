@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { CreditCard, Banknote, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { CreditCard, Banknote, AlertCircle, Split } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -8,19 +8,28 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
-export type PaymentMethod = 'card' | 'cash' | 'unpaid';
+export type PaymentMethod = 'card' | 'cash' | 'unpaid' | 'partial_card' | 'partial_cash';
+
+export interface PaymentData {
+  method: PaymentMethod;
+  paidAmount?: number;
+  totalAmount?: number;
+}
 
 interface CompleteAppointmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (paymentMethod: PaymentMethod) => void;
+  onConfirm: (paymentData: PaymentData) => void;
   patientName?: string;
+  totalPrice?: number;
   isLoading?: boolean;
 }
 
-const paymentOptions: { value: PaymentMethod; label: string; icon: React.ReactNode; color: string }[] = [
+const paymentOptions: { value: PaymentMethod; label: string; icon: React.ReactNode; color: string; isPartial?: boolean }[] = [
   {
     value: 'card',
     label: 'Card',
@@ -32,6 +41,20 @@ const paymentOptions: { value: PaymentMethod; label: string; icon: React.ReactNo
     label: 'Cash',
     icon: <Banknote className="h-6 w-6" />,
     color: 'bg-green-500 hover:bg-green-600 text-white',
+  },
+  {
+    value: 'partial_card',
+    label: 'Parțial Card',
+    icon: <Split className="h-6 w-6" />,
+    color: 'bg-cyan-500 hover:bg-cyan-600 text-white',
+    isPartial: true,
+  },
+  {
+    value: 'partial_cash',
+    label: 'Parțial Cash',
+    icon: <Split className="h-6 w-6" />,
+    color: 'bg-teal-500 hover:bg-teal-600 text-white',
+    isPartial: true,
   },
   {
     value: 'unpaid',
@@ -46,64 +69,162 @@ export function CompleteAppointmentDialog({
   onOpenChange,
   onConfirm,
   patientName,
+  totalPrice = 0,
   isLoading,
 }: CompleteAppointmentDialogProps) {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
+  const [paidAmount, setPaidAmount] = useState<string>('');
+  const [showPartialInput, setShowPartialInput] = useState(false);
+
+  // Reset state when dialog opens/closes
+  useEffect(() => {
+    if (open) {
+      setSelectedMethod(null);
+      setPaidAmount('');
+      setShowPartialInput(false);
+    }
+  }, [open]);
+
+  const handleMethodSelect = (method: PaymentMethod) => {
+    setSelectedMethod(method);
+    const option = paymentOptions.find(o => o.value === method);
+    if (option?.isPartial) {
+      setShowPartialInput(true);
+      setPaidAmount('');
+    } else {
+      setShowPartialInput(false);
+      setPaidAmount('');
+    }
+  };
 
   const handleConfirm = () => {
     if (selectedMethod) {
-      onConfirm(selectedMethod);
+      const isPartial = selectedMethod.startsWith('partial_');
+      const paymentData: PaymentData = {
+        method: selectedMethod,
+        totalAmount: totalPrice,
+      };
+      
+      if (isPartial && paidAmount) {
+        paymentData.paidAmount = parseFloat(paidAmount);
+      } else if (!isPartial && selectedMethod !== 'unpaid') {
+        paymentData.paidAmount = totalPrice;
+      } else {
+        paymentData.paidAmount = 0;
+      }
+      
+      onConfirm(paymentData);
       setSelectedMethod(null);
+      setPaidAmount('');
+      setShowPartialInput(false);
     }
   };
 
   const handleClose = (open: boolean) => {
     if (!open) {
       setSelectedMethod(null);
+      setPaidAmount('');
+      setShowPartialInput(false);
     }
     onOpenChange(open);
   };
 
+  const isPartialValid = () => {
+    if (!showPartialInput) return true;
+    const amount = parseFloat(paidAmount);
+    return !isNaN(amount) && amount > 0 && amount < totalPrice;
+  };
+
+  const remainingAmount = showPartialInput && paidAmount 
+    ? totalPrice - parseFloat(paidAmount || '0')
+    : 0;
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Finalizare programare</DialogTitle>
           <DialogDescription>
             {patientName ? (
-              <>Finalizați programarea pentru <span className="font-medium text-foreground">{patientName}</span>. Selectați metoda de plată:</>
+              <>Finalizați programarea pentru <span className="font-medium text-foreground">{patientName}</span>.</>
             ) : (
-              'Selectați metoda de plată pentru această programare:'
+              'Finalizați această programare.'
+            )}
+            {totalPrice > 0 && (
+              <span className="block mt-1 text-lg font-semibold text-foreground">
+                Total: {totalPrice.toLocaleString()} RON
+              </span>
             )}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-3 gap-3 py-4">
-          {paymentOptions.map((option) => (
-            <button
-              key={option.value}
-              onClick={() => setSelectedMethod(option.value)}
-              disabled={isLoading}
-              className={cn(
-                "flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all",
-                selectedMethod === option.value
-                  ? `${option.color} border-transparent shadow-lg scale-105`
-                  : "bg-muted/50 border-border hover:border-primary/50 hover:bg-muted"
-              )}
-            >
-              <div className={cn(
-                selectedMethod === option.value ? "text-current" : "text-muted-foreground"
-              )}>
-                {option.icon}
+        <div className="space-y-4 py-4">
+          {/* Payment method grid */}
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+            {paymentOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => handleMethodSelect(option.value)}
+                disabled={isLoading}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-1.5 p-3 rounded-lg border-2 transition-all text-center",
+                  selectedMethod === option.value
+                    ? `${option.color} border-transparent shadow-lg scale-105`
+                    : "bg-muted/50 border-border hover:border-primary/50 hover:bg-muted"
+                )}
+              >
+                <div className={cn(
+                  selectedMethod === option.value ? "text-current" : "text-muted-foreground"
+                )}>
+                  {option.icon}
+                </div>
+                <span className={cn(
+                  "text-xs font-medium leading-tight",
+                  selectedMethod === option.value ? "text-current" : "text-foreground"
+                )}>
+                  {option.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Partial payment input */}
+          {showPartialInput && (
+            <div className="space-y-3 p-4 bg-muted/50 rounded-lg border">
+              <div className="space-y-2">
+                <Label htmlFor="paidAmount">Suma achitată (RON)</Label>
+                <Input
+                  id="paidAmount"
+                  type="number"
+                  placeholder="Introduceți suma achitată"
+                  value={paidAmount}
+                  onChange={(e) => setPaidAmount(e.target.value)}
+                  min={0}
+                  max={totalPrice - 1}
+                  step={0.01}
+                  className="text-lg"
+                />
               </div>
-              <span className={cn(
-                "text-sm font-medium",
-                selectedMethod === option.value ? "text-current" : "text-foreground"
-              )}>
-                {option.label}
-              </span>
-            </button>
-          ))}
+              
+              {paidAmount && parseFloat(paidAmount) > 0 && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Rest de plată:</span>
+                  <span className={cn(
+                    "font-semibold",
+                    remainingAmount > 0 ? "text-orange-600" : "text-green-600"
+                  )}>
+                    {remainingAmount.toLocaleString()} RON
+                  </span>
+                </div>
+              )}
+              
+              {paidAmount && parseFloat(paidAmount) >= totalPrice && (
+                <p className="text-sm text-destructive">
+                  Suma achitată trebuie să fie mai mică decât totalul. Pentru plată integrală, selectați Card sau Cash.
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end gap-2">
@@ -116,7 +237,7 @@ export function CompleteAppointmentDialog({
           </Button>
           <Button
             onClick={handleConfirm}
-            disabled={!selectedMethod || isLoading}
+            disabled={!selectedMethod || isLoading || !isPartialValid()}
           >
             {isLoading ? 'Se procesează...' : 'Confirmă'}
           </Button>

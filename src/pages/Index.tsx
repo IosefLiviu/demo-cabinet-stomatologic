@@ -13,7 +13,7 @@ import { AppointmentForm, AppointmentFormData } from '@/components/AppointmentFo
 import { SelectedIntervention } from '@/components/InterventionSelector';
 import { ReportsDashboard } from '@/components/ReportsDashboard';
 import { CabinetSettings } from '@/components/CabinetSettings';
-import { CompleteAppointmentDialog, PaymentMethod } from '@/components/CompleteAppointmentDialog';
+import { CompleteAppointmentDialog, PaymentData } from '@/components/CompleteAppointmentDialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePatients, Patient } from '@/hooks/usePatients';
@@ -60,6 +60,7 @@ const Index = () => {
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
   const [completingAppointmentId, setCompletingAppointmentId] = useState<string | null>(null);
   const [completingAppointmentName, setCompletingAppointmentName] = useState<string>('');
+  const [completingAppointmentPrice, setCompletingAppointmentPrice] = useState<number>(0);
   const [isCompleting, setIsCompleting] = useState(false);
 
   const { patients, loading: patientsLoading, addPatient, updatePatient, deletePatient } = usePatients();
@@ -280,18 +281,20 @@ const Index = () => {
       : '';
     setCompletingAppointmentId(id);
     setCompletingAppointmentName(patientName);
+    setCompletingAppointmentPrice(dbAppointment?.price || 0);
     setCompleteDialogOpen(true);
   };
 
-  const handleConfirmComplete = async (paymentMethod: PaymentMethod) => {
+  const handleConfirmComplete = async (paymentData: PaymentData) => {
     if (!completingAppointmentId) return;
     
     setIsCompleting(true);
-    await completeAppointment(completingAppointmentId, paymentMethod);
+    await completeAppointment(completingAppointmentId, paymentData.method, paymentData.paidAmount);
     setIsCompleting(false);
     setCompleteDialogOpen(false);
     setCompletingAppointmentId(null);
     setCompletingAppointmentName('');
+    setCompletingAppointmentPrice(0);
   };
 
   const handleAppointmentCancel = async (id: string) => {
@@ -451,6 +454,7 @@ const Index = () => {
         onOpenChange={setCompleteDialogOpen}
         onConfirm={handleConfirmComplete}
         patientName={completingAppointmentName}
+        totalPrice={completingAppointmentPrice}
         isLoading={isCompleting}
       />
     </div>

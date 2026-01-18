@@ -35,6 +35,8 @@ export interface AppointmentDB {
   notes?: string;
   price?: number;
   is_paid: boolean;
+  paid_amount?: number;
+  payment_method?: string;
   created_at: string;
   updated_at: string;
   // Joined data
@@ -338,12 +340,31 @@ export function useAppointmentsDB() {
     }
   };
 
-  const completeAppointment = async (id: string, paymentMethod: 'card' | 'cash' | 'unpaid') => {
+  const completeAppointment = async (
+    id: string, 
+    paymentMethod: 'card' | 'cash' | 'unpaid' | 'partial_card' | 'partial_cash',
+    paidAmount?: number
+  ) => {
     try {
-      const isPaid = paymentMethod !== 'unpaid';
+      const isPartial = paymentMethod.startsWith('partial_');
+      const isPaid = paymentMethod !== 'unpaid' && !isPartial;
       
       // First get the appointment with its treatments
       const appointment = appointments.find(a => a.id === id);
+      const totalPrice = appointment?.price || 0;
+      
+      // Determine paid amount
+      const actualPaidAmount = isPartial ? (paidAmount || 0) : 
+                               paymentMethod === 'unpaid' ? 0 : totalPrice;
+      
+      // Format payment method label
+      const getPaymentLabel = () => {
+        if (paymentMethod === 'card') return 'Card';
+        if (paymentMethod === 'cash') return 'Cash';
+        if (paymentMethod === 'partial_card') return `Parțial Card (${actualPaidAmount} RON)`;
+        if (paymentMethod === 'partial_cash') return `Parțial Cash (${actualPaidAmount} RON)`;
+        return 'Neachitat';
+      };
       
       // Update the appointment status and payment info
       const { data, error } = await supabase
@@ -351,9 +372,11 @@ export function useAppointmentsDB() {
         .update({ 
           status: 'completed',
           is_paid: isPaid,
+          paid_amount: actualPaidAmount,
+          payment_method: paymentMethod,
           notes: appointment?.notes 
-            ? `${appointment.notes}\n[Plată: ${paymentMethod === 'card' ? 'Card' : paymentMethod === 'cash' ? 'Cash' : 'Neachitat'}]`
-            : `[Plată: ${paymentMethod === 'card' ? 'Card' : paymentMethod === 'cash' ? 'Cash' : 'Neachitat'}]`
+            ? `${appointment.notes}\n[Plată: ${getPaymentLabel()}]`
+            : `[Plată: ${getPaymentLabel()}]`
         })
         .eq('id', id)
         .select(`
@@ -380,7 +403,7 @@ export function useAppointmentsDB() {
           tooth_numbers: t.tooth_numbers,
           cabinet_id: completedAppointment.cabinet_id,
           performed_at: new Date().toISOString(),
-          notes: `Metodă plată: ${paymentMethod === 'card' ? 'Card' : paymentMethod === 'cash' ? 'Cash' : 'Neachitat'}`,
+          notes: `Metodă plată: ${getPaymentLabel()}`,
         }));
 
         const { error: recordsError } = await supabase
@@ -429,7 +452,7 @@ export function useAppointmentsDB() {
       
       toast({
         title: 'Succes',
-        description: `Programarea a fost finalizată - ${paymentMethod === 'card' ? 'Plată cu card' : paymentMethod === 'cash' ? 'Plată cash' : 'Neachitat'}`,
+        description: `Programarea a fost finalizată - ${getPaymentLabel()}`,
       });
       return data;
     } catch (error: any) {
