@@ -412,6 +412,101 @@ export type Database = {
         }
         Relationships: []
       }
+      prescription_items: {
+        Row: {
+          created_at: string
+          dosage: string | null
+          id: string
+          medication: string
+          prescription_id: string
+          quantity: string | null
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string
+          dosage?: string | null
+          id?: string
+          medication: string
+          prescription_id: string
+          quantity?: string | null
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string
+          dosage?: string | null
+          id?: string
+          medication?: string
+          prescription_id?: string
+          quantity?: string | null
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prescription_items_prescription_id_fkey"
+            columns: ["prescription_id"]
+            isOneToOne: false
+            referencedRelation: "prescriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prescriptions: {
+        Row: {
+          created_at: string
+          diagnostic: string | null
+          doctor_id: string | null
+          id: string
+          judet: string | null
+          localitate: string | null
+          nr_fisa: string | null
+          patient_id: string
+          prescription_date: string
+          unitate_sanitara: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          diagnostic?: string | null
+          doctor_id?: string | null
+          id?: string
+          judet?: string | null
+          localitate?: string | null
+          nr_fisa?: string | null
+          patient_id: string
+          prescription_date?: string
+          unitate_sanitara?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          diagnostic?: string | null
+          doctor_id?: string | null
+          id?: string
+          judet?: string | null
+          localitate?: string | null
+          nr_fisa?: string | null
+          patient_id?: string
+          prescription_date?: string
+          unitate_sanitara?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prescriptions_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prescriptions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
