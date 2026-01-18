@@ -78,6 +78,13 @@ const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients }) => {
     return items.reduce((sum, item) => sum + calculateItemTotal(item), 0);
   };
 
+  // Helper function to escape HTML entities
+  const escapeHtml = (text: string): string => {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  };
+
   const handlePrint = () => {
     const printWindow = window.open('', '', 'width=800,height=600');
     if (!printWindow) return;
@@ -86,9 +93,11 @@ const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients }) => {
     const formattedDate = invoiceDate ? format(new Date(invoiceDate), 'dd.MM.yyyy', { locale: ro }) : '';
 
     printWindow.document.write(`
-      <html>
+      <!DOCTYPE html>
+      <html lang="ro">
         <head>
-          <title>Proformă ${invoiceNumber}</title>
+          <meta charset="UTF-8">
+          <title>Proformă ${escapeHtml(invoiceNumber)}</title>
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { 
@@ -266,7 +275,7 @@ const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients }) => {
                 return `
                   <tr>
                     <td>${index + 1}</td>
-                    <td class="description">${item.description}</td>
+                    <td class="description">${escapeHtml(item.description || '')}</td>
                     <td>${item.quantity}</td>
                     <td class="amount">${initialValue.toFixed(2)}</td>
                     <td>${item.discount > 0 ? item.discount : ''}</td>
