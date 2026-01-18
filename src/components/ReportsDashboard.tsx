@@ -302,7 +302,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     
     // Sheet 2: Doctor Revenue
     const doctorData = [
-      ['Doctor', 'Programări', 'Card (RON)', 'Cash (RON)', 'Neachitat (RON)', 'Planificat (RON)', 'CAS (RON)', 'Laborator (RON)', 'Venit Net Lab. (RON)', 'Încasări + Net Lab. (RON)', 'Încasări + Net Lab. + Neachitat (RON)', '60% Total (RON)', '40% Total (RON)', 'Total (RON)'],
+      ['Doctor', 'Programări', 'Card (RON)', 'Cash (RON)', 'Neachitat (RON)', 'Planificat (RON)', 'CAS (RON)', 'Laborator (RON)', 'Venit Net Lab. (RON)', 'Încasări + Net Lab. (RON)', 'Încasări + Net Lab. + Neachitat (RON)', 'Clinică (RON)', '40% Total (RON)', 'Total (RON)'],
       ...doctorRevenueData.map(d => [
         d.name,
         d.appointments,
@@ -622,7 +622,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                       {doctor.sixtPercentTotal !== 0 && (
                         <div className="flex items-center gap-1">
                           <div className="w-2 h-2 rounded-full bg-amber-500" />
-                          <span className="text-muted-foreground">60% Total:</span>
+                          <span className="text-muted-foreground">Clinică:</span>
                           <span className="font-medium text-amber-600">{doctor.sixtPercentTotal.toLocaleString()} RON</span>
                         </div>
                       )}
@@ -699,7 +699,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                     Încasări + Net Lab. + Neachitat: {doctorRevenueData.reduce((sum, d) => sum + d.totalWithNetLabAndUnpaid, 0).toLocaleString()} RON
                   </span>
                   <span className="text-amber-600 font-medium">
-                    60% Total: {doctorRevenueData.reduce((sum, d) => sum + d.sixtPercentTotal, 0).toLocaleString()} RON
+                    Clinică: {doctorRevenueData.reduce((sum, d) => sum + d.sixtPercentTotal, 0).toLocaleString()} RON
                   </span>
                   <span className="text-lime-600 font-medium">
                     40% Total: {doctorRevenueData.reduce((sum, d) => sum + d.fortyPercentTotal, 0).toLocaleString()} RON
