@@ -4,7 +4,6 @@ import { Search, Trash2, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -531,11 +530,7 @@ export function AppointmentForm({
                 </Button>
                 <Button 
                   type="submit"
-                  disabled={
-                    !formData.patientName || 
-                    interventions.length === 0 || 
-                    interventions.some(i => i.selectedTeeth.length === 0)
-                  }
+                  disabled={!formData.patientName || interventions.length === 0}
                   className="flex-1 sm:flex-none text-sm h-9 sm:h-10"
                 >
                   {editingAppointment ? 'Salvează' : 'Adaugă'}
