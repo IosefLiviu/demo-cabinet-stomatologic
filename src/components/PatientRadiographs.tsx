@@ -85,6 +85,7 @@ export function PatientRadiographs({ patientId, patientName }: PatientRadiograph
   const [description, setDescription] = useState('');
   const [radiographType, setRadiographType] = useState<RadiographType | ''>('');
   const [takenAt, setTakenAt] = useState('');
+  const [compressionQuality, setCompressionQuality] = useState<'high' | 'medium' | 'economic'>('medium');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -105,6 +106,7 @@ export function PatientRadiographs({ patientId, patientName }: PatientRadiograph
       description: description || undefined,
       radiograph_type: radiographType || undefined,
       taken_at: takenAt || undefined,
+      compressionQuality,
     });
 
     if (result) {
@@ -118,6 +120,7 @@ export function PatientRadiographs({ patientId, patientName }: PatientRadiograph
     setDescription('');
     setRadiographType('');
     setTakenAt('');
+    setCompressionQuality('medium');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -429,6 +432,39 @@ export function PatientRadiographs({ patientId, patientName }: PatientRadiograph
                 value={takenAt}
                 onChange={(e) => setTakenAt(e.target.value)}
               />
+            </div>
+
+            {/* Compression quality */}
+            <div className="space-y-2">
+              <Label>Calitate compresie</Label>
+              <Select
+                value={compressionQuality}
+                onValueChange={(v) => setCompressionQuality(v as 'high' | 'medium' | 'economic')}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="high">
+                    <div className="flex flex-col">
+                      <span>Calitate înaltă</span>
+                      <span className="text-xs text-muted-foreground">Max 3000px, 92% calitate</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="medium">
+                    <div className="flex flex-col">
+                      <span>Medie (recomandat)</span>
+                      <span className="text-xs text-muted-foreground">Max 2048px, 85% calitate</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="economic">
+                    <div className="flex flex-col">
+                      <span>Economică</span>
+                      <span className="text-xs text-muted-foreground">Max 1600px, 75% calitate</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Description */}

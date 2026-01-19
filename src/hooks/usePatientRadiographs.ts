@@ -76,11 +76,20 @@ export function usePatientRadiographs(patientId?: string) {
       radiograph_type?: RadiographType;
       tooth_numbers?: number[];
       taken_at?: string;
+      compressionQuality?: 'high' | 'medium' | 'economic';
     }
   ) => {
     if (!patientId) return null;
 
     setUploading(true);
+    
+    // Compression settings based on quality level
+    const qualitySettings = {
+      high: { maxWidth: 3000, maxHeight: 3000, quality: 0.92 },
+      medium: { maxWidth: 2048, maxHeight: 2048, quality: 0.85 },
+      economic: { maxWidth: 1600, maxHeight: 1600, quality: 0.75 },
+    };
+    const compressionOpts = qualitySettings[metadata.compressionQuality || 'medium'];
     try {
       // Compress the image before upload
       const { 
@@ -88,11 +97,7 @@ export function usePatientRadiographs(patientId?: string) {
         originalSize, 
         compressedSize, 
         compressionRatio 
-      } = await compressImage(file, {
-        maxWidth: 2048,
-        maxHeight: 2048,
-        quality: 0.85,
-      });
+      } = await compressImage(file, compressionOpts);
 
       // Show compression info if significant compression occurred
       if (compressionRatio > 1.1) {
