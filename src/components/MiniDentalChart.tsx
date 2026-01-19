@@ -21,6 +21,10 @@ export interface ToothData {
 const upperTeeth = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
 const lowerTeeth = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
 
+// FDI notation - deciduous (baby) teeth
+const upperDeciduousTeeth = [55, 54, 53, 52, 51, 61, 62, 63, 64, 65];
+const lowerDeciduousTeeth = [85, 84, 83, 82, 81, 71, 72, 73, 74, 75];
+
 const statusColors: Record<ToothStatus, string> = {
   healthy: 'bg-success/20 border-success text-success',
   cavity: 'bg-destructive/20 border-destructive text-destructive',
@@ -114,11 +118,19 @@ export function MiniDentalChart({ treatedTeeth, teethData = [], className }: Min
         </div>
       )}
 
-      {/* Upper jaw */}
+      {/* Upper jaw - permanent teeth */}
       <div className="space-y-0.5">
-        <div className="text-[8px] text-muted-foreground text-center">Maxilar superior</div>
+        <div className="text-[8px] text-muted-foreground text-center">Superior permanent</div>
         <div className="flex justify-center gap-0.5">
           {upperTeeth.map(renderTooth)}
+        </div>
+      </div>
+
+      {/* Upper jaw - deciduous teeth */}
+      <div className="space-y-0.5">
+        <div className="text-[8px] text-muted-foreground text-center">De lapte superior</div>
+        <div className="flex justify-center gap-0.5">
+          {upperDeciduousTeeth.map(renderTooth)}
         </div>
       </div>
 
@@ -127,12 +139,20 @@ export function MiniDentalChart({ treatedTeeth, teethData = [], className }: Min
         <div className="w-full max-w-xs border-b border-muted-foreground/30" />
       </div>
 
-      {/* Lower jaw */}
+      {/* Lower jaw - deciduous teeth */}
+      <div className="space-y-0.5">
+        <div className="flex justify-center gap-0.5">
+          {lowerDeciduousTeeth.map(renderTooth)}
+        </div>
+        <div className="text-[8px] text-muted-foreground text-center">De lapte inferior</div>
+      </div>
+
+      {/* Lower jaw - permanent teeth */}
       <div className="space-y-0.5">
         <div className="flex justify-center gap-0.5">
           {lowerTeeth.map(renderTooth)}
         </div>
-        <div className="text-[8px] text-muted-foreground text-center">Maxilar inferior</div>
+        <div className="text-[8px] text-muted-foreground text-center">Inferior permanent</div>
       </div>
     </div>
   );
