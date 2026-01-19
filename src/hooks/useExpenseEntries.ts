@@ -37,7 +37,18 @@ export const useExpenseEntries = () => {
     }
   };
 
-  const addEntry = async (expenseId: string, description: string, amount: number) => {
+  const updateMainExpenseAmount = async (expenseId: string, newEntriesTotal: number) => {
+    try {
+      await supabase
+        .from('monthly_expenses')
+        .update({ amount: newEntriesTotal })
+        .eq('id', expenseId);
+    } catch (error) {
+      console.error('Error updating main expense amount:', error);
+    }
+  };
+
+  const addEntry = async (expenseId: string, description: string, amount: number, onExpenseUpdate?: () => void) => {
     try {
       const { data, error } = await supabase
         .from('expense_entries')
@@ -52,10 +63,17 @@ export const useExpenseEntries = () => {
 
       if (error) throw error;
 
+      const currentEntries = entries[expenseId] || [];
+      const newEntries = [...currentEntries, data as ExpenseEntry];
+      const newTotal = newEntries.reduce((sum, e) => sum + (e.amount || 0), 0);
+
       setEntries((prev) => ({
         ...prev,
-        [expenseId]: [...(prev[expenseId] || []), data as ExpenseEntry],
+        [expenseId]: newEntries,
       }));
+
+      await updateMainExpenseAmount(expenseId, newTotal);
+      onExpenseUpdate?.();
 
       toast({
         title: 'Adăugat',
@@ -73,7 +91,7 @@ export const useExpenseEntries = () => {
     }
   };
 
-  const updateEntry = async (entryId: string, expenseId: string, updates: Partial<Pick<ExpenseEntry, 'description' | 'amount'>>) => {
+  const updateEntry = async (entryId: string, expenseId: string, updates: Partial<Pick<ExpenseEntry, 'description' | 'amount'>>, onExpenseUpdate?: () => void) => {
     try {
       const { error } = await supabase
         .from('expense_entries')
@@ -82,12 +100,19 @@ export const useExpenseEntries = () => {
 
       if (error) throw error;
 
+      const currentEntries = entries[expenseId] || [];
+      const updatedEntries = currentEntries.map((entry) =>
+        entry.id === entryId ? { ...entry, ...updates } : entry
+      );
+      const newTotal = updatedEntries.reduce((sum, e) => sum + (e.amount || 0), 0);
+
       setEntries((prev) => ({
         ...prev,
-        [expenseId]: (prev[expenseId] || []).map((entry) =>
-          entry.id === entryId ? { ...entry, ...updates } : entry
-        ),
+        [expenseId]: updatedEntries,
       }));
+
+      await updateMainExpenseAmount(expenseId, newTotal);
+      onExpenseUpdate?.();
     } catch (error: any) {
       toast({
         title: 'Eroare',
@@ -97,7 +122,7 @@ export const useExpenseEntries = () => {
     }
   };
 
-  const deleteEntry = async (entryId: string, expenseId: string) => {
+  const deleteEntry = async (entryId: string, expenseId: string, onExpenseUpdate?: () => void) => {
     try {
       const { error } = await supabase
         .from('expense_entries')
@@ -106,10 +131,17 @@ export const useExpenseEntries = () => {
 
       if (error) throw error;
 
+      const currentEntries = entries[expenseId] || [];
+      const filteredEntries = currentEntries.filter((entry) => entry.id !== entryId);
+      const newTotal = filteredEntries.reduce((sum, e) => sum + (e.amount || 0), 0);
+
       setEntries((prev) => ({
         ...prev,
-        [expenseId]: (prev[expenseId] || []).filter((entry) => entry.id !== entryId),
+        [expenseId]: filteredEntries,
       }));
+
+      await updateMainExpenseAmount(expenseId, newTotal);
+      onExpenseUpdate?.();
 
       toast({
         title: 'Șters',
