@@ -18,7 +18,7 @@ export const useExpenseEntries = () => {
   const [loadingEntries, setLoadingEntries] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
-  const fetchEntries = async (expenseId: string) => {
+  const fetchEntries = async (expenseId: string, syncToMainExpense: boolean = false, onExpenseUpdate?: () => void) => {
     setLoadingEntries((prev) => ({ ...prev, [expenseId]: true }));
     try {
       const { data, error } = await supabase
@@ -29,7 +29,15 @@ export const useExpenseEntries = () => {
 
       if (error) throw error;
 
-      setEntries((prev) => ({ ...prev, [expenseId]: data as ExpenseEntry[] }));
+      const entriesData = data as ExpenseEntry[];
+      setEntries((prev) => ({ ...prev, [expenseId]: entriesData }));
+
+      // Sync entries total to main expense if requested
+      if (syncToMainExpense && entriesData.length > 0) {
+        const total = entriesData.reduce((sum, e) => sum + (e.amount || 0), 0);
+        await updateMainExpenseAmount(expenseId, total);
+        onExpenseUpdate?.();
+      }
     } catch (error: any) {
       console.error('Error fetching entries:', error);
     } finally {

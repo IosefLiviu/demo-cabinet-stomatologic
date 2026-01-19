@@ -144,7 +144,8 @@ export const MonthlyExpenses = () => {
     } else {
       newExpanded.add(expenseId);
       if (!entries[expenseId]) {
-        await fetchEntries(expenseId);
+        // Sync entries total to main expense when loading entries
+        await fetchEntries(expenseId, true, () => fetchExpenses(monthYear));
       }
     }
     setExpandedExpenses(newExpanded);
