@@ -71,14 +71,28 @@ export function AppointmentCard({
     ? { color: appointment.doctorColor }
     : undefined;
 
+  // Style for completed appointments - use green
+  const completedStyle = isCompleted ? {
+    backgroundColor: 'rgb(240 253 244)', // green-50
+    borderColor: 'rgb(134 239 172)', // green-300
+  } : undefined;
+
+  // For non-completed: use doctor color if available
+  const activeCardStyle = !isCompleted && hasDoctorColor 
+    ? { 
+        backgroundColor: `${appointment.doctorColor}15`, 
+        borderColor: `${appointment.doctorColor}40`,
+      }
+    : undefined;
+
   return (
     <div
       className={cn(
         "rounded-lg border p-3 transition-all hover:shadow-md",
-        !hasDoctorColor && cabinetBgColors[appointment.cabinetId],
-        isCompleted && "opacity-60 bg-green-50 dark:bg-green-950/20 border-green-300 dark:border-green-800"
+        !isCompleted && !hasDoctorColor && cabinetBgColors[appointment.cabinetId],
+        isCompleted && "opacity-60 dark:bg-green-950/20 dark:border-green-800"
       )}
-      style={!isCompleted ? cardStyle : undefined}
+      style={isCompleted ? completedStyle : activeCardStyle}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
