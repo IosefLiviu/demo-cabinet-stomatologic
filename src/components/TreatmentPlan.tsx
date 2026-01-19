@@ -29,6 +29,7 @@ import {
 import { TreatmentListDialog } from './TreatmentListDialog';
 import { Patient } from '@/hooks/usePatients';
 import { useTreatmentPlans, TreatmentPlanItem as TreatmentPlanItemType } from '@/hooks/useTreatmentPlans';
+import { MiniDentalChart } from './MiniDentalChart';
 
 interface Treatment {
   id: string;
@@ -366,42 +367,71 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
                           <PopoverTrigger asChild>
                             <Button variant="outline" className="w-auto min-w-16 h-8 text-xs">
                               {item.toothNumbers.length > 0 
-                                ? item.toothNumbers.join(', ') 
+                                ? (item.toothNumbers.length <= 3 
+                                    ? item.toothNumbers.join(', ') 
+                                    : `${item.toothNumbers.length} dinți`)
                                 : '-'}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-80 p-3">
-                            <div className="space-y-2">
+                          <PopoverContent className="w-auto p-3" align="start">
+                            <div className="space-y-3">
                               <p className="text-sm font-medium">Selectează dinții</p>
-                              <div className="grid grid-cols-8 gap-1">
-                                {allTeeth.slice(0, 16).map(tooth => (
-                                  <Button
-                                    key={tooth}
-                                    variant={item.toothNumbers.includes(tooth) ? "default" : "outline"}
-                                    size="sm"
-                                    className="h-7 w-7 p-0 text-xs"
-                                    onClick={() => handleToggleTooth(item.id, tooth)}
-                                  >
-                                    {tooth}
-                                  </Button>
-                                ))}
+                              
+                              {/* Mini dental chart preview */}
+                              <MiniDentalChart 
+                                treatedTeeth={item.toothNumbers} 
+                                className="pointer-events-none opacity-80"
+                              />
+                              
+                              {/* Selection buttons */}
+                              <div className="space-y-1">
+                                <div className="text-[10px] text-muted-foreground text-center">Maxilar superior</div>
+                                <div className="grid grid-cols-8 gap-1">
+                                  {allTeeth.slice(0, 16).map(tooth => (
+                                    <Button
+                                      key={tooth}
+                                      variant={item.toothNumbers.includes(tooth) ? "default" : "outline"}
+                                      size="sm"
+                                      className="h-7 w-7 p-0 text-xs"
+                                      onClick={() => handleToggleTooth(item.id, tooth)}
+                                    >
+                                      {tooth}
+                                    </Button>
+                                  ))}
+                                </div>
                               </div>
-                              <div className="grid grid-cols-8 gap-1">
-                                {allTeeth.slice(16).map(tooth => (
-                                  <Button
-                                    key={tooth}
-                                    variant={item.toothNumbers.includes(tooth) ? "default" : "outline"}
-                                    size="sm"
-                                    className="h-7 w-7 p-0 text-xs"
-                                    onClick={() => handleToggleTooth(item.id, tooth)}
-                                  >
-                                    {tooth}
-                                  </Button>
-                                ))}
+                              <div className="space-y-1">
+                                <div className="text-[10px] text-muted-foreground text-center">Maxilar inferior</div>
+                                <div className="grid grid-cols-8 gap-1">
+                                  {allTeeth.slice(16).map(tooth => (
+                                    <Button
+                                      key={tooth}
+                                      variant={item.toothNumbers.includes(tooth) ? "default" : "outline"}
+                                      size="sm"
+                                      className="h-7 w-7 p-0 text-xs"
+                                      onClick={() => handleToggleTooth(item.id, tooth)}
+                                    >
+                                      {tooth}
+                                    </Button>
+                                  ))}
+                                </div>
                               </div>
-                              <p className="text-xs text-muted-foreground">
-                                Selectați: {item.toothNumbers.length} dinți
-                              </p>
+                              
+                              <div className="flex items-center justify-between pt-2 border-t">
+                                <p className="text-xs text-muted-foreground">
+                                  Selectați: <span className="font-medium text-foreground">{item.toothNumbers.length}</span> dinți
+                                </p>
+                                {item.toothNumbers.length > 0 && (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-6 text-xs"
+                                    onClick={() => handleUpdateItem(item.id, 'toothNumbers', [])}
+                                  >
+                                    Resetează
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                           </PopoverContent>
                         </Popover>
