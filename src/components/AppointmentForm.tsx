@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { toast } from '@/hooks/use-toast';
 import {
   Select,
   SelectContent,
@@ -231,6 +232,20 @@ export function AppointmentForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate that interventions have teeth selected
+    const interventionsWithoutTeeth = interventions.filter(
+      i => !i.selectedTeeth || i.selectedTeeth.length === 0
+    );
+    
+    if (interventionsWithoutTeeth.length > 0) {
+      toast({
+        title: "Dinți neselectați",
+        description: `Selectați cel puțin un dinte pentru: ${interventionsWithoutTeeth.map(i => i.treatmentName).join(', ')}`,
+        variant: "destructive",
+      });
+      return;
+    }
     
     // Convert interventions to selectedTreatments format
     const selectedTreatments: SelectedTreatment[] = interventions.map(i => ({
@@ -530,7 +545,11 @@ export function AppointmentForm({
                 </Button>
                 <Button 
                   type="submit"
-                  disabled={!formData.patientName || interventions.length === 0}
+                  disabled={
+                    !formData.patientName || 
+                    interventions.length === 0 || 
+                    interventions.some(i => !i.selectedTeeth || i.selectedTeeth.length === 0)
+                  }
                   className="flex-1 sm:flex-none text-sm h-9 sm:h-10"
                 >
                   {editingAppointment ? 'Salvează' : 'Adaugă'}
