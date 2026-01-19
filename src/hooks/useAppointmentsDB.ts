@@ -172,7 +172,8 @@ export function useAppointmentsDB() {
         .select(`
           *,
           patients (id, first_name, last_name, phone, allergies),
-          treatments (id, name, default_duration)
+          treatments (id, name, default_duration),
+          doctors (id, name, color)
         `)
         .single();
 
@@ -204,7 +205,8 @@ export function useAppointmentsDB() {
         .select(`
           *,
           patients (id, first_name, last_name, phone, allergies),
-          treatments (id, name, default_duration)
+          treatments (id, name, default_duration),
+          doctors (id, name, color)
         `)
         .single();
 

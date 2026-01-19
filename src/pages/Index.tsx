@@ -338,21 +338,27 @@ const Index = () => {
   };
 
   // Convert appointments to legacy format for existing components
-  const legacyAppointments: Appointment[] = appointments.map((apt) => ({
-    id: apt.id,
-    cabinetId: apt.cabinet_id,
-    patientName: apt.patients ? `${apt.patients.first_name} ${apt.patients.last_name}` : 'Pacient necunoscut',
-    patientPhone: apt.patients?.phone || '',
-    date: apt.appointment_date,
-    time: apt.start_time.substring(0, 5),
-    duration: apt.duration,
-    treatment: apt.treatments?.name || 'Consultație',
-    notes: apt.notes,
-    doctorId: apt.doctor_id || undefined,
-    doctorName: apt.doctors?.name || undefined,
-    doctorColor: apt.doctors?.color || undefined,
-    status: apt.status,
-  }));
+  const legacyAppointments: Appointment[] = appointments.map((apt) => {
+    const doctorFromJoin = apt.doctors;
+    const doctorFromList = apt.doctor_id ? doctors.find(d => d.id === apt.doctor_id) : undefined;
+    const doctor = doctorFromJoin || doctorFromList;
+
+    return {
+      id: apt.id,
+      cabinetId: apt.cabinet_id,
+      patientName: apt.patients ? `${apt.patients.first_name} ${apt.patients.last_name}` : 'Pacient necunoscut',
+      patientPhone: apt.patients?.phone || '',
+      date: apt.appointment_date,
+      time: apt.start_time.substring(0, 5),
+      duration: apt.duration,
+      treatment: apt.treatments?.name || 'Consultație',
+      notes: apt.notes,
+      doctorId: apt.doctor_id || undefined,
+      doctorName: doctor?.name || undefined,
+      doctorColor: doctor?.color || undefined,
+      status: apt.status,
+    };
+  });
 
   const todayAppointments = legacyAppointments.filter(
     (apt) =>
