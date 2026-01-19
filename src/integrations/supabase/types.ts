@@ -278,6 +278,47 @@ export type Database = {
         }
         Relationships: []
       }
+      expense_entries: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          expense_id: string
+          id: string
+          is_paid: boolean | null
+          paid_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          expense_id: string
+          id?: string
+          is_paid?: boolean | null
+          paid_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          expense_id?: string
+          id?: string
+          is_paid?: boolean | null
+          paid_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_entries_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "monthly_expenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       monthly_expenses: {
         Row: {
           amount: number | null
