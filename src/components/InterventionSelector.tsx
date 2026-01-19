@@ -52,6 +52,10 @@ interface InterventionSelectorProps {
 const upperTeeth = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
 const lowerTeeth = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
 
+// FDI notation - deciduous (baby) teeth
+const upperDeciduousTeeth = [55, 54, 53, 52, 51, 61, 62, 63, 64, 65];
+const lowerDeciduousTeeth = [85, 84, 83, 82, 81, 71, 72, 73, 74, 75];
+
 // Status colors from DentalChart
 const statusColors: Record<ToothStatus, string> = {
   healthy: 'bg-success/20 border-success text-success',
@@ -205,7 +209,7 @@ export function InterventionSelector({
     return intervention.teethDetails?.find(t => t.toothNumber === toothNumber);
   };
 
-  const renderToothButton = (toothNumber: number, interventionId: string, intervention: SelectedIntervention) => {
+  const renderToothButton = (toothNumber: number, interventionId: string, intervention: SelectedIntervention, isDeciduous: boolean = false) => {
     const isSelected = intervention.selectedTeeth.includes(toothNumber);
     const toothDetails = getToothDetails(intervention, toothNumber);
     const isHovered = hoveredTooth?.interventionId === interventionId && hoveredTooth?.toothNumber === toothNumber;
@@ -219,11 +223,15 @@ export function InterventionSelector({
           onMouseEnter={() => setHoveredTooth({ interventionId, toothNumber })}
           onMouseLeave={() => setHoveredTooth(null)}
           className={cn(
-            'w-8 h-10 sm:w-10 sm:h-12 rounded-lg border-2 flex items-center justify-center text-xs font-medium transition-all hover:scale-110 cursor-pointer',
+            'flex items-center justify-center font-medium transition-all hover:scale-110 cursor-pointer',
             isSelected
               ? statusColors[status]
               : statusColors.healthy,
-            isHovered && 'ring-2 ring-primary ring-offset-2'
+            isHovered && 'ring-2 ring-primary ring-offset-2',
+            // Deciduous teeth: smaller, circular shape with dashed border
+            isDeciduous 
+              ? 'w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 text-[10px] border-dashed' 
+              : 'w-8 h-10 sm:w-10 sm:h-12 rounded-lg border-2 text-xs'
           )}
         >
           {toothNumber}
@@ -408,26 +416,48 @@ export function InterventionSelector({
 
                     {/* Dental Chart */}
                     <div className="space-y-4">
-                      {/* Upper jaw */}
+                      {/* Upper jaw - permanent teeth */}
                       <div className="space-y-1">
                         <div className="text-xs text-muted-foreground text-center mb-2">
-                          Maxilar superior
+                          Maxilar superior (dinți permanenți)
                         </div>
                         <div className="flex justify-center gap-1">
-                          {upperTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention))}
-                        </div>
-                        <div className="flex justify-center">
-                          <div className="w-full max-w-md border-b-2 border-muted-foreground/30 my-2" />
+                          {upperTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention, false))}
                         </div>
                       </div>
 
-                      {/* Lower jaw */}
+                      {/* Upper jaw - deciduous teeth */}
+                      <div className="space-y-1">
+                        <div className="text-xs text-muted-foreground text-center mb-2">
+                          Dinți temporari (de lapte) - superior
+                        </div>
+                        <div className="flex justify-center gap-1">
+                          {upperDeciduousTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention, true))}
+                        </div>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="flex justify-center">
+                        <div className="w-full max-w-2xl border-b-2 border-muted-foreground/30 my-2" />
+                      </div>
+
+                      {/* Lower jaw - deciduous teeth */}
                       <div className="space-y-1">
                         <div className="flex justify-center gap-1">
-                          {lowerTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention))}
+                          {lowerDeciduousTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention, true))}
                         </div>
                         <div className="text-xs text-muted-foreground text-center mt-2">
-                          Maxilar inferior
+                          Dinți temporari (de lapte) - inferior
+                        </div>
+                      </div>
+
+                      {/* Lower jaw - permanent teeth */}
+                      <div className="space-y-1">
+                        <div className="flex justify-center gap-1">
+                          {lowerTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention, false))}
+                        </div>
+                        <div className="text-xs text-muted-foreground text-center mt-2">
+                          Maxilar inferior (dinți permanenți)
                         </div>
                       </div>
                     </div>
