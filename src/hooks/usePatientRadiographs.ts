@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { compressImage, formatBytes } from '@/lib/imageCompression';
 
 export interface PatientRadiograph {
   id: string;
@@ -81,14 +82,31 @@ export function usePatientRadiographs(patientId?: string) {
 
     setUploading(true);
     try {
-      // Generate unique file path
-      const fileExt = file.name.split('.').pop();
+      // Compress the image before upload
+      const { 
+        compressedFile, 
+        originalSize, 
+        compressedSize, 
+        compressionRatio 
+      } = await compressImage(file, {
+        maxWidth: 2048,
+        maxHeight: 2048,
+        quality: 0.85,
+      });
+
+      // Show compression info if significant compression occurred
+      if (compressionRatio > 1.1) {
+        console.log(`Image compressed: ${formatBytes(originalSize)} → ${formatBytes(compressedSize)} (${compressionRatio.toFixed(1)}x)`);
+      }
+
+      // Generate unique file path (always use .jpg for compressed images)
+      const fileExt = compressionRatio > 1 ? 'jpg' : file.name.split('.').pop();
       const fileName = `${patientId}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
 
-      // Upload file to storage
+      // Upload compressed file to storage
       const { error: uploadError } = await supabase.storage
         .from('patient-radiographs')
-        .upload(fileName, file, {
+        .upload(fileName, compressedFile, {
           cacheControl: '3600',
           upsert: false,
         });
@@ -98,14 +116,14 @@ export function usePatientRadiographs(patientId?: string) {
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
 
-      // Save metadata to database
+      // Save metadata to database (store compressed size)
       const { data, error: dbError } = await supabase
         .from('patient_radiographs')
         .insert({
           patient_id: patientId,
           file_path: fileName,
           file_name: file.name,
-          file_size: file.size,
+          file_size: compressedSize,
           description: metadata.description || null,
           radiograph_type: metadata.radiograph_type || null,
           tooth_numbers: metadata.tooth_numbers || null,
@@ -117,7 +135,13 @@ export function usePatientRadiographs(patientId?: string) {
 
       if (dbError) throw dbError;
 
-      toast.success('Radiografia a fost încărcată cu succes');
+      // Show success message with compression info
+      if (compressionRatio > 1.1) {
+        toast.success(`Radiografia a fost încărcată (comprimată ${formatBytes(originalSize)} → ${formatBytes(compressedSize)})`);
+      } else {
+        toast.success('Radiografia a fost încărcată cu succes');
+      }
+      
       await fetchRadiographs();
       return data;
     } catch (error) {
