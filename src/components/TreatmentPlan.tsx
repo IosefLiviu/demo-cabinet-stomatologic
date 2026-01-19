@@ -169,7 +169,7 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
             body { font-family: Arial, sans-serif; padding: 20px; color: #000; }
             .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #999; padding-bottom: 10px; }
             .logo-section { display: flex; align-items: center; gap: 10px; }
-            .logo { width: 60px; height: 60px; object-fit: contain; }
+            .logo { width: 120px; height: 80px; object-fit: contain; }
             .header h1 { font-size: 18px; margin: 0; color: #b8860b; }
             .header p { margin: 2px 0; font-size: 12px; }
             .clinic-name { font-weight: bold; font-size: 14px; }

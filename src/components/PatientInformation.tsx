@@ -177,7 +177,9 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
                 gap: 5px;
               }
               .logo {
-                height: 50px;
+                width: 120px;
+                height: 80px;
+                object-fit: contain;
                 width: auto;
               }
               .clinic-contact {
