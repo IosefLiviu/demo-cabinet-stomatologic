@@ -20,6 +20,7 @@ import PrescriptionForm from '@/components/PrescriptionForm';
 import PatientInformation from '@/components/PatientInformation';
 import { CabinetSettings } from '@/components/CabinetSettings';
 import { CompleteAppointmentDialog, PaymentData } from '@/components/CompleteAppointmentDialog';
+import { CancelAppointmentDialog } from '@/components/CancelAppointmentDialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -74,6 +75,11 @@ const Index = () => {
   const [completingAppointmentName, setCompletingAppointmentName] = useState<string>('');
   const [completingAppointmentPrice, setCompletingAppointmentPrice] = useState<number>(0);
   const [isCompleting, setIsCompleting] = useState(false);
+
+  // Cancel appointment dialog state
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancellingAppointmentId, setCancellingAppointmentId] = useState<string | null>(null);
+  const [cancellingAppointmentName, setCancellingAppointmentName] = useState<string>('');
 
   const { patients, loading: patientsLoading, addPatient, updatePatient, deletePatient } = usePatients();
   const { 
@@ -309,8 +315,26 @@ const Index = () => {
     setCompletingAppointmentPrice(0);
   };
 
-  const handleAppointmentCancel = async (id: string) => {
-    await cancelAppointment(id);
+  const handleAppointmentCancelClick = (id: string) => {
+    const appointment = appointments.find(a => a.id === id);
+    if (appointment) {
+      setCancellingAppointmentId(id);
+      setCancellingAppointmentName(
+        appointment.patients 
+          ? `${appointment.patients.first_name} ${appointment.patients.last_name}`
+          : 'Pacient necunoscut'
+      );
+      setCancelDialogOpen(true);
+    }
+  };
+
+  const handleAppointmentCancelConfirm = async (reason: string) => {
+    if (cancellingAppointmentId) {
+      await cancelAppointment(cancellingAppointmentId, reason);
+      setCancelDialogOpen(false);
+      setCancellingAppointmentId(null);
+      setCancellingAppointmentName('');
+    }
   };
 
   // Convert appointments to legacy format for existing components
@@ -457,7 +481,7 @@ const Index = () => {
               onSlotClick={handleSlotClick}
               onAppointmentClick={handleAppointmentClick}
               onAppointmentComplete={handleAppointmentComplete}
-              onAppointmentCancel={handleAppointmentCancel}
+              onAppointmentCancel={handleAppointmentCancelClick}
             />
           </TabsContent>
 
@@ -572,6 +596,14 @@ const Index = () => {
         patientName={completingAppointmentName}
         totalPrice={completingAppointmentPrice}
         isLoading={isCompleting}
+      />
+
+      {/* Cancel Appointment Dialog */}
+      <CancelAppointmentDialog
+        open={cancelDialogOpen}
+        onOpenChange={setCancelDialogOpen}
+        onConfirm={handleAppointmentCancelConfirm}
+        patientName={cancellingAppointmentName}
       />
     </div>
   );
