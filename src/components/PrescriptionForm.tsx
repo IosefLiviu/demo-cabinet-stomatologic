@@ -481,7 +481,7 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
         </head>
         <body>
           <div class="header">
-            <img src="/images/perfect-smile-logo-print.png" alt="Perfect Smile Logo" class="header-logo" />
+            <img src="/images/perfect-smile-logo-print.jpg" alt="Perfect Smile Logo" class="header-logo" />
             <div>
               <div class="header-title">REȚETĂ MEDICALĂ</div>
             </div>

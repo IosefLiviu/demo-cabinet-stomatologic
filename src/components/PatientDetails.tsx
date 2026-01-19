@@ -192,7 +192,7 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
         <body>
           <div class="header">
             <div class="logo-section">
-              <img src="/images/perfect-smile-logo-print.png" alt="Perfect Smile Logo" class="logo" />
+              <img src="/images/perfect-smile-logo-print.jpg" alt="Perfect Smile Logo" class="logo" />
               <div style="font-weight: bold; font-size: 14px;">
                 PERFECT SMILE GLIM
               </div>
