@@ -391,10 +391,18 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
               max-width: 95mm;
             }
             .header {
-              text-align: center;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 10px;
               margin-bottom: 15px;
               padding-bottom: 10px;
               border-bottom: 1px solid #000;
+            }
+            .header-logo {
+              width: 50px;
+              height: 50px;
+              object-fit: contain;
             }
             .header-title {
               font-size: 14pt;
@@ -473,7 +481,10 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
         </head>
         <body>
           <div class="header">
-            <div class="header-title">REȚETĂ MEDICALĂ</div>
+            <img src="/images/perfect-smile-logo-print.png" alt="Perfect Smile Logo" class="header-logo" />
+            <div>
+              <div class="header-title">REȚETĂ MEDICALĂ</div>
+            </div>
           </div>
           
           <div class="form-row-split">

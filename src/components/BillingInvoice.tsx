@@ -236,7 +236,7 @@ const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients }) => {
               <p>IBAN:</p>
             </div>
             <div class="logo-section">
-              <img src="/images/perfect-smile-logo.png" alt="Perfect Smile Logo" class="logo" />
+              <img src="/images/perfect-smile-logo-print.png" alt="Perfect Smile Logo" class="logo" />
               <div class="phone-email">
                 <p>0721.702.820</p>
                 <p>perfectsmilevarteju@gmail.com</p>
