@@ -359,6 +359,7 @@ export type Database = {
           file_path: string
           file_size: number | null
           id: string
+          original_file_size: number | null
           patient_id: string
           radiograph_type: string | null
           taken_at: string | null
@@ -372,6 +373,7 @@ export type Database = {
           file_path: string
           file_size?: number | null
           id?: string
+          original_file_size?: number | null
           patient_id: string
           radiograph_type?: string | null
           taken_at?: string | null
@@ -385,6 +387,7 @@ export type Database = {
           file_path?: string
           file_size?: number | null
           id?: string
+          original_file_size?: number | null
           patient_id?: string
           radiograph_type?: string | null
           taken_at?: string | null
