@@ -114,13 +114,23 @@ export function TimeSlotGrid({
                     {appointment ? (
                       <div
                         className={cn(
-                          "w-full h-full rounded-md p-1 sm:p-2 text-left transition-all overflow-hidden min-w-0 flex items-center gap-1",
+                          "w-full h-full rounded-md p-1 sm:p-2 text-left transition-all overflow-hidden min-w-0 flex items-center gap-1 border",
                           appointment.status === 'completed' 
-                            ? "bg-green-100 dark:bg-green-950/30 border border-green-300 dark:border-green-800"
+                            ? "bg-green-100 dark:bg-green-950/30 border-green-300 dark:border-green-800"
                             : appointment.status === 'cancelled'
-                            ? "bg-red-100 dark:bg-red-950/30 border border-red-300 dark:border-red-800 opacity-60"
-                            : cabinetBgLightColors[cabinet.id]
+                            ? "bg-red-100 dark:bg-red-950/30 border-red-300 dark:border-red-800 opacity-60"
+                            : !appointment.doctorColor && cabinetBgLightColors[cabinet.id]
                         )}
+                        style={
+                          appointment.status !== 'completed' && 
+                          appointment.status !== 'cancelled' && 
+                          appointment.doctorColor 
+                            ? { 
+                                backgroundColor: `${appointment.doctorColor}20`, 
+                                borderColor: `${appointment.doctorColor}50` 
+                              } 
+                            : undefined
+                        }
                       >
                         <button
                           onClick={() => onAppointmentClick(appointment)}
