@@ -9,6 +9,7 @@ export interface PatientRadiograph {
   file_path: string;
   file_name: string;
   file_size: number | null;
+  original_file_size: number | null;
   description: string | null;
   radiograph_type: string | null;
   tooth_numbers: number[] | null;
@@ -16,6 +17,14 @@ export interface PatientRadiograph {
   uploaded_at: string;
   uploaded_by: string | null;
   url?: string;
+}
+
+export interface StorageStats {
+  totalSize: number;
+  originalSize: number;
+  savedSize: number;
+  compressionRatio: number;
+  count: number;
 }
 
 export type RadiographType = 'panoramic' | 'periapical' | 'bitewing' | 'cbct' | 'other';
@@ -30,6 +39,13 @@ export const RADIOGRAPH_TYPE_LABELS: Record<RadiographType, string> = {
 
 export function usePatientRadiographs(patientId?: string) {
   const [radiographs, setRadiographs] = useState<PatientRadiograph[]>([]);
+  const [storageStats, setStorageStats] = useState<StorageStats>({ 
+    totalSize: 0, 
+    originalSize: 0, 
+    savedSize: 0, 
+    compressionRatio: 1, 
+    count: 0 
+  });
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -61,6 +77,31 @@ export function usePatientRadiographs(patientId?: string) {
       );
 
       setRadiographs(radiographsWithUrls);
+
+      // Calculate storage statistics
+      const stats = (data || []).reduce(
+        (acc, rad) => {
+          const fileSize = rad.file_size || 0;
+          const originalSize = rad.original_file_size || fileSize;
+          return {
+            totalSize: acc.totalSize + fileSize,
+            originalSize: acc.originalSize + originalSize,
+            count: acc.count + 1,
+          };
+        },
+        { totalSize: 0, originalSize: 0, count: 0 }
+      );
+      
+      const savedSize = stats.originalSize - stats.totalSize;
+      const compressionRatio = stats.originalSize > 0 ? stats.originalSize / stats.totalSize : 1;
+      
+      setStorageStats({
+        totalSize: stats.totalSize,
+        originalSize: stats.originalSize,
+        savedSize,
+        compressionRatio,
+        count: stats.count,
+      });
     } catch (error) {
       console.error('Error fetching radiographs:', error);
       toast.error('Eroare la încărcarea radiografiilor');
@@ -121,7 +162,7 @@ export function usePatientRadiographs(patientId?: string) {
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
 
-      // Save metadata to database (store compressed size)
+      // Save metadata to database (store both compressed and original size)
       const { data, error: dbError } = await supabase
         .from('patient_radiographs')
         .insert({
@@ -129,6 +170,7 @@ export function usePatientRadiographs(patientId?: string) {
           file_path: fileName,
           file_name: file.name,
           file_size: compressedSize,
+          original_file_size: originalSize,
           description: metadata.description || null,
           radiograph_type: metadata.radiograph_type || null,
           tooth_numbers: metadata.tooth_numbers || null,
@@ -212,6 +254,7 @@ export function usePatientRadiographs(patientId?: string) {
 
   return {
     radiographs,
+    storageStats,
     loading,
     uploading,
     fetchRadiographs,

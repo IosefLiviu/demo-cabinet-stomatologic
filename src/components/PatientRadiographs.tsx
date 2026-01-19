@@ -15,6 +15,8 @@ import {
   ChevronRight,
   Columns2,
   Check,
+  HardDrive,
+  TrendingDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,7 +53,9 @@ import {
   PatientRadiograph,
   RadiographType,
   RADIOGRAPH_TYPE_LABELS,
+  StorageStats,
 } from '@/hooks/usePatientRadiographs';
+import { formatBytes } from '@/lib/imageCompression';
 
 interface PatientRadiographsProps {
   patientId: string;
@@ -61,6 +65,7 @@ interface PatientRadiographsProps {
 export function PatientRadiographs({ patientId, patientName }: PatientRadiographsProps) {
   const {
     radiographs,
+    storageStats,
     loading,
     uploading,
     fetchRadiographs,
@@ -240,6 +245,44 @@ export function PatientRadiographs({ patientId, patientName }: PatientRadiograph
           )}
         </div>
       </div>
+
+      {/* Storage Statistics */}
+      {radiographs.length > 0 && storageStats.totalSize > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="bg-muted/50 rounded-lg p-3 flex items-center gap-2">
+            <HardDrive className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <p className="text-xs text-muted-foreground">Spațiu utilizat</p>
+              <p className="text-sm font-medium">{formatBytes(storageStats.totalSize)}</p>
+            </div>
+          </div>
+          <div className="bg-muted/50 rounded-lg p-3 flex items-center gap-2">
+            <FileImage className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <p className="text-xs text-muted-foreground">Dimensiune originală</p>
+              <p className="text-sm font-medium">{formatBytes(storageStats.originalSize)}</p>
+            </div>
+          </div>
+          {storageStats.savedSize > 0 && (
+            <>
+              <div className="bg-green-500/10 rounded-lg p-3 flex items-center gap-2">
+                <TrendingDown className="h-4 w-4 text-green-600" />
+                <div>
+                  <p className="text-xs text-green-600">Spațiu economisit</p>
+                  <p className="text-sm font-medium text-green-700">{formatBytes(storageStats.savedSize)}</p>
+                </div>
+              </div>
+              <div className="bg-green-500/10 rounded-lg p-3 flex items-center gap-2">
+                <TrendingDown className="h-4 w-4 text-green-600" />
+                <div>
+                  <p className="text-xs text-green-600">Rata compresie</p>
+                  <p className="text-sm font-medium text-green-700">{storageStats.compressionRatio.toFixed(1)}x</p>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Compare mode instructions */}
       {compareMode && (
