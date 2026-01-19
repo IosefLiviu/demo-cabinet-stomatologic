@@ -400,8 +400,8 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
               border-bottom: 1px solid #000;
             }
             .header-logo {
-              width: 50px;
-              height: 50px;
+              width: 120px;
+              height: 80px;
               object-fit: contain;
             }
             .header-title {

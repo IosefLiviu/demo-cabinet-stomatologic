@@ -104,8 +104,9 @@ export function RadiologyReferral({ patients, doctors }: RadiologyReferralProps)
               gap: 10px;
             }
             .logo {
-              width: 60px;
-              height: 60px;
+              width: 120px;
+              height: 80px;
+              object-fit: contain;
             }
             .clinic-contact {
               text-align: right;

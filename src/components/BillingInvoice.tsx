@@ -123,8 +123,8 @@ const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients }) => {
               text-align: center;
             }
             .logo {
-              width: 50px;
-              height: 50px;
+              width: 120px;
+              height: 80px;
               object-fit: contain;
             }
             .phone-email {
