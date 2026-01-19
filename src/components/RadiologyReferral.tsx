@@ -369,6 +369,14 @@ export function RadiologyReferral({ patients, doctors }: RadiologyReferralProps)
           <div className="section-content observations-content">
             {observations || '-'}
           </div>
+          
+          <div style={{ marginTop: '30px', paddingTop: '10px', borderTop: '2px solid #b8860b' }}>
+            <div style={{ textAlign: 'center', fontSize: '9px', color: '#666' }}>
+              <p><strong>PERFECT SMILE GLIM SRL</strong> | Str. București 68-70, Vârteju, Măgurele, Ilfov</p>
+              <p>Tel: 0721.702.820 | Email: perfectsmilevarteju@gmail.com | www.perfectsmileglim.ro</p>
+              <p style={{ marginTop: '5px', fontSize: '8px', color: '#999' }}>© {new Date().getFullYear()} Perfect Smile Glim. Toate drepturile rezervate.</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

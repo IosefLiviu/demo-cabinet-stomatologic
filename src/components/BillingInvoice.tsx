@@ -336,6 +336,14 @@ const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients }) => {
               </table>
             </div>
           </div>
+          
+          <div style="margin-top: 30px; padding-top: 10px; border-top: 2px solid #b8860b;">
+            <div style="text-align: center; font-size: 9px; color: #666;">
+              <p><strong>PERFECT SMILE GLIM SRL</strong> | Str. București 68-70, Vârteju, Măgurele, Ilfov</p>
+              <p>Tel: 0721.702.820 | Email: perfectsmilevarteju@gmail.com | www.perfectsmileglim.ro</p>
+              <p style="margin-top: 5px; font-size: 8px; color: #999;">© ${new Date().getFullYear()} Perfect Smile Glim. Toate drepturile rezervate.</p>
+            </div>
+          </div>
         </body>
       </html>
     `);
