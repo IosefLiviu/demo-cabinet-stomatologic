@@ -396,7 +396,7 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
                               {/* Selection buttons */}
                               <div className="space-y-1">
                                 <div className="text-[10px] text-muted-foreground text-center">Superior permanent</div>
-                                <div className="grid grid-cols-8 gap-1">
+                                <div className="flex justify-center gap-1">
                                   {upperPermanentTeeth.map(tooth => (
                                     <Button
                                       key={tooth}
@@ -447,7 +447,7 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
                               </div>
                               <div className="space-y-1">
                                 <div className="text-[10px] text-muted-foreground text-center">Inferior permanent</div>
-                                <div className="grid grid-cols-8 gap-1">
+                                <div className="flex justify-center gap-1">
                                   {lowerPermanentTeeth.map(tooth => (
                                     <Button
                                       key={tooth}
