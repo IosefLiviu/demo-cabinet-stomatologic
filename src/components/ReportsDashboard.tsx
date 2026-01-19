@@ -1,7 +1,9 @@
 import { useState, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChart, UserCircle, Filter, Download, FlaskConical } from 'lucide-react';
+import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChart, UserCircle, Filter, Download, FlaskConical, ClipboardList } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AppointmentsPatientReport } from './AppointmentsPatientReport';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -437,76 +439,89 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
   };
 
   return (
-    <div className="space-y-6">
-      {/* Period Selector */}
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="flex gap-2">
-          <Button
-            variant={period === 'week' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => handlePeriodChange('week')}
-          >
-            Săptămâna curentă
-          </Button>
-          <Button
-            variant={period === 'month' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => handlePeriodChange('month')}
-          >
-            Luna curentă
-          </Button>
-        </div>
-        
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <CalendarIcon className="h-4 w-4" />
-              {format(dateRange.from, 'dd MMM', { locale: ro })} - {format(dateRange.to, 'dd MMM yyyy', { locale: ro })}
+    <Tabs defaultValue="financial" className="space-y-6">
+      <TabsList className="grid w-full grid-cols-2 max-w-md">
+        <TabsTrigger value="financial" className="gap-2">
+          <DollarSign className="h-4 w-4" />
+          Financiar
+        </TabsTrigger>
+        <TabsTrigger value="patients" className="gap-2">
+          <ClipboardList className="h-4 w-4" />
+          Pe Pacienți
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="financial">
+        <div className="space-y-6">
+          {/* Period Selector */}
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex gap-2">
+              <Button
+                variant={period === 'week' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handlePeriodChange('week')}
+              >
+                Săptămâna curentă
+              </Button>
+              <Button
+                variant={period === 'month' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handlePeriodChange('month')}
+              >
+                Luna curentă
+              </Button>
+            </div>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  {format(dateRange.from, 'dd MMM', { locale: ro })} - {format(dateRange.to, 'dd MMM yyyy', { locale: ro })}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="range"
+                  selected={{ from: dateRange.from, to: dateRange.to }}
+                  onSelect={(range) => range && handleDateRangeChange(range)}
+                  numberOfMonths={2}
+                />
+              </PopoverContent>
+            </Popover>
+
+            {/* Doctor Filter */}
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select value={selectedDoctorId} onValueChange={setSelectedDoctorId}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Toți doctorii" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toți doctorii</SelectItem>
+                  {doctors.map((doctor) => (
+                    <SelectItem key={doctor.id} value={doctor.id}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-2 h-2 rounded-full" 
+                          style={{ backgroundColor: doctor.color }}
+                        />
+                        {doctor.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Export Button */}
+            <Button variant="outline" size="sm" className="gap-2 ml-auto" onClick={exportToExcel}>
+              <Download className="h-4 w-4" />
+              Export Excel
             </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="range"
-              selected={{ from: dateRange.from, to: dateRange.to }}
-              onSelect={(range) => range && handleDateRangeChange(range)}
-              numberOfMonths={2}
-            />
-          </PopoverContent>
-        </Popover>
+          </div>
 
-        {/* Doctor Filter */}
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <Select value={selectedDoctorId} onValueChange={setSelectedDoctorId}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Toți doctorii" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Toți doctorii</SelectItem>
-              {doctors.map((doctor) => (
-                <SelectItem key={doctor.id} value={doctor.id}>
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-2 h-2 rounded-full" 
-                      style={{ backgroundColor: doctor.color }}
-                    />
-                    {doctor.name}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Export Button */}
-        <Button variant="outline" size="sm" className="gap-2 ml-auto" onClick={exportToExcel}>
-          <Download className="h-4 w-4" />
-          Export Excel
-        </Button>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+          {/* KPI Cards */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Programări</CardTitle>
@@ -861,7 +876,16 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
             ))}
           </div>
         </CardContent>
-      </Card>
-    </div>
+        </Card>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="patients">
+        <AppointmentsPatientReport 
+          appointments={appointments} 
+          dateRange={dateRange}
+        />
+      </TabsContent>
+    </Tabs>
   );
 }
