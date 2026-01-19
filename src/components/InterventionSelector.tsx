@@ -264,12 +264,17 @@ export function InterventionSelector({
       {/* Interventions List */}
       {interventions.length > 0 && (
         <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-          {interventions.map((intervention) => (
+          {interventions.map((intervention) => {
+            const hasNoTeeth = !intervention.selectedTeeth || intervention.selectedTeeth.length === 0;
+            return (
             <Collapsible 
               key={intervention.id} 
               open={expandedInterventions.has(intervention.id)}
               onOpenChange={() => toggleExpanded(intervention.id)}
-              className="border rounded-lg overflow-hidden"
+              className={cn(
+                "border rounded-lg overflow-hidden",
+                hasNoTeeth && "border-destructive border-2"
+              )}
             >
               {/* Intervention Header */}
               <CollapsibleTrigger asChild>
@@ -430,7 +435,8 @@ export function InterventionSelector({
                 </div>
               </CollapsibleContent>
             </Collapsible>
-          ))}
+            );
+          })}
 
           {/* Totals */}
           <div className="bg-muted/50 rounded-lg p-3">
