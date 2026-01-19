@@ -4,6 +4,7 @@ import { Search, Trash2, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { toast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -231,6 +232,20 @@ export function AppointmentForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate that interventions have teeth selected
+    const interventionsWithoutTeeth = interventions.filter(
+      i => !i.selectedTeeth || i.selectedTeeth.length === 0
+    );
+    
+    if (interventionsWithoutTeeth.length > 0) {
+      toast({
+        title: "Dinți neselectați",
+        description: `Selectați cel puțin un dinte pentru: ${interventionsWithoutTeeth.map(i => i.treatmentName).join(', ')}`,
+        variant: "destructive",
+      });
+      return;
+    }
     
     // Convert interventions to selectedTreatments format
     const selectedTreatments: SelectedTreatment[] = interventions.map(i => ({
