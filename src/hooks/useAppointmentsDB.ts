@@ -37,6 +37,8 @@ export interface AppointmentDB {
   is_paid: boolean;
   paid_amount?: number;
   payment_method?: string;
+  cancellation_reason?: string | null;
+  cancelled_at?: string | null;
   created_at: string;
   updated_at: string;
   // Joined data
