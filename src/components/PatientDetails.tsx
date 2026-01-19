@@ -22,6 +22,7 @@ import {
   ClipboardList,
   Printer,
   Trash2,
+  FileImage,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -51,6 +52,7 @@ import { Patient } from '@/hooks/usePatients';
 import { supabase } from '@/integrations/supabase/client';
 import { MiniDentalChart, ToothData } from './MiniDentalChart';
 import { useTreatmentPlans, TreatmentPlan } from '@/hooks/useTreatmentPlans';
+import { PatientRadiographs } from './PatientRadiographs';
 
 interface ToothDataRecord {
   toothNumber: number;
@@ -527,9 +529,13 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
         </SheetHeader>
 
         <Tabs defaultValue="info" className="w-full">
-          <TabsList className="w-full grid grid-cols-3">
+          <TabsList className="w-full grid grid-cols-4">
             <TabsTrigger value="info">Informații</TabsTrigger>
             <TabsTrigger value="history">Istoric</TabsTrigger>
+            <TabsTrigger value="radiographs" className="gap-1">
+              <FileImage className="h-3 w-3" />
+              Radiografii
+            </TabsTrigger>
             <TabsTrigger value="plans" className="gap-1">
               <ClipboardList className="h-3 w-3" />
               Planuri
@@ -853,6 +859,14 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
                 )}
               </div>
             )}
+          </TabsContent>
+
+          {/* Radiographs Tab */}
+          <TabsContent value="radiographs" className="mt-6">
+            <PatientRadiographs 
+              patientId={patient.id} 
+              patientName={`${patient.first_name} ${patient.last_name}`} 
+            />
           </TabsContent>
 
           {/* Treatment Plans Tab */}

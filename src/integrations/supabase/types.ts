@@ -346,6 +346,56 @@ export type Database = {
           },
         ]
       }
+      patient_radiographs: {
+        Row: {
+          description: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          patient_id: string
+          radiograph_type: string | null
+          taken_at: string | null
+          tooth_numbers: number[] | null
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          description?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          patient_id: string
+          radiograph_type?: string | null
+          taken_at?: string | null
+          tooth_numbers?: number[] | null
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          description?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          patient_id?: string
+          radiograph_type?: string | null
+          taken_at?: string | null
+          tooth_numbers?: number[] | null
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_radiographs_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patients: {
         Row: {
           address: string | null
