@@ -87,7 +87,7 @@ export function RadiologyReferral({ patients, doctors }: RadiologyReferralProps)
             body { 
               font-family: Arial, sans-serif; 
               padding: 20px; 
-              color: #000; 
+              color: #1a365d; 
               font-size: 12px;
             }
             .header { 
@@ -95,8 +95,11 @@ export function RadiologyReferral({ patients, doctors }: RadiologyReferralProps)
               justify-content: space-between;
               align-items: flex-start;
               margin-bottom: 20px;
-              border-bottom: 1px solid #999;
-              padding-bottom: 10px;
+              border-bottom: 3px solid #b8860b;
+              padding-bottom: 15px;
+              background: linear-gradient(to right, #fef9e7, #fff8e1, #fef9e7);
+              padding: 15px;
+              border-radius: 8px;
             }
             .logo-section {
               display: flex;
@@ -111,6 +114,7 @@ export function RadiologyReferral({ patients, doctors }: RadiologyReferralProps)
             .clinic-contact {
               text-align: right;
               font-size: 11px;
+              color: #b8860b;
             }
             .clinic-contact p {
               margin: 2px 0;
@@ -118,9 +122,10 @@ export function RadiologyReferral({ patients, doctors }: RadiologyReferralProps)
             .title { 
               text-align: center; 
               font-weight: bold; 
-              font-size: 14px;
+              font-size: 16px;
               margin: 15px 0;
               text-transform: uppercase;
+              color: #b8860b;
             }
             .form-table {
               width: 100%;
@@ -128,29 +133,33 @@ export function RadiologyReferral({ patients, doctors }: RadiologyReferralProps)
               margin-bottom: 15px;
             }
             .form-table td {
-              border: 1px solid #333;
+              border: 1px solid #b8860b;
               padding: 8px;
               vertical-align: top;
             }
             .form-table .label {
               font-weight: bold;
+              color: #b8860b;
             }
             .section-title {
               text-align: center;
               font-weight: bold;
-              background: #f5f5f5;
+              background: linear-gradient(to bottom, #b8860b, #9a7209);
+              color: #fff;
               padding: 5px;
-              border: 1px solid #333;
+              border: 1px solid #b8860b;
               border-bottom: none;
             }
             .section-content {
-              border: 1px solid #333;
+              border: 1px solid #b8860b;
               min-height: 80px;
               padding: 10px;
+              background: #fffef5;
             }
             .observations-content {
               min-height: 60px;
             }
+            @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
           </style>
         </head>
         <body>

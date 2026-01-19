@@ -167,8 +167,11 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
                 justify-content: space-between;
                 align-items: flex-start;
                 margin-bottom: 15px;
-                border-bottom: 1px solid #d4a574;
-                padding-bottom: 10px;
+                border-bottom: 3px solid #b8860b;
+                padding-bottom: 15px;
+                background: linear-gradient(to right, #fef9e7, #fff8e1, #fef9e7);
+                padding: 15px;
+                border-radius: 8px;
               }
               .logo-section {
                 display: flex;
@@ -180,12 +183,11 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
                 width: 120px;
                 height: 80px;
                 object-fit: contain;
-                width: auto;
               }
               .clinic-contact {
                 text-align: right;
                 font-size: 10px;
-                color: #c4a574;
+                color: #b8860b;
               }
               .patient-info-section {
                 display: flex;
@@ -193,12 +195,12 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
                 align-items: center;
                 margin: 20px 0;
                 padding-bottom: 15px;
-                border-bottom: 1px solid #eee;
+                border-bottom: 2px solid #b8860b;
               }
               .patient-name {
                 font-size: 16px;
                 font-weight: bold;
-                color: #1a365d;
+                color: #b8860b;
               }
               .patient-details-left {
                 display: flex;
@@ -210,11 +212,11 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
                 font-size: 10px;
               }
               .section-title {
-                font-size: 13px;
+                font-size: 14px;
                 font-weight: bold;
                 text-align: center;
                 margin: 15px 0;
-                color: #1a365d;
+                color: #b8860b;
               }
               .date-label {
                 text-align: center;
@@ -229,19 +231,18 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
                 font-size: 10px;
               }
               th {
-                background-color: #f8f4ef;
+                background: linear-gradient(to bottom, #b8860b, #9a7209);
+                color: #fff;
                 padding: 8px 5px;
                 text-align: left;
                 font-weight: bold;
-                border-bottom: 2px solid #d4a574;
-                color: #1a365d;
               }
               td {
                 padding: 6px 5px;
-                border-bottom: 1px solid #eee;
+                border-bottom: 1px solid #b8860b;
               }
               tr:hover {
-                background-color: #fafafa;
+                background-color: #fffef5;
               }
               .text-right {
                 text-align: right;
@@ -252,8 +253,9 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
               .total-row {
                 font-weight: bold;
                 font-size: 12px;
-                border-top: 2px solid #d4a574;
-                background-color: #f8f4ef;
+                border-top: 2px solid #b8860b;
+                background-color: #fef9e7;
+                color: #b8860b;
               }
               .signature-section {
                 margin-top: 40px;
@@ -261,26 +263,28 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
                 justify-content: space-between;
               }
               .signature-line {
-                border-top: 1px solid #333;
+                border-top: 2px solid #b8860b;
                 width: 200px;
                 padding-top: 5px;
                 font-size: 9px;
                 text-align: center;
+                color: #666;
               }
               .footer {
                 position: fixed;
                 bottom: 15px;
                 right: 15px;
                 font-size: 9px;
-                color: #666;
+                color: #b8860b;
               }
               .page-number {
                 position: fixed;
                 top: 15px;
                 right: 15px;
                 font-size: 9px;
-                color: #666;
+                color: #b8860b;
               }
+              @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
             </style>
           </head>
           <body>
