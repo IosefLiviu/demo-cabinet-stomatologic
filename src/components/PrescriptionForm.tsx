@@ -501,6 +501,27 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
               font-size: 10pt;
               color: #4a5568;
             }
+            .document-footer {
+              margin-top: 30px;
+              padding-top: 10px;
+            }
+            .footer-divider {
+              border-top: 2px solid #b8860b;
+              margin-bottom: 10px;
+            }
+            .footer-content {
+              text-align: center;
+              font-size: 8pt;
+              color: #666;
+            }
+            .footer-content p {
+              margin: 2px 0;
+            }
+            .footer-content .copyright {
+              margin-top: 5px;
+              font-size: 7pt;
+              color: #999;
+            }
             @media print {
               body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             }
@@ -588,6 +609,15 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
                 Semnătura și parafa<br/>medicului
                 ${doctorToPrint ? `<div style="margin-top: 5px; font-size: 9pt;">${typeof doctorToPrint === 'object' && 'name' in doctorToPrint ? doctorToPrint.name : (doctorToPrint as Doctor).name}</div>` : ''}
               </div>
+            </div>
+          </div>
+          
+          <div class="document-footer">
+            <div class="footer-divider"></div>
+            <div class="footer-content">
+              <p><strong>PERFECT SMILE GLIM SRL</strong> | Str. București 68-70, Vârteju, Măgurele, Ilfov</p>
+              <p>Tel: 0721.702.820 | Email: perfectsmilevarteju@gmail.com | www.perfectsmileglim.ro</p>
+              <p class="copyright">© ${new Date().getFullYear()} Perfect Smile Glim. Toate drepturile rezervate.</p>
             </div>
           </div>
         </body>
