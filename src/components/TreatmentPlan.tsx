@@ -387,12 +387,6 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
                             <div className="space-y-3">
                               <p className="text-sm font-medium">Selectează dinții</p>
                               
-                              {/* Mini dental chart preview */}
-                              <MiniDentalChart 
-                                treatedTeeth={item.toothNumbers} 
-                                className="pointer-events-none opacity-80"
-                              />
-                              
                               {/* Selection buttons */}
                               <div className="space-y-1">
                                 <div className="text-[10px] text-muted-foreground text-center">Superior permanent</div>
