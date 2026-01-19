@@ -306,7 +306,7 @@ export function RadiologyReferral({ patients, doctors }: RadiologyReferralProps)
         <div ref={printRef}>
           <div className="header">
             <div className="logo-section">
-              <img src="/images/perfect-smile-logo-print.png" alt="Perfect Smile Logo" className="logo" />
+              <img src="/images/perfect-smile-logo-print.jpg" alt="Perfect Smile Logo" className="logo" />
               <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
                 PERFECT SMILE GLIM
               </div>
