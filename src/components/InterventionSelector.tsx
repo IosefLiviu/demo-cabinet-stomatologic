@@ -228,9 +228,9 @@ export function InterventionSelector({
               ? statusColors[status]
               : statusColors.healthy,
             isHovered && 'ring-2 ring-primary ring-offset-2',
-            // Deciduous teeth: smaller, circular shape with dashed border
+            // Deciduous teeth: circular shape with dashed border
             isDeciduous 
-              ? 'w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 text-[10px] border-dashed' 
+              ? 'w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 text-xs border-dashed' 
               : 'w-8 h-10 sm:w-10 sm:h-12 rounded-lg border-2 text-xs'
           )}
         >
