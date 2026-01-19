@@ -63,10 +63,20 @@ interface TreatmentPlanProps {
   doctors: Doctor[];
 }
 
-// FDI notation teeth
+// FDI notation - permanent teeth
+const upperPermanentTeeth = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
+const lowerPermanentTeeth = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
+
+// FDI notation - deciduous (baby) teeth
+const upperDeciduousTeeth = [55, 54, 53, 52, 51, 61, 62, 63, 64, 65];
+const lowerDeciduousTeeth = [85, 84, 83, 82, 81, 71, 72, 73, 74, 75];
+
+// All teeth combined
 const allTeeth = [
-  18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28,
-  48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38,
+  ...upperPermanentTeeth,
+  ...lowerPermanentTeeth,
+  ...upperDeciduousTeeth,
+  ...lowerDeciduousTeeth,
 ];
 
 export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanProps) {
@@ -385,9 +395,9 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
                               
                               {/* Selection buttons */}
                               <div className="space-y-1">
-                                <div className="text-[10px] text-muted-foreground text-center">Maxilar superior</div>
+                                <div className="text-[10px] text-muted-foreground text-center">Superior permanent</div>
                                 <div className="grid grid-cols-8 gap-1">
-                                  {allTeeth.slice(0, 16).map(tooth => (
+                                  {upperPermanentTeeth.map(tooth => (
                                     <Button
                                       key={tooth}
                                       variant={item.toothNumbers.includes(tooth) ? "default" : "outline"}
@@ -401,9 +411,44 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
                                 </div>
                               </div>
                               <div className="space-y-1">
-                                <div className="text-[10px] text-muted-foreground text-center">Maxilar inferior</div>
+                                <div className="text-[10px] text-muted-foreground text-center">De lapte superior</div>
+                                <div className="flex justify-center gap-1">
+                                  {upperDeciduousTeeth.map(tooth => (
+                                    <Button
+                                      key={tooth}
+                                      variant={item.toothNumbers.includes(tooth) ? "default" : "outline"}
+                                      size="sm"
+                                      className="h-6 w-6 p-0 text-[10px] rounded-full border-dashed"
+                                      onClick={() => handleToggleTooth(item.id, tooth)}
+                                    >
+                                      {tooth}
+                                    </Button>
+                                  ))}
+                                </div>
+                              </div>
+                              
+                              <div className="border-t my-2" />
+                              
+                              <div className="space-y-1">
+                                <div className="text-[10px] text-muted-foreground text-center">De lapte inferior</div>
+                                <div className="flex justify-center gap-1">
+                                  {lowerDeciduousTeeth.map(tooth => (
+                                    <Button
+                                      key={tooth}
+                                      variant={item.toothNumbers.includes(tooth) ? "default" : "outline"}
+                                      size="sm"
+                                      className="h-6 w-6 p-0 text-[10px] rounded-full border-dashed"
+                                      onClick={() => handleToggleTooth(item.id, tooth)}
+                                    >
+                                      {tooth}
+                                    </Button>
+                                  ))}
+                                </div>
+                              </div>
+                              <div className="space-y-1">
+                                <div className="text-[10px] text-muted-foreground text-center">Inferior permanent</div>
                                 <div className="grid grid-cols-8 gap-1">
-                                  {allTeeth.slice(16).map(tooth => (
+                                  {lowerPermanentTeeth.map(tooth => (
                                     <Button
                                       key={tooth}
                                       variant={item.toothNumbers.includes(tooth) ? "default" : "outline"}
