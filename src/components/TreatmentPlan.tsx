@@ -21,6 +21,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { TreatmentListDialog } from './TreatmentListDialog';
 import { Patient } from '@/hooks/usePatients';
 import { useTreatmentPlans, TreatmentPlanItem as TreatmentPlanItemType } from '@/hooks/useTreatmentPlans';
@@ -45,11 +50,10 @@ interface Doctor {
 interface LocalTreatmentPlanItem {
   id: string;
   treatmentId?: string;
-  toothNumber: number | null;
+  toothNumbers: number[];
   treatmentName: string;
   doctorId: string;
-  quantity: number;
-  price: number;
+  unitPrice: number;
 }
 
 interface TreatmentPlanProps {
@@ -102,13 +106,25 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
     const newItem: LocalTreatmentPlanItem = {
       id: `${treatment.id}-${Date.now()}`,
       treatmentId: treatment.id,
-      toothNumber: null,
+      toothNumbers: [],
       treatmentName: treatment.name,
       doctorId: selectedDoctorId || activeDoctors[0]?.id || '',
-      quantity: 1,
-      price: treatment.default_price || 0,
+      unitPrice: treatment.default_price || 0,
     };
     setPlanItems([...planItems, newItem]);
+  };
+
+  const handleToggleTooth = (itemId: string, tooth: number) => {
+    setPlanItems(planItems.map(item => {
+      if (item.id !== itemId) return item;
+      const hasThisTooth = item.toothNumbers.includes(tooth);
+      return {
+        ...item,
+        toothNumbers: hasThisTooth 
+          ? item.toothNumbers.filter(t => t !== tooth)
+          : [...item.toothNumbers, tooth].sort((a, b) => a - b)
+      };
+    }));
   };
 
   const handleRemoveItem = (itemId: string) => {
@@ -121,7 +137,12 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
     ));
   };
 
-  const subtotal = planItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const getItemTotal = (item: LocalTreatmentPlanItem) => {
+    const quantity = item.toothNumbers.length > 0 ? item.toothNumbers.length : 1;
+    return item.unitPrice * quantity;
+  };
+
+  const subtotal = planItems.reduce((sum, item) => sum + getItemTotal(item), 0);
   const discountAmount = subtotal * (discountPercent / 100);
   const total = subtotal - discountAmount;
 
@@ -131,10 +152,10 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
     const itemsToSave: TreatmentPlanItemType[] = planItems.map(item => ({
       treatmentId: item.treatmentId,
       treatmentName: item.treatmentName,
-      toothNumber: item.toothNumber,
+      toothNumber: item.toothNumbers.length > 0 ? item.toothNumbers[0] : null,
       doctorId: item.doctorId,
-      quantity: item.quantity,
-      price: item.price,
+      quantity: item.toothNumbers.length > 0 ? item.toothNumbers.length : 1,
+      price: item.unitPrice,
     }));
 
     const savedPlanId = await saveTreatmentPlan(
@@ -335,23 +356,55 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {planItems.map(item => (
+                  {planItems.map(item => {
+                    const quantity = item.toothNumbers.length > 0 ? item.toothNumbers.length : 1;
+                    const itemTotal = getItemTotal(item);
+                    return (
                     <TableRow key={item.id}>
                       <TableCell>
-                        <Select 
-                          value={item.toothNumber?.toString() || 'none'} 
-                          onValueChange={(val) => handleUpdateItem(item.id, 'toothNumber', val === 'none' ? null : parseInt(val))}
-                        >
-                          <SelectTrigger className="w-16 h-8">
-                            <SelectValue placeholder="-" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">-</SelectItem>
-                            {allTeeth.map(tooth => (
-                              <SelectItem key={tooth} value={tooth.toString()}>{tooth}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" className="w-auto min-w-16 h-8 text-xs">
+                              {item.toothNumbers.length > 0 
+                                ? item.toothNumbers.join(', ') 
+                                : '-'}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-80 p-3">
+                            <div className="space-y-2">
+                              <p className="text-sm font-medium">Selectează dinții</p>
+                              <div className="grid grid-cols-8 gap-1">
+                                {allTeeth.slice(0, 16).map(tooth => (
+                                  <Button
+                                    key={tooth}
+                                    variant={item.toothNumbers.includes(tooth) ? "default" : "outline"}
+                                    size="sm"
+                                    className="h-7 w-7 p-0 text-xs"
+                                    onClick={() => handleToggleTooth(item.id, tooth)}
+                                  >
+                                    {tooth}
+                                  </Button>
+                                ))}
+                              </div>
+                              <div className="grid grid-cols-8 gap-1">
+                                {allTeeth.slice(16).map(tooth => (
+                                  <Button
+                                    key={tooth}
+                                    variant={item.toothNumbers.includes(tooth) ? "default" : "outline"}
+                                    size="sm"
+                                    className="h-7 w-7 p-0 text-xs"
+                                    onClick={() => handleToggleTooth(item.id, tooth)}
+                                  >
+                                    {tooth}
+                                  </Button>
+                                ))}
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                Selectați: {item.toothNumbers.length} dinți
+                              </p>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       </TableCell>
                       <TableCell className="font-medium">{item.treatmentName}</TableCell>
                       <TableCell>
@@ -369,22 +422,23 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          value={item.quantity}
-                          onChange={(e) => handleUpdateItem(item.id, 'quantity', parseInt(e.target.value) || 1)}
-                          className="w-16 h-8 text-center"
-                          min={1}
-                        />
+                      <TableCell className="text-center">
+                        {quantity}
                       </TableCell>
                       <TableCell>
-                        <Input
-                          type="number"
-                          value={item.price}
-                          onChange={(e) => handleUpdateItem(item.id, 'price', parseFloat(e.target.value) || 0)}
-                          className="w-24 h-8 text-right"
-                        />
+                        <div className="flex items-center gap-1">
+                          <Input
+                            type="number"
+                            value={item.unitPrice}
+                            onChange={(e) => handleUpdateItem(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
+                            className="w-20 h-8 text-right"
+                          />
+                          {quantity > 1 && (
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                              = {itemTotal.toFixed(0)}
+                            </span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Button
@@ -397,7 +451,8 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
                         </Button>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
               <div className="bg-muted/50 p-3 flex items-center justify-between">
@@ -505,13 +560,15 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
               <tbody>
                 {planItems.map(item => {
                   const doctor = doctors.find(d => d.id === item.doctorId);
+                  const quantity = item.toothNumbers.length > 0 ? item.toothNumbers.length : 1;
+                  const itemTotal = getItemTotal(item);
                   return (
                     <tr key={item.id}>
-                      <td>{item.toothNumber || '-'}</td>
+                      <td>{item.toothNumbers.length > 0 ? item.toothNumbers.join(', ') : '-'}</td>
                       <td>{item.treatmentName}</td>
                       <td>{doctor?.name || '-'}</td>
-                      <td style={{ textAlign: 'center' }}>{item.quantity}</td>
-                      <td style={{ textAlign: 'right' }}>{item.price.toFixed(0)}</td>
+                      <td style={{ textAlign: 'center' }}>{quantity}</td>
+                      <td style={{ textAlign: 'right' }}>{itemTotal.toFixed(0)}</td>
                     </tr>
                   );
                 })}
