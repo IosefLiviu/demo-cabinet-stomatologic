@@ -49,10 +49,19 @@ export function TreatmentListDialog({
     cas: 0,
   });
 
-  const filteredTreatments = treatments.filter(t =>
-    t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (t.category && t.category.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  // Normalize text by removing diacritics for search
+  const normalizeText = (text: string) => {
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  };
+
+  const filteredTreatments = treatments.filter(t => {
+    const searchNormalized = normalizeText(searchTerm);
+    return normalizeText(t.name).includes(searchNormalized) ||
+      (t.category && normalizeText(t.category).includes(searchNormalized));
+  });
 
   // Group treatments by category
   const groupedTreatments = filteredTreatments.reduce((acc, treatment) => {
