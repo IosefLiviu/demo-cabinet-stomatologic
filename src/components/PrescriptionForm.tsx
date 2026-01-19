@@ -389,6 +389,7 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
               line-height: 1.4;
               padding: 10px;
               max-width: 95mm;
+              color: #1a365d;
             }
             .header {
               display: flex;
@@ -397,7 +398,10 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
               gap: 10px;
               margin-bottom: 15px;
               padding-bottom: 10px;
-              border-bottom: 1px solid #000;
+              border-bottom: 2px solid #b8860b;
+              background: linear-gradient(to right, #fef9e7, #fff8e1, #fef9e7);
+              padding: 10px;
+              border-radius: 5px;
             }
             .header-logo {
               width: 120px;
@@ -408,6 +412,7 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
               font-size: 14pt;
               font-weight: bold;
               margin-bottom: 5px;
+              color: #b8860b;
             }
             .form-row {
               display: flex;
@@ -416,12 +421,15 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
             }
             .form-label {
               min-width: 80px;
+              color: #b8860b;
+              font-weight: bold;
             }
             .form-value {
               flex: 1;
-              border-bottom: 1px dotted #000;
+              border-bottom: 1px dotted #b8860b;
               padding-left: 5px;
               min-height: 18px;
+              color: #1a365d;
             }
             .form-row-split {
               display: flex;
@@ -436,43 +444,62 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
             .prescription-section {
               margin-top: 15px;
               padding-top: 10px;
-              border-top: 1px solid #ccc;
+              border-top: 2px solid #b8860b;
+              background: #fffef5;
+              padding: 10px;
+              border-radius: 5px;
+            }
+            .prescription-section strong {
+              color: #b8860b;
+              font-size: 12pt;
             }
             .prescription-item {
               margin-bottom: 10px;
               padding-left: 10px;
+              border-left: 3px solid #b8860b;
             }
             .prescription-number {
               font-weight: bold;
+              color: #b8860b;
             }
             .medication-name {
               font-weight: bold;
               margin-left: 5px;
+              color: #1a365d;
             }
             .quantity {
               margin-left: 20px;
+              color: #2d3748;
             }
             .dosage {
               margin-left: 20px;
               font-style: italic;
+              color: #4a5568;
             }
             .footer {
               margin-top: 30px;
               display: flex;
               justify-content: space-between;
               align-items: flex-end;
+              padding-top: 10px;
+              border-top: 1px solid #b8860b;
             }
             .date-section {
               text-align: left;
+              color: #1a365d;
+            }
+            .date-section strong {
+              color: #b8860b;
             }
             .signature-section {
               text-align: center;
             }
             .signature-line {
-              border-top: 1px solid #000;
+              border-top: 1px solid #b8860b;
               padding-top: 5px;
               margin-top: 40px;
               font-size: 10pt;
+              color: #4a5568;
             }
             @media print {
               body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }

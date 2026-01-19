@@ -166,26 +166,32 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
         <head>
           <title>Plan de Tratament</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 20px; color: #000; }
-            .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #999; padding-bottom: 10px; }
+            body { font-family: Arial, sans-serif; padding: 20px; color: #1a365d; }
+            .header { 
+              display: flex; justify-content: space-between; align-items: flex-start; 
+              margin-bottom: 20px; border-bottom: 3px solid #b8860b; padding-bottom: 15px;
+              background: linear-gradient(to right, #fef9e7, #fff8e1, #fef9e7);
+              padding: 15px; border-radius: 8px;
+            }
             .logo-section { display: flex; align-items: center; gap: 10px; }
             .logo { width: 120px; height: 80px; object-fit: contain; }
             .header h1 { font-size: 18px; margin: 0; color: #b8860b; }
             .header p { margin: 2px 0; font-size: 12px; }
-            .clinic-name { font-weight: bold; font-size: 14px; }
+            .clinic-name { font-weight: bold; font-size: 14px; color: #b8860b; }
             .section { margin: 15px 0; }
-            .section-title { font-weight: bold; margin-bottom: 5px; }
+            .section-title { font-weight: bold; margin-bottom: 5px; color: #b8860b; }
             .info-line { margin: 3px 0; font-size: 13px; }
             .dental-chart { margin: 20px 0; text-align: center; }
             .dental-row { display: flex; justify-content: center; gap: 2px; margin: 5px 0; }
-            .tooth { width: 24px; height: 30px; border: 1px solid #999; text-align: center; font-size: 10px; line-height: 30px; }
+            .tooth { width: 24px; height: 30px; border: 1px solid #b8860b; text-align: center; font-size: 10px; line-height: 30px; }
             table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px; }
-            th, td { border: 1px solid #333; padding: 6px; text-align: left; }
-            th { background: #333; color: #fff; }
-            .total { font-weight: bold; text-align: right; margin-top: 10px; font-size: 14px; }
+            th, td { border: 1px solid #b8860b; padding: 6px; text-align: left; }
+            th { background: linear-gradient(to bottom, #b8860b, #9a7209); color: #fff; }
+            .total { font-weight: bold; text-align: right; margin-top: 10px; font-size: 14px; color: #b8860b; }
             .disclaimer { font-size: 10px; color: #666; margin-top: 5px; }
-            .clinic-contact { text-align: right; font-size: 11px; }
+            .clinic-contact { text-align: right; font-size: 11px; color: #b8860b; }
             .clinic-contact p { margin: 2px 0; }
+            @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
           </style>
         </head>
         <body>

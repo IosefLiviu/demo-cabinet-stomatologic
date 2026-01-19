@@ -103,7 +103,7 @@ const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients }) => {
             body { 
               font-family: Arial, sans-serif; 
               padding: 20px; 
-              color: #000; 
+              color: #1a365d; 
               font-size: 11px;
               line-height: 1.4;
             }
@@ -112,12 +112,19 @@ const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients }) => {
               justify-content: space-between;
               margin-bottom: 15px;
               font-size: 10px;
+              background: linear-gradient(to right, #fef9e7, #fff8e1, #fef9e7);
+              padding: 15px;
+              border-radius: 8px;
+              border-bottom: 3px solid #b8860b;
             }
             .supplier-info {
               max-width: 45%;
             }
             .supplier-info p {
               margin: 1px 0;
+            }
+            .supplier-info strong {
+              color: #b8860b;
             }
             .logo-section {
               text-align: center;
@@ -130,6 +137,7 @@ const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients }) => {
             .phone-email {
               font-size: 9px;
               margin-top: 3px;
+              color: #b8860b;
             }
             .client-info {
               max-width: 35%;
@@ -138,18 +146,24 @@ const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients }) => {
             .client-info p {
               margin: 1px 0;
             }
+            .client-info strong {
+              color: #b8860b;
+            }
             .title {
               text-align: center;
-              font-size: 16px;
+              font-size: 18px;
               font-weight: bold;
               margin: 20px 0 10px 0;
+              color: #b8860b;
             }
             .invoice-details {
               text-align: center;
-              border: 1px solid #000;
+              border: 2px solid #b8860b;
               padding: 8px;
               margin: 0 auto 20px auto;
-              width: 200px;
+              width: 220px;
+              background: #fffef5;
+              border-radius: 5px;
             }
             .invoice-details p {
               margin: 2px 0;
@@ -160,13 +174,14 @@ const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients }) => {
               margin-bottom: 10px;
             }
             th, td {
-              border: 1px solid #000;
+              border: 1px solid #b8860b;
               padding: 6px 4px;
               text-align: center;
               font-size: 10px;
             }
             th {
-              background: #f5f5f5;
+              background: linear-gradient(to bottom, #b8860b, #9a7209);
+              color: #fff;
               font-weight: bold;
             }
             td.description {
