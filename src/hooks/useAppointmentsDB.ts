@@ -466,11 +466,15 @@ export function useAppointmentsDB() {
     }
   };
 
-  const cancelAppointment = async (id: string) => {
+  const cancelAppointment = async (id: string, cancellationReason?: string) => {
     try {
       const { data, error } = await supabase
         .from('appointments')
-        .update({ status: 'cancelled' })
+        .update({ 
+          status: 'cancelled',
+          cancellation_reason: cancellationReason || null,
+          cancelled_at: new Date().toISOString()
+        })
         .eq('id', id)
         .select(`
           *,
