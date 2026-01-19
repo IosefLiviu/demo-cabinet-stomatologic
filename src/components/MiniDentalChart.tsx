@@ -60,7 +60,7 @@ export function MiniDentalChart({ treatedTeeth, teethData = [], className }: Min
     return teethData.find((t) => t.tooth_number === toothNumber);
   };
 
-  const renderTooth = (toothNumber: number) => {
+  const renderTooth = (toothNumber: number, isDeciduous: boolean = false) => {
     const isTreated = treatedTeeth.includes(toothNumber);
     const toothData = getToothData(toothNumber);
     const isHovered = hoveredTooth === toothNumber && isTreated;
@@ -78,9 +78,13 @@ export function MiniDentalChart({ treatedTeeth, teethData = [], className }: Min
           onMouseEnter={() => isTreated && setHoveredTooth(toothNumber)}
           onMouseLeave={() => setHoveredTooth(null)}
           className={cn(
-            'w-5 h-6 rounded border flex items-center justify-center text-[9px] font-medium transition-all cursor-default',
+            'flex items-center justify-center font-medium transition-all cursor-default',
             colorClass,
-            isHovered && 'ring-1 ring-primary ring-offset-1'
+            isHovered && 'ring-1 ring-primary ring-offset-1',
+            // Deciduous teeth: smaller, circular shape with dashed border
+            isDeciduous 
+              ? 'w-4 h-4 rounded-full border text-[7px] border-dashed' 
+              : 'w-5 h-6 rounded border text-[9px]'
           )}
         >
           {toothNumber}
@@ -122,7 +126,7 @@ export function MiniDentalChart({ treatedTeeth, teethData = [], className }: Min
       <div className="space-y-0.5">
         <div className="text-[8px] text-muted-foreground text-center">Superior permanent</div>
         <div className="flex justify-center gap-0.5">
-          {upperTeeth.map(renderTooth)}
+          {upperTeeth.map((tooth) => renderTooth(tooth, false))}
         </div>
       </div>
 
@@ -130,7 +134,7 @@ export function MiniDentalChart({ treatedTeeth, teethData = [], className }: Min
       <div className="space-y-0.5">
         <div className="text-[8px] text-muted-foreground text-center">De lapte superior</div>
         <div className="flex justify-center gap-0.5">
-          {upperDeciduousTeeth.map(renderTooth)}
+          {upperDeciduousTeeth.map((tooth) => renderTooth(tooth, true))}
         </div>
       </div>
 
@@ -142,7 +146,7 @@ export function MiniDentalChart({ treatedTeeth, teethData = [], className }: Min
       {/* Lower jaw - deciduous teeth */}
       <div className="space-y-0.5">
         <div className="flex justify-center gap-0.5">
-          {lowerDeciduousTeeth.map(renderTooth)}
+          {lowerDeciduousTeeth.map((tooth) => renderTooth(tooth, true))}
         </div>
         <div className="text-[8px] text-muted-foreground text-center">De lapte inferior</div>
       </div>
@@ -150,7 +154,7 @@ export function MiniDentalChart({ treatedTeeth, teethData = [], className }: Min
       {/* Lower jaw - permanent teeth */}
       <div className="space-y-0.5">
         <div className="flex justify-center gap-0.5">
-          {lowerTeeth.map(renderTooth)}
+          {lowerTeeth.map((tooth) => renderTooth(tooth, false))}
         </div>
         <div className="text-[8px] text-muted-foreground text-center">Inferior permanent</div>
       </div>
