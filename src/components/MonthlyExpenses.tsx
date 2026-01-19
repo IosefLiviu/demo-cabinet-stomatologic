@@ -123,7 +123,7 @@ export const MonthlyExpenses = () => {
     if (newValue !== undefined) {
       const numValue = parseFloat(newValue) || 0;
       if (numValue !== entry.amount) {
-        await updateEntry(entry.id, entry.expense_id, { amount: numValue });
+        await updateEntry(entry.id, entry.expense_id, { amount: numValue }, () => fetchExpenses(monthYear));
       }
       setEditingEntryAmounts((prev) => {
         const updated = { ...prev };
@@ -184,7 +184,7 @@ export const MonthlyExpenses = () => {
     if (!selectedExpense) return;
     
     const amount = parseFloat(newEntryAmount) || 0;
-    const result = await addEntry(selectedExpense.id, newEntryDescription.trim(), amount);
+    const result = await addEntry(selectedExpense.id, newEntryDescription.trim(), amount, () => fetchExpenses(monthYear));
     
     if (result) {
       setIsAddEntryDialogOpen(false);
@@ -196,7 +196,7 @@ export const MonthlyExpenses = () => {
   const handleDeleteEntry = async () => {
     if (!selectedEntry) return;
     
-    await deleteEntry(selectedEntry.id, selectedEntry.expense_id);
+    await deleteEntry(selectedEntry.id, selectedEntry.expense_id, () => fetchExpenses(monthYear));
     setIsDeleteEntryDialogOpen(false);
     setSelectedEntry(null);
   };
