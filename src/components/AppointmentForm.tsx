@@ -233,20 +233,6 @@ export function AppointmentForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate that interventions have teeth selected
-    const interventionsWithoutTeeth = interventions.filter(
-      i => !i.selectedTeeth || i.selectedTeeth.length === 0
-    );
-    
-    if (interventionsWithoutTeeth.length > 0) {
-      toast({
-        title: "Dinți neselectați",
-        description: `Selectați cel puțin un dinte pentru: ${interventionsWithoutTeeth.map(i => i.treatmentName).join(', ')}`,
-        variant: "destructive",
-      });
-      return;
-    }
-    
     // Convert interventions to selectedTreatments format
     const selectedTreatments: SelectedTreatment[] = interventions.map(i => ({
       treatmentId: i.treatmentId,
