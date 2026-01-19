@@ -418,7 +418,7 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
                                       key={tooth}
                                       variant={item.toothNumbers.includes(tooth) ? "default" : "outline"}
                                       size="sm"
-                                      className="h-6 w-6 p-0 text-[10px] rounded-full border-dashed"
+                                      className="h-7 w-7 p-0 text-xs rounded-full border-dashed"
                                       onClick={() => handleToggleTooth(item.id, tooth)}
                                     >
                                       {tooth}
@@ -437,7 +437,7 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
                                       key={tooth}
                                       variant={item.toothNumbers.includes(tooth) ? "default" : "outline"}
                                       size="sm"
-                                      className="h-6 w-6 p-0 text-[10px] rounded-full border-dashed"
+                                      className="h-7 w-7 p-0 text-xs rounded-full border-dashed"
                                       onClick={() => handleToggleTooth(item.id, tooth)}
                                     >
                                       {tooth}

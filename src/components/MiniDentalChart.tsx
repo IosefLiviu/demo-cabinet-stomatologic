@@ -81,9 +81,9 @@ export function MiniDentalChart({ treatedTeeth, teethData = [], className }: Min
             'flex items-center justify-center font-medium transition-all cursor-default',
             colorClass,
             isHovered && 'ring-1 ring-primary ring-offset-1',
-            // Deciduous teeth: smaller, circular shape with dashed border
+            // Deciduous teeth: circular shape with dashed border
             isDeciduous 
-              ? 'w-4 h-4 rounded-full border text-[7px] border-dashed' 
+              ? 'w-5 h-5 rounded-full border text-[8px] border-dashed' 
               : 'w-5 h-6 rounded border text-[9px]'
           )}
         >

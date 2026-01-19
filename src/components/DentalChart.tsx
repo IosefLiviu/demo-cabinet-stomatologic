@@ -85,9 +85,9 @@ export function DentalChart({ dentalStatus, onToothClick, readonly = false }: De
             !readonly && 'hover:scale-110 cursor-pointer',
             status === 'missing' && 'opacity-50',
             isHovered && 'ring-2 ring-primary ring-offset-2',
-            // Deciduous teeth: smaller, circular shape
+            // Deciduous teeth: circular shape with dashed border
             isDeciduous 
-              ? 'w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 text-[10px] border-dashed' 
+              ? 'w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 text-xs border-dashed' 
               : 'w-8 h-10 sm:w-10 sm:h-12 rounded-lg border-2 text-xs'
           )}
         >
