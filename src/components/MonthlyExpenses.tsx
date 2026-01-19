@@ -436,7 +436,7 @@ export const MonthlyExpenses = () => {
                                     'h-7 w-7 shrink-0',
                                     entry.is_paid && 'bg-green-600 hover:bg-green-700'
                                   )}
-                                  onClick={() => toggleEntryPaid(entry.id, entry.expense_id, !entry.is_paid)}
+                                  onClick={() => toggleEntryPaid(entry.id, entry.expense_id, !entry.is_paid, () => fetchExpenses(monthYear))}
                                 >
                                   {entry.is_paid ? (
                                     <Check className="h-3 w-3" />

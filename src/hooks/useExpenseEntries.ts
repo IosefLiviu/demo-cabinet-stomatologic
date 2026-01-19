@@ -164,7 +164,7 @@ export const useExpenseEntries = () => {
     }
   };
 
-  const toggleEntryPaid = async (entryId: string, expenseId: string, isPaid: boolean) => {
+  const toggleEntryPaid = async (entryId: string, expenseId: string, isPaid: boolean, onExpenseUpdate?: () => void) => {
     try {
       const { error } = await supabase
         .from('expense_entries')
@@ -176,14 +176,31 @@ export const useExpenseEntries = () => {
 
       if (error) throw error;
 
+      const currentEntries = entries[expenseId] || [];
+      const updatedEntries = currentEntries.map((entry) =>
+        entry.id === entryId
+          ? { ...entry, is_paid: isPaid, paid_at: isPaid ? new Date().toISOString() : null }
+          : entry
+      );
+
       setEntries((prev) => ({
         ...prev,
-        [expenseId]: (prev[expenseId] || []).map((entry) =>
-          entry.id === entryId
-            ? { ...entry, is_paid: isPaid, paid_at: isPaid ? new Date().toISOString() : null }
-            : entry
-        ),
+        [expenseId]: updatedEntries,
       }));
+
+      // Check if all entries are paid
+      const allPaid = updatedEntries.length > 0 && updatedEntries.every((entry) => entry.is_paid);
+      
+      // Update main expense paid status
+      await supabase
+        .from('monthly_expenses')
+        .update({
+          is_paid: allPaid,
+          paid_at: allPaid ? new Date().toISOString() : null,
+        })
+        .eq('id', expenseId);
+
+      onExpenseUpdate?.();
     } catch (error: any) {
       toast({
         title: 'Eroare',
