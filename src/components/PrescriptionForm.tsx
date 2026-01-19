@@ -78,6 +78,66 @@ interface PrescriptionFormProps {
   doctors: Doctor[];
 }
 
+// Lista predefinită de diagnostice stomatologice (conform CMSR)
+const PREDEFINED_DIAGNOSTICS = [
+  // Cod 543 - Anomalii dentare
+  { name: 'Anodontia', code: '543' },
+  { name: 'Dinți supranumerari', code: '543' },
+  { name: 'Anomalii de volum și de formă ale dinților', code: '543' },
+  { name: 'Dinți pătați', code: '543' },
+  { name: 'Tulburări de formare a dinților', code: '543' },
+  { name: 'Anomalii ereditare ale structurii dentare, neclasificate altundeva', code: '543' },
+  { name: 'Tulburări de erupție dentară', code: '543' },
+  { name: 'Sindromul de erupție dentară', code: '543' },
+  { name: 'Alte tulburări de odontogeneză', code: '543' },
+  { name: 'Tulburări de odontogeneză, nespecificate', code: '543' },
+  { name: 'Dinți incluși', code: '543' },
+  { name: 'Dinți inclavați', code: '543' },
+  // Cod 544 - Carii dentare
+  { name: 'Caria limitată la smalț', code: '544' },
+  { name: 'Caria dentinei', code: '544' },
+  { name: 'Caria cimentului', code: '544' },
+  { name: 'Caria dentară stabilizată', code: '544' },
+  { name: 'Odontoclazia', code: '544' },
+  { name: 'Alte carii dentare', code: '544' },
+  { name: 'Carie dentară, nespecificată', code: '544' },
+  // Cod 555 - Alte boli ale țesutului dur
+  { name: 'Frecarea excesivă a dinților', code: '555' },
+  { name: 'Abraziunea dinților', code: '555' },
+  { name: 'Eroziunea dinților', code: '555' },
+  { name: 'Rezorbția patologică a dinților', code: '555' },
+  { name: 'Hipercimentoză', code: '555' },
+  { name: 'Anchiloză dentară', code: '555' },
+  { name: 'Depozite [acumulare] pe dinți', code: '555' },
+  { name: 'Modificări ale culorii țesutului dentar dur după erupție', code: '555' },
+  { name: 'Alte boli specificate ale țesutului dentar dur', code: '555' },
+  { name: 'Boala țesutului dentar dur, nespecificată', code: '555' },
+  // Cod 546 - Boli pulpare
+  { name: 'Pulpită', code: '546' },
+  { name: 'Necroza pulpară', code: '546' },
+  { name: 'Degenerescența pulpară', code: '546' },
+  { name: 'Formațiune anormală de țesut dentar dur în pulpă', code: '546' },
+  { name: 'Periodontită apicală acută de origine pulpară', code: '546' },
+  { name: 'Periodontită apicală cronică', code: '546' },
+  { name: 'Abces periapical cu fistulă', code: '546' },
+  { name: 'Abces periapical fără fistulă', code: '546' },
+  { name: 'Chist radicular', code: '546' },
+  // Cod 547 - Boli gingivale și parodontale
+  { name: 'Gingivită acută', code: '547' },
+  { name: 'Gingivită cronică', code: '547' },
+  { name: 'Parodontită acută', code: '547' },
+  { name: 'Parodontită cronică', code: '547' },
+  { name: 'Parodontoză', code: '547' },
+  { name: 'Recesiune gingivală', code: '547' },
+  { name: 'Alte boli ale gingiei și ale crestei alveolare edentate', code: '547' },
+  // Alte diagnostice comune
+  { name: 'Stomatită', code: '548' },
+  { name: 'Abces dentoalveolar', code: '548' },
+  { name: 'Pericoronită', code: '548' },
+  { name: 'Alveolită', code: '548' },
+  { name: 'Disfuncție temporomandibulară', code: '549' },
+];
+
 // Lista predefinită de medicamente
 const PREDEFINED_MEDICATIONS = [
   // Antibiotice
@@ -654,11 +714,49 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
                 </div>
                 <div className="space-y-2">
                   <Label>Diagnostic</Label>
-                  <Input 
-                    value={diagnostic} 
-                    onChange={(e) => setDiagnostic(e.target.value)}
-                    placeholder="Diagnostic"
-                  />
+                  <Select value={diagnostic} onValueChange={setDiagnostic}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selectează diagnostic" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <div className="text-xs font-semibold text-muted-foreground px-2 py-1 bg-muted">Cod 543 - Anomalii dentare</div>
+                      {PREDEFINED_DIAGNOSTICS.filter(d => d.code === '543').map(diag => (
+                        <SelectItem key={diag.name} value={diag.name}>
+                          {diag.name}
+                        </SelectItem>
+                      ))}
+                      <div className="text-xs font-semibold text-muted-foreground px-2 py-1 bg-muted mt-1">Cod 544 - Carii dentare</div>
+                      {PREDEFINED_DIAGNOSTICS.filter(d => d.code === '544').map(diag => (
+                        <SelectItem key={diag.name} value={diag.name}>
+                          {diag.name}
+                        </SelectItem>
+                      ))}
+                      <div className="text-xs font-semibold text-muted-foreground px-2 py-1 bg-muted mt-1">Cod 555 - Boli țesut dur</div>
+                      {PREDEFINED_DIAGNOSTICS.filter(d => d.code === '555').map(diag => (
+                        <SelectItem key={diag.name} value={diag.name}>
+                          {diag.name}
+                        </SelectItem>
+                      ))}
+                      <div className="text-xs font-semibold text-muted-foreground px-2 py-1 bg-muted mt-1">Cod 546 - Boli pulpare</div>
+                      {PREDEFINED_DIAGNOSTICS.filter(d => d.code === '546').map(diag => (
+                        <SelectItem key={diag.name} value={diag.name}>
+                          {diag.name}
+                        </SelectItem>
+                      ))}
+                      <div className="text-xs font-semibold text-muted-foreground px-2 py-1 bg-muted mt-1">Cod 547 - Boli gingivale/parodontale</div>
+                      {PREDEFINED_DIAGNOSTICS.filter(d => d.code === '547').map(diag => (
+                        <SelectItem key={diag.name} value={diag.name}>
+                          {diag.name}
+                        </SelectItem>
+                      ))}
+                      <div className="text-xs font-semibold text-muted-foreground px-2 py-1 bg-muted mt-1">Cod 548/549 - Alte diagnostice</div>
+                      {PREDEFINED_DIAGNOSTICS.filter(d => d.code === '548' || d.code === '549').map(diag => (
+                        <SelectItem key={diag.name} value={diag.name}>
+                          {diag.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
