@@ -21,7 +21,6 @@ import PatientInformation from '@/components/PatientInformation';
 import { CabinetSettings } from '@/components/CabinetSettings';
 import { CompleteAppointmentDialog, PaymentData } from '@/components/CompleteAppointmentDialog';
 import { CancelAppointmentDialog } from '@/components/CancelAppointmentDialog';
-import { ChangePasswordDialog } from '@/components/ChangePasswordDialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -100,7 +99,7 @@ const Index = () => {
   const { treatments } = useTreatments();
   const { cabinets, updateCabinetDoctor } = useCabinets();
   const { doctors } = useDoctors();
-  const { isAdmin, user, mustChangePassword, clearMustChangePassword } = useAuth();
+  const { isAdmin } = useAuth();
 
   useEffect(() => {
     if (activeTab === 'calendar') {
@@ -626,14 +625,6 @@ const Index = () => {
         patientName={cancellingAppointmentName}
       />
 
-      {/* Change Password Dialog - shown on first login */}
-      {user && (
-        <ChangePasswordDialog
-          open={mustChangePassword}
-          userId={user.id}
-          onPasswordChanged={clearMustChangePassword}
-        />
-      )}
     </div>
   );
 };
