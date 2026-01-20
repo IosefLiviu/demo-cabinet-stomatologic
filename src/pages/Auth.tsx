@@ -7,18 +7,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import perfectSmileLogo from '@/assets/perfect-smile-logo.png';
 
-const emailSchema = z.string().email('Email invalid');
+const usernameSchema = z.string().min(3, 'Numele de utilizator trebuie să aibă minim 3 caractere');
 const passwordSchema = z.string().min(6, 'Parola trebuie să aibă minim 6 caractere');
 
 export default function Auth() {
   const navigate = useNavigate();
   const { user, loading, signIn } = useAuth();
-  const [email, setEmail] = useState('');
+  const { toast } = useToast();
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ username?: string; password?: string }>({});
 
   useEffect(() => {
     if (!loading && user) {
@@ -27,11 +30,11 @@ export default function Auth() {
   }, [user, loading, navigate]);
 
   const validateForm = () => {
-    const newErrors: { email?: string; password?: string } = {};
+    const newErrors: { username?: string; password?: string } = {};
     
-    const emailResult = emailSchema.safeParse(email);
-    if (!emailResult.success) {
-      newErrors.email = emailResult.error.errors[0].message;
+    const usernameResult = usernameSchema.safeParse(username);
+    if (!usernameResult.success) {
+      newErrors.username = usernameResult.error.errors[0].message;
     }
 
     const passwordResult = passwordSchema.safeParse(password);
@@ -48,12 +51,74 @@ export default function Auth() {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
-    const { error } = await signIn(email, password);
-    setIsSubmitting(false);
+    
+    try {
+      // First, lookup the email by username
+      const { data: profileData, error: lookupError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('username', username)
+        .maybeSingle();
 
-    if (!error) {
-      navigate('/');
+      if (lookupError) {
+        console.error('Error looking up username:', lookupError);
+        toast({
+          title: 'Eroare',
+          description: 'A apărut o eroare la autentificare.',
+          variant: 'destructive',
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!profileData) {
+        toast({
+          title: 'Eroare la autentificare',
+          description: 'Nume de utilizator sau parolă incorectă.',
+          variant: 'destructive',
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Get the user's email from auth.users via admin lookup
+      // We need to use a different approach - get email from profiles or use the user_id
+      const { data: userData, error: userError } = await supabase.auth.admin?.getUserById?.(profileData.user_id);
+      
+      // Since we can't access admin API from client, we need an edge function
+      // Alternative: store email in profiles table or use a lookup edge function
+      // For now, let's call an edge function to get the email
+      
+      const { data: lookupData, error: edgeFnError } = await supabase.functions.invoke('lookup-user-email', {
+        body: { username }
+      });
+
+      if (edgeFnError || !lookupData?.email) {
+        toast({
+          title: 'Eroare la autentificare',
+          description: 'Nume de utilizator sau parolă incorectă.',
+          variant: 'destructive',
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Now sign in with the email
+      const { error } = await signIn(lookupData.email, password);
+      
+      if (!error) {
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Sign in error:', error);
+      toast({
+        title: 'Eroare',
+        description: 'A apărut o eroare la autentificare.',
+        variant: 'destructive',
+      });
     }
+    
+    setIsSubmitting(false);
   };
 
   if (loading) {
@@ -83,17 +148,18 @@ export default function Auth() {
         <CardContent>
           <form onSubmit={handleSignIn} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="login-email">Email</Label>
+              <Label htmlFor="login-username">Nume utilizator</Label>
               <Input
-                id="login-email"
-                type="email"
-                placeholder="email@exemplu.ro"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="login-username"
+                type="text"
+                placeholder="utilizator"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
+                autoComplete="username"
               />
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email}</p>
+              {errors.username && (
+                <p className="text-sm text-destructive">{errors.username}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -105,6 +171,7 @@ export default function Auth() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete="current-password"
               />
               {errors.password && (
                 <p className="text-sm text-destructive">{errors.password}</p>
