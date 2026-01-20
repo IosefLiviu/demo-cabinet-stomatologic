@@ -394,38 +394,34 @@ export default function Admin() {
     try {
       setCreatingUser(true);
       
-      // Create user via Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: newUserData.email,
-        password: newUserData.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            full_name: newUserData.fullName,
-          },
+      // Get current session token
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('Nu ești autentificat');
+      }
+      
+      // Call edge function to create user (doesn't affect current session)
+      const response = await supabase.functions.invoke('create-user', {
+        body: {
+          email: newUserData.email,
+          password: newUserData.password,
+          fullName: newUserData.fullName,
+          role: newUserData.role,
         },
       });
 
-      if (authError) throw authError;
+      if (response.error) {
+        throw new Error(response.error.message || 'Eroare la crearea utilizatorului');
+      }
 
-      // If we need to set admin role and user was created
-      if (authData.user && newUserData.role === 'admin') {
-        // Wait a bit for the trigger to create the user_roles entry
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .update({ role: 'admin' })
-          .eq('user_id', authData.user.id);
-
-        if (roleError) {
-          console.error('Error setting admin role:', roleError);
-        }
+      if (response.data?.error) {
+        throw new Error(response.data.error);
       }
 
       toast({ 
         title: 'Succes', 
-        description: 'Utilizatorul a fost creat. Va primi un email de confirmare.' 
+        description: 'Utilizatorul a fost creat cu succes.' 
       });
       
       setNewUserDialogOpen(false);
