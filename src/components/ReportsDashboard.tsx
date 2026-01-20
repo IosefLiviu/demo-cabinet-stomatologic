@@ -247,6 +247,9 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         
         const method = getPaymentMethod(a);
         const paidAmount = a.paid_amount ?? (a.is_paid ? price : 0);
+        // Calculate total CAS/decont for this appointment
+        const totalCas = a.appointment_treatments?.reduce((sum, t) => sum + (t.decont || 0), 0) || 0;
+        const payableAmount = price - totalCas;
         
         if (method === 'card') {
           acc[doctorName].paidCard += price;
@@ -256,22 +259,16 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
           acc[doctorName].paid += price;
         } else if (method === 'partial_card') {
           acc[doctorName].paidCard += paidAmount;
-          acc[doctorName].paid += paidAmount;
-          // Calculate total CAS/decont - patient only owes payable amount
-          const totalCas = a.appointment_treatments?.reduce((sum, t) => sum + (t.decont || 0), 0) || 0;
-          const payableAmount = price - totalCas;
+          // Include CAS in paid: patient paid paidAmount + CAS was covered by insurance
+          acc[doctorName].paid += paidAmount + totalCas;
           acc[doctorName].unpaid += (payableAmount - paidAmount);
         } else if (method === 'partial_cash') {
           acc[doctorName].paidCash += paidAmount;
-          acc[doctorName].paid += paidAmount;
-          // Calculate total CAS/decont - patient only owes payable amount
-          const totalCas = a.appointment_treatments?.reduce((sum, t) => sum + (t.decont || 0), 0) || 0;
-          const payableAmount = price - totalCas;
+          // Include CAS in paid: patient paid paidAmount + CAS was covered by insurance
+          acc[doctorName].paid += paidAmount + totalCas;
           acc[doctorName].unpaid += (payableAmount - paidAmount);
         } else if (method === 'unpaid' || !a.is_paid) {
           // For unpaid, debt is payable amount (after CAS)
-          const totalCas = a.appointment_treatments?.reduce((sum, t) => sum + (t.decont || 0), 0) || 0;
-          const payableAmount = price - totalCas;
           acc[doctorName].unpaid += payableAmount;
         } else if (a.is_paid) {
           // Fallback for old data
@@ -282,13 +279,13 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         acc[doctorName].scheduled += price;
       }
       
-      // Calculate totalWithNetLab: paid - laborator (real income after lab costs)
+      // Calculate totalWithNetLab: paid - laborator (real income after lab costs, includes CAS as it's paid revenue)
       acc[doctorName].totalWithNetLab = acc[doctorName].paid - acc[doctorName].laborator;
       // Calculate totalWithNetLabAndUnpaid: paid - laborator + unpaid (total potential income - for reference only)
       acc[doctorName].totalWithNetLabAndUnpaid = acc[doctorName].paid - acc[doctorName].laborator + acc[doctorName].unpaid;
-      // Calculate 60% of totalWithNetLab (only from paid amounts, not including unpaid)
+      // Calculate 60% of totalWithNetLab (includes paid amounts + CAS, not including unpaid)
       acc[doctorName].sixtPercentTotal = Math.round(acc[doctorName].totalWithNetLab * 0.6);
-      // Calculate 40% of totalWithNetLab (only from paid amounts, not including unpaid)
+      // Calculate 40% of totalWithNetLab (includes paid amounts + CAS, not including unpaid)
       acc[doctorName].fortyPercentTotal = Math.round(acc[doctorName].totalWithNetLab * 0.4);
       
       return acc;
