@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Search, Trash2, UserPlus } from 'lucide-react';
+import { Search, Trash2, UserPlus, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -39,6 +39,7 @@ import { Cabinet } from '@/hooks/useCabinets';
 import { Doctor } from '@/hooks/useDoctors';
 import { InterventionSelector, SelectedIntervention } from '@/components/InterventionSelector';
 import { useCasBudget } from '@/hooks/useCasBudget';
+import { useTreatmentPlans, TreatmentPlan } from '@/hooks/useTreatmentPlans';
 
 interface Treatment {
   id: string;
@@ -137,9 +138,13 @@ export function AppointmentForm({
   const [isNewPatient, setIsNewPatient] = useState(false);
   
   const [interventions, setInterventions] = useState<SelectedIntervention[]>([]);
+  const [patientPlans, setPatientPlans] = useState<TreatmentPlan[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = useState<string>('');
   
   const { remainingBudget } = useCasBudget();
   const isCasDisabled = remainingBudget <= 0;
+  
+  const { fetchPatientTreatmentPlans } = useTreatmentPlans();
   
   const [formData, setFormData] = useState({
     patientId: '',
@@ -155,6 +160,51 @@ export function AppointmentForm({
   const totalPrice = interventions.reduce((sum, i) => sum + i.price, 0);
   const totalCas = interventions.reduce((sum, i) => sum + i.cas, 0);
   const totalDuration = interventions.reduce((sum, i) => sum + i.duration, 0) || 30;
+
+  // Fetch treatment plans when patient is selected
+  useEffect(() => {
+    const loadPatientPlans = async () => {
+      if (formData.patientId) {
+        const plans = await fetchPatientTreatmentPlans(formData.patientId);
+        setPatientPlans(plans);
+      } else {
+        setPatientPlans([]);
+      }
+    };
+    loadPatientPlans();
+  }, [formData.patientId]);
+
+  // Handle treatment plan selection
+  const handleSelectPlan = (planId: string) => {
+    setSelectedPlanId(planId);
+    
+    if (planId === 'none') {
+      return;
+    }
+    
+    const selectedPlan = patientPlans.find(p => p.id === planId);
+    if (selectedPlan) {
+      // Convert plan items to interventions
+      const planInterventions: SelectedIntervention[] = selectedPlan.items.map((item, index) => ({
+        id: `plan-${item.id || index}-${Date.now()}`,
+        treatmentId: item.treatmentId || '',
+        treatmentName: item.treatmentName,
+        price: item.price || 0,
+        cas: item.cas || 0,
+        laborator: item.laborator || 0,
+        duration: item.duration || 30,
+        discountPercent: item.discountPercent || 0,
+        selectedTeeth: item.toothNumbers || [],
+      }));
+      
+      setInterventions(planInterventions);
+      
+      // Set doctor from plan if available
+      if (selectedPlan.doctorId) {
+        setFormData(prev => ({ ...prev, doctorId: selectedPlan.doctorId || '' }));
+      }
+    }
+  };
 
   useEffect(() => {
     if (open) {
@@ -207,6 +257,8 @@ export function AppointmentForm({
         setIsNewPatient(false);
       }
       setPatientSearch('');
+      setSelectedPlanId('');
+      setPatientPlans([]);
     }
   }, [open, editingAppointment, existingInterventions, selectedTime, selectedCabinet, treatments]);
 
@@ -487,6 +539,46 @@ export function AppointmentForm({
                 </div>
               </div>
             </div>
+
+            {/* Treatment Plan Selection */}
+            {formData.patientId && patientPlans.length > 0 && (
+              <div className="space-y-1.5">
+                <Label className="text-sm flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Plan Tratament
+                </Label>
+                <Select
+                  value={selectedPlanId}
+                  onValueChange={handleSelectPlan}
+                >
+                  <SelectTrigger className="h-9 sm:h-10 text-sm">
+                    <SelectValue placeholder="Selectează plan de tratament..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border shadow-lg z-50">
+                    <SelectItem value="none" className="text-sm text-muted-foreground">
+                      Fără plan de tratament
+                    </SelectItem>
+                    {patientPlans.map((plan) => {
+                      const totalItems = plan.items.length;
+                      const totalPrice = plan.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                      return (
+                        <SelectItem key={plan.id} value={plan.id} className="text-sm">
+                          <div className="flex flex-col">
+                            <span>
+                              Plan din {format(new Date(plan.createdAt), 'dd.MM.yyyy')} 
+                              ({totalItems} {totalItems === 1 ? 'intervenție' : 'intervenții'})
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              Total: {totalPrice.toLocaleString('ro-RO')} lei
+                            </span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Interventions Section */}
             <InterventionSelector
