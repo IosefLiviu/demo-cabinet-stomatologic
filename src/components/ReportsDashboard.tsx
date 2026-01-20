@@ -119,30 +119,38 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       const price = a.price || 0;
       const paidAmount = a.paid_amount ?? (a.is_paid ? price : 0);
       const method = getPaymentMethod(a);
-      // Calculate total CAS/decont from treatments - this reduces the amount the patient needs to pay
-      const totalCas = a.appointment_treatments?.reduce((sum, t) => sum + (t.decont || 0), 0) || 0;
-      // The actual payable amount is price minus CAS discount
-      const payableAmount = price - totalCas;
+      
+      // Calculate payable amount including discount_percent per treatment
+      // payable = sum( (price - decont) * (1 - discount_percent/100) )
+      const payableAmount = a.appointment_treatments?.length
+        ? a.appointment_treatments.reduce((sum, t) => {
+            const tPrice = t.price || 0;
+            const tCas = t.decont || 0;
+            const discountPercent = (t as any).discount_percent || 0;
+            const priceAfterCas = tPrice - tCas;
+            const discountAmount = priceAfterCas * (discountPercent / 100);
+            return sum + (priceAfterCas - discountAmount);
+          }, 0)
+        : price;
       
       if (method === 'card') {
-        cardRevenue += price;
+        // For card payment, use payable (net) amount, not gross price
+        cardRevenue += payableAmount;
       } else if (method === 'cash') {
-        cashRevenue += price;
+        cashRevenue += payableAmount;
       } else if (method === 'partial_card') {
         partialCardRevenue += paidAmount;
-        // Remaining debt is based on payable amount (after CAS), not full price
-        remainingDebt += (payableAmount - paidAmount);
+        // Remaining debt is based on payable amount (after CAS + discount)
+        remainingDebt += Math.max(0, payableAmount - paidAmount);
       } else if (method === 'partial_cash') {
         partialCashRevenue += paidAmount;
-        // Remaining debt is based on payable amount (after CAS), not full price
-        remainingDebt += (payableAmount - paidAmount);
+        remainingDebt += Math.max(0, payableAmount - paidAmount);
       } else if (method === 'unpaid' || !a.is_paid) {
-        unpaidRevenue += price;
-        // For unpaid, the debt is the payable amount (after CAS discount)
+        unpaidRevenue += payableAmount;
         remainingDebt += payableAmount;
       } else if (a.is_paid) {
         // Fallback for old data without explicit method
-        cashRevenue += price;
+        cashRevenue += payableAmount;
       }
     });
     
@@ -247,33 +255,42 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         
         const method = getPaymentMethod(a);
         const paidAmount = a.paid_amount ?? (a.is_paid ? price : 0);
-        // Calculate total CAS/decont for this appointment
-        const totalCas = a.appointment_treatments?.reduce((sum, t) => sum + (t.decont || 0), 0) || 0;
-        const payableAmount = price - totalCas;
+        
+        // Calculate payable amount including discount_percent per treatment
+        // payable = sum( (price - decont) * (1 - discount_percent/100) )
+        const payableAmount = a.appointment_treatments?.length
+          ? a.appointment_treatments.reduce((sum, t) => {
+              const tPrice = t.price || 0;
+              const tCas = t.decont || 0;
+              const discountPercent = (t as any).discount_percent || 0;
+              const priceAfterCas = tPrice - tCas;
+              const discountAmount = priceAfterCas * (discountPercent / 100);
+              return sum + (priceAfterCas - discountAmount);
+            }, 0)
+          : price;
         
         if (method === 'card') {
-          acc[doctorName].paidCard += price;
-          acc[doctorName].paid += price;
+          // Use payable (net) amount for paid revenue
+          acc[doctorName].paidCard += payableAmount;
+          acc[doctorName].paid += payableAmount;
         } else if (method === 'cash') {
-          acc[doctorName].paidCash += price;
-          acc[doctorName].paid += price;
+          acc[doctorName].paidCash += payableAmount;
+          acc[doctorName].paid += payableAmount;
         } else if (method === 'partial_card') {
           acc[doctorName].paidCard += paidAmount;
-          // Include CAS in paid: patient paid paidAmount + CAS was covered by insurance
-          acc[doctorName].paid += paidAmount + totalCas;
-          acc[doctorName].unpaid += (payableAmount - paidAmount);
+          acc[doctorName].paid += paidAmount;
+          acc[doctorName].unpaid += Math.max(0, payableAmount - paidAmount);
         } else if (method === 'partial_cash') {
           acc[doctorName].paidCash += paidAmount;
-          // Include CAS in paid: patient paid paidAmount + CAS was covered by insurance
-          acc[doctorName].paid += paidAmount + totalCas;
-          acc[doctorName].unpaid += (payableAmount - paidAmount);
+          acc[doctorName].paid += paidAmount;
+          acc[doctorName].unpaid += Math.max(0, payableAmount - paidAmount);
         } else if (method === 'unpaid' || !a.is_paid) {
-          // For unpaid, debt is payable amount (after CAS)
+          // For unpaid, debt is payable amount (after CAS + discount)
           acc[doctorName].unpaid += payableAmount;
         } else if (a.is_paid) {
           // Fallback for old data
-          acc[doctorName].paidCash += price;
-          acc[doctorName].paid += price;
+          acc[doctorName].paidCash += payableAmount;
+          acc[doctorName].paid += payableAmount;
         }
       } else if (a.status === 'scheduled') {
         acc[doctorName].scheduled += price;
@@ -299,11 +316,24 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     const unpaidAppointments = filteredAppointments.filter(a => {
       const method = getPaymentMethod(a);
       const paidAmount = a.paid_amount ?? (a.is_paid ? (a.price || 0) : 0);
-      const price = a.price || 0;
+      
+      // Calculate payable amount including discount
+      const payableAmount = a.appointment_treatments?.length
+        ? a.appointment_treatments.reduce((sum, t) => {
+            const tPrice = t.price || 0;
+            const tCas = t.decont || 0;
+            const discountPercent = (t as any).discount_percent || 0;
+            const priceAfterCas = tPrice - tCas;
+            const discountAmount = priceAfterCas * (discountPercent / 100);
+            return sum + (priceAfterCas - discountAmount);
+          }, 0)
+        : (a.price || 0);
       
       // Include if payment method is unpaid, partial payment with remaining balance, or not paid
+      // Only include if there's actually something to pay (payableAmount > 0)
+      if (payableAmount <= 0) return false;
       if (method === 'unpaid') return true;
-      if ((method === 'partial_card' || method === 'partial_cash') && paidAmount < price) return true;
+      if ((method === 'partial_card' || method === 'partial_cash') && paidAmount < payableAmount) return true;
       if (!a.is_paid && a.status === 'completed') return true;
       return false;
     });
@@ -311,11 +341,21 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     return unpaidAppointments.map(a => {
       const price = a.price || 0;
       const paidAmount = a.paid_amount ?? (a.is_paid ? price : 0);
-      // Calculate total CAS/decont - patient only owes payable amount
-      const totalCas = a.appointment_treatments?.reduce((sum, t) => sum + (t.decont || 0), 0) || 0;
-      const payableAmount = price - totalCas;
-      // Unpaid amount is what remains after CAS discount and partial payments
-      const unpaidAmount = payableAmount - paidAmount;
+      
+      // Calculate payable amount including discount_percent
+      const payableAmount = a.appointment_treatments?.length
+        ? a.appointment_treatments.reduce((sum, t) => {
+            const tPrice = t.price || 0;
+            const tCas = t.decont || 0;
+            const discountPercent = (t as any).discount_percent || 0;
+            const priceAfterCas = tPrice - tCas;
+            const discountAmount = priceAfterCas * (discountPercent / 100);
+            return sum + (priceAfterCas - discountAmount);
+          }, 0)
+        : price;
+      
+      // Unpaid amount is what remains after CAS + discount and partial payments
+      const unpaidAmount = Math.max(0, payableAmount - paidAmount);
       
       return {
         id: a.id,
@@ -325,6 +365,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         treatment: a.treatments?.name || 'N/A',
         doctor: a.doctors?.name || 'N/A',
         totalPrice: price,
+        payableAmount: payableAmount,
         paidAmount: paidAmount,
         unpaidAmount: unpaidAmount
       };
