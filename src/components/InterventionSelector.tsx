@@ -40,6 +40,8 @@ export interface SelectedIntervention {
   discountPercent: number;
   selectedTeeth: number[];
   teethDetails?: ToothSelection[];
+  // Link to treatment plan item for tracking completion
+  planItemId?: string;
 }
 
 interface InterventionSelectorProps {
