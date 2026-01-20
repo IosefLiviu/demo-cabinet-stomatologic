@@ -105,35 +105,7 @@ export function useAuth() {
     setMustChangePassword(false);
   };
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          full_name: fullName,
-        },
-      },
-    });
-
-    if (error) {
-      toast({
-        title: 'Eroare la înregistrare',
-        description: error.message,
-        variant: 'destructive',
-      });
-      return { error };
-    }
-
-    toast({
-      title: 'Cont creat cu succes!',
-      description: 'Te-ai înregistrat cu succes.',
-    });
-    return { error: null };
-  };
+  // Note: signUp is disabled - user creation is admin-only via edge function
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -184,7 +156,6 @@ export function useAuth() {
     doctorId,
     mustChangePassword,
     clearMustChangePassword,
-    signUp,
     signIn,
     signOut,
   };
