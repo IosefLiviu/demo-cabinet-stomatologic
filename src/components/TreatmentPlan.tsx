@@ -54,7 +54,11 @@ interface LocalTreatmentPlanItem {
   toothNumbers: number[];
   treatmentName: string;
   doctorId: string;
-  unitPrice: number;
+  duration: number;
+  initialPrice: number;
+  laborator: number;
+  cas: number;
+  discountPercent: number;
 }
 
 interface InitialPlanData {
@@ -69,7 +73,11 @@ interface InitialPlanData {
     treatmentName: string;
     toothNumbers: number[];
     doctorId: string;
-    unitPrice: number;
+    duration: number;
+    initialPrice: number;
+    laborator: number;
+    cas: number;
+    discountPercent: number;
   }[];
 }
 
@@ -132,7 +140,11 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
         toothNumbers: item.toothNumbers,
         treatmentName: item.treatmentName,
         doctorId: item.doctorId,
-        unitPrice: item.unitPrice,
+        duration: item.duration,
+        initialPrice: item.initialPrice,
+        laborator: item.laborator,
+        cas: item.cas,
+        discountPercent: item.discountPercent,
       })));
     }
   }, [initialPlan]);
@@ -168,7 +180,11 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
       toothNumbers: [],
       treatmentName: treatment.name,
       doctorId: selectedDoctorId || activeDoctors[0]?.id || '',
-      unitPrice: treatment.default_price || 0,
+      duration: treatment.default_duration || 30,
+      initialPrice: treatment.default_price || 0,
+      laborator: 0,
+      cas: treatment.cas || 0,
+      discountPercent: 0,
     };
     setPlanItems([...planItems, newItem]);
   };
@@ -196,12 +212,35 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
     ));
   };
 
+  // Calculate "Preț" based on initial price minus CAS
+  const getPrice = (item: LocalTreatmentPlanItem) => {
+    return Math.max(0, item.initialPrice - item.cas);
+  };
+
+  // Calculate "De plată" considering discount
+  const getDePlata = (item: LocalTreatmentPlanItem) => {
+    const price = getPrice(item);
+    const quantity = item.toothNumbers.length > 0 ? item.toothNumbers.length : 1;
+    const subtotal = price * quantity;
+    const discount = subtotal * (item.discountPercent / 100);
+    return subtotal - discount;
+  };
+
   const getItemTotal = (item: LocalTreatmentPlanItem) => {
     const quantity = item.toothNumbers.length > 0 ? item.toothNumbers.length : 1;
-    return item.unitPrice * quantity;
+    return item.initialPrice * quantity;
   };
 
   const subtotal = planItems.reduce((sum, item) => sum + getItemTotal(item), 0);
+  const totalCas = planItems.reduce((sum, item) => {
+    const quantity = item.toothNumbers.length > 0 ? item.toothNumbers.length : 1;
+    return sum + (item.cas * quantity);
+  }, 0);
+  const totalLaborator = planItems.reduce((sum, item) => {
+    const quantity = item.toothNumbers.length > 0 ? item.toothNumbers.length : 1;
+    return sum + (item.laborator * quantity);
+  }, 0);
+  const totalDePlata = planItems.reduce((sum, item) => sum + getDePlata(item), 0);
   const discountAmount = subtotal * (discountPercent / 100);
   const total = subtotal - discountAmount;
 
@@ -215,7 +254,11 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
       toothNumbers: item.toothNumbers,
       doctorId: item.doctorId,
       quantity: item.toothNumbers.length > 0 ? item.toothNumbers.length : 1,
-      price: item.unitPrice,
+      price: item.initialPrice,
+      duration: item.duration,
+      laborator: item.laborator,
+      cas: item.cas,
+      discountPercent: item.discountPercent,
     }));
 
     const savedPlanId = await saveTreatmentPlan(
@@ -415,16 +458,22 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
                   <TableRow>
                     <TableHead className="w-20">Dinte</TableHead>
                     <TableHead>Denumire</TableHead>
-                    <TableHead className="w-40">Medic</TableHead>
-                    <TableHead className="w-20 text-center">Cant.</TableHead>
-                    <TableHead className="w-28 text-right">Lei</TableHead>
-                    <TableHead className="w-12"></TableHead>
+                    <TableHead className="w-32">Medic</TableHead>
+                    <TableHead className="w-20 text-center">Durată</TableHead>
+                    <TableHead className="w-24 text-right">Preț inițial</TableHead>
+                    <TableHead className="w-20 text-right">Laborator</TableHead>
+                    <TableHead className="w-20 text-right">Preț</TableHead>
+                    <TableHead className="w-20 text-right text-green-600">CAS</TableHead>
+                    <TableHead className="w-20 text-right text-orange-500">Disc. %</TableHead>
+                    <TableHead className="w-24 text-right text-purple-600">De plată</TableHead>
+                    <TableHead className="w-10"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {planItems.map(item => {
                     const quantity = item.toothNumbers.length > 0 ? item.toothNumbers.length : 1;
-                    const itemTotal = getItemTotal(item);
+                    const price = getPrice(item);
+                    const dePlata = getDePlata(item);
                     return (
                     <TableRow key={item.id}>
                       <TableCell>
@@ -530,13 +579,13 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
                           </PopoverContent>
                         </Popover>
                       </TableCell>
-                      <TableCell className="font-medium">{item.treatmentName}</TableCell>
+                      <TableCell className="font-medium text-sm">{item.treatmentName}</TableCell>
                       <TableCell>
                         <Select 
                           value={item.doctorId} 
                           onValueChange={(val) => handleUpdateItem(item.id, 'doctorId', val)}
                         >
-                          <SelectTrigger className="h-8">
+                          <SelectTrigger className="h-8 text-xs">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -546,23 +595,53 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell className="text-center">
-                        {quantity}
+                      <TableCell>
+                        <Input
+                          type="number"
+                          value={item.duration}
+                          onChange={(e) => handleUpdateItem(item.id, 'duration', parseInt(e.target.value) || 0)}
+                          className="w-16 h-8 text-center text-xs"
+                        />
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Input
-                            type="number"
-                            value={item.unitPrice}
-                            onChange={(e) => handleUpdateItem(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
-                            className="w-20 h-8 text-right"
-                          />
-                          {quantity > 1 && (
-                            <span className="text-xs text-muted-foreground whitespace-nowrap">
-                              = {itemTotal.toFixed(0)}
-                            </span>
-                          )}
-                        </div>
+                        <Input
+                          type="number"
+                          value={item.initialPrice}
+                          onChange={(e) => handleUpdateItem(item.id, 'initialPrice', parseFloat(e.target.value) || 0)}
+                          className="w-20 h-8 text-right text-xs"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          value={item.laborator}
+                          onChange={(e) => handleUpdateItem(item.id, 'laborator', parseFloat(e.target.value) || 0)}
+                          className="w-16 h-8 text-right text-xs"
+                        />
+                      </TableCell>
+                      <TableCell className="text-right text-sm">
+                        {(price * quantity).toFixed(0)}
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          value={item.cas}
+                          onChange={(e) => handleUpdateItem(item.id, 'cas', parseFloat(e.target.value) || 0)}
+                          className="w-16 h-8 text-right text-xs text-green-600"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={item.discountPercent}
+                          onChange={(e) => handleUpdateItem(item.id, 'discountPercent', Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
+                          className="w-16 h-8 text-right text-xs text-orange-500"
+                        />
+                      </TableCell>
+                      <TableCell className="text-right font-medium text-purple-600">
+                        {dePlata.toFixed(0)}
                       </TableCell>
                       <TableCell>
                         <Button
@@ -579,31 +658,44 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
                   })}
                 </TableBody>
               </Table>
-              <div className="bg-muted/50 p-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Label className="text-sm font-medium">Discount %</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={discountPercent}
-                    onChange={(e) => setDiscountPercent(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
-                    className="w-20 h-8"
-                  />
-                  {discountPercent > 0 && (
-                    <span className="text-sm text-muted-foreground">
-                      (-{discountAmount.toFixed(2)} LEI)
+              <div className="bg-muted/50 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex flex-wrap items-center gap-4 text-sm">
+                    <span>
+                      <span className="text-muted-foreground">Preț total:</span>{' '}
+                      <span className="font-medium">{subtotal.toFixed(0)} LEI</span>
                     </span>
-                  )}
+                    <span>
+                      <span className="text-muted-foreground">Laborator:</span>{' '}
+                      <span className="font-medium">{totalLaborator.toFixed(0)} LEI</span>
+                    </span>
+                    <span>
+                      <span className="text-green-600">CAS:</span>{' '}
+                      <span className="font-medium text-green-600">{totalCas.toFixed(0)} LEI</span>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Label className="text-sm font-medium">Discount general %</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={discountPercent}
+                      onChange={(e) => setDiscountPercent(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
+                      className="w-20 h-8"
+                    />
+                    {discountPercent > 0 && (
+                      <span className="text-sm text-muted-foreground">
+                        (-{discountAmount.toFixed(0)} LEI)
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="text-right">
-                  {discountPercent > 0 && (
-                    <div className="text-sm text-muted-foreground line-through">
-                      {subtotal.toFixed(2)} LEI
+                <div className="mt-3 pt-3 border-t flex justify-end">
+                  <div className="text-right">
+                    <div className="font-bold text-lg text-purple-600">
+                      DE PLATĂ: {totalDePlata.toFixed(0)} LEI
                     </div>
-                  )}
-                  <div className="font-bold text-lg">
-                    TOTAL: {total.toFixed(2)} LEI
                   </div>
                 </div>
               </div>

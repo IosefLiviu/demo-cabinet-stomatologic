@@ -11,6 +11,10 @@ export interface TreatmentPlanItem {
   doctorId: string;
   quantity: number;
   price: number;
+  duration?: number;
+  laborator?: number;
+  cas?: number;
+  discountPercent?: number;
   sortOrder?: number;
 }
 
@@ -64,6 +68,10 @@ export function useTreatmentPlans() {
           doctorId: item.doctor_id || '',
           quantity: item.quantity || 1,
           price: item.price || 0,
+          duration: item.duration || 30,
+          laborator: item.laborator || 0,
+          cas: item.cas || 0,
+          discountPercent: item.discount_percent || 0,
           sortOrder: item.sort_order || 0,
         })),
       }));
@@ -143,6 +151,10 @@ export function useTreatmentPlans() {
           doctor_id: item.doctorId || null,
           quantity: item.quantity,
           price: item.price,
+          duration: item.duration || 30,
+          laborator: item.laborator || 0,
+          cas: item.cas || 0,
+          discount_percent: item.discountPercent || 0,
           sort_order: index,
         }));
 

@@ -619,7 +619,11 @@ onPlanSaved={() => {
               treatmentName: item.treatmentName,
               toothNumbers: item.toothNumbers || [],
               doctorId: item.doctorId,
-              unitPrice: item.price,
+              duration: item.duration || 30,
+              initialPrice: item.price,
+              laborator: item.laborator || 0,
+              cas: item.cas || 0,
+              discountPercent: item.discountPercent || 0,
             })),
           });
           setActiveTab('treatment-plan');

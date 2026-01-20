@@ -678,9 +678,13 @@ export type Database = {
       }
       treatment_plan_items: {
         Row: {
+          cas: number | null
           created_at: string
+          discount_percent: number | null
           doctor_id: string | null
+          duration: number | null
           id: string
+          laborator: number | null
           price: number | null
           quantity: number | null
           sort_order: number | null
@@ -691,9 +695,13 @@ export type Database = {
           treatment_plan_id: string
         }
         Insert: {
+          cas?: number | null
           created_at?: string
+          discount_percent?: number | null
           doctor_id?: string | null
+          duration?: number | null
           id?: string
+          laborator?: number | null
           price?: number | null
           quantity?: number | null
           sort_order?: number | null
@@ -704,9 +712,13 @@ export type Database = {
           treatment_plan_id: string
         }
         Update: {
+          cas?: number | null
           created_at?: string
+          discount_percent?: number | null
           doctor_id?: string | null
+          duration?: number | null
           id?: string
+          laborator?: number | null
           price?: number | null
           quantity?: number | null
           sort_order?: number | null
