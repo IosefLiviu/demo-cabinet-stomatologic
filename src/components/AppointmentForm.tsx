@@ -63,6 +63,7 @@ export interface SelectedTreatment {
   cas: number;
   laborator: number;
   duration: number;
+  discountPercent?: number;
   selectedTeeth?: number[];
   teethDetails?: ToothDetail[];
 }
@@ -242,6 +243,7 @@ export function AppointmentForm({
       cas: i.cas,
       laborator: i.laborator || 0,
       duration: i.duration,
+      discountPercent: i.discountPercent || 0,
       selectedTeeth: i.selectedTeeth,
       teethDetails: i.teethDetails?.map(td => ({
         toothNumber: td.toothNumber,

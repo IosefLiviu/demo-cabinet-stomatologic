@@ -178,7 +178,7 @@ const Index = () => {
         cas: (t.decont || 0) + (t.co_plata || 0),
         laborator: t.laborator || 0,
         duration: t.duration,
-        discountPercent: 0,
+        discountPercent: t.discount_percent || 0,
         selectedTeeth: t.tooth_numbers || [],
         teethDetails: (t.tooth_data || []).map((td: any) => ({
           toothNumber: td.toothNumber,
@@ -198,7 +198,7 @@ const Index = () => {
           cas: (t.decont || 0) + (t.co_plata || 0),
           laborator: t.laborator || 0,
           duration: t.duration,
-          discountPercent: 0,
+          discountPercent: t.discount_percent || 0,
           selectedTeeth: t.tooth_numbers || [],
           teethDetails: (t.tooth_data || []).map(td => ({
             toothNumber: td.toothNumber,
@@ -274,6 +274,7 @@ const Index = () => {
         co_plata: 0,
         laborator: t.laborator || 0,
         duration: t.duration,
+        discount_percent: t.discountPercent || 0,
         tooth_numbers: t.selectedTeeth || [],
         tooth_data: t.teethDetails || [],
       }));
