@@ -93,16 +93,35 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
   // Calculate statistics with partial payment support
   const stats = useMemo(() => {
     const completed = filteredAppointments.filter(a => a.status === 'completed');
-    const totalRevenue = completed.reduce((sum, a) => sum + (a.price || 0), 0);
     
-    // Calculate CAS and Laborator from appointment treatments
+    // Calculate totalRevenue as net payable (after discounts), and CAS/Laborator only for non-100% discounted treatments
+    let totalRevenue = 0;
     let totalCas = 0;
     let totalLaborator = 0;
+    
     completed.forEach(a => {
+      // Calculate net payable for this appointment
+      const netPayable = a.appointment_treatments?.length
+        ? a.appointment_treatments.reduce((sum, t) => {
+            const tPrice = t.price || 0;
+            const tCas = t.decont || 0;
+            const discountPercent = (t as any).discount_percent || 0;
+            const priceAfterCas = tPrice - tCas;
+            const discountAmount = priceAfterCas * (discountPercent / 100);
+            return sum + (priceAfterCas - discountAmount);
+          }, 0)
+        : (a.price || 0);
+      
+      totalRevenue += netPayable;
+      
+      // Calculate CAS and Laborator from appointment treatments (only for non-100% discounted)
       if (a.appointment_treatments && a.appointment_treatments.length > 0) {
         a.appointment_treatments.forEach(t => {
-          totalCas += (t.decont || 0);
-          totalLaborator += (Number((t as any).laborator) || 0);
+          const discountPercent = (t as any).discount_percent || 0;
+          if (discountPercent < 100) {
+            totalCas += (t.decont || 0);
+            totalLaborator += (Number((t as any).laborator) || 0);
+          }
         });
       }
     });
@@ -237,26 +256,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       acc[doctorName].appointments += 1;
       
       if (a.status === 'completed') {
-        acc[doctorName].revenue += price;
-        
-        // Calculate CAS and Laborator from appointment treatments
-        if (a.appointment_treatments && a.appointment_treatments.length > 0) {
-          a.appointment_treatments.forEach(t => {
-            acc[doctorName].cas += (t.decont || 0);
-            const labCost = Number((t as any).laborator) || 0;
-            acc[doctorName].laborator += labCost;
-            // Add to netLabRevenue only if laborator is set (> 0)
-            if (labCost > 0) {
-              const treatmentPrice = t.price || 0;
-              acc[doctorName].netLabRevenue += (treatmentPrice - labCost);
-            }
-          });
-        }
-        
-        const method = getPaymentMethod(a);
-        const paidAmount = a.paid_amount ?? (a.is_paid ? price : 0);
-        
-        // Calculate payable amount including discount_percent per treatment
+        // Calculate payable amount including discount_percent per treatment FIRST
         // payable = sum( (price - decont) * (1 - discount_percent/100) )
         const payableAmount = a.appointment_treatments?.length
           ? a.appointment_treatments.reduce((sum, t) => {
@@ -268,6 +268,31 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
               return sum + (priceAfterCas - discountAmount);
             }, 0)
           : price;
+        
+        // Revenue should reflect the net payable amount (after discounts)
+        acc[doctorName].revenue += payableAmount;
+        
+        // Calculate CAS and Laborator from appointment treatments (only from non-100% discounted treatments)
+        if (a.appointment_treatments && a.appointment_treatments.length > 0) {
+          a.appointment_treatments.forEach(t => {
+            const discountPercent = (t as any).discount_percent || 0;
+            // Only count CAS and Laborator for non-100% discounted treatments
+            if (discountPercent < 100) {
+              acc[doctorName].cas += (t.decont || 0);
+              const labCost = Number((t as any).laborator) || 0;
+              acc[doctorName].laborator += labCost;
+              // Add to netLabRevenue only if laborator is set (> 0)
+              if (labCost > 0) {
+                const treatmentPrice = t.price || 0;
+                const discountedLabRevenue = (treatmentPrice - labCost) * (1 - discountPercent / 100);
+                acc[doctorName].netLabRevenue += discountedLabRevenue;
+              }
+            }
+          });
+        }
+        
+        const method = getPaymentMethod(a);
+        const paidAmount = a.paid_amount ?? (a.is_paid ? payableAmount : 0);
         
         if (method === 'card') {
           // Use payable (net) amount for paid revenue
