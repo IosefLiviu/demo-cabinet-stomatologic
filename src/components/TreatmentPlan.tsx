@@ -212,18 +212,20 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
     ));
   };
 
-  // Calculate "Preț" based on initial price minus CAS
+  // Calculate "Preț" based on initial price minus CAS (per unit)
   const getPrice = (item: LocalTreatmentPlanItem) => {
     return Math.max(0, item.initialPrice - item.cas);
   };
 
-  // Calculate "De plată" considering discount
+  // Calculate "De plată" considering quantity, CAS and discount
+  // Formula: ((initialPrice * quantity) - (cas * quantity)) * (1 - discount/100)
   const getDePlata = (item: LocalTreatmentPlanItem) => {
-    const price = getPrice(item);
     const quantity = item.toothNumbers.length > 0 ? item.toothNumbers.length : 1;
-    const subtotal = price * quantity;
-    const discount = subtotal * (item.discountPercent / 100);
-    return subtotal - discount;
+    const totalInitialPrice = item.initialPrice * quantity;
+    const totalCas = item.cas * quantity;
+    const subtotalAfterCas = totalInitialPrice - totalCas;
+    const discount = subtotalAfterCas * (item.discountPercent / 100);
+    return Math.max(0, subtotalAfterCas - discount);
   };
 
   const getItemTotal = (item: LocalTreatmentPlanItem) => {
