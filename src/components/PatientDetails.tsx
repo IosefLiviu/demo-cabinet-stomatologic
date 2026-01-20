@@ -113,6 +113,9 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<string | null>(null);
   const { loading: loadingPlans, fetchPatientTreatmentPlans, deleteTreatmentPlan } = useTreatmentPlans();
+  
+  // Track completed teeth per plan item
+  const [completedTeethByPlanItem, setCompletedTeethByPlanItem] = useState<Map<string, Set<number>>>(new Map());
 
   const getFilteredHistory = () => {
     if (periodFilter === 'all') return treatmentHistory;
@@ -153,6 +156,34 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
     if (!patient) return;
     const plans = await fetchPatientTreatmentPlans(patient.id);
     setTreatmentPlans(plans);
+    
+    // Fetch completed teeth for each plan item
+    const planItemIds = plans.flatMap(p => p.items.map(i => i.id)).filter(Boolean) as string[];
+    if (planItemIds.length > 0) {
+      const { data: completedTreatments } = await supabase
+        .from('appointment_treatments')
+        .select(`
+          plan_item_id,
+          tooth_numbers,
+          appointments!inner(status)
+        `)
+        .in('plan_item_id', planItemIds)
+        .eq('appointments.status', 'completed');
+      
+      const teethMap = new Map<string, Set<number>>();
+      if (completedTreatments) {
+        completedTreatments.forEach(ct => {
+          const key = ct.plan_item_id as string;
+          if (!teethMap.has(key)) {
+            teethMap.set(key, new Set());
+          }
+          (ct.tooth_numbers || []).forEach((t: number) => {
+            teethMap.get(key)!.add(t);
+          });
+        });
+      }
+      setCompletedTeethByPlanItem(teethMap);
+    }
   };
 
   const handleDeletePlan = async () => {
@@ -1038,44 +1069,54 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {plan.items.map((item, idx) => {
+                                {plan.items.map((item, idx) => {
                                     const isCompleted = !!item.completedAt;
                                     const paymentStatus = item.paymentStatus || 'neachitat';
+                                    const totalTeeth = item.toothNumbers?.length || 0;
+                                    const completedTeeth = completedTeethByPlanItem.get(item.id || '')?.size || 0;
+                                    const hasPartialProgress = totalTeeth > 0 && completedTeeth > 0 && completedTeeth < totalTeeth;
+                                    const allTeethDone = totalTeeth > 0 && completedTeeth >= totalTeeth;
                                     
                                     return (
                                       <tr 
                                         key={item.id || idx} 
                                         className={cn(
                                           'border-t',
-                                          isCompleted && 'bg-success/10'
+                                          (isCompleted || allTeethDone) && 'bg-success/10',
+                                          hasPartialProgress && !allTeethDone && 'bg-warning/10'
                                         )}
                                       >
-                                        <td className={cn('px-3 py-2', isCompleted && 'text-success')}>
+                                        <td className={cn('px-3 py-2', (isCompleted || allTeethDone) && 'text-success', hasPartialProgress && !allTeethDone && 'text-warning')}>
                                           {item.toothNumber || (item.toothNumbers?.join(', ')) || '-'}
                                         </td>
-                                        <td className={cn('px-3 py-2', isCompleted && 'text-success')}>
+                                        <td className={cn('px-3 py-2', (isCompleted || allTeethDone) && 'text-success', hasPartialProgress && !allTeethDone && 'text-warning')}>
                                           {item.treatmentName}
-                                          {isCompleted && <span className="ml-2">✓</span>}
+                                          {(isCompleted || allTeethDone) && <span className="ml-2">✓</span>}
+                                          {hasPartialProgress && !allTeethDone && <span className="ml-2 text-xs">({completedTeeth}/{totalTeeth})</span>}
                                         </td>
-                                        <td className={cn('px-3 py-2 text-center', isCompleted && 'text-success')}>
+                                        <td className={cn('px-3 py-2 text-center', (isCompleted || allTeethDone) && 'text-success')}>
                                           {item.quantity}
                                         </td>
-                                        <td className={cn('px-3 py-2 text-right', isCompleted && 'text-success')}>
+                                        <td className={cn('px-3 py-2 text-right', (isCompleted || allTeethDone) && 'text-success')}>
                                           {item.price} RON
                                         </td>
                                         <td className="px-3 py-2 text-center">
-                                          {isCompleted ? (
+                                          {(isCompleted || allTeethDone) ? (
                                             <Badge 
                                               variant="outline"
                                               className={
-                                                paymentStatus === 'achitat' 
+                                                paymentStatus === 'achitat' || paymentStatus === 'card' || paymentStatus === 'cash'
                                                   ? 'bg-success/15 text-success border-success/30' 
-                                                  : paymentStatus === 'partial' 
+                                                  : paymentStatus === 'partial' || paymentStatus === 'partial_card' || paymentStatus === 'partial_cash'
                                                     ? 'bg-warning/15 text-warning border-warning/30'
                                                     : 'bg-destructive/15 text-destructive border-destructive/30'
                                               }
                                             >
-                                              {paymentStatus === 'achitat' ? 'Achitat' : paymentStatus === 'partial' ? `Parțial (${item.paidAmount || 0})` : 'Neachitat'}
+                                              {paymentStatus === 'achitat' || paymentStatus === 'card' || paymentStatus === 'cash' ? 'Achitat' : paymentStatus.startsWith('partial') ? `Parțial (${item.paidAmount || 0})` : 'Neachitat'}
+                                            </Badge>
+                                          ) : hasPartialProgress ? (
+                                            <Badge variant="outline" className="bg-warning/15 text-warning border-warning/30">
+                                              {completedTeeth}/{totalTeeth} finalizat
                                             </Badge>
                                           ) : (
                                             <Badge variant="outline" className="text-muted-foreground">
