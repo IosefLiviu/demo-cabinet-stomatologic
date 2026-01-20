@@ -212,18 +212,20 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
     ));
   };
 
-  // Calculate "Preț" based on initial price minus CAS (per unit)
+  // CAS is treated as TOTAL for the whole line item (not per-tooth).
+  // Initial price is per tooth and multiplied by selected teeth count.
   const getPrice = (item: LocalTreatmentPlanItem) => {
-    return Math.max(0, item.initialPrice - item.cas);
+    const quantity = item.toothNumbers.length > 0 ? item.toothNumbers.length : 1;
+    const casPerUnit = item.cas / quantity;
+    return Math.max(0, item.initialPrice - casPerUnit);
   };
 
-  // Calculate "De plată" considering quantity, CAS and discount
-  // Formula: ((initialPrice * quantity) - (cas * quantity)) * (1 - discount/100)
+  // Calculate "De plată" considering quantity, TOTAL CAS and discount
+  // Formula: ((initialPrice * quantity) - cas_total) * (1 - discount/100)
   const getDePlata = (item: LocalTreatmentPlanItem) => {
     const quantity = item.toothNumbers.length > 0 ? item.toothNumbers.length : 1;
     const totalInitialPrice = item.initialPrice * quantity;
-    const totalCas = item.cas * quantity;
-    const subtotalAfterCas = totalInitialPrice - totalCas;
+    const subtotalAfterCas = totalInitialPrice - item.cas;
     const discount = subtotalAfterCas * (item.discountPercent / 100);
     return Math.max(0, subtotalAfterCas - discount);
   };
@@ -234,10 +236,7 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
   };
 
   const subtotal = planItems.reduce((sum, item) => sum + getItemTotal(item), 0);
-  const totalCas = planItems.reduce((sum, item) => {
-    const quantity = item.toothNumbers.length > 0 ? item.toothNumbers.length : 1;
-    return sum + (item.cas * quantity);
-  }, 0);
+  const totalCas = planItems.reduce((sum, item) => sum + item.cas, 0);
   const totalLaborator = planItems.reduce((sum, item) => {
     const quantity = item.toothNumbers.length > 0 ? item.toothNumbers.length : 1;
     return sum + (item.laborator * quantity);
