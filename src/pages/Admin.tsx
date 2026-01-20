@@ -83,6 +83,7 @@ export default function Admin() {
     email: '',
     password: '',
     fullName: '',
+    username: '',
     role: 'user' as 'admin' | 'user',
   });
   const [creatingUser, setCreatingUser] = useState(false);
@@ -370,10 +371,10 @@ export default function Admin() {
   };
 
   const handleCreateUser = async () => {
-    if (!newUserData.email || !newUserData.password) {
+    if (!newUserData.email || !newUserData.password || !newUserData.username) {
       toast({
         title: 'Eroare',
-        description: 'Email și parola sunt obligatorii',
+        description: 'Email, nume utilizator și parola sunt obligatorii',
         variant: 'destructive',
       });
       return;
@@ -385,6 +386,15 @@ export default function Admin() {
       toast({
         title: 'Eroare',
         description: 'Formatul email-ului nu este valid',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (newUserData.username.length < 3) {
+      toast({
+        title: 'Eroare',
+        description: 'Numele de utilizator trebuie să aibă minim 3 caractere',
         variant: 'destructive',
       });
       return;
@@ -415,6 +425,7 @@ export default function Admin() {
           email: newUserData.email,
           password: newUserData.password,
           fullName: newUserData.fullName,
+          username: newUserData.username,
           role: newUserData.role,
         },
       });
@@ -433,7 +444,7 @@ export default function Admin() {
       });
       
       setNewUserDialogOpen(false);
-      setNewUserData({ email: '', password: '', fullName: '', role: 'user' });
+      setNewUserData({ email: '', password: '', fullName: '', username: '', role: 'user' });
       fetchUsers();
     } catch (error: any) {
       console.error('Error creating user:', error);
@@ -897,6 +908,18 @@ export default function Admin() {
                   onChange={(e) => setNewUserData({ ...newUserData, fullName: e.target.value })}
                   placeholder="Ion Popescu"
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="user-username">Nume utilizator *</Label>
+                <Input
+                  id="user-username"
+                  type="text"
+                  value={newUserData.username}
+                  onChange={(e) => setNewUserData({ ...newUserData, username: e.target.value })}
+                  placeholder="ion.popescu"
+                  autoComplete="off"
+                />
+                <p className="text-xs text-muted-foreground">Minim 3 caractere. Utilizatorul se va autentifica cu acest nume.</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="user-email">Email *</Label>
