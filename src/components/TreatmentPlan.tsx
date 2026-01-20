@@ -57,11 +57,29 @@ interface LocalTreatmentPlanItem {
   unitPrice: number;
 }
 
+interface InitialPlanData {
+  id: string;
+  patientId: string;
+  doctorId?: string;
+  nextAppointmentDate?: string;
+  nextAppointmentTime?: string;
+  discountPercent?: number;
+  items: {
+    treatmentId?: string;
+    treatmentName: string;
+    toothNumbers: number[];
+    doctorId: string;
+    unitPrice: number;
+  }[];
+}
+
 interface TreatmentPlanProps {
   patients: Patient[];
   treatments: Treatment[];
   doctors: Doctor[];
   initialPatientId?: string;
+  initialPlan?: InitialPlanData;
+  onPlanSaved?: () => void;
 }
 
 // FDI notation - permanent teeth
@@ -80,7 +98,7 @@ const allTeeth = [
   ...lowerDeciduousTeeth,
 ];
 
-export function TreatmentPlan({ patients, treatments, doctors, initialPatientId }: TreatmentPlanProps) {
+export function TreatmentPlan({ patients, treatments, doctors, initialPatientId, initialPlan, onPlanSaved }: TreatmentPlanProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string>(initialPatientId || '');
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
@@ -90,6 +108,7 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId 
   const [treatmentDialogOpen, setTreatmentDialogOpen] = useState(false);
   const [patientSearch, setPatientSearch] = useState('');
   const [discountPercent, setDiscountPercent] = useState<number>(0);
+  const [editingPlanId, setEditingPlanId] = useState<string | undefined>();
 
   // Update selectedPatientId when initialPatientId changes
   useEffect(() => {
@@ -97,6 +116,26 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId 
       setSelectedPatientId(initialPatientId);
     }
   }, [initialPatientId]);
+
+  // Load initial plan for editing
+  useEffect(() => {
+    if (initialPlan) {
+      setSelectedPatientId(initialPlan.patientId);
+      setSelectedDoctorId(initialPlan.doctorId || '');
+      setNextAppointmentDate(initialPlan.nextAppointmentDate || '');
+      setNextAppointmentTime(initialPlan.nextAppointmentTime || '');
+      setDiscountPercent(initialPlan.discountPercent || 0);
+      setEditingPlanId(initialPlan.id);
+      setPlanItems(initialPlan.items.map((item, index) => ({
+        id: `edit-${index}-${Date.now()}`,
+        treatmentId: item.treatmentId,
+        toothNumbers: item.toothNumbers,
+        treatmentName: item.treatmentName,
+        doctorId: item.doctorId,
+        unitPrice: item.unitPrice,
+      })));
+    }
+  }, [initialPlan]);
 
   const { loading, saveTreatmentPlan } = useTreatmentPlans();
 
@@ -119,6 +158,7 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId 
     setNextAppointmentTime('');
     setPlanItems([]);
     setDiscountPercent(0);
+    setEditingPlanId(undefined);
   };
 
   const handleAddTreatment = (treatment: Treatment) => {
@@ -184,12 +224,13 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId 
       nextAppointmentDate || undefined,
       nextAppointmentTime || undefined,
       itemsToSave,
-      undefined,
+      editingPlanId,
       discountPercent
     );
 
     if (savedPlanId) {
       resetForm();
+      onPlanSaved?.();
     }
   };
 
