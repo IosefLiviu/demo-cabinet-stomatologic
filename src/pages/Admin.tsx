@@ -382,6 +382,17 @@ export default function Admin() {
       return;
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newUserData.email)) {
+      toast({
+        title: 'Eroare',
+        description: 'Formatul email-ului nu este valid',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (newUserData.password.length < 6) {
       toast({
         title: 'Eroare',
