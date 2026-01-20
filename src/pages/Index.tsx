@@ -288,7 +288,7 @@ const Index = () => {
         discount_percent: t.discountPercent || 0,
         tooth_numbers: t.selectedTeeth || [],
         tooth_data: t.teethDetails || [],
-        plan_item_id: (t as any).planItemId || undefined,
+        plan_item_id: t.planItemId || undefined,
       }));
       await saveAppointmentTreatments(appointmentId, treatmentsToSave);
     }
