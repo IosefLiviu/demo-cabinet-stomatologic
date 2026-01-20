@@ -42,6 +42,7 @@ interface Doctor {
   color: string;
   specialization?: string;
   is_active: boolean;
+  user_id?: string | null;
 }
 
 interface UserWithRole {
@@ -223,6 +224,30 @@ export default function Admin() {
       fetchDoctors();
     } catch (error: any) {
       console.error('Error toggling doctor status:', error);
+    }
+  };
+
+  const handleAssignUser = async (doctorId: string, userId: string | null) => {
+    try {
+      const { error } = await supabase
+        .from('doctors')
+        .update({ user_id: userId })
+        .eq('id', doctorId);
+
+      if (error) throw error;
+      
+      toast({ 
+        title: 'Succes', 
+        description: userId ? 'Utilizatorul a fost asociat cu doctorul' : 'Asocierea a fost eliminată' 
+      });
+      fetchDoctors();
+    } catch (error: any) {
+      console.error('Error assigning user to doctor:', error);
+      toast({
+        title: 'Eroare',
+        description: 'Nu s-a putut asocia utilizatorul',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -521,9 +546,30 @@ export default function Admin() {
                           {doctor.specialization && (
                             <p className="text-sm text-muted-foreground">{doctor.specialization}</p>
                           )}
+                          {doctor.user_id && (
+                            <p className="text-xs text-primary">
+                              ✓ Asociat cu utilizator
+                            </p>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
+                        <Select
+                          value={doctor.user_id || 'none'}
+                          onValueChange={(value) => handleAssignUser(doctor.id, value === 'none' ? null : value)}
+                        >
+                          <SelectTrigger className="w-[160px]">
+                            <SelectValue placeholder="Asociază utilizator" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Fără asociere</SelectItem>
+                            {users.map((u) => (
+                              <SelectItem key={u.user_id} value={u.user_id}>
+                                {u.full_name || 'Fără nume'}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <Button
                           variant="outline"
                           size="sm"
