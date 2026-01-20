@@ -87,8 +87,15 @@ Deno.serve(async (req) => {
     });
 
     if (createError) {
+      // Translate common Supabase auth errors to Romanian
+      let errorMessage = createError.message;
+      if (createError.message.includes('already been registered')) {
+        errorMessage = 'Un utilizator cu acest email există deja';
+      } else if (createError.message.includes('invalid format')) {
+        errorMessage = 'Formatul email-ului nu este valid';
+      }
       return new Response(
-        JSON.stringify({ error: createError.message }),
+        JSON.stringify({ error: errorMessage }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
