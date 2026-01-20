@@ -119,6 +119,10 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       const price = a.price || 0;
       const paidAmount = a.paid_amount ?? (a.is_paid ? price : 0);
       const method = getPaymentMethod(a);
+      // Calculate total CAS/decont from treatments - this reduces the amount the patient needs to pay
+      const totalCas = a.appointment_treatments?.reduce((sum, t) => sum + (t.decont || 0), 0) || 0;
+      // The actual payable amount is price minus CAS discount
+      const payableAmount = price - totalCas;
       
       if (method === 'card') {
         cardRevenue += price;
@@ -126,13 +130,16 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         cashRevenue += price;
       } else if (method === 'partial_card') {
         partialCardRevenue += paidAmount;
-        remainingDebt += (price - paidAmount);
+        // Remaining debt is based on payable amount (after CAS), not full price
+        remainingDebt += (payableAmount - paidAmount);
       } else if (method === 'partial_cash') {
         partialCashRevenue += paidAmount;
-        remainingDebt += (price - paidAmount);
+        // Remaining debt is based on payable amount (after CAS), not full price
+        remainingDebt += (payableAmount - paidAmount);
       } else if (method === 'unpaid' || !a.is_paid) {
         unpaidRevenue += price;
-        remainingDebt += price;
+        // For unpaid, the debt is the payable amount (after CAS discount)
+        remainingDebt += payableAmount;
       } else if (a.is_paid) {
         // Fallback for old data without explicit method
         cashRevenue += price;
@@ -250,13 +257,22 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         } else if (method === 'partial_card') {
           acc[doctorName].paidCard += paidAmount;
           acc[doctorName].paid += paidAmount;
-          acc[doctorName].unpaid += (price - paidAmount);
+          // Calculate total CAS/decont - patient only owes payable amount
+          const totalCas = a.appointment_treatments?.reduce((sum, t) => sum + (t.decont || 0), 0) || 0;
+          const payableAmount = price - totalCas;
+          acc[doctorName].unpaid += (payableAmount - paidAmount);
         } else if (method === 'partial_cash') {
           acc[doctorName].paidCash += paidAmount;
           acc[doctorName].paid += paidAmount;
-          acc[doctorName].unpaid += (price - paidAmount);
+          // Calculate total CAS/decont - patient only owes payable amount
+          const totalCas = a.appointment_treatments?.reduce((sum, t) => sum + (t.decont || 0), 0) || 0;
+          const payableAmount = price - totalCas;
+          acc[doctorName].unpaid += (payableAmount - paidAmount);
         } else if (method === 'unpaid' || !a.is_paid) {
-          acc[doctorName].unpaid += price;
+          // For unpaid, debt is payable amount (after CAS)
+          const totalCas = a.appointment_treatments?.reduce((sum, t) => sum + (t.decont || 0), 0) || 0;
+          const payableAmount = price - totalCas;
+          acc[doctorName].unpaid += payableAmount;
         } else if (a.is_paid) {
           // Fallback for old data
           acc[doctorName].paidCash += price;
@@ -298,7 +314,11 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     return unpaidAppointments.map(a => {
       const price = a.price || 0;
       const paidAmount = a.paid_amount ?? (a.is_paid ? price : 0);
-      const unpaidAmount = price - paidAmount;
+      // Calculate total CAS/decont - patient only owes payable amount
+      const totalCas = a.appointment_treatments?.reduce((sum, t) => sum + (t.decont || 0), 0) || 0;
+      const payableAmount = price - totalCas;
+      // Unpaid amount is what remains after CAS discount and partial payments
+      const unpaidAmount = payableAmount - paidAmount;
       
       return {
         id: a.id,
