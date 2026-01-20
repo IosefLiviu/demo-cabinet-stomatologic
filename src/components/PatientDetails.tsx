@@ -81,6 +81,8 @@ interface TreatmentRecord {
 
 type PaymentMethod = 'card' | 'cash' | 'unpaid' | 'partial_card' | 'partial_cash';
 
+import { SelectedIntervention } from './InterventionSelector';
+
 interface PatientDetailsProps {
   patient: Patient | null;
   open: boolean;
@@ -88,7 +90,7 @@ interface PatientDetailsProps {
   onEdit: (patient: Patient) => void;
   onOpenTreatmentPlan?: (patient: Patient) => void;
   onEditTreatmentPlan?: (patient: Patient, plan: TreatmentPlan) => void;
-  onCreateAppointment?: (patient: Patient, treatmentName?: string) => void;
+  onCreateAppointment?: (patient: Patient, treatmentName?: string, interventions?: SelectedIntervention[], doctorId?: string) => void;
 }
 
 type PeriodFilter = 'all' | '30days' | '3months' | '1year';
@@ -1060,8 +1062,20 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                                   size="sm"
                                   onClick={() => {
                                     const treatmentNames = plan.items.map(i => i.treatmentName).join(', ');
+                                    // Convert plan items to interventions for the appointment
+                                    const interventions: SelectedIntervention[] = plan.items.map((item, index) => ({
+                                      id: `plan-item-${index}`,
+                                      treatmentId: item.treatmentId || '',
+                                      treatmentName: item.treatmentName,
+                                      price: item.price * item.quantity,
+                                      cas: 0,
+                                      laborator: 0,
+                                      duration: 30,
+                                      discountPercent: plan.discountPercent || 0,
+                                      selectedTeeth: item.toothNumbers || [],
+                                    }));
                                     onClose();
-                                    onCreateAppointment(patient, treatmentNames);
+                                    onCreateAppointment(patient, treatmentNames, interventions, plan.doctorId);
                                   }}
                                   className="gap-1"
                                 >
