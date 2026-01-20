@@ -49,6 +49,7 @@ interface UserWithRole {
   id: string;
   user_id: string;
   full_name: string | null;
+  username: string | null;
   email: string;
   role: 'admin' | 'user';
   created_at: string;
@@ -87,6 +88,10 @@ export default function Admin() {
     role: 'user' as 'admin' | 'user',
   });
   const [creatingUser, setCreatingUser] = useState(false);
+  const [editUserDialogOpen, setEditUserDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserWithRole | null>(null);
+  const [editUserData, setEditUserData] = useState({ username: '', fullName: '' });
+  const [savingUser, setSavingUser] = useState(false);
 
   // Tooth statuses state
   const { statuses: toothStatuses, loading: loadingStatuses, addStatus, updateStatus, deleteStatus, toggleActive: toggleStatusActive } = useToothStatuses();
@@ -257,10 +262,10 @@ export default function Admin() {
     try {
       setLoadingUsers(true);
       
-      // Fetch profiles with their roles
+      // Fetch profiles with their roles including username
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, user_id, full_name, created_at');
+        .select('id, user_id, full_name, username, created_at');
 
       if (profilesError) throw profilesError;
 
@@ -278,6 +283,7 @@ export default function Admin() {
           id: profile.id,
           user_id: profile.user_id,
           full_name: profile.full_name,
+          username: profile.username,
           email: '', // We'll need to get this from a different source
           role: (userRole?.role as 'admin' | 'user') || 'user',
           created_at: profile.created_at,
@@ -367,6 +373,65 @@ export default function Admin() {
         description: error.message || 'Nu s-a putut șterge utilizatorul',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleOpenEditUser = (userItem: UserWithRole) => {
+    setEditingUser(userItem);
+    setEditUserData({
+      username: userItem.username || '',
+      fullName: userItem.full_name || '',
+    });
+    setEditUserDialogOpen(true);
+  };
+
+  const handleSaveUser = async () => {
+    if (!editingUser) return;
+
+    if (editUserData.username && editUserData.username.length < 3) {
+      toast({
+        title: 'Eroare',
+        description: 'Numele de utilizator trebuie să aibă minim 3 caractere',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setSavingUser(true);
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          username: editUserData.username || null,
+          full_name: editUserData.fullName || null,
+        })
+        .eq('user_id', editingUser.user_id);
+
+      if (error) {
+        if (error.message.includes('unique') || error.message.includes('duplicate')) {
+          throw new Error('Acest nume de utilizator este deja folosit');
+        }
+        throw error;
+      }
+
+      toast({
+        title: 'Succes',
+        description: 'Datele utilizatorului au fost actualizate',
+      });
+
+      setEditUserDialogOpen(false);
+      setEditingUser(null);
+      fetchUsers();
+    } catch (error: any) {
+      console.error('Error updating user:', error);
+      toast({
+        title: 'Eroare',
+        description: error.message || 'Nu s-au putut actualiza datele utilizatorului',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingUser(false);
     }
   };
 
@@ -669,12 +734,29 @@ export default function Admin() {
                           <h3 className="font-semibold">
                             {userItem.full_name || 'Fără nume'}
                           </h3>
-                          <p className="text-sm text-muted-foreground">
-                            {userItem.role === 'admin' ? 'Administrator' : 'Utilizator'}
-                          </p>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>{userItem.role === 'admin' ? 'Administrator' : 'Utilizator'}</span>
+                            {userItem.username ? (
+                              <span className="px-2 py-0.5 bg-primary/10 text-primary rounded text-xs font-medium">
+                                @{userItem.username}
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 bg-destructive/10 text-destructive rounded text-xs">
+                                fără username
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleOpenEditUser(userItem)}
+                          title="Editează utilizator"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
                         <Select
                           value={userItem.role}
                           onValueChange={(value: 'admin' | 'user') => handleChangeRole(userItem.user_id, value)}
@@ -965,6 +1047,50 @@ export default function Admin() {
               <Button onClick={handleCreateUser} disabled={creatingUser}>
                 <Save className="h-4 w-4 mr-2" />
                 {creatingUser ? 'Se creează...' : 'Creează'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit User Dialog */}
+        <Dialog open={editUserDialogOpen} onOpenChange={setEditUserDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Editare Utilizator</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-user-name">Nume complet</Label>
+                <Input
+                  id="edit-user-name"
+                  value={editUserData.fullName}
+                  onChange={(e) => setEditUserData({ ...editUserData, fullName: e.target.value })}
+                  placeholder="Ion Popescu"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-user-username">Nume utilizator *</Label>
+                <Input
+                  id="edit-user-username"
+                  type="text"
+                  value={editUserData.username}
+                  onChange={(e) => setEditUserData({ ...editUserData, username: e.target.value })}
+                  placeholder="ion.popescu"
+                  autoComplete="off"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Minim 3 caractere. Utilizatorul se va autentifica cu acest nume.
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditUserDialogOpen(false)}>
+                <X className="h-4 w-4 mr-2" />
+                Anulează
+              </Button>
+              <Button onClick={handleSaveUser} disabled={savingUser}>
+                <Save className="h-4 w-4 mr-2" />
+                {savingUser ? 'Se salvează...' : 'Salvează'}
               </Button>
             </DialogFooter>
           </DialogContent>
