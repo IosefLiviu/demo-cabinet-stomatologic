@@ -552,7 +552,16 @@ const Index = () => {
               doctors={doctors}
               initialPatientId={treatmentPlanPatientId}
               initialPlan={editingTreatmentPlan}
-              onPlanSaved={() => setEditingTreatmentPlan(undefined)}
+onPlanSaved={() => {
+                setEditingTreatmentPlan(undefined);
+                // Reopen patient details if a patient was selected for the treatment plan
+                if (treatmentPlanPatientId) {
+                  const patient = patients.find(p => p.id === treatmentPlanPatientId);
+                  if (patient) {
+                    setSelectedPatient(patient);
+                  }
+                }
+              }}
             />
           </TabsContent>
 
