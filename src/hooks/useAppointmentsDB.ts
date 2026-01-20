@@ -426,7 +426,7 @@ export function useAppointmentsDB() {
           // Don't throw - the appointment was completed, just log the error
         }
 
-        // Mark treatment plan items as completed
+        // Mark treatment plan items as completed (only if ALL teeth from that item are completed)
         const planItemIds = completedAppointment.appointment_treatments
           .filter(t => t.plan_item_id)
           .map(t => t.plan_item_id as string);
@@ -435,19 +435,91 @@ export function useAppointmentsDB() {
           // Collect unique plan item IDs
           const uniquePlanItemIds = [...new Set(planItemIds)];
           
-          // Update each plan item with completion status
-          const { error: planUpdateError } = await supabase
-            .from('treatment_plan_items')
-            .update({
-              completed_at: new Date().toISOString(),
-              payment_status: paymentMethod,
-              paid_amount: actualPaidAmount,
-              completed_appointment_id: id,
-            })
-            .in('id', uniquePlanItemIds);
-
-          if (planUpdateError) {
-            console.error('Error marking plan items as completed:', planUpdateError);
+          // For each unique plan item, check if all its teeth have been completed
+          for (const planItemId of uniquePlanItemIds) {
+            // Get the original plan item to see how many teeth it had
+            const { data: planItem } = await supabase
+              .from('treatment_plan_items')
+              .select('tooth_numbers')
+              .eq('id', planItemId)
+              .maybeSingle();
+            
+            if (!planItem) continue;
+            
+            const originalTeeth = planItem.tooth_numbers || [];
+            
+            // If no teeth specified (like PRF), mark as completed immediately
+            if (originalTeeth.length === 0) {
+              const { error: planUpdateError } = await supabase
+                .from('treatment_plan_items')
+                .update({
+                  completed_at: new Date().toISOString(),
+                  payment_status: paymentMethod,
+                  paid_amount: actualPaidAmount,
+                  completed_appointment_id: id,
+                })
+                .eq('id', planItemId);
+              
+              if (planUpdateError) {
+                console.error('Error marking plan item as completed:', planUpdateError);
+              }
+              continue;
+            }
+            
+            // Get all completed teeth for this plan item across all completed appointments
+            const { data: completedTreatments } = await supabase
+              .from('appointment_treatments')
+              .select(`
+                tooth_numbers,
+                appointments!inner(status)
+              `)
+              .eq('plan_item_id', planItemId)
+              .eq('appointments.status', 'completed');
+            
+            // Collect all completed teeth
+            const completedTeeth = new Set<number>();
+            if (completedTreatments) {
+              completedTreatments.forEach(ct => {
+                (ct.tooth_numbers || []).forEach((t: number) => completedTeeth.add(t));
+              });
+            }
+            
+            // Check if all original teeth are now completed
+            const allTeethCompleted = originalTeeth.every((t: number) => completedTeeth.has(t));
+            
+            if (allTeethCompleted) {
+              // Calculate total paid amount across all appointments for this plan item
+              const { data: allPayments } = await supabase
+                .from('appointment_treatments')
+                .select(`
+                  price,
+                  appointments!inner(status, paid_amount, is_paid)
+                `)
+                .eq('plan_item_id', planItemId)
+                .eq('appointments.status', 'completed');
+              
+              let totalPaidForItem = 0;
+              if (allPayments) {
+                allPayments.forEach(p => {
+                  // Approximate the paid portion based on price ratio
+                  totalPaidForItem += (p.price || 0);
+                });
+              }
+              
+              const { error: planUpdateError } = await supabase
+                .from('treatment_plan_items')
+                .update({
+                  completed_at: new Date().toISOString(),
+                  payment_status: paymentMethod,
+                  paid_amount: totalPaidForItem,
+                  completed_appointment_id: id,
+                })
+                .eq('id', planItemId);
+              
+              if (planUpdateError) {
+                console.error('Error marking plan item as completed:', planUpdateError);
+              }
+            }
           }
         }
 

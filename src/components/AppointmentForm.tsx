@@ -40,6 +40,7 @@ import { Doctor } from '@/hooks/useDoctors';
 import { InterventionSelector, SelectedIntervention } from '@/components/InterventionSelector';
 import { useCasBudget } from '@/hooks/useCasBudget';
 import { useTreatmentPlans, TreatmentPlan } from '@/hooks/useTreatmentPlans';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Treatment {
   id: string;
@@ -176,7 +177,7 @@ export function AppointmentForm({
   }, [formData.patientId]);
 
   // Handle treatment plan selection
-  const handleSelectPlan = (planId: string) => {
+  const handleSelectPlan = async (planId: string) => {
     setSelectedPlanId(planId);
     
     if (planId === 'none') {
@@ -185,50 +186,111 @@ export function AppointmentForm({
     
     const selectedPlan = patientPlans.find(p => p.id === planId);
     if (selectedPlan) {
+      // Get already completed teeth from completed appointments for this plan's items
+      const planItemIds = selectedPlan.items.map(item => item.id).filter(Boolean);
+      
+      let completedTeethByTreatment: Map<string, Set<number>> = new Map();
+      
+      if (planItemIds.length > 0) {
+        // Query appointment_treatments for completed appointments that have plan_item_id from this plan
+        const { data: completedTreatments } = await supabase
+          .from('appointment_treatments')
+          .select(`
+            plan_item_id,
+            treatment_name,
+            tooth_numbers,
+            appointments!inner(status)
+          `)
+          .in('plan_item_id', planItemIds)
+          .eq('appointments.status', 'completed');
+        
+        // Build a map of treatment_name+planItemId -> completed teeth
+        if (completedTreatments) {
+          completedTreatments.forEach(ct => {
+            const key = `${ct.plan_item_id}`;
+            if (!completedTeethByTreatment.has(key)) {
+              completedTeethByTreatment.set(key, new Set());
+            }
+            (ct.tooth_numbers || []).forEach((t: number) => {
+              completedTeethByTreatment.get(key)!.add(t);
+            });
+          });
+        }
+      }
+      
       // Convert plan items to interventions - expand items with multiple teeth into separate entries
-      // Only include items that are NOT completed
+      // Only include teeth that are NOT already completed
       const planInterventions: SelectedIntervention[] = [];
       
-      selectedPlan.items
-        .filter(item => !item.completedAt) // Filter out completed items
-        .forEach((item, itemIndex) => {
-          const toothNumbers = item.toothNumbers || [];
+      selectedPlan.items.forEach((item, itemIndex) => {
+        const toothNumbers = item.toothNumbers || [];
+        const completedTeeth = completedTeethByTreatment.get(item.id || '') || new Set();
+        
+        // Filter out completed teeth
+        const remainingTeeth = toothNumbers.filter(t => !completedTeeth.has(t));
+        
+        // Skip this item entirely if all teeth are completed
+        if (toothNumbers.length > 0 && remainingTeeth.length === 0) {
+          return;
+        }
+        
+        // If item has no teeth (like PRF), check if it's marked as completed
+        if (toothNumbers.length === 0 && item.completedAt) {
+          return;
+        }
+        
+        if (remainingTeeth.length > 1) {
+          // Multiple teeth: create one entry per remaining tooth, dividing CAS evenly
+          const casPerTooth = (item.cas || 0) / toothNumbers.length; // Use original count for CAS division
+          const laboratorPerTooth = (item.laborator || 0) / toothNumbers.length;
           
-          if (toothNumbers.length > 1) {
-            // Multiple teeth: create one entry per tooth, dividing CAS evenly
-            const casPerTooth = (item.cas || 0) / toothNumbers.length;
-            const laboratorPerTooth = (item.laborator || 0) / toothNumbers.length;
-            
-            toothNumbers.forEach((toothNumber, toothIndex) => {
-              planInterventions.push({
-                id: `plan-${item.id || itemIndex}-tooth-${toothNumber}-${Date.now()}-${toothIndex}`,
-                treatmentId: item.treatmentId || '',
-                treatmentName: item.treatmentName,
-                price: item.price || 0,
-                cas: Math.round(casPerTooth * 100) / 100,
-                laborator: Math.round(laboratorPerTooth * 100) / 100,
-                duration: item.duration || 30,
-                discountPercent: item.discountPercent || 0,
-                selectedTeeth: [toothNumber],
-                planItemId: item.id, // Link to plan item
-              });
-            });
-          } else {
-            // Single tooth or no teeth: keep as single entry
+          remainingTeeth.forEach((toothNumber, toothIndex) => {
             planInterventions.push({
-              id: `plan-${item.id || itemIndex}-${Date.now()}`,
+              id: `plan-${item.id || itemIndex}-tooth-${toothNumber}-${Date.now()}-${toothIndex}`,
               treatmentId: item.treatmentId || '',
               treatmentName: item.treatmentName,
               price: item.price || 0,
-              cas: item.cas || 0,
-              laborator: item.laborator || 0,
+              cas: Math.round(casPerTooth * 100) / 100,
+              laborator: Math.round(laboratorPerTooth * 100) / 100,
               duration: item.duration || 30,
               discountPercent: item.discountPercent || 0,
-              selectedTeeth: toothNumbers,
+              selectedTeeth: [toothNumber],
               planItemId: item.id, // Link to plan item
             });
-          }
-        });
+          });
+        } else if (remainingTeeth.length === 1) {
+          // Single remaining tooth
+          const casPerTooth = (item.cas || 0) / toothNumbers.length;
+          const laboratorPerTooth = (item.laborator || 0) / toothNumbers.length;
+          
+          planInterventions.push({
+            id: `plan-${item.id || itemIndex}-${Date.now()}`,
+            treatmentId: item.treatmentId || '',
+            treatmentName: item.treatmentName,
+            price: item.price || 0,
+            cas: Math.round(casPerTooth * 100) / 100,
+            laborator: Math.round(laboratorPerTooth * 100) / 100,
+            duration: item.duration || 30,
+            discountPercent: item.discountPercent || 0,
+            selectedTeeth: remainingTeeth,
+            planItemId: item.id, // Link to plan item
+          });
+        } else {
+          // No teeth specified (like PRF) - keep as single entry
+          planInterventions.push({
+            id: `plan-${item.id || itemIndex}-${Date.now()}`,
+            treatmentId: item.treatmentId || '',
+            treatmentName: item.treatmentName,
+            price: item.price || 0,
+            cas: item.cas || 0,
+            laborator: item.laborator || 0,
+            duration: item.duration || 30,
+            discountPercent: item.discountPercent || 0,
+            selectedTeeth: [],
+            planItemId: item.id, // Link to plan item
+          });
+        }
+      });
       
       setInterventions(planInterventions);
       
