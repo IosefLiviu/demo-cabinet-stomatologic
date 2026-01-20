@@ -74,6 +74,7 @@ const Index = () => {
   const [completingAppointmentId, setCompletingAppointmentId] = useState<string | null>(null);
   const [completingAppointmentName, setCompletingAppointmentName] = useState<string>('');
   const [completingAppointmentPrice, setCompletingAppointmentPrice] = useState<number>(0);
+  const [completingAppointmentPayable, setCompletingAppointmentPayable] = useState<number>(0);
   const [isCompleting, setIsCompleting] = useState(false);
 
   // Cancel appointment dialog state
@@ -297,9 +298,19 @@ const Index = () => {
     const patientName = dbAppointment?.patients 
       ? `${dbAppointment.patients.first_name} ${dbAppointment.patients.last_name}`
       : '';
+    
+    // Calculate total price and payable amount (price - CAS/decont)
+    const totalPrice = dbAppointment?.price || 0;
+    const totalCas = dbAppointment?.appointment_treatments?.reduce(
+      (sum, t) => sum + (t.decont || 0), 
+      0
+    ) || 0;
+    const payableAmount = totalPrice - totalCas;
+    
     setCompletingAppointmentId(id);
     setCompletingAppointmentName(patientName);
-    setCompletingAppointmentPrice(dbAppointment?.price || 0);
+    setCompletingAppointmentPrice(totalPrice);
+    setCompletingAppointmentPayable(payableAmount);
     setCompleteDialogOpen(true);
   };
 
@@ -313,6 +324,7 @@ const Index = () => {
     setCompletingAppointmentId(null);
     setCompletingAppointmentName('');
     setCompletingAppointmentPrice(0);
+    setCompletingAppointmentPayable(0);
   };
 
   const handleAppointmentCancelClick = (id: string) => {
@@ -601,6 +613,7 @@ const Index = () => {
         onConfirm={handleConfirmComplete}
         patientName={completingAppointmentName}
         totalPrice={completingAppointmentPrice}
+        payableAmount={completingAppointmentPayable}
         isLoading={isCompleting}
       />
 

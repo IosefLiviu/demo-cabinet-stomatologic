@@ -26,6 +26,7 @@ interface CompleteAppointmentDialogProps {
   onConfirm: (paymentData: PaymentData) => void;
   patientName?: string;
   totalPrice?: number;
+  payableAmount?: number;
   isLoading?: boolean;
 }
 
@@ -70,8 +71,12 @@ export function CompleteAppointmentDialog({
   onConfirm,
   patientName,
   totalPrice = 0,
+  payableAmount,
   isLoading,
 }: CompleteAppointmentDialogProps) {
+  // Use payableAmount if provided, otherwise use totalPrice
+  const amountToPay = payableAmount !== undefined ? payableAmount : totalPrice;
+  const hasCasDiscount = payableAmount !== undefined && payableAmount < totalPrice;
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
   const [paidAmount, setPaidAmount] = useState<string>('');
   const [showPartialInput, setShowPartialInput] = useState(false);
@@ -108,7 +113,8 @@ export function CompleteAppointmentDialog({
       if (isPartial && paidAmount) {
         paymentData.paidAmount = parseFloat(paidAmount);
       } else if (!isPartial && selectedMethod !== 'unpaid') {
-        paymentData.paidAmount = totalPrice;
+        // Use amountToPay (which is payableAmount if CAS applied, otherwise totalPrice)
+        paymentData.paidAmount = amountToPay;
       } else {
         paymentData.paidAmount = 0;
       }
@@ -132,11 +138,11 @@ export function CompleteAppointmentDialog({
   const isPartialValid = () => {
     if (!showPartialInput) return true;
     const amount = parseFloat(paidAmount);
-    return !isNaN(amount) && amount > 0 && amount < totalPrice;
+    return !isNaN(amount) && amount > 0 && amount < amountToPay;
   };
 
   const remainingAmount = showPartialInput && paidAmount 
-    ? totalPrice - parseFloat(paidAmount || '0')
+    ? amountToPay - parseFloat(paidAmount || '0')
     : 0;
 
   return (
@@ -150,10 +156,19 @@ export function CompleteAppointmentDialog({
             ) : (
               'Finalizați această programare.'
             )}
-            {totalPrice > 0 && (
-              <span className="block mt-1 text-lg font-semibold text-foreground">
-                Total: {totalPrice.toLocaleString()} RON
-              </span>
+            {amountToPay > 0 && (
+              <div className="mt-2 space-y-1">
+                {hasCasDiscount && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-muted-foreground">Preț total:</span>
+                    <span className="line-through text-muted-foreground">{totalPrice.toLocaleString()} RON</span>
+                    <span className="text-green-600 font-medium">(-{(totalPrice - amountToPay).toLocaleString()} CAS)</span>
+                  </div>
+                )}
+                <span className="block text-lg font-semibold text-foreground">
+                  De plată: {amountToPay.toLocaleString()} RON
+                </span>
+              </div>
             )}
           </DialogDescription>
         </DialogHeader>
@@ -199,8 +214,8 @@ export function CompleteAppointmentDialog({
                   placeholder="Introduceți suma achitată"
                   value={paidAmount}
                   onChange={(e) => setPaidAmount(e.target.value)}
-                  min={0}
-                  max={totalPrice - 1}
+                    min={0}
+                    max={amountToPay - 1}
                   step={0.01}
                   className="text-lg"
                 />
@@ -218,9 +233,9 @@ export function CompleteAppointmentDialog({
                 </div>
               )}
               
-              {paidAmount && parseFloat(paidAmount) >= totalPrice && (
+              {paidAmount && parseFloat(paidAmount) >= amountToPay && (
                 <p className="text-sm text-destructive">
-                  Suma achitată trebuie să fie mai mică decât totalul. Pentru plată integrală, selectați Card sau Cash.
+                  Suma achitată trebuie să fie mai mică decât suma de plată. Pentru plată integrală, selectați Card sau Cash.
                 </p>
               )}
             </div>
