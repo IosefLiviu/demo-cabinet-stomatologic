@@ -170,42 +170,52 @@ const Index = () => {
 
     // Load existing interventions from DB
     if (dbAppointment?.appointment_treatments && dbAppointment.appointment_treatments.length > 0) {
-      setExistingInterventions(dbAppointment.appointment_treatments.map((t: any) => ({
-        id: t.id,
-        treatmentId: t.treatment_id || '',
-        treatmentName: t.treatment_name,
-        price: t.price,
-        cas: (t.decont || 0) + (t.co_plata || 0),
-        laborator: t.laborator || 0,
-        duration: t.duration,
-        discountPercent: t.discount_percent || 0,
-        selectedTeeth: t.tooth_numbers || [],
-        teethDetails: (t.tooth_data || []).map((td: any) => ({
-          toothNumber: td.toothNumber,
-          status: td.status as any,
-          notes: td.notes,
-        })),
-      })));
+      setExistingInterventions(
+        dbAppointment.appointment_treatments.map((t: any): SelectedIntervention => {
+          const intervention: SelectedIntervention = {
+            id: t.id,
+            treatmentId: t.treatment_id || '',
+            treatmentName: t.treatment_name,
+            price: t.price,
+            cas: (t.decont || 0) + (t.co_plata || 0),
+            laborator: t.laborator || 0,
+            duration: t.duration,
+            discountPercent: t.discount_percent || 0,
+            selectedTeeth: t.tooth_numbers || [],
+            teethDetails: (t.tooth_data || []).map((td: any) => ({
+              toothNumber: td.toothNumber,
+              status: td.status as any,
+              notes: td.notes,
+            })),
+          };
+          return intervention;
+        })
+      );
     } else {
       // Fallback: fetch from DB if not included
       const treatmentsData = await fetchAppointmentTreatments(appointment.id);
       if (treatmentsData.length > 0) {
-        setExistingInterventions(treatmentsData.map(t => ({
-          id: t.id,
-          treatmentId: t.treatment_id || '',
-          treatmentName: t.treatment_name,
-          price: t.price,
-          cas: (t.decont || 0) + (t.co_plata || 0),
-          laborator: t.laborator || 0,
-          duration: t.duration,
-          discountPercent: t.discount_percent || 0,
-          selectedTeeth: t.tooth_numbers || [],
-          teethDetails: (t.tooth_data || []).map(td => ({
-            toothNumber: td.toothNumber,
-            status: td.status as any,
-            notes: td.notes,
-          })),
-        })));
+        setExistingInterventions(
+          treatmentsData.map((t): SelectedIntervention => {
+            const intervention: SelectedIntervention = {
+              id: t.id,
+              treatmentId: t.treatment_id || '',
+              treatmentName: t.treatment_name,
+              price: t.price,
+              cas: (t.decont || 0) + (t.co_plata || 0),
+              laborator: t.laborator || 0,
+              duration: t.duration,
+              discountPercent: t.discount_percent || 0,
+              selectedTeeth: t.tooth_numbers || [],
+              teethDetails: (t.tooth_data || []).map((td) => ({
+                toothNumber: td.toothNumber,
+                status: td.status as any,
+                notes: td.notes,
+              })),
+            };
+            return intervention;
+          })
+        );
       } else {
         setExistingInterventions([]);
       }
@@ -298,19 +308,32 @@ const Index = () => {
 
   const handleAppointmentComplete = (id: string) => {
     // Find appointment from DB appointments
-    const dbAppointment = appointments.find(a => a.id === id);
-    const patientName = dbAppointment?.patients 
+    const dbAppointment = appointments.find((a) => a.id === id);
+    const patientName = dbAppointment?.patients
       ? `${dbAppointment.patients.first_name} ${dbAppointment.patients.last_name}`
       : '';
-    
-    // Calculate total price and payable amount (price - CAS/decont)
-    const totalPrice = dbAppointment?.price || 0;
-    const totalCas = dbAppointment?.appointment_treatments?.reduce(
-      (sum, t) => sum + (t.decont || 0), 
-      0
-    ) || 0;
-    const payableAmount = totalPrice - totalCas;
-    
+
+    const treatments = dbAppointment?.appointment_treatments ?? [];
+
+    // Total price is the "gross" amount (before CAS + discounts)
+    const totalPrice =
+      (dbAppointment?.price ?? 0) ||
+      treatments.reduce((sum, t) => sum + (t.price || 0), 0);
+
+    // De plată (net) = sum( (price - decont) * (1 - discount_percent/100) )
+    const payableAmount = treatments.length
+      ? treatments.reduce((sum, t) => {
+          const price = t.price || 0;
+          const cas = t.decont || 0;
+          const discountPercent = t.discount_percent || 0;
+
+          const priceAfterCas = price - cas;
+          const discountAmount = priceAfterCas * (discountPercent / 100);
+          return sum + (priceAfterCas - discountAmount);
+        }, 0)
+      : totalPrice -
+        (treatments.reduce((sum, t) => sum + (t.decont || 0), 0) || 0);
+
     setCompletingAppointmentId(id);
     setCompletingAppointmentName(patientName);
     setCompletingAppointmentPrice(totalPrice);
