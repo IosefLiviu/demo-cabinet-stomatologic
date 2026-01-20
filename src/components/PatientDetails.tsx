@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Sheet,
@@ -1044,19 +1045,22 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                                     return (
                                       <tr 
                                         key={item.id || idx} 
-                                        className={`border-t ${isCompleted ? 'bg-green-50 dark:bg-green-950/30' : ''}`}
+                                        className={cn(
+                                          'border-t',
+                                          isCompleted && 'bg-success/10'
+                                        )}
                                       >
-                                        <td className={`px-3 py-2 ${isCompleted ? 'text-green-700 dark:text-green-400' : ''}`}>
+                                        <td className={cn('px-3 py-2', isCompleted && 'text-success')}>
                                           {item.toothNumber || (item.toothNumbers?.join(', ')) || '-'}
                                         </td>
-                                        <td className={`px-3 py-2 ${isCompleted ? 'text-green-700 dark:text-green-400' : ''}`}>
+                                        <td className={cn('px-3 py-2', isCompleted && 'text-success')}>
                                           {item.treatmentName}
                                           {isCompleted && <span className="ml-2">✓</span>}
                                         </td>
-                                        <td className={`px-3 py-2 text-center ${isCompleted ? 'text-green-700 dark:text-green-400' : ''}`}>
+                                        <td className={cn('px-3 py-2 text-center', isCompleted && 'text-success')}>
                                           {item.quantity}
                                         </td>
-                                        <td className={`px-3 py-2 text-right ${isCompleted ? 'text-green-700 dark:text-green-400' : ''}`}>
+                                        <td className={cn('px-3 py-2 text-right', isCompleted && 'text-success')}>
                                           {item.price} RON
                                         </td>
                                         <td className="px-3 py-2 text-center">
@@ -1065,10 +1069,10 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                                               variant="outline"
                                               className={
                                                 paymentStatus === 'achitat' 
-                                                  ? 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/50 dark:text-green-400 dark:border-green-700' 
+                                                  ? 'bg-success/15 text-success border-success/30' 
                                                   : paymentStatus === 'partial' 
-                                                    ? 'bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-900/50 dark:text-yellow-400 dark:border-yellow-700'
-                                                    : 'bg-red-100 text-red-700 border-red-300 dark:bg-red-900/50 dark:text-red-400 dark:border-red-700'
+                                                    ? 'bg-warning/15 text-warning border-warning/30'
+                                                    : 'bg-destructive/15 text-destructive border-destructive/30'
                                               }
                                             >
                                               {paymentStatus === 'achitat' ? 'Achitat' : paymentStatus === 'partial' ? `Parțial (${item.paidAmount || 0})` : 'Neachitat'}
@@ -1101,7 +1105,9 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                                   onClick={() => {
                                     const treatmentNames = plan.items.map(i => i.treatmentName).join(', ');
                                     // Convert plan items to interventions for the appointment
-                                    const interventions: SelectedIntervention[] = plan.items.map((item, index) => ({
+                                    const interventions: SelectedIntervention[] = plan.items
+                                      .filter((i) => !i.completedAt)
+                                      .map((item, index) => ({
                                       id: `plan-item-${index}`,
                                       treatmentId: item.treatmentId || '',
                                       treatmentName: item.treatmentName,
@@ -1111,6 +1117,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                                       duration: item.duration || 30,
                                       discountPercent: item.discountPercent || plan.discountPercent || 0,
                                       selectedTeeth: item.toothNumbers || [],
+                                      planItemId: item.id,
                                     }));
                                     onClose();
                                     onCreateAppointment(patient, treatmentNames, interventions, plan.doctorId);
