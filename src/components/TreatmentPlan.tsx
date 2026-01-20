@@ -229,7 +229,8 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
     );
 
     if (savedPlanId) {
-      resetForm();
+      // Keep the plan open after saving - just update the editingPlanId to the saved one
+      setEditingPlanId(savedPlanId);
       onPlanSaved?.();
     }
   };
