@@ -447,8 +447,11 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
     }
   };
 
-  const getPaymentBadge = (method: PaymentMethod | null, appointmentId?: string, paidAmount?: number | null, totalPrice?: number | null) => {
-    const remaining = (totalPrice || 0) - (paidAmount || 0);
+  const getPaymentBadge = (method: PaymentMethod | null, appointmentId?: string, paidAmount?: number | null, totalPrice?: number | null, cas?: number | null) => {
+    // Calculate payable amount (price minus CAS discount)
+    const payableAmount = (totalPrice || 0) - (cas || 0);
+    // Remaining is based on payable amount, not full price
+    const remaining = payableAmount - (paidAmount || 0);
     
     switch (method) {
       case 'card':
@@ -812,7 +815,7 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
                                       </div>
                                     </div>
                                     <div className="flex flex-col items-end gap-1 shrink-0">
-                                      {record.payment_method && getPaymentBadge(record.payment_method, record.appointment_id, record.paid_amount, record.total_price)}
+                                      {record.payment_method && getPaymentBadge(record.payment_method, record.appointment_id, record.paid_amount, record.total_price, record.cas)}
                                       {record.price !== null && record.price > 0 && (
                                         <div className="flex flex-col items-end gap-0.5">
                                           {record.cas && record.cas > 0 && (
