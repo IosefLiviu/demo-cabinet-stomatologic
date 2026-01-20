@@ -9,6 +9,7 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [doctorId, setDoctorId] = useState<string | null>(null);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -23,10 +24,12 @@ export function useAuth() {
           setTimeout(() => {
             checkAdminRole(session.user.id);
             checkDoctorAssociation(session.user.id);
+            checkMustChangePassword(session.user.id);
           }, 0);
         } else {
           setIsAdmin(false);
           setDoctorId(null);
+          setMustChangePassword(false);
         }
       }
     );
@@ -39,6 +42,7 @@ export function useAuth() {
       if (session?.user) {
         checkAdminRole(session.user.id);
         checkDoctorAssociation(session.user.id);
+        checkMustChangePassword(session.user.id);
       }
       setLoading(false);
     });
@@ -77,6 +81,26 @@ export function useAuth() {
       console.error('Error checking doctor association:', error);
       setDoctorId(null);
     }
+  };
+
+  const checkMustChangePassword = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('must_change_password')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) throw error;
+      setMustChangePassword(data?.must_change_password ?? false);
+    } catch (error) {
+      console.error('Error checking password change requirement:', error);
+      setMustChangePassword(false);
+    }
+  };
+
+  const clearMustChangePassword = () => {
+    setMustChangePassword(false);
   };
 
   const signUp = async (email: string, password: string, fullName?: string) => {
@@ -146,6 +170,7 @@ export function useAuth() {
     setSession(null);
     setIsAdmin(false);
     setDoctorId(null);
+    setMustChangePassword(false);
     return { error: null };
   };
 
@@ -155,6 +180,8 @@ export function useAuth() {
     loading,
     isAdmin,
     doctorId,
+    mustChangePassword,
+    clearMustChangePassword,
     signUp,
     signIn,
     signOut,
