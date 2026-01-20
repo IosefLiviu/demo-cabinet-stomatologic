@@ -136,25 +136,77 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
       setNextAppointmentTime(initialPlan.nextAppointmentTime || '');
       setDiscountPercent(initialPlan.discountPercent || 0);
       setEditingPlanId(initialPlan.id);
-      setPlanItems(initialPlan.items.map((item, index) => ({
-        id: `edit-${index}-${Date.now()}`,
-        treatmentId: item.treatmentId,
-        toothNumbers: item.toothNumbers,
-        treatmentName: item.treatmentName,
-        doctorId: item.doctorId,
-        duration: item.duration,
-        initialPrice: item.initialPrice,
-        laborator: item.laborator,
-        cas: item.cas,
-        discountPercent: item.discountPercent,
-      })));
+      
+      // Load completed teeth and apply them to the plan items
+      const loadAndApplyCompletedTeeth = async () => {
+        const { data } = await supabase
+          .from('appointment_treatments')
+          .select('treatment_name,tooth_numbers,appointments!inner(status,patient_id)')
+          .eq('appointments.status', 'completed')
+          .eq('appointments.patient_id', initialPlan.patientId);
+
+        const completedTeethMap = new Map<string, Set<number>>();
+        (data || []).forEach((row: any) => {
+          const name = row.treatment_name as string;
+          if (!completedTeethMap.has(name)) completedTeethMap.set(name, new Set());
+          (row.tooth_numbers || []).forEach((t: number) => completedTeethMap.get(name)!.add(t));
+        });
+
+        // Map initial plan items and subtract completed teeth
+        const adjustedItems = initialPlan.items.map((item, index) => {
+          const baseItem: LocalTreatmentPlanItem = {
+            id: `edit-${index}-${Date.now()}`,
+            treatmentId: item.treatmentId,
+            toothNumbers: item.toothNumbers,
+            treatmentName: item.treatmentName,
+            doctorId: item.doctorId,
+            duration: item.duration,
+            initialPrice: item.initialPrice,
+            laborator: item.laborator,
+            cas: item.cas,
+            discountPercent: item.discountPercent,
+          };
+
+          // Skip items without teeth
+          if (!baseItem.toothNumbers || baseItem.toothNumbers.length === 0) {
+            return baseItem;
+          }
+
+          const completed = completedTeethMap.get(baseItem.treatmentName);
+          if (!completed || completed.size === 0) {
+            return baseItem;
+          }
+
+          const beforeCount = baseItem.toothNumbers.length;
+          const remainingTeeth = baseItem.toothNumbers.filter(t => !completed.has(t));
+
+          // If nothing changed, keep item as is
+          if (remainingTeeth.length === beforeCount) {
+            return baseItem;
+          }
+
+          // Scale CAS proportionally
+          const ratio = beforeCount > 0 ? remainingTeeth.length / beforeCount : 1;
+          const adjustedCas = Math.round((baseItem.cas * ratio) * 100) / 100;
+
+          return {
+            ...baseItem,
+            toothNumbers: remainingTeeth,
+            cas: adjustedCas,
+          };
+        });
+
+        setPlanItems(adjustedItems);
+      };
+
+      loadAndApplyCompletedTeeth();
     }
   }, [initialPlan]);
 
-  // Fetch completed teeth for the selected patient (even if plan_item_id wasn't saved on older appointments)
+  // Also apply completed teeth filter when patient changes (for new plans or switching patients)
   useEffect(() => {
-    const loadCompletedTeeth = async () => {
-      if (!selectedPatientId) {
+    const applyCompletedTeethFilter = async () => {
+      if (!selectedPatientId || planItems.length === 0) {
         return;
       }
 
@@ -171,7 +223,9 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
         (row.tooth_numbers || []).forEach((t: number) => map.get(name)!.add(t));
       });
 
-      // Apply completion by removing already finished teeth from current plan items
+      // Only apply if there are completed teeth
+      if (map.size === 0) return;
+
       setPlanItems(prev =>
         prev.map(item => {
           if (!item.toothNumbers || item.toothNumbers.length === 0) return item;
@@ -182,10 +236,8 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
           const beforeCount = item.toothNumbers.length;
           const remainingTeeth = item.toothNumbers.filter(t => !completed.has(t));
 
-          // If nothing changed, keep item
           if (remainingTeeth.length === beforeCount) return item;
 
-          // Scale CAS proportionally (CAS is stored as TOTAL per line item)
           const ratio = beforeCount > 0 ? remainingTeeth.length / beforeCount : 1;
           const nextCas = Math.round((item.cas * ratio) * 100) / 100;
 
@@ -198,7 +250,10 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
       );
     };
 
-    loadCompletedTeeth();
+    // Don't run on initial mount or when initialPlan is being loaded
+    if (!initialPlan) {
+      applyCompletedTeethFilter();
+    }
   }, [selectedPatientId]);
 
   const { loading, saveTreatmentPlan } = useTreatmentPlans();
