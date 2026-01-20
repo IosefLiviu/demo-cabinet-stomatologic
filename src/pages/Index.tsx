@@ -624,7 +624,7 @@ onPlanSaved={() => {
           });
           setActiveTab('treatment-plan');
         }}
-        onCreateAppointment={(patient, treatmentName) => {
+        onCreateAppointment={(patient, treatmentName, interventions, doctorId) => {
           setSelectedPatient(null);
           setEditingAppointmentData({
             id: '',
@@ -632,11 +632,16 @@ onPlanSaved={() => {
             patientName: `${patient.first_name} ${patient.last_name}`,
             patientPhone: patient.phone,
             cabinetId: selectedCabinet || cabinets[0]?.id || 1,
+            doctorId: doctorId || '',
             time: '',
-            duration: 30,
+            duration: interventions ? interventions.reduce((sum, i) => sum + i.duration, 0) : 30,
             treatmentName: treatmentName || '',
             notes: treatmentName ? `Plan tratament: ${treatmentName}` : '',
           });
+          // Set existing interventions from treatment plan
+          if (interventions && interventions.length > 0) {
+            setExistingInterventions(interventions);
+          }
           setShowAppointmentForm(true);
         }}
       />
