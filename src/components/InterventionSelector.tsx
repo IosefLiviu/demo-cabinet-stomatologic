@@ -37,6 +37,7 @@ export interface SelectedIntervention {
   cas: number;
   laborator: number;
   duration: number;
+  discountPercent: number;
   selectedTeeth: number[];
   teethDetails?: ToothSelection[];
 }
@@ -113,7 +114,12 @@ export function InterventionSelector({
   const totalLaborator = interventions.reduce((sum, i) => sum + (i.laborator || 0), 0);
   const totalPret = totalPretInitial - totalLaborator;
   const totalCas = interventions.reduce((sum, i) => sum + i.cas, 0);
-  const totalDePlata = totalPretInitial - totalCas;
+  // Calculate De Plată with discount: (price - cas) * (1 - discount%)
+  const totalDePlata = interventions.reduce((sum, i) => {
+    const priceAfterCas = i.price - i.cas;
+    const discountAmount = priceAfterCas * ((i.discountPercent || 0) / 100);
+    return sum + (priceAfterCas - discountAmount);
+  }, 0);
   const totalDuration = interventions.reduce((sum, i) => sum + i.duration, 0) || 30;
 
   const handleAddTreatment = (treatment: Treatment) => {
@@ -125,6 +131,7 @@ export function InterventionSelector({
       cas: 0,
       laborator: 0,
       duration: treatment.default_duration || 30,
+      discountPercent: 0,
       selectedTeeth: [],
       teethDetails: [],
     };
@@ -138,7 +145,7 @@ export function InterventionSelector({
 
   const handleUpdateIntervention = (
     interventionId: string,
-    field: 'price' | 'cas' | 'duration' | 'laborator',
+    field: 'price' | 'cas' | 'duration' | 'laborator' | 'discountPercent',
     value: number
   ) => {
     onInterventionsChange(
@@ -325,7 +332,7 @@ export function InterventionSelector({
               <CollapsibleContent>
                 <div className="p-3 space-y-4 border-t">
                   {/* Duration and Prices Row */}
-                  <div className="grid grid-cols-6 gap-2">
+                  <div className="grid grid-cols-7 gap-2">
                     <div className="space-y-1">
                       <Label className="text-xs text-blue-600">Durată (min)</Label>
                       <Input
@@ -384,10 +391,27 @@ export function InterventionSelector({
                       />
                     </div>
                     <div className="space-y-1">
+                      <Label className="text-xs text-pink-600">Discount %</Label>
+                      <Input
+                        type="number"
+                        value={intervention.discountPercent || 0}
+                        onChange={(e) =>
+                          handleUpdateIntervention(intervention.id, 'discountPercent', Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))
+                        }
+                        className="h-8"
+                        min={0}
+                        max={100}
+                      />
+                    </div>
+                    <div className="space-y-1">
                       <Label className="text-xs text-orange-600">De plată</Label>
                       <Input
                         type="number"
-                        value={intervention.price - intervention.cas}
+                        value={(() => {
+                          const priceAfterCas = intervention.price - intervention.cas;
+                          const discountAmount = priceAfterCas * ((intervention.discountPercent || 0) / 100);
+                          return (priceAfterCas - discountAmount).toFixed(0);
+                        })()}
                         readOnly
                         disabled
                         className="h-8 bg-muted"

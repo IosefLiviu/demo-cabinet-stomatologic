@@ -182,6 +182,7 @@ export function AppointmentForm({
               cas: 0,
               laborator: 0,
               duration: editingAppointment.duration || treatment.default_duration || 30,
+              discountPercent: 0,
               selectedTeeth: [],
             }]);
           } else {
