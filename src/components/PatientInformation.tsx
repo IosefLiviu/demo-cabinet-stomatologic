@@ -1,11 +1,12 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { format, parseISO, isSameDay } from 'date-fns';
+import { format, parseISO, isSameDay, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import { Printer, Search, User, CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { DateRange } from 'react-day-picker';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Command,
@@ -64,22 +65,27 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
   const [patientOpen, setPatientOpen] = useState(false);
   const [treatmentRecords, setTreatmentRecords] = useState<EditableTreatmentRecord[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: new Date()
+  });
   const [dateOpen, setDateOpen] = useState(false);
 
   const selectedPatient = patients.find(p => p.id === selectedPatientId);
 
-  // Fetch treatment records for selected patient and date
+  // Fetch treatment records for selected patient and date range
   useEffect(() => {
     const fetchTreatmentRecords = async () => {
-      if (!selectedPatientId) {
+      if (!selectedPatientId || !dateRange?.from) {
         setTreatmentRecords([]);
         return;
       }
 
       setLoading(true);
       try {
-        const dateStr = format(selectedDate, 'yyyy-MM-dd');
+        const fromDateStr = format(dateRange.from, 'yyyy-MM-dd');
+        const toDateStr = format(dateRange.to || dateRange.from, 'yyyy-MM-dd');
+        
         const { data, error } = await supabase
           .from('treatment_records')
           .select(`
@@ -101,8 +107,8 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
             )
           `)
           .eq('patient_id', selectedPatientId)
-          .gte('performed_at', `${dateStr}T00:00:00`)
-          .lte('performed_at', `${dateStr}T23:59:59`)
+          .gte('performed_at', `${fromDateStr}T00:00:00`)
+          .lte('performed_at', `${toDateStr}T23:59:59`)
           .order('performed_at', { ascending: false });
 
         if (error) throw error;
@@ -120,7 +126,7 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
     };
 
     fetchTreatmentRecords();
-  }, [selectedPatientId, selectedDate]);
+  }, [selectedPatientId, dateRange]);
 
   // Handle price change
   const handlePriceChange = (recordId: string, newPrice: number) => {
@@ -399,9 +405,9 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
             </Popover>
           </div>
 
-          {/* Date Selection */}
+          {/* Date Range Selection */}
           <div className="space-y-2">
-            <Label>Selectează Data</Label>
+            <Label>Selectează Interval de Date</Label>
             <Popover open={dateOpen} onOpenChange={setDateOpen}>
               <PopoverTrigger asChild>
                 <Button
@@ -409,20 +415,28 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
                   className="w-full justify-start text-left font-normal"
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {format(selectedDate, 'dd MMMM yyyy', { locale: ro })}
+                  {dateRange?.from ? (
+                    dateRange.to && dateRange.from.getTime() !== dateRange.to.getTime() ? (
+                      <>
+                        {format(dateRange.from, 'dd MMM yyyy', { locale: ro })} -{' '}
+                        {format(dateRange.to, 'dd MMM yyyy', { locale: ro })}
+                      </>
+                    ) : (
+                      format(dateRange.from, 'dd MMMM yyyy', { locale: ro })
+                    )
+                  ) : (
+                    <span>Selectează interval</span>
+                  )}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => {
-                    if (date) {
-                      setSelectedDate(date);
-                      setDateOpen(false);
-                    }
-                  }}
+                  mode="range"
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  numberOfMonths={2}
                   initialFocus
+                  className="pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>
@@ -487,7 +501,15 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
                 </div>
               ) : (
                 <div className="text-center py-4 text-muted-foreground">
-                  Nu există intervenții pentru data selectată ({format(selectedDate, 'dd.MM.yyyy')}).
+                  Nu există intervenții pentru intervalul selectat
+                  {dateRange?.from && (
+                    <>
+                      {' '}({format(dateRange.from, 'dd.MM.yyyy')}
+                      {dateRange.to && dateRange.from.getTime() !== dateRange.to.getTime() && (
+                        <> - {format(dateRange.to, 'dd.MM.yyyy')}</>
+                      )})
+                    </>
+                  )}.
                 </div>
               )}
 
@@ -552,7 +574,12 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
               </div>
 
               <div className="section-title">Intervenții realizate</div>
-              <div className="date-label">({format(selectedDate, 'dd MMM yyyy', { locale: ro })})</div>
+              <div className="date-label">
+                ({dateRange?.from && format(dateRange.from, 'dd MMM yyyy', { locale: ro })}
+                {dateRange?.to && dateRange.from && dateRange.from.getTime() !== dateRange.to.getTime() && (
+                  <> - {format(dateRange.to, 'dd MMM yyyy', { locale: ro })}</>
+                )})
+              </div>
 
               <table>
                 <thead>
