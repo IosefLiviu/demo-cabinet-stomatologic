@@ -48,6 +48,7 @@ const Index = () => {
   const [editingPatient, setEditingPatient] = useState<Patient | undefined>();
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [treatmentPlanPatientId, setTreatmentPlanPatientId] = useState<string | undefined>();
+  const [editingTreatmentPlan, setEditingTreatmentPlan] = useState<any>(undefined);
 
   // Appointment form state
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);
@@ -550,6 +551,8 @@ const Index = () => {
               treatments={treatments}
               doctors={doctors}
               initialPatientId={treatmentPlanPatientId}
+              initialPlan={editingTreatmentPlan}
+              onPlanSaved={() => setEditingTreatmentPlan(undefined)}
             />
           </TabsContent>
 
@@ -596,6 +599,26 @@ const Index = () => {
         onEdit={handleEditPatient}
         onOpenTreatmentPlan={(patient) => {
           setTreatmentPlanPatientId(patient.id);
+          setEditingTreatmentPlan(undefined);
+          setActiveTab('treatment-plan');
+        }}
+        onEditTreatmentPlan={(patient, plan) => {
+          setTreatmentPlanPatientId(patient.id);
+          setEditingTreatmentPlan({
+            id: plan.id,
+            patientId: plan.patientId,
+            doctorId: plan.doctorId,
+            nextAppointmentDate: plan.nextAppointmentDate,
+            nextAppointmentTime: plan.nextAppointmentTime,
+            discountPercent: plan.discountPercent,
+            items: plan.items.map(item => ({
+              treatmentId: item.treatmentId,
+              treatmentName: item.treatmentName,
+              toothNumbers: item.toothNumbers || [],
+              doctorId: item.doctorId,
+              unitPrice: item.price,
+            })),
+          });
           setActiveTab('treatment-plan');
         }}
         onCreateAppointment={(patient, treatmentName) => {

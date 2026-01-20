@@ -87,12 +87,13 @@ interface PatientDetailsProps {
   onClose: () => void;
   onEdit: (patient: Patient) => void;
   onOpenTreatmentPlan?: (patient: Patient) => void;
+  onEditTreatmentPlan?: (patient: Patient, plan: TreatmentPlan) => void;
   onCreateAppointment?: (patient: Patient, treatmentName?: string) => void;
 }
 
 type PeriodFilter = 'all' | '30days' | '3months' | '1year';
 
-export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatmentPlan, onCreateAppointment }: PatientDetailsProps) {
+export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatmentPlan, onEditTreatmentPlan, onCreateAppointment }: PatientDetailsProps) {
   const [treatmentHistory, setTreatmentHistory] = useState<TreatmentRecord[]>([]);
   const [dentalStatus, setDentalStatus] = useState<ToothData[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
@@ -1066,6 +1067,20 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                                 >
                                   <CalendarPlus className="h-3 w-3" />
                                   Programare
+                                </Button>
+                              )}
+                              {onEditTreatmentPlan && patient && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    onClose();
+                                    onEditTreatmentPlan(patient, plan);
+                                  }}
+                                  className="gap-1"
+                                >
+                                  <Edit className="h-3 w-3" />
+                                  Editează
                                 </Button>
                               )}
                               <Button
