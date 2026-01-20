@@ -167,10 +167,20 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
   };
 
   const handlePrintPlan = (plan: TreatmentPlan) => {
-    const total = plan.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const discountPercent = plan.discountPercent || 0;
+    const subtotal = plan.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const discountAmount = subtotal * (discountPercent / 100);
+    const total = subtotal - discountAmount;
     
-    // Collect all selected teeth from the plan
-    const selectedTeeth = new Set(plan.items.map(item => item.toothNumber).filter(Boolean));
+    // Collect all selected teeth from the plan - use toothNumbers array if available
+    const selectedTeeth = new Set<number>();
+    plan.items.forEach(item => {
+      if (item.toothNumbers && item.toothNumbers.length > 0) {
+        item.toothNumbers.forEach(t => selectedTeeth.add(t));
+      } else if (item.toothNumber) {
+        selectedTeeth.add(item.toothNumber);
+      }
+    });
     
     const renderTooth = (tooth: number) => {
       const isSelected = selectedTeeth.has(tooth);
@@ -210,6 +220,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
             th, td { border: 1px solid #b8860b; padding: 6px; text-align: left; }
             th { background: linear-gradient(to bottom, #b8860b, #9a7209); color: #fff; }
             .total { font-weight: bold; text-align: right; margin-top: 10px; font-size: 14px; color: #b8860b; }
+            .discount-info { text-align: right; font-size: 12px; color: #666; }
             .clinic-contact { text-align: right; font-size: 11px; color: #b8860b; }
             .clinic-contact p { margin: 2px 0; }
             @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
@@ -256,24 +267,34 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
             <table>
               <thead>
                 <tr>
-                  <th>Dinte</th>
+                  <th>Dinți</th>
                   <th>Tratament</th>
                   <th>Cant.</th>
                   <th>Preț</th>
                 </tr>
               </thead>
               <tbody>
-                ${plan.items.map(item => `
+                ${plan.items.map(item => {
+                  const teethDisplay = item.toothNumbers && item.toothNumbers.length > 0 
+                    ? item.toothNumbers.join(', ') 
+                    : (item.toothNumber || '-');
+                  return `
                   <tr>
-                    <td>${item.toothNumber || '-'}</td>
+                    <td>${teethDisplay}</td>
                     <td>${item.treatmentName}</td>
                     <td style="text-align: center">${item.quantity}</td>
-                    <td style="text-align: right">${item.price} RON</td>
+                    <td style="text-align: right">${(item.price * item.quantity).toFixed(0)} RON</td>
                   </tr>
-                `).join('')}
+                `}).join('')}
               </tbody>
             </table>
           </div>
+          ${discountPercent > 0 ? `
+            <div class="discount-info">
+              <p>Subtotal: ${subtotal.toFixed(2)} LEI</p>
+              <p>Discount (${discountPercent}%): -${discountAmount.toFixed(2)} LEI</p>
+            </div>
+          ` : ''}
           <div class="total">TOTAL: ${total.toFixed(2)} LEI</div>
           
           <div style="margin-top: 30px; padding-top: 10px; border-top: 2px solid #b8860b;">

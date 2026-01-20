@@ -172,6 +172,7 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId 
       treatmentId: item.treatmentId,
       treatmentName: item.treatmentName,
       toothNumber: item.toothNumbers.length > 0 ? item.toothNumbers[0] : null,
+      toothNumbers: item.toothNumbers,
       doctorId: item.doctorId,
       quantity: item.toothNumbers.length > 0 ? item.toothNumbers.length : 1,
       price: item.unitPrice,
@@ -182,7 +183,9 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId 
       selectedDoctorId || undefined,
       nextAppointmentDate || undefined,
       nextAppointmentTime || undefined,
-      itemsToSave
+      itemsToSave,
+      undefined,
+      discountPercent
     );
 
     if (savedPlanId) {

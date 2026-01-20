@@ -682,6 +682,7 @@ export type Database = {
           quantity: number | null
           sort_order: number | null
           tooth_number: number | null
+          tooth_numbers: number[] | null
           treatment_id: string | null
           treatment_name: string
           treatment_plan_id: string
@@ -694,6 +695,7 @@ export type Database = {
           quantity?: number | null
           sort_order?: number | null
           tooth_number?: number | null
+          tooth_numbers?: number[] | null
           treatment_id?: string | null
           treatment_name: string
           treatment_plan_id: string
@@ -706,6 +708,7 @@ export type Database = {
           quantity?: number | null
           sort_order?: number | null
           tooth_number?: number | null
+          tooth_numbers?: number[] | null
           treatment_id?: string | null
           treatment_name?: string
           treatment_plan_id?: string
@@ -737,6 +740,7 @@ export type Database = {
       treatment_plans: {
         Row: {
           created_at: string
+          discount_percent: number | null
           doctor_id: string | null
           id: string
           next_appointment_date: string | null
@@ -747,6 +751,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          discount_percent?: number | null
           doctor_id?: string | null
           id?: string
           next_appointment_date?: string | null
@@ -757,6 +762,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          discount_percent?: number | null
           doctor_id?: string | null
           id?: string
           next_appointment_date?: string | null
