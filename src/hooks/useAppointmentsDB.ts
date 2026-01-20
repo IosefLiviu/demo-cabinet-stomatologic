@@ -355,11 +355,10 @@ export function useAppointmentsDB() {
       
       // First get the appointment with its treatments
       const appointment = appointments.find(a => a.id === id);
-      const totalPrice = appointment?.price || 0;
       
       // Determine paid amount
-      const actualPaidAmount = isPartial ? (paidAmount || 0) : 
-                               paymentMethod === 'unpaid' ? 0 : totalPrice;
+      // paidAmount is now passed from the dialog (which calculates price - CAS for full payments)
+      const actualPaidAmount = paymentMethod === 'unpaid' ? 0 : (paidAmount || 0);
       
       // Format payment method label
       const getPaymentLabel = () => {
