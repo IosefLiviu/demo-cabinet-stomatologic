@@ -679,12 +679,16 @@ export type Database = {
       treatment_plan_items: {
         Row: {
           cas: number | null
+          completed_appointment_id: string | null
+          completed_at: string | null
           created_at: string
           discount_percent: number | null
           doctor_id: string | null
           duration: number | null
           id: string
           laborator: number | null
+          paid_amount: number | null
+          payment_status: string | null
           price: number | null
           quantity: number | null
           sort_order: number | null
@@ -696,12 +700,16 @@ export type Database = {
         }
         Insert: {
           cas?: number | null
+          completed_appointment_id?: string | null
+          completed_at?: string | null
           created_at?: string
           discount_percent?: number | null
           doctor_id?: string | null
           duration?: number | null
           id?: string
           laborator?: number | null
+          paid_amount?: number | null
+          payment_status?: string | null
           price?: number | null
           quantity?: number | null
           sort_order?: number | null
@@ -713,12 +721,16 @@ export type Database = {
         }
         Update: {
           cas?: number | null
+          completed_appointment_id?: string | null
+          completed_at?: string | null
           created_at?: string
           discount_percent?: number | null
           doctor_id?: string | null
           duration?: number | null
           id?: string
           laborator?: number | null
+          paid_amount?: number | null
+          payment_status?: string | null
           price?: number | null
           quantity?: number | null
           sort_order?: number | null
@@ -729,6 +741,13 @@ export type Database = {
           treatment_plan_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "treatment_plan_items_completed_appointment_id_fkey"
+            columns: ["completed_appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "treatment_plan_items_doctor_id_fkey"
             columns: ["doctor_id"]

@@ -16,6 +16,11 @@ export interface TreatmentPlanItem {
   cas?: number;
   discountPercent?: number;
   sortOrder?: number;
+  // Completion tracking
+  completedAt?: string;
+  paymentStatus?: string;
+  paidAmount?: number;
+  completedAppointmentId?: string;
 }
 
 export interface TreatmentPlan {
@@ -73,6 +78,11 @@ export function useTreatmentPlans() {
           cas: item.cas || 0,
           discountPercent: item.discount_percent || 0,
           sortOrder: item.sort_order || 0,
+          // Completion tracking
+          completedAt: item.completed_at || undefined,
+          paymentStatus: item.payment_status || undefined,
+          paidAmount: item.paid_amount || 0,
+          completedAppointmentId: item.completed_appointment_id || undefined,
         })),
       }));
     } catch (error: any) {
@@ -213,10 +223,38 @@ export function useTreatmentPlans() {
     }
   };
 
+  const markItemsAsCompleted = async (
+    itemIds: string[],
+    appointmentId: string,
+    paymentStatus: string,
+    paidAmount: number
+  ): Promise<boolean> => {
+    if (itemIds.length === 0) return true;
+    
+    try {
+      const { error } = await supabase
+        .from('treatment_plan_items')
+        .update({
+          completed_at: new Date().toISOString(),
+          payment_status: paymentStatus,
+          paid_amount: paidAmount,
+          completed_appointment_id: appointmentId,
+        })
+        .in('id', itemIds);
+
+      if (error) throw error;
+      return true;
+    } catch (error: any) {
+      console.error('Error marking plan items as completed:', error);
+      return false;
+    }
+  };
+
   return {
     loading,
     fetchPatientTreatmentPlans,
     saveTreatmentPlan,
     deleteTreatmentPlan,
+    markItemsAsCompleted,
   };
 }
