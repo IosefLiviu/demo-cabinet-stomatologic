@@ -67,6 +67,7 @@ export interface SelectedTreatment {
   discountPercent?: number;
   selectedTeeth?: number[];
   teethDetails?: ToothDetail[];
+  planItemId?: string; // Link to treatment plan item for tracking completion
 }
 
 export interface AppointmentFormData {
@@ -334,6 +335,7 @@ export function AppointmentForm({
         status: td.status,
         notes: td.notes,
       })),
+      planItemId: i.planItemId, // Include link to treatment plan item
     }));
 
     const firstTreatment = selectedTreatments[0];
