@@ -1033,21 +1033,59 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                                     <th className="px-3 py-2 text-left font-medium">Tratament</th>
                                     <th className="px-3 py-2 text-center font-medium">Cant.</th>
                                     <th className="px-3 py-2 text-right font-medium">Preț</th>
+                                    <th className="px-3 py-2 text-center font-medium">Status</th>
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {plan.items.map((item, idx) => (
-                                    <tr key={item.id || idx} className="border-t">
-                                      <td className="px-3 py-2">{item.toothNumber || '-'}</td>
-                                      <td className="px-3 py-2">{item.treatmentName}</td>
-                                      <td className="px-3 py-2 text-center">{item.quantity}</td>
-                                      <td className="px-3 py-2 text-right">{item.price} RON</td>
-                                    </tr>
-                                  ))}
+                                  {plan.items.map((item, idx) => {
+                                    const isCompleted = !!item.completedAt;
+                                    const paymentStatus = item.paymentStatus || 'neachitat';
+                                    
+                                    return (
+                                      <tr 
+                                        key={item.id || idx} 
+                                        className={`border-t ${isCompleted ? 'bg-green-50 dark:bg-green-950/30' : ''}`}
+                                      >
+                                        <td className={`px-3 py-2 ${isCompleted ? 'text-green-700 dark:text-green-400' : ''}`}>
+                                          {item.toothNumber || (item.toothNumbers?.join(', ')) || '-'}
+                                        </td>
+                                        <td className={`px-3 py-2 ${isCompleted ? 'text-green-700 dark:text-green-400' : ''}`}>
+                                          {item.treatmentName}
+                                          {isCompleted && <span className="ml-2">✓</span>}
+                                        </td>
+                                        <td className={`px-3 py-2 text-center ${isCompleted ? 'text-green-700 dark:text-green-400' : ''}`}>
+                                          {item.quantity}
+                                        </td>
+                                        <td className={`px-3 py-2 text-right ${isCompleted ? 'text-green-700 dark:text-green-400' : ''}`}>
+                                          {item.price} RON
+                                        </td>
+                                        <td className="px-3 py-2 text-center">
+                                          {isCompleted ? (
+                                            <Badge 
+                                              variant="outline"
+                                              className={
+                                                paymentStatus === 'achitat' 
+                                                  ? 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/50 dark:text-green-400 dark:border-green-700' 
+                                                  : paymentStatus === 'partial' 
+                                                    ? 'bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-900/50 dark:text-yellow-400 dark:border-yellow-700'
+                                                    : 'bg-red-100 text-red-700 border-red-300 dark:bg-red-900/50 dark:text-red-400 dark:border-red-700'
+                                              }
+                                            >
+                                              {paymentStatus === 'achitat' ? 'Achitat' : paymentStatus === 'partial' ? `Parțial (${item.paidAmount || 0})` : 'Neachitat'}
+                                            </Badge>
+                                          ) : (
+                                            <Badge variant="outline" className="text-muted-foreground">
+                                              În așteptare
+                                            </Badge>
+                                          )}
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
                                 </tbody>
                                 <tfoot>
                                   <tr className="border-t bg-muted/30">
-                                    <td colSpan={3} className="px-3 py-2 text-right font-medium">Total:</td>
+                                    <td colSpan={4} className="px-3 py-2 text-right font-medium">Total:</td>
                                     <td className="px-3 py-2 text-right font-bold">{total.toFixed(0)} RON</td>
                                   </tr>
                                 </tfoot>
