@@ -341,32 +341,29 @@ export default function Admin() {
 
   const handleDeleteUser = async (userId: string) => {
     try {
-      // Delete user role first
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', userId);
+      // Call edge function to delete user completely (including auth.users)
+      const response = await supabase.functions.invoke('delete-user', {
+        body: { userId },
+      });
 
-      if (roleError) throw roleError;
+      if (response.error) {
+        throw new Error(response.error.message || 'Eroare la ștergerea utilizatorului');
+      }
 
-      // Delete user profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('user_id', userId);
-
-      if (profileError) throw profileError;
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
 
       toast({ 
         title: 'Succes', 
-        description: 'Utilizatorul a fost șters' 
+        description: 'Utilizatorul a fost șters complet din sistem' 
       });
       fetchUsers();
     } catch (error: any) {
       console.error('Error deleting user:', error);
       toast({
         title: 'Eroare',
-        description: 'Nu s-a putut șterge utilizatorul',
+        description: error.message || 'Nu s-a putut șterge utilizatorul',
         variant: 'destructive',
       });
     }
