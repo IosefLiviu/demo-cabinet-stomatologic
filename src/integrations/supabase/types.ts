@@ -20,6 +20,7 @@ export type Database = {
           co_plata: number | null
           created_at: string
           decont: number | null
+          discount_percent: number | null
           duration: number | null
           id: string
           laborator: number | null
@@ -34,6 +35,7 @@ export type Database = {
           co_plata?: number | null
           created_at?: string
           decont?: number | null
+          discount_percent?: number | null
           duration?: number | null
           id?: string
           laborator?: number | null
@@ -48,6 +50,7 @@ export type Database = {
           co_plata?: number | null
           created_at?: string
           decont?: number | null
+          discount_percent?: number | null
           duration?: number | null
           id?: string
           laborator?: number | null

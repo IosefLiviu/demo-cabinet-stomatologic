@@ -18,6 +18,7 @@ export interface AppointmentTreatment {
   co_plata: number;
   laborator: number;
   duration: number;
+  discount_percent: number;
   tooth_numbers: number[];
   tooth_data?: ToothDataEntry[];
 }
@@ -90,6 +91,7 @@ export type AppointmentTreatmentInsert = {
   co_plata: number;
   laborator: number;
   duration: number;
+  discount_percent?: number;
   tooth_numbers: number[];
   tooth_data?: ToothDataItem[];
 };
@@ -295,6 +297,7 @@ export function useAppointmentsDB() {
           co_plata: t.co_plata,
           laborator: t.laborator || 0,
           duration: t.duration,
+          discount_percent: t.discount_percent || 0,
           tooth_numbers: t.tooth_numbers,
           tooth_data: t.tooth_data ? JSON.parse(JSON.stringify(t.tooth_data)) : [],
         }));
@@ -335,6 +338,7 @@ export function useAppointmentsDB() {
         co_plata: Number(t.co_plata) || 0,
         laborator: Number(t.laborator) || 0,
         duration: t.duration || 30,
+        discount_percent: Number(t.discount_percent) || 0,
         tooth_numbers: t.tooth_numbers || [],
         tooth_data: (t.tooth_data as unknown as ToothDataEntry[]) || [],
       }));
