@@ -257,6 +257,7 @@ export type Database = {
           name: string
           specialization: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           color?: string
@@ -266,6 +267,7 @@ export type Database = {
           name: string
           specialization?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           color?: string
@@ -275,6 +277,7 @@ export type Database = {
           name?: string
           specialization?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }

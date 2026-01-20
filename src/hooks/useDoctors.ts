@@ -8,6 +8,7 @@ export interface Doctor {
   color: string;
   specialization?: string;
   is_active: boolean;
+  user_id?: string | null;
 }
 
 export function useDoctors() {

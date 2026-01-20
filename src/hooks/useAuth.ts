@@ -8,6 +8,7 @@ export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [doctorId, setDoctorId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -21,9 +22,11 @@ export function useAuth() {
         if (session?.user) {
           setTimeout(() => {
             checkAdminRole(session.user.id);
+            checkDoctorAssociation(session.user.id);
           }, 0);
         } else {
           setIsAdmin(false);
+          setDoctorId(null);
         }
       }
     );
@@ -35,6 +38,7 @@ export function useAuth() {
       
       if (session?.user) {
         checkAdminRole(session.user.id);
+        checkDoctorAssociation(session.user.id);
       }
       setLoading(false);
     });
@@ -56,6 +60,22 @@ export function useAuth() {
     } catch (error) {
       console.error('Error checking admin role:', error);
       setIsAdmin(false);
+    }
+  };
+
+  const checkDoctorAssociation = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('doctors')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) throw error;
+      setDoctorId(data?.id || null);
+    } catch (error) {
+      console.error('Error checking doctor association:', error);
+      setDoctorId(null);
     }
   };
 
@@ -125,6 +145,7 @@ export function useAuth() {
     setUser(null);
     setSession(null);
     setIsAdmin(false);
+    setDoctorId(null);
     return { error: null };
   };
 
@@ -133,6 +154,7 @@ export function useAuth() {
     session,
     loading,
     isAdmin,
+    doctorId,
     signUp,
     signIn,
     signOut,

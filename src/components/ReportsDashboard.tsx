@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChart, UserCircle, Filter, Download, FlaskConical, ClipboardList } from 'lucide-react';
@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { AppointmentDB } from '@/hooks/useAppointmentsDB';
 import { Tooltip } from 'recharts';
 import { useDoctors } from '@/hooks/useDoctors';
+import { useAuth } from '@/hooks/useAuth';
 import * as XLSX from 'xlsx';
 
 interface ReportsDashboardProps {
@@ -25,12 +26,20 @@ const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
 export function ReportsDashboard({ appointments, loading, onFetchRange }: ReportsDashboardProps) {
   const { doctors } = useDoctors();
+  const { isAdmin, doctorId } = useAuth();
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
     from: startOfMonth(new Date()),
     to: endOfMonth(new Date()),
   });
   const [period, setPeriod] = useState<'week' | 'month' | 'custom'>('month');
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>('all');
+
+  // Set initial doctor filter based on user role
+  useEffect(() => {
+    if (!isAdmin && doctorId) {
+      setSelectedDoctorId(doctorId);
+    }
+  }, [isAdmin, doctorId]);
 
   // Filter appointments by selected doctor
   const filteredAppointments = useMemo(() => {
@@ -492,25 +501,34 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
             {/* Doctor Filter */}
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-muted-foreground" />
-              <Select value={selectedDoctorId} onValueChange={setSelectedDoctorId}>
+              <Select 
+                value={selectedDoctorId} 
+                onValueChange={setSelectedDoctorId}
+                disabled={!isAdmin && !!doctorId}
+              >
                 <SelectTrigger className="w-[200px]">
                   <SelectValue placeholder="Toți doctorii" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toți doctorii</SelectItem>
-                  {doctors.map((doctor) => (
-                    <SelectItem key={doctor.id} value={doctor.id}>
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-2 h-2 rounded-full" 
-                          style={{ backgroundColor: doctor.color }}
-                        />
-                        {doctor.name}
-                      </div>
-                    </SelectItem>
-                  ))}
+                  {isAdmin && <SelectItem value="all">Toți doctorii</SelectItem>}
+                  {doctors
+                    .filter(doctor => isAdmin || doctor.id === doctorId)
+                    .map((doctor) => (
+                      <SelectItem key={doctor.id} value={doctor.id}>
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-2 h-2 rounded-full" 
+                            style={{ backgroundColor: doctor.color }}
+                          />
+                          {doctor.name}
+                        </div>
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
+              {!isAdmin && doctorId && (
+                <span className="text-xs text-muted-foreground">(doar datele tale)</span>
+              )}
             </div>
 
             {/* Export Button */}
