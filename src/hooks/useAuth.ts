@@ -92,7 +92,9 @@ export function useAuth() {
         .maybeSingle();
 
       if (error) throw error;
-      setMustChangePassword(data?.must_change_password ?? false);
+
+      // Treat NULL as TRUE to enforce policy for older accounts
+      setMustChangePassword(data?.must_change_password !== false);
     } catch (error) {
       console.error('Error checking password change requirement:', error);
       setMustChangePassword(false);
