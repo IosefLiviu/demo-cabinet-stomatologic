@@ -21,6 +21,7 @@ export interface AppointmentTreatment {
   discount_percent: number;
   tooth_numbers: number[];
   tooth_data?: ToothDataEntry[];
+  plan_item_id?: string; // Link to treatment plan item
 }
 
 export interface AppointmentDB {
@@ -94,6 +95,7 @@ export type AppointmentTreatmentInsert = {
   discount_percent?: number;
   tooth_numbers: number[];
   tooth_data?: ToothDataItem[];
+  plan_item_id?: string; // Link to treatment plan item
 };
 
 export function useAppointmentsDB() {
@@ -300,6 +302,7 @@ export function useAppointmentsDB() {
           discount_percent: t.discount_percent || 0,
           tooth_numbers: t.tooth_numbers,
           tooth_data: t.tooth_data ? JSON.parse(JSON.stringify(t.tooth_data)) : [],
+          plan_item_id: t.plan_item_id || null,
         }));
 
         const { error } = await supabase
@@ -341,6 +344,7 @@ export function useAppointmentsDB() {
         discount_percent: Number(t.discount_percent) || 0,
         tooth_numbers: t.tooth_numbers || [],
         tooth_data: (t.tooth_data as unknown as ToothDataEntry[]) || [],
+        plan_item_id: t.plan_item_id || undefined,
       }));
     } catch (error: any) {
       console.error('Error fetching appointment treatments:', error);
@@ -391,7 +395,7 @@ export function useAppointmentsDB() {
           patients (id, first_name, last_name, phone, allergies),
           treatments (id, name, default_duration),
           doctors (id, name, color),
-          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, laborator, duration, discount_percent, tooth_numbers, tooth_data)
+          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, laborator, duration, discount_percent, tooth_numbers, tooth_data, plan_item_id)
         `)
         .single();
 
@@ -420,6 +424,31 @@ export function useAppointmentsDB() {
         if (recordsError) {
           console.error('Error saving treatment records:', recordsError);
           // Don't throw - the appointment was completed, just log the error
+        }
+
+        // Mark treatment plan items as completed
+        const planItemIds = completedAppointment.appointment_treatments
+          .filter(t => t.plan_item_id)
+          .map(t => t.plan_item_id as string);
+        
+        if (planItemIds.length > 0) {
+          // Collect unique plan item IDs
+          const uniquePlanItemIds = [...new Set(planItemIds)];
+          
+          // Update each plan item with completion status
+          const { error: planUpdateError } = await supabase
+            .from('treatment_plan_items')
+            .update({
+              completed_at: new Date().toISOString(),
+              payment_status: paymentMethod,
+              paid_amount: actualPaidAmount,
+              completed_appointment_id: id,
+            })
+            .in('id', uniquePlanItemIds);
+
+          if (planUpdateError) {
+            console.error('Error marking plan items as completed:', planUpdateError);
+          }
         }
 
         // Deduct CAS discount from monthly budget
