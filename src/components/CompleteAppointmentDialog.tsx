@@ -162,7 +162,7 @@ export function CompleteAppointmentDialog({
                   <div className="flex items-center gap-2 text-sm">
                     <span className="text-muted-foreground">Preț total:</span>
                     <span className="line-through text-muted-foreground">{totalPrice.toLocaleString()} RON</span>
-                    <span className="text-green-600 font-medium">(-{(totalPrice - amountToPay).toLocaleString()} CAS)</span>
+                    <span className="text-green-600 font-medium">(-{(totalPrice - amountToPay).toLocaleString()} reducere/decont)</span>
                   </div>
                 )}
                 <span className="block text-lg font-semibold text-foreground">
