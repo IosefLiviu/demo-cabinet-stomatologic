@@ -24,6 +24,7 @@ export type Database = {
           duration: number | null
           id: string
           laborator: number | null
+          plan_item_id: string | null
           price: number | null
           tooth_data: Json | null
           tooth_numbers: number[] | null
@@ -39,6 +40,7 @@ export type Database = {
           duration?: number | null
           id?: string
           laborator?: number | null
+          plan_item_id?: string | null
           price?: number | null
           tooth_data?: Json | null
           tooth_numbers?: number[] | null
@@ -54,6 +56,7 @@ export type Database = {
           duration?: number | null
           id?: string
           laborator?: number | null
+          plan_item_id?: string | null
           price?: number | null
           tooth_data?: Json | null
           tooth_numbers?: number[] | null
@@ -66,6 +69,13 @@ export type Database = {
             columns: ["appointment_id"]
             isOneToOne: false
             referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_treatments_plan_item_id_fkey"
+            columns: ["plan_item_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_plan_items"
             referencedColumns: ["id"]
           },
           {
