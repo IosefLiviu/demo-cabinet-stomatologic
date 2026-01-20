@@ -1068,10 +1068,10 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                                       treatmentId: item.treatmentId || '',
                                       treatmentName: item.treatmentName,
                                       price: item.price * item.quantity,
-                                      cas: 0,
-                                      laborator: 0,
-                                      duration: 30,
-                                      discountPercent: plan.discountPercent || 0,
+                                      cas: (item.cas || 0) * item.quantity,
+                                      laborator: (item.laborator || 0) * item.quantity,
+                                      duration: item.duration || 30,
+                                      discountPercent: item.discountPercent || plan.discountPercent || 0,
                                       selectedTeeth: item.toothNumbers || [],
                                     }));
                                     onClose();
