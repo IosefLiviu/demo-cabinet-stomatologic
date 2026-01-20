@@ -23,6 +23,7 @@ import {
   Printer,
   Trash2,
   FileImage,
+  Plus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -84,11 +85,12 @@ interface PatientDetailsProps {
   open: boolean;
   onClose: () => void;
   onEdit: (patient: Patient) => void;
+  onOpenTreatmentPlan?: (patient: Patient) => void;
 }
 
 type PeriodFilter = 'all' | '30days' | '3months' | '1year';
 
-export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetailsProps) {
+export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatmentPlan }: PatientDetailsProps) {
   const [treatmentHistory, setTreatmentHistory] = useState<TreatmentRecord[]>([]);
   const [dentalStatus, setDentalStatus] = useState<ToothData[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
@@ -891,6 +893,22 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
 
           {/* Treatment Plans Tab */}
           <TabsContent value="plans" className="mt-6">
+            {/* Add Treatment Plan Button */}
+            {onOpenTreatmentPlan && patient && (
+              <div className="mb-4">
+                <Button
+                  onClick={() => {
+                    onClose();
+                    onOpenTreatmentPlan(patient);
+                  }}
+                  className="gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Creează plan de tratament
+                </Button>
+              </div>
+            )}
+
             {loadingPlans ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -899,7 +917,7 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
               <div className="text-center py-8 text-muted-foreground">
                 <ClipboardList className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>Nu există planuri de tratament salvate</p>
-                <p className="text-sm mt-2">Creați un plan din tab-ul "Plan Tratament"</p>
+                {!onOpenTreatmentPlan && <p className="text-sm mt-2">Creați un plan din tab-ul "Plan Tratament"</p>}
               </div>
             ) : (
               <div className="space-y-4">

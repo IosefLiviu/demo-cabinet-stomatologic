@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { format, differenceInYears } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import { Plus, Printer, X, Search, Save } from 'lucide-react';
@@ -61,6 +61,7 @@ interface TreatmentPlanProps {
   patients: Patient[];
   treatments: Treatment[];
   doctors: Doctor[];
+  initialPatientId?: string;
 }
 
 // FDI notation - permanent teeth
@@ -79,9 +80,9 @@ const allTeeth = [
   ...lowerDeciduousTeeth,
 ];
 
-export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanProps) {
+export function TreatmentPlan({ patients, treatments, doctors, initialPatientId }: TreatmentPlanProps) {
   const printRef = useRef<HTMLDivElement>(null);
-  const [selectedPatientId, setSelectedPatientId] = useState<string>('');
+  const [selectedPatientId, setSelectedPatientId] = useState<string>(initialPatientId || '');
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
   const [nextAppointmentDate, setNextAppointmentDate] = useState<string>('');
   const [nextAppointmentTime, setNextAppointmentTime] = useState<string>('');
@@ -89,6 +90,13 @@ export function TreatmentPlan({ patients, treatments, doctors }: TreatmentPlanPr
   const [treatmentDialogOpen, setTreatmentDialogOpen] = useState(false);
   const [patientSearch, setPatientSearch] = useState('');
   const [discountPercent, setDiscountPercent] = useState<number>(0);
+
+  // Update selectedPatientId when initialPatientId changes
+  useEffect(() => {
+    if (initialPatientId) {
+      setSelectedPatientId(initialPatientId);
+    }
+  }, [initialPatientId]);
 
   const { loading, saveTreatmentPlan } = useTreatmentPlans();
 

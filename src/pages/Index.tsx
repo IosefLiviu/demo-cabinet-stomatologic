@@ -47,6 +47,7 @@ const Index = () => {
   const [showPatientForm, setShowPatientForm] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | undefined>();
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [treatmentPlanPatientId, setTreatmentPlanPatientId] = useState<string | undefined>();
 
   // Appointment form state
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);
@@ -530,6 +531,7 @@ const Index = () => {
               patients={patients}
               treatments={treatments}
               doctors={doctors}
+              initialPatientId={treatmentPlanPatientId}
             />
           </TabsContent>
 
@@ -574,6 +576,10 @@ const Index = () => {
         open={selectedPatient !== null}
         onClose={() => setSelectedPatient(null)}
         onEdit={handleEditPatient}
+        onOpenTreatmentPlan={(patient) => {
+          setTreatmentPlanPatientId(patient.id);
+          setActiveTab('treatment-plan');
+        }}
       />
 
       {/* Appointment Form */}
