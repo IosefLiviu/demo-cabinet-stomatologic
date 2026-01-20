@@ -553,14 +553,8 @@ const Index = () => {
               initialPatientId={treatmentPlanPatientId}
               initialPlan={editingTreatmentPlan}
 onPlanSaved={() => {
+                // Plan stays open, just clear the initial editing state
                 setEditingTreatmentPlan(undefined);
-                // Reopen patient details if a patient was selected for the treatment plan
-                if (treatmentPlanPatientId) {
-                  const patient = patients.find(p => p.id === treatmentPlanPatientId);
-                  if (patient) {
-                    setSelectedPatient(patient);
-                  }
-                }
               }}
             />
           </TabsContent>
