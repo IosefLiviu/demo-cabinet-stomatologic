@@ -398,7 +398,7 @@ const Index = () => {
               <DropdownMenuTrigger asChild>
                 <button 
                 className={`inline-flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm py-2 px-3 rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-                    ['reports', 'expenses', 'treatment-plan', 'radiology-referral', 'billing', 'prescription', 'patient-info'].includes(activeTab)
+                    ['reports', 'expenses', 'radiology-referral', 'billing', 'prescription', 'patient-info'].includes(activeTab)
                       ? 'bg-background text-foreground shadow-sm' 
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
@@ -427,14 +427,6 @@ const Index = () => {
                     {activeTab === 'expenses' && <span className="ml-auto text-primary">✓</span>}
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem 
-                  onClick={() => setActiveTab('treatment-plan')} 
-                  className={`gap-2 ${activeTab === 'treatment-plan' ? 'bg-accent font-semibold' : ''}`}
-                >
-                  <ClipboardList className="h-4 w-4" />
-                  Plan Tratament
-                  {activeTab === 'treatment-plan' && <span className="ml-auto text-primary">✓</span>}
-                </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={() => setActiveTab('radiology-referral')} 
                   className={`gap-2 ${activeTab === 'radiology-referral' ? 'bg-accent font-semibold' : ''}`}
