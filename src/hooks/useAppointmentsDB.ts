@@ -111,7 +111,7 @@ export function useAppointmentsDB() {
           patients (id, first_name, last_name, phone, allergies),
           treatments (id, name, default_duration),
           doctors (id, name, color),
-          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, laborator, duration, tooth_numbers, tooth_data)
+          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, laborator, duration, discount_percent, tooth_numbers, tooth_data)
         `)
         .order('start_time', { ascending: true });
 
@@ -145,7 +145,7 @@ export function useAppointmentsDB() {
           patients (id, first_name, last_name, phone, allergies),
           treatments (id, name, default_duration),
           doctors (id, name, color),
-          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, laborator, duration, tooth_numbers, tooth_data)
+          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, laborator, duration, discount_percent, tooth_numbers, tooth_data)
         `)
         .gte('appointment_date', startDate)
         .lte('appointment_date', endDate)
@@ -391,7 +391,7 @@ export function useAppointmentsDB() {
           patients (id, first_name, last_name, phone, allergies),
           treatments (id, name, default_duration),
           doctors (id, name, color),
-          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, duration, tooth_numbers, tooth_data)
+          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, laborator, duration, discount_percent, tooth_numbers, tooth_data)
         `)
         .single();
 
@@ -488,7 +488,7 @@ export function useAppointmentsDB() {
           patients (id, first_name, last_name, phone, allergies),
           treatments (id, name, default_duration),
           doctors (id, name, color),
-          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, duration, tooth_numbers, tooth_data)
+          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, laborator, duration, discount_percent, tooth_numbers, tooth_data)
         `)
         .single();
 
