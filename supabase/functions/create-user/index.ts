@@ -100,15 +100,30 @@ Deno.serve(async (req) => {
       );
     }
 
-    // If role is admin, update the role (trigger creates 'user' role by default)
-    if (newUser.user && role === 'admin') {
-      // Wait for trigger to execute
+    // Wait for trigger to create profile, then ensure must_change_password is set
+    if (newUser.user) {
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      await supabaseAdmin
-        .from('user_roles')
-        .update({ role: 'admin' })
-        .eq('user_id', newUser.user.id);
+      // Update or insert profile with must_change_password = true
+      const { error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .upsert({
+          user_id: newUser.user.id,
+          full_name: fullName || null,
+          must_change_password: true,
+        }, { onConflict: 'user_id' });
+
+      if (profileError) {
+        console.error('Error setting must_change_password:', profileError);
+      }
+
+      // If role is admin, update the role
+      if (role === 'admin') {
+        await supabaseAdmin
+          .from('user_roles')
+          .update({ role: 'admin' })
+          .eq('user_id', newUser.user.id);
+      }
     }
 
     return new Response(
