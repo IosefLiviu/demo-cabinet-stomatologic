@@ -268,12 +268,12 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       
       // Calculate totalWithNetLab: paid - laborator (real income after lab costs)
       acc[doctorName].totalWithNetLab = acc[doctorName].paid - acc[doctorName].laborator;
-      // Calculate totalWithNetLabAndUnpaid: paid - laborator + unpaid (total potential income)
+      // Calculate totalWithNetLabAndUnpaid: paid - laborator + unpaid (total potential income - for reference only)
       acc[doctorName].totalWithNetLabAndUnpaid = acc[doctorName].paid - acc[doctorName].laborator + acc[doctorName].unpaid;
-      // Calculate 60% of totalWithNetLabAndUnpaid
-      acc[doctorName].sixtPercentTotal = Math.round(acc[doctorName].totalWithNetLabAndUnpaid * 0.6);
-      // Calculate 40% of totalWithNetLabAndUnpaid
-      acc[doctorName].fortyPercentTotal = Math.round(acc[doctorName].totalWithNetLabAndUnpaid * 0.4);
+      // Calculate 60% of totalWithNetLab (only from paid amounts, not including unpaid)
+      acc[doctorName].sixtPercentTotal = Math.round(acc[doctorName].totalWithNetLab * 0.6);
+      // Calculate 40% of totalWithNetLab (only from paid amounts, not including unpaid)
+      acc[doctorName].fortyPercentTotal = Math.round(acc[doctorName].totalWithNetLab * 0.4);
       
       return acc;
     }, {} as Record<string, { name: string; revenue: number; paid: number; paidCard: number; paidCash: number; unpaid: number; scheduled: number; cas: number; laborator: number; netLabRevenue: number; totalWithNetLab: number; totalWithNetLabAndUnpaid: number; sixtPercentTotal: number; fortyPercentTotal: number; appointments: number; color: string }>);
