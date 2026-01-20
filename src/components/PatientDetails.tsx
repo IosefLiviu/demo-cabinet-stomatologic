@@ -169,6 +169,17 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
   const handlePrintPlan = (plan: TreatmentPlan) => {
     const total = plan.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     
+    // Collect all selected teeth from the plan
+    const selectedTeeth = new Set(plan.items.map(item => item.toothNumber).filter(Boolean));
+    
+    const renderTooth = (tooth: number) => {
+      const isSelected = selectedTeeth.has(tooth);
+      return `<div class="tooth ${isSelected ? 'selected' : ''}">
+        ${isSelected ? '<span class="checkmark">✓</span>' : ''}
+        <span>${tooth}</span>
+      </div>`;
+    };
+    
     const printWindow = window.open('', '', 'width=800,height=600');
     if (!printWindow) return;
 
@@ -190,6 +201,11 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
             .clinic-name { font-weight: bold; font-size: 14px; color: #b8860b; }
             .section { margin: 15px 0; }
             .section-title { font-weight: bold; margin-bottom: 5px; color: #b8860b; }
+            .dental-chart { margin: 20px 0; text-align: center; }
+            .dental-row { display: flex; justify-content: center; gap: 2px; margin: 5px 0; }
+            .tooth { width: 28px; height: 34px; border: 1px solid #b8860b; text-align: center; font-size: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+            .tooth.selected { background: linear-gradient(to bottom, #fef9e7, #fff8e1); border: 2px solid #b8860b; font-weight: bold; }
+            .tooth .checkmark { color: #228B22; font-size: 12px; font-weight: bold; line-height: 1; }
             table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px; }
             th, td { border: 1px solid #b8860b; padding: 6px; text-align: left; }
             th { background: linear-gradient(to bottom, #b8860b, #9a7209); color: #fff; }
@@ -223,6 +239,19 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
             <p><strong>Data:</strong> ${format(new Date(plan.createdAt), 'dd.MM.yyyy', { locale: ro })}</p>
             ${plan.nextAppointmentDate ? `<p><strong>Următoarea programare:</strong> ${format(new Date(plan.nextAppointmentDate), 'dd.MM.yyyy', { locale: ro })} ${plan.nextAppointmentTime || ''}</p>` : ''}
           </div>
+          
+          <div class="section">
+            <p class="section-title">Dinți selectați</p>
+            <div class="dental-chart">
+              <div class="dental-row">
+                ${[18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28].map(renderTooth).join('')}
+              </div>
+              <div class="dental-row">
+                ${[48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38].map(renderTooth).join('')}
+              </div>
+            </div>
+          </div>
+          
           <div class="section">
             <table>
               <thead>

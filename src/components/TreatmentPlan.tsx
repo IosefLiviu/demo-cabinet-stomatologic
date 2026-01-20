@@ -223,7 +223,9 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId 
             .info-line { margin: 3px 0; font-size: 13px; }
             .dental-chart { margin: 20px 0; text-align: center; }
             .dental-row { display: flex; justify-content: center; gap: 2px; margin: 5px 0; }
-            .tooth { width: 24px; height: 30px; border: 1px solid #b8860b; text-align: center; font-size: 10px; line-height: 30px; }
+            .tooth { width: 28px; height: 34px; border: 1px solid #b8860b; text-align: center; font-size: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+            .tooth.selected { background: linear-gradient(to bottom, #fef9e7, #fff8e1); border: 2px solid #b8860b; font-weight: bold; }
+            .tooth .checkmark { color: #228B22; font-size: 12px; font-weight: bold; line-height: 1; }
             table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px; }
             th, td { border: 1px solid #b8860b; padding: 6px; text-align: left; }
             th { background: linear-gradient(to bottom, #b8860b, #9a7209); color: #fff; }
@@ -607,19 +609,30 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId 
           <div className="section">
             <p className="section-title">Diagnostic</p>
             {/* Dental Chart Visual */}
-            <div className="dental-chart">
-              <div className="dental-row">
-                {[18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28].map(tooth => (
-                  <div key={tooth} className="tooth">{tooth}</div>
-                ))}
-              </div>
-              <div className="dental-row">
-                {[48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38].map(tooth => (
-                  <div key={tooth} className="tooth">{tooth}</div>
-                ))}
-              </div>
-              <p className="disclaimer">Disclaimer plan tratament</p>
-            </div>
+            {(() => {
+              const selectedTeeth = new Set(planItems.flatMap(item => item.toothNumbers));
+              return (
+                <div className="dental-chart">
+                  <div className="dental-row">
+                    {[18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28].map(tooth => (
+                      <div key={tooth} className={`tooth ${selectedTeeth.has(tooth) ? 'selected' : ''}`}>
+                        {selectedTeeth.has(tooth) && <span className="checkmark">✓</span>}
+                        <span>{tooth}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="dental-row">
+                    {[48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38].map(tooth => (
+                      <div key={tooth} className={`tooth ${selectedTeeth.has(tooth) ? 'selected' : ''}`}>
+                        {selectedTeeth.has(tooth) && <span className="checkmark">✓</span>}
+                        <span>{tooth}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="disclaimer">Disclaimer plan tratament</p>
+                </div>
+              );
+            })()}
           </div>
 
           <div className="section">
