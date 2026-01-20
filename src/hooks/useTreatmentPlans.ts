@@ -7,6 +7,7 @@ export interface TreatmentPlanItem {
   treatmentId?: string;
   treatmentName: string;
   toothNumber: number | null;
+  toothNumbers?: number[];
   doctorId: string;
   quantity: number;
   price: number;
@@ -20,6 +21,7 @@ export interface TreatmentPlan {
   nextAppointmentDate?: string;
   nextAppointmentTime?: string;
   notes?: string;
+  discountPercent?: number;
   createdAt: string;
   updatedAt: string;
   items: TreatmentPlanItem[];
@@ -50,6 +52,7 @@ export function useTreatmentPlans() {
         nextAppointmentDate: plan.next_appointment_date || undefined,
         nextAppointmentTime: plan.next_appointment_time || undefined,
         notes: plan.notes || undefined,
+        discountPercent: plan.discount_percent || 0,
         createdAt: plan.created_at,
         updatedAt: plan.updated_at,
         items: (plan.treatment_plan_items || []).map((item: any) => ({
@@ -57,6 +60,7 @@ export function useTreatmentPlans() {
           treatmentId: item.treatment_id || undefined,
           treatmentName: item.treatment_name,
           toothNumber: item.tooth_number,
+          toothNumbers: item.tooth_numbers || (item.tooth_number ? [item.tooth_number] : []),
           doctorId: item.doctor_id || '',
           quantity: item.quantity || 1,
           price: item.price || 0,
@@ -82,7 +86,8 @@ export function useTreatmentPlans() {
     nextAppointmentDate: string | undefined,
     nextAppointmentTime: string | undefined,
     items: TreatmentPlanItem[],
-    existingPlanId?: string
+    existingPlanId?: string,
+    discountPercent?: number
   ): Promise<string | null> => {
     setLoading(true);
     try {
@@ -96,6 +101,7 @@ export function useTreatmentPlans() {
             doctor_id: doctorId || null,
             next_appointment_date: nextAppointmentDate || null,
             next_appointment_time: nextAppointmentTime || null,
+            discount_percent: discountPercent || 0,
           })
           .eq('id', existingPlanId);
 
@@ -117,6 +123,7 @@ export function useTreatmentPlans() {
             doctor_id: doctorId || null,
             next_appointment_date: nextAppointmentDate || null,
             next_appointment_time: nextAppointmentTime || null,
+            discount_percent: discountPercent || 0,
           })
           .select()
           .single();
@@ -131,7 +138,8 @@ export function useTreatmentPlans() {
           treatment_plan_id: planId,
           treatment_id: item.treatmentId || null,
           treatment_name: item.treatmentName,
-          tooth_number: item.toothNumber,
+          tooth_number: item.toothNumbers && item.toothNumbers.length > 0 ? item.toothNumbers[0] : item.toothNumber,
+          tooth_numbers: item.toothNumbers || (item.toothNumber ? [item.toothNumber] : []),
           doctor_id: item.doctorId || null,
           quantity: item.quantity,
           price: item.price,
