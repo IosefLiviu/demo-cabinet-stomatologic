@@ -297,9 +297,23 @@ const Index = () => {
     const patientName = dbAppointment?.patients 
       ? `${dbAppointment.patients.first_name} ${dbAppointment.patients.last_name}`
       : '';
+    
+    // Calculate "De Plată" = total price - total CAS/decont
+    // This is the amount the patient actually needs to pay
+    let dePlata = dbAppointment?.price || 0;
+    if (dbAppointment?.appointment_treatments && dbAppointment.appointment_treatments.length > 0) {
+      const totalPrice = dbAppointment.appointment_treatments.reduce(
+        (sum, t) => sum + (Number(t.price) || 0), 0
+      );
+      const totalCas = dbAppointment.appointment_treatments.reduce(
+        (sum, t) => sum + (Number(t.decont) || 0), 0
+      );
+      dePlata = totalPrice - totalCas;
+    }
+    
     setCompletingAppointmentId(id);
     setCompletingAppointmentName(patientName);
-    setCompletingAppointmentPrice(dbAppointment?.price || 0);
+    setCompletingAppointmentPrice(dePlata);
     setCompleteDialogOpen(true);
   };
 
