@@ -580,6 +580,21 @@ const Index = () => {
           setTreatmentPlanPatientId(patient.id);
           setActiveTab('treatment-plan');
         }}
+        onCreateAppointment={(patient, treatmentName) => {
+          setSelectedPatient(null);
+          setEditingAppointmentData({
+            id: '',
+            patientId: patient.id,
+            patientName: `${patient.first_name} ${patient.last_name}`,
+            patientPhone: patient.phone,
+            cabinetId: selectedCabinet || cabinets[0]?.id || 1,
+            time: '',
+            duration: 30,
+            treatmentName: treatmentName || '',
+            notes: treatmentName ? `Plan tratament: ${treatmentName}` : '',
+          });
+          setShowAppointmentForm(true);
+        }}
       />
 
       {/* Appointment Form */}

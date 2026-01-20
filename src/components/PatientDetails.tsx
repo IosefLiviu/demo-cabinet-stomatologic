@@ -24,6 +24,7 @@ import {
   Trash2,
   FileImage,
   Plus,
+  CalendarPlus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -86,11 +87,12 @@ interface PatientDetailsProps {
   onClose: () => void;
   onEdit: (patient: Patient) => void;
   onOpenTreatmentPlan?: (patient: Patient) => void;
+  onCreateAppointment?: (patient: Patient, treatmentName?: string) => void;
 }
 
 type PeriodFilter = 'all' | '30days' | '3months' | '1year';
 
-export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatmentPlan }: PatientDetailsProps) {
+export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatmentPlan, onCreateAppointment }: PatientDetailsProps) {
   const [treatmentHistory, setTreatmentHistory] = useState<TreatmentRecord[]>([]);
   const [dentalStatus, setDentalStatus] = useState<ToothData[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
@@ -992,6 +994,21 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
 
                             {/* Actions */}
                             <div className="flex justify-end gap-2 pt-2">
+                              {onCreateAppointment && patient && (
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={() => {
+                                    const treatmentNames = plan.items.map(i => i.treatmentName).join(', ');
+                                    onClose();
+                                    onCreateAppointment(patient, treatmentNames);
+                                  }}
+                                  className="gap-1"
+                                >
+                                  <CalendarPlus className="h-3 w-3" />
+                                  Programare
+                                </Button>
+                              )}
                               <Button
                                 variant="outline"
                                 size="sm"
