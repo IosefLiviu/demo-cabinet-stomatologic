@@ -30,6 +30,7 @@ import { TreatmentListDialog } from './TreatmentListDialog';
 import { Patient } from '@/hooks/usePatients';
 import { useTreatmentPlans, TreatmentPlanItem as TreatmentPlanItemType } from '@/hooks/useTreatmentPlans';
 import { MiniDentalChart } from './MiniDentalChart';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Treatment {
   id: string;
@@ -118,6 +119,7 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
   const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [editingPlanId, setEditingPlanId] = useState<string | undefined>();
 
+
   // Update selectedPatientId when initialPatientId changes
   useEffect(() => {
     if (initialPatientId) {
@@ -148,6 +150,56 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
       })));
     }
   }, [initialPlan]);
+
+  // Fetch completed teeth for the selected patient (even if plan_item_id wasn't saved on older appointments)
+  useEffect(() => {
+    const loadCompletedTeeth = async () => {
+      if (!selectedPatientId) {
+        return;
+      }
+
+      const { data } = await supabase
+        .from('appointment_treatments')
+        .select('treatment_name,tooth_numbers,appointments!inner(status,patient_id)')
+        .eq('appointments.status', 'completed')
+        .eq('appointments.patient_id', selectedPatientId);
+
+      const map = new Map<string, Set<number>>();
+      (data || []).forEach((row: any) => {
+        const name = row.treatment_name as string;
+        if (!map.has(name)) map.set(name, new Set());
+        (row.tooth_numbers || []).forEach((t: number) => map.get(name)!.add(t));
+      });
+
+      // Apply completion by removing already finished teeth from current plan items
+      setPlanItems(prev =>
+        prev.map(item => {
+          if (!item.toothNumbers || item.toothNumbers.length === 0) return item;
+
+          const completed = map.get(item.treatmentName);
+          if (!completed || completed.size === 0) return item;
+
+          const beforeCount = item.toothNumbers.length;
+          const remainingTeeth = item.toothNumbers.filter(t => !completed.has(t));
+
+          // If nothing changed, keep item
+          if (remainingTeeth.length === beforeCount) return item;
+
+          // Scale CAS proportionally (CAS is stored as TOTAL per line item)
+          const ratio = beforeCount > 0 ? remainingTeeth.length / beforeCount : 1;
+          const nextCas = Math.round((item.cas * ratio) * 100) / 100;
+
+          return {
+            ...item,
+            toothNumbers: remainingTeeth,
+            cas: nextCas,
+          };
+        })
+      );
+    };
+
+    loadCompletedTeeth();
+  }, [selectedPatientId]);
 
   const { loading, saveTreatmentPlan } = useTreatmentPlans();
 
