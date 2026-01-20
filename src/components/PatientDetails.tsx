@@ -182,9 +182,10 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
       }
     });
     
-    const renderTooth = (tooth: number) => {
+    const renderTooth = (tooth: number, isDeciduous: boolean = false) => {
       const isSelected = selectedTeeth.has(tooth);
-      return `<div class="tooth ${isSelected ? 'selected' : ''}">
+      const deciduousClass = isDeciduous ? 'deciduous' : '';
+      return `<div class="tooth ${deciduousClass} ${isSelected ? 'selected' : ''}">
         ${isSelected ? '<span class="checkmark">✓</span>' : ''}
         <span>${tooth}</span>
       </div>`;
@@ -214,7 +215,9 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
             .dental-chart { margin: 20px 0; text-align: center; }
             .dental-row { display: flex; justify-content: center; gap: 2px; margin: 5px 0; }
             .tooth { width: 28px; height: 34px; border: 1px solid #b8860b; text-align: center; font-size: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+            .tooth.deciduous { width: 26px; height: 30px; border-radius: 50%; border-style: dashed; }
             .tooth.selected { background: linear-gradient(to bottom, #fef9e7, #fff8e1); border: 2px solid #b8860b; font-weight: bold; }
+            .tooth.deciduous.selected { border-style: dashed; }
             .tooth .checkmark { color: #228B22; font-size: 12px; font-weight: bold; line-height: 1; }
             table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px; }
             th, td { border: 1px solid #b8860b; padding: 6px; text-align: left; }
@@ -255,10 +258,16 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
             <p class="section-title">Dinți selectați</p>
             <div class="dental-chart">
               <div class="dental-row">
-                ${[18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28].map(renderTooth).join('')}
+                ${[18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28].map(t => renderTooth(t)).join('')}
+              </div>
+              <div class="dental-row deciduous">
+                ${[55, 54, 53, 52, 51, 61, 62, 63, 64, 65].map(t => renderTooth(t, true)).join('')}
+              </div>
+              <div class="dental-row deciduous">
+                ${[85, 84, 83, 82, 81, 71, 72, 73, 74, 75].map(t => renderTooth(t, true)).join('')}
               </div>
               <div class="dental-row">
-                ${[48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38].map(renderTooth).join('')}
+                ${[48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38].map(t => renderTooth(t)).join('')}
               </div>
             </div>
           </div>
