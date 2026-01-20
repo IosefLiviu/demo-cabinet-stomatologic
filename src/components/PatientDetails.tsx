@@ -470,6 +470,7 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
         );
       case 'partial_card':
       case 'partial_cash':
+        const hasCas = cas && cas > 0;
         return (
           <button
             onClick={(e) => {
@@ -480,7 +481,9 @@ export function PatientDetails({ patient, open, onClose, onEdit }: PatientDetail
           >
             <Badge className="bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400 gap-1 hover:bg-cyan-200">
               {method === 'partial_card' ? <CreditCard className="h-3 w-3" /> : <Banknote className="h-3 w-3" />}
-              Parțial ({paidAmount?.toLocaleString()} RON) - Rest: {remaining.toLocaleString()} RON
+              Parțial ({paidAmount?.toLocaleString()} RON)
+              {hasCas && <span className="text-cyan-600">• CAS: {cas.toLocaleString()}</span>}
+              - Rest: {remaining.toLocaleString()} RON
             </Badge>
           </button>
         );
