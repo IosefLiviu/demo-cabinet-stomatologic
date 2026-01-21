@@ -726,6 +726,10 @@ const Index = () => {
               laborator: item.laborator || 0,
               cas: item.cas || 0,
               discountPercent: item.discountPercent || 0,
+              // Include completion tracking fields
+              completedAt: item.completedAt,
+              paymentStatus: item.paymentStatus,
+              paidAmount: item.paidAmount || 0,
             })),
           });
           setTreatmentPlanSourcePatient(patient);

@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { format, differenceInYears } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
 import { ro } from 'date-fns/locale';
-import { Plus, Printer, X, Search, Save } from 'lucide-react';
+import { Plus, Printer, X, Search, Save, Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,6 +62,10 @@ interface LocalTreatmentPlanItem {
   laborator: number;
   cas: number;
   discountPercent: number;
+  // Completion tracking
+  completedAt?: string;
+  paymentStatus?: string;
+  paidAmount?: number;
 }
 
 interface InitialPlanData {
@@ -80,6 +85,10 @@ interface InitialPlanData {
     laborator: number;
     cas: number;
     discountPercent: number;
+    // Completion tracking
+    completedAt?: string;
+    paymentStatus?: string;
+    paidAmount?: number;
   }[];
 }
 
@@ -166,6 +175,10 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
             laborator: item.laborator,
             cas: item.cas,
             discountPercent: item.discountPercent,
+            // Completion tracking - load from initial plan
+            completedAt: (item as any).completedAt,
+            paymentStatus: (item as any).paymentStatus,
+            paidAmount: (item as any).paidAmount || 0,
           };
 
           // Skip items without teeth
@@ -343,13 +356,21 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
     return item.initialPrice * quantity;
   };
 
+  // Filter out fully paid items for totals calculation
+  const unpaidItems = planItems.filter(item => item.paymentStatus !== 'achitat');
+  const paidItems = planItems.filter(item => item.paymentStatus === 'achitat');
+  
   const subtotal = planItems.reduce((sum, item) => sum + getItemTotal(item), 0);
   const totalCas = planItems.reduce((sum, item) => sum + item.cas, 0);
   const totalLaborator = planItems.reduce((sum, item) => {
     const quantity = item.toothNumbers.length > 0 ? item.toothNumbers.length : 1;
     return sum + (item.laborator * quantity);
   }, 0);
-  const totalDePlata = planItems.reduce((sum, item) => sum + getDePlata(item), 0);
+  
+  // De plată excludes fully paid items
+  const totalDePlata = unpaidItems.reduce((sum, item) => sum + getDePlata(item), 0);
+  const totalPaid = paidItems.reduce((sum, item) => sum + getDePlata(item), 0);
+  
   const discountAmount = subtotal * (discountPercent / 100);
   const total = subtotal - discountAmount;
 
@@ -575,6 +596,7 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
                     <TableHead className="w-20 text-right text-green-600">CAS</TableHead>
                     <TableHead className="w-20 text-right text-orange-500">Disc. %</TableHead>
                     <TableHead className="w-24 text-right text-purple-600">De plată</TableHead>
+                    <TableHead className="w-24 text-center">Status</TableHead>
                     <TableHead className="w-10"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -583,8 +605,10 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
                     const quantity = item.toothNumbers.length > 0 ? item.toothNumbers.length : 1;
                     const price = getPrice(item);
                     const dePlata = getDePlata(item);
+                    const isCompleted = !!item.completedAt;
+                    const isPaid = item.paymentStatus === 'achitat';
                     return (
-                    <TableRow key={item.id}>
+                    <TableRow key={item.id} className={isPaid ? 'bg-success/10' : isCompleted ? 'bg-warning/10' : ''}>
                       <TableCell>
                         <Popover>
                           <PopoverTrigger asChild>
@@ -750,7 +774,31 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
                         />
                       </TableCell>
                       <TableCell className="text-right font-medium text-purple-600">
-                        {dePlata.toFixed(0)}
+                        {isPaid ? (
+                          <span className="flex items-center justify-end gap-1 text-green-600">
+                            <Check className="h-4 w-4" />
+                            {dePlata.toFixed(0)}
+                          </span>
+                        ) : dePlata.toFixed(0)}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {isPaid ? (
+                          <Badge variant="outline" className="bg-success/20 text-success border-success/50">
+                            Achitat
+                          </Badge>
+                        ) : item.paymentStatus === 'partial' ? (
+                          <Badge variant="outline" className="bg-warning/20 text-warning border-warning/50">
+                            Parțial
+                          </Badge>
+                        ) : isCompleted ? (
+                          <Badge variant="outline" className="bg-warning/20 text-warning border-warning/50">
+                            Neachitat
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-muted-foreground">
+                            În așteptare
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Button
@@ -758,6 +806,7 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
                           size="icon"
                           className="h-8 w-8 text-destructive hover:text-destructive"
                           onClick={() => handleRemoveItem(item.id)}
+                          disabled={isCompleted}
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -782,6 +831,12 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
                       <span className="text-green-600">CAS:</span>{' '}
                       <span className="font-medium text-green-600">{totalCas.toFixed(0)} LEI</span>
                     </span>
+                    {totalPaid > 0 && (
+                      <span>
+                        <span className="text-success">Achitat:</span>{' '}
+                        <span className="font-medium text-success">{totalPaid.toFixed(0)} LEI</span>
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-3">
                     <Label className="text-sm font-medium">Discount general %</Label>
@@ -805,6 +860,11 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
                     <div className="font-bold text-lg text-purple-600">
                       DE PLATĂ: {totalDePlata.toFixed(0)} LEI
                     </div>
+                    {totalPaid > 0 && (
+                      <div className="text-sm text-success">
+                        (din total {(totalDePlata + totalPaid).toFixed(0)} LEI - achitat {totalPaid.toFixed(0)} LEI)
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
