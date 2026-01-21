@@ -28,6 +28,7 @@ interface AppointmentCardProps {
   showCabinet?: boolean;
   isCompleted?: boolean;
   canDeleteCompleted?: boolean;
+  isAdmin?: boolean;
 }
 
 const cabinetBgColors: Record<number, string> = {
@@ -54,6 +55,7 @@ export function AppointmentCard({
   showCabinet = true,
   isCompleted = false,
   canDeleteCompleted = false,
+  isAdmin = false,
 }: AppointmentCardProps) {
   const cabinet = CABINETS.find((c) => c.id === appointment.cabinetId);
 
@@ -177,7 +179,7 @@ export function AppointmentCard({
           >
             <Edit className="h-3.5 w-3.5" />
           </Button>
-          {(!isCompleted || canDeleteCompleted) && (
+          {isAdmin && (!isCompleted || canDeleteCompleted) && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive">
