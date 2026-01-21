@@ -176,6 +176,13 @@ export function InterventionSelector({
   const handleSaveToothDialog = () => {
     if (!toothDialog) return;
 
+    // If status is 'healthy', remove the tooth from selection
+    if (toothDialog.status === 'healthy') {
+      handleRemoveTooth(toothDialog.interventionId, toothDialog.toothNumber);
+      setToothDialog(null);
+      return;
+    }
+
     onInterventionsChange(
       interventions.map(i => {
         if (i.id !== toothDialog.interventionId) return i;
