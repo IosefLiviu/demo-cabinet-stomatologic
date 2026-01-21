@@ -577,7 +577,15 @@ const Index = () => {
                 setEditingPatient(undefined);
                 setShowPatientForm(true);
               }}
-              onViewDetails={setSelectedPatient}
+              onViewDetails={(patient) => {
+                // Push navigation state when opening patient details
+                pushNavState({ 
+                  tab: 'patients', 
+                  patientId: patient.id, 
+                  patientName: `${patient.first_name} ${patient.last_name}` 
+                });
+                setSelectedPatient(patient);
+              }}
             />
           </TabsContent>
 
@@ -681,7 +689,11 @@ const Index = () => {
       <PatientDetails
         patient={selectedPatient}
         open={selectedPatient !== null}
-        onClose={() => setSelectedPatient(null)}
+        onClose={() => {
+          // Push current tab state (without patient) when closing patient details
+          pushNavState({ tab: activeTab });
+          setSelectedPatient(null);
+        }}
         onEdit={handleEditPatient}
         onOpenTreatmentPlan={(patient) => {
           // Push patient state to nav history before leaving
