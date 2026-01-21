@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useTreatments } from '@/hooks/useTreatments';
+import { CLINIC, getClinicCopyright } from '@/constants/clinic';
 
 interface Patient {
   id: string;
@@ -242,19 +243,18 @@ const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients }) => {
         <body>
           <div class="document-header">
             <div class="supplier-info">
-              <p><strong>Furnizor: PERFECT SMILE GLIM SRL</strong></p>
-              <p>Nr. Înreg: J23/5347/2023</p>
-              <p>Cod Fiscal: 48655560</p>
+              <p><strong>Furnizor: ${CLINIC.name}</strong></p>
+              <p>Nr. Înreg: ${CLINIC.regNumber}</p>
+              <p>Cod Fiscal: ${CLINIC.fiscalCode}</p>
               <p>Capital social: 0</p>
-              <p>Adresă: Str. Diamantului, Nr. 113, Bl. 3C, Et. 5, Ap.</p>
-              <p style="padding-left: 40px;">40, Ilfov</p>
+              <p>Adresă: ${CLINIC.address}</p>
               <p>IBAN:</p>
             </div>
             <div class="logo-section">
-              <img src="/images/perfect-smile-logo-print.jpg" alt="Perfect Smile Logo" class="logo" />
+              <img src="${CLINIC.logoPrint}" alt="Perfect Smile Logo" class="logo" />
               <div class="phone-email">
-                <p>0721 702 820</p>
-                <p>office@perfectsmileglim.ro</p>
+                <p>${CLINIC.phone}</p>
+                <p>${CLINIC.email}</p>
               </div>
             </div>
             <div class="client-info">
@@ -339,9 +339,9 @@ const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients }) => {
           
           <div style="margin-top: 30px; padding-top: 10px; border-top: 2px solid #b8860b;">
             <div style="text-align: center; font-size: 9px; color: #666;">
-              <p><strong>PERFECT SMILE GLIM SRL</strong> | Strada București 68-70, Măgurele, România</p>
-              <p>Tel: 0721 702 820 | Email: office@perfectsmileglim.ro | www.perfectsmileglim.ro</p>
-              <p style="margin-top: 5px; font-size: 8px; color: #999;">© ${new Date().getFullYear()} Perfect Smile Glim. Toate drepturile rezervate.</p>
+              <p><strong>${CLINIC.name}</strong> | ${CLINIC.address}</p>
+              <p>Tel: ${CLINIC.phone} | Email: ${CLINIC.email} | ${CLINIC.website}</p>
+              <p style="margin-top: 5px; font-size: 8px; color: #999;">${getClinicCopyright()}</p>
             </div>
           </div>
         </body>

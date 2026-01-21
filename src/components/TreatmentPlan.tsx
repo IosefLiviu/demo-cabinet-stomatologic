@@ -31,6 +31,7 @@ import { Patient } from '@/hooks/usePatients';
 import { useTreatmentPlans, TreatmentPlanItem as TreatmentPlanItemType } from '@/hooks/useTreatmentPlans';
 import { MiniDentalChart } from './MiniDentalChart';
 import { supabase } from '@/integrations/supabase/client';
+import { CLINIC, getClinicCopyright } from '@/constants/clinic';
 
 interface Treatment {
   id: string;
@@ -817,23 +818,22 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
         <div ref={printRef}>
           <div className="header">
             <div className="logo-section">
-              <img src="/images/perfect-smile-logo-print.jpg" alt="Perfect Smile Logo" className="logo" />
+              <img src={CLINIC.logoPrint} alt="Perfect Smile Logo" className="logo" />
               <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
-                PERFECT SMILE GLIM
+                {CLINIC.shortName}
               </div>
             </div>
             <div className="clinic-contact">
-              <p>0721 702 820</p>
-              <p>office@perfectsmileglim.ro</p>
-              <p>www.perfectsmileglim.ro</p>
-              <p>Strada București 68-70, Măgurele, România</p>
+              <p>{CLINIC.phone}</p>
+              <p>{CLINIC.email}</p>
+              <p>{CLINIC.website}</p>
+              <p>{CLINIC.address}</p>
             </div>
           </div>
 
           <div className="section">
-            <p className="clinic-name">PERFECT SMILE GLIM</p>
-            <p>Strada București 68-70</p>
-            <p>Măgurele, România</p>
+            <p className="clinic-name">{CLINIC.shortName}</p>
+            <p>{CLINIC.address}</p>
           </div>
 
           <div className="section">
@@ -921,9 +921,9 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
           
           <div style={{ marginTop: '30px', paddingTop: '10px', borderTop: '2px solid #b8860b' }}>
             <div style={{ textAlign: 'center', fontSize: '9px', color: '#666' }}>
-              <p><strong>PERFECT SMILE GLIM SRL</strong> | Strada București 68-70, Măgurele, România</p>
-              <p>Tel: 0721 702 820 | Email: office@perfectsmileglim.ro | www.perfectsmileglim.ro</p>
-              <p style={{ marginTop: '5px', fontSize: '8px', color: '#999' }}>© {new Date().getFullYear()} Perfect Smile Glim. Toate drepturile rezervate.</p>
+              <p><strong>{CLINIC.name}</strong> | {CLINIC.address}</p>
+              <p>Tel: {CLINIC.phone} | Email: {CLINIC.email} | {CLINIC.website}</p>
+              <p style={{ marginTop: '5px', fontSize: '8px', color: '#999' }}>{getClinicCopyright()}</p>
             </div>
           </div>
         </div>

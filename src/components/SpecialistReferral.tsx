@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Patient } from '@/hooks/usePatients';
+import { CLINIC, getClinicCopyright } from '@/constants/clinic';
 
 interface Doctor {
   id: string;
@@ -357,9 +358,9 @@ export function SpecialistReferral({ patients, doctors }: SpecialistReferralProp
           </div>
 
           <div className="footer">
-            <p><strong>PERFECT SMILE GLIM SRL</strong> | Strada București 68-70, Măgurele, România</p>
-            <p>Tel: 0721 702 820 | Email: office@perfectsmileglim.ro | www.perfectsmileglim.ro</p>
-            <p style={{ marginTop: '5px', fontSize: '8px', color: '#999' }}>© {new Date().getFullYear()} Perfect Smile Glim. Toate drepturile rezervate.</p>
+            <p><strong>{CLINIC.name}</strong> | {CLINIC.address}</p>
+            <p>Tel: {CLINIC.phone} | Email: {CLINIC.email} | {CLINIC.website}</p>
+            <p style={{ marginTop: '5px', fontSize: '8px', color: '#999' }}>{getClinicCopyright()}</p>
           </div>
         </div>
       </div>

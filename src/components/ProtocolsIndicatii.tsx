@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Printer, FileText, Stethoscope, Baby, AlertTriangle, Scissors, Heart, Smile, Crown, CircleDot } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { CLINIC, getClinicCopyright } from '@/constants/clinic';
 
 const ProtocolsIndicatii = () => {
   const printRef = useRef<HTMLDivElement>(null);
@@ -117,17 +118,17 @@ const ProtocolsIndicatii = () => {
       </head>
       <body>
         <div class="header">
-          <img src="/images/perfect-smile-logo-print.jpg" alt="Perfect Smile" class="logo" />
+          <img src="${CLINIC.logoPrint}" alt="Perfect Smile" class="logo" />
           <div class="clinic-info">
-            <strong>PERFECT SMILE GLIM SRL</strong><br/>
-            Strada București 68-70, Măgurele, România<br/>
-            Tel: 0721 702 820 | Email: office@perfectsmileglim.ro
+            <strong>${CLINIC.name}</strong><br/>
+            ${CLINIC.address}<br/>
+            Tel: ${CLINIC.phone} | Email: ${CLINIC.email}
           </div>
         </div>
-        ${printContent}
+        \${printContent}
         <div class="footer">
-          © ${new Date().getFullYear()} PERFECT SMILE GLIM SRL - Toate drepturile rezervate<br/>
-          www.perfectsmile.ro
+          ${getClinicCopyright()}<br/>
+          ${CLINIC.website}
         </div>
       </body>
       </html>
