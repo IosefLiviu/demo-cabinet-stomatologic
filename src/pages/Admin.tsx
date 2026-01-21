@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, ArrowLeft, Save, X, Users, Stethoscope, Shield, ShieldCheck, Palette } from 'lucide-react';
+import { Plus, Edit, Trash2, ArrowLeft, Save, X, Users, Stethoscope, Shield, ShieldCheck, Palette, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
@@ -43,6 +44,7 @@ interface Doctor {
   specialization?: string;
   doctor_code?: string;
   email?: string | null;
+  email_notifications_enabled?: boolean;
   is_active: boolean;
   user_id?: string | null;
 }
@@ -78,6 +80,7 @@ export default function Admin() {
     specialization: '',
     doctor_code: '',
     email: '',
+    email_notifications_enabled: true,
   });
 
   // Users state
@@ -149,6 +152,7 @@ export default function Admin() {
         specialization: doctor.specialization || '',
         doctor_code: doctor.doctor_code || '',
         email: doctor.email || '',
+        email_notifications_enabled: doctor.email_notifications_enabled !== false,
       });
     } else {
       setEditingDoctor(null);
@@ -158,6 +162,7 @@ export default function Admin() {
         specialization: '',
         doctor_code: '',
         email: '',
+        email_notifications_enabled: true,
       });
     }
     setDialogOpen(true);
@@ -183,6 +188,7 @@ export default function Admin() {
             specialization: formData.specialization || null,
             doctor_code: formData.doctor_code || null,
             email: formData.email || null,
+            email_notifications_enabled: formData.email_notifications_enabled,
           })
           .eq('id', editingDoctor.id);
 
@@ -197,6 +203,7 @@ export default function Admin() {
             specialization: formData.specialization || null,
             doctor_code: formData.doctor_code || null,
             email: formData.email || null,
+            email_notifications_enabled: formData.email_notifications_enabled,
           });
 
         if (error) throw error;
@@ -968,9 +975,22 @@ export default function Admin() {
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="doctor@exemplu.ro"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Doctorul va primi notificări prin email la programări noi
-                </p>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="email-notifications" className="flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    Notificări Email
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Primește notificări la programări noi
+                  </p>
+                </div>
+                <Switch
+                  id="email-notifications"
+                  checked={formData.email_notifications_enabled}
+                  onCheckedChange={(checked) => setFormData({ ...formData, email_notifications_enabled: checked })}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Culoare</Label>

@@ -10,6 +10,8 @@ export interface Doctor {
   doctor_code?: string;
   is_active: boolean;
   user_id?: string | null;
+  email?: string | null;
+  email_notifications_enabled?: boolean;
 }
 
 export function useDoctors() {

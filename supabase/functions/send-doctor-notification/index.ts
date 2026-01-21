@@ -50,10 +50,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Received notification request for doctor:", doctorId);
 
-    // Fetch doctor details including email
+    // Fetch doctor details including email and notification preference
     const { data: doctor, error: doctorError } = await supabase
       .from("doctors")
-      .select("name, email")
+      .select("name, email, email_notifications_enabled")
       .eq("id", doctorId)
       .maybeSingle();
 
@@ -74,6 +74,18 @@ const handler = async (req: Request): Promise<Response> => {
         JSON.stringify({ error: "Doctor not found" }),
         {
           status: 404,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Check if notifications are disabled for this doctor
+    if (doctor.email_notifications_enabled === false) {
+      console.log("Email notifications disabled for doctor:", doctorId);
+      return new Response(
+        JSON.stringify({ message: "Email notifications disabled for this doctor" }),
+        {
+          status: 200,
           headers: { "Content-Type": "application/json", ...corsHeaders },
         }
       );
