@@ -266,6 +266,7 @@ export type Database = {
           color: string
           created_at: string
           doctor_code: string | null
+          email: string | null
           id: string
           is_active: boolean
           name: string
@@ -277,6 +278,7 @@ export type Database = {
           color?: string
           created_at?: string
           doctor_code?: string | null
+          email?: string | null
           id?: string
           is_active?: boolean
           name: string
@@ -288,6 +290,7 @@ export type Database = {
           color?: string
           created_at?: string
           doctor_code?: string | null
+          email?: string | null
           id?: string
           is_active?: boolean
           name?: string

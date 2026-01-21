@@ -168,7 +168,37 @@ export function useAppointmentsDB() {
     }
   };
 
-  const addAppointment = async (appointment: AppointmentInsert) => {
+  const sendDoctorNotification = async (
+    doctorId: string,
+    patientName: string,
+    appointmentDate: string,
+    appointmentTime: string,
+    cabinetName: string,
+    notes?: string
+  ) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('send-doctor-notification', {
+        body: {
+          doctorId,
+          patientName,
+          appointmentDate,
+          appointmentTime,
+          cabinetName,
+          notes,
+        },
+      });
+
+      if (error) {
+        console.error('Error sending doctor notification:', error);
+      } else {
+        console.log('Doctor notification result:', data);
+      }
+    } catch (error) {
+      console.error('Failed to send doctor notification:', error);
+    }
+  };
+
+  const addAppointment = async (appointment: AppointmentInsert, patientName?: string, cabinetName?: string) => {
     try {
       const { data, error } = await supabase
         .from('appointments')
@@ -188,6 +218,19 @@ export function useAppointmentsDB() {
         title: 'Succes',
         description: 'Programarea a fost adăugată',
       });
+
+      // Send email notification to doctor (async, don't block)
+      if (appointment.doctor_id && patientName && cabinetName) {
+        sendDoctorNotification(
+          appointment.doctor_id,
+          patientName,
+          appointment.appointment_date,
+          appointment.start_time,
+          cabinetName,
+          appointment.notes || undefined
+        );
+      }
+
       return data;
     } catch (error: any) {
       console.error('Error adding appointment:', error);
