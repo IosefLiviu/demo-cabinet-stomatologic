@@ -34,6 +34,7 @@ export interface SelectedIntervention {
   treatmentId: string;
   treatmentName: string;
   price: number;
+  basePrice?: number; // Original per-tooth price for multiplication
   cas: number;
   laborator: number;
   duration: number;
@@ -125,11 +126,13 @@ export function InterventionSelector({
   const totalDuration = interventions.reduce((sum, i) => sum + i.duration, 0) || 30;
 
   const handleAddTreatment = (treatment: Treatment) => {
+    const basePrice = treatment.default_price || 0;
     const newIntervention: SelectedIntervention = {
       id: `${treatment.id}-${Date.now()}`,
       treatmentId: treatment.id,
       treatmentName: treatment.name,
-      price: treatment.default_price || 0,
+      price: basePrice,
+      basePrice: basePrice,
       cas: 0,
       laborator: 0,
       duration: treatment.default_duration || 30,
@@ -181,11 +184,18 @@ export function InterventionSelector({
         const existingDetails = i.teethDetails || [];
         const otherDetails = existingDetails.filter(t => t.toothNumber !== toothDialog.toothNumber);
         
+        const newSelectedTeeth = isAlreadySelected 
+          ? i.selectedTeeth 
+          : [...i.selectedTeeth, toothDialog.toothNumber];
+        
+        // Calculate new price based on teeth count if basePrice exists
+        const teethCount = newSelectedTeeth.length;
+        const basePrice = i.basePrice ?? i.price;
+        const newPrice = teethCount > 0 ? basePrice * teethCount : basePrice;
+        
         return {
           ...i,
-          selectedTeeth: isAlreadySelected 
-            ? i.selectedTeeth 
-            : [...i.selectedTeeth, toothDialog.toothNumber],
+          selectedTeeth: newSelectedTeeth,
           teethDetails: [
             ...otherDetails,
             {
@@ -194,6 +204,8 @@ export function InterventionSelector({
               notes: toothDialog.notes || undefined,
             },
           ],
+          basePrice: basePrice,
+          price: newPrice,
         };
       })
     );
@@ -205,10 +217,17 @@ export function InterventionSelector({
     onInterventionsChange(
       interventions.map(i => {
         if (i.id !== interventionId) return i;
+        
+        const newSelectedTeeth = i.selectedTeeth.filter(t => t !== toothNumber);
+        const teethCount = newSelectedTeeth.length;
+        const basePrice = i.basePrice ?? i.price;
+        const newPrice = teethCount > 0 ? basePrice * teethCount : basePrice;
+        
         return {
           ...i,
-          selectedTeeth: i.selectedTeeth.filter(t => t !== toothNumber),
+          selectedTeeth: newSelectedTeeth,
           teethDetails: (i.teethDetails || []).filter(t => t.toothNumber !== toothNumber),
+          price: newPrice,
         };
       })
     );
