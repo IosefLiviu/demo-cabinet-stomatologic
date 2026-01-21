@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Printer, FileText, Stethoscope, Baby, AlertTriangle } from 'lucide-react';
+import { Printer, FileText, Stethoscope, Baby, AlertTriangle, Scissors, Heart, Smile } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const ProtocolsIndicatii = () => {
@@ -22,62 +22,68 @@ const ProtocolsIndicatii = () => {
       <head>
         <title>Protocol</title>
         <style>
-          @page { size: A4; margin: 15mm; }
+          @page { size: A4; margin: 10mm; }
           body { 
             font-family: 'Segoe UI', Arial, sans-serif; 
-            font-size: 11pt; 
-            line-height: 1.5;
+            font-size: 10pt; 
+            line-height: 1.4;
             color: #333;
-            padding: 20px;
+            padding: 15px;
           }
           h1 { 
-            font-size: 18pt; 
-            color: #1e40af; 
-            border-bottom: 2px solid #1e40af;
-            padding-bottom: 8px;
-            margin-bottom: 16px;
+            font-size: 16pt; 
+            color: #b8860b; 
+            border-bottom: 2px solid #b8860b;
+            padding-bottom: 6px;
+            margin-bottom: 12px;
           }
           h2 { 
-            font-size: 14pt; 
-            color: #1e40af; 
-            margin-top: 20px;
-            margin-bottom: 10px;
-          }
-          h3 {
-            font-size: 12pt;
-            color: #374151;
-            margin-top: 16px;
+            font-size: 12pt; 
+            color: #b8860b; 
+            margin-top: 14px;
             margin-bottom: 8px;
           }
-          p { margin: 8px 0; }
-          ul, ol { 
-            margin: 8px 0 8px 20px;
-            padding-left: 10px;
+          h3 {
+            font-size: 11pt;
+            color: #374151;
+            margin-top: 12px;
+            margin-bottom: 6px;
           }
-          li { margin: 4px 0; }
+          p { margin: 6px 0; }
+          ul, ol { 
+            margin: 6px 0 6px 16px;
+            padding-left: 8px;
+          }
+          li { margin: 3px 0; }
           .warning { 
             background: #fef3c7; 
-            border-left: 4px solid #f59e0b;
-            padding: 10px 15px;
-            margin: 15px 0;
+            border-left: 3px solid #f59e0b;
+            padding: 8px 12px;
+            margin: 10px 0;
           }
           .important {
             background: #fee2e2;
-            border-left: 4px solid #ef4444;
-            padding: 10px 15px;
-            margin: 15px 0;
+            border-left: 3px solid #ef4444;
+            padding: 8px 12px;
+            margin: 10px 0;
             font-weight: 600;
           }
+          .info {
+            background: #eff6ff;
+            border-left: 3px solid #3b82f6;
+            padding: 8px 12px;
+            margin: 10px 0;
+          }
           .section {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
           }
           .header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #b8860b;
           }
           .logo {
             width: 120px;
@@ -89,12 +95,23 @@ const ProtocolsIndicatii = () => {
             color: #6b7280;
           }
           .footer {
-            margin-top: 30px;
-            padding-top: 15px;
-            border-top: 1px solid #e5e7eb;
-            font-size: 9pt;
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #b8860b;
+            font-size: 8pt;
             color: #6b7280;
             text-align: center;
+          }
+          .medication-box {
+            background: #fefce8;
+            border: 1px solid #b8860b;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+          }
+          .medication-box h3 {
+            color: #b8860b;
+            margin-top: 0;
           }
         </style>
       </head>
@@ -150,6 +167,22 @@ const ProtocolsIndicatii = () => {
               <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Traumatisme</span>
             </TabsTrigger>
+            <TabsTrigger value="ind-canal" className="gap-1 text-xs sm:text-sm py-2">
+              <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span>Ind. Tratament Canal</span>
+            </TabsTrigger>
+            <TabsTrigger value="ind-extractie" className="gap-1 text-xs sm:text-sm py-2">
+              <Scissors className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span>Ind. Extracție</span>
+            </TabsTrigger>
+            <TabsTrigger value="ind-extractie-copii" className="gap-1 text-xs sm:text-sm py-2">
+              <Baby className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span>Ind. Extracție Copii</span>
+            </TabsTrigger>
+            <TabsTrigger value="ind-proteze" className="gap-1 text-xs sm:text-sm py-2">
+              <Smile className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span>Ind. Proteze</span>
+            </TabsTrigger>
           </TabsList>
 
           <ScrollArea className="h-[600px] rounded-md border p-4">
@@ -165,6 +198,18 @@ const ProtocolsIndicatii = () => {
               </TabsContent>
               <TabsContent value="traumatisme" className="mt-0">
                 <ProtocolTraumatisme />
+              </TabsContent>
+              <TabsContent value="ind-canal" className="mt-0">
+                <IndicatiiTratamentCanal />
+              </TabsContent>
+              <TabsContent value="ind-extractie" className="mt-0">
+                <IndicatiiExtractie />
+              </TabsContent>
+              <TabsContent value="ind-extractie-copii" className="mt-0">
+                <IndicatiiExtractieCopii />
+              </TabsContent>
+              <TabsContent value="ind-proteze" className="mt-0">
+                <IndicatiiProteze />
               </TabsContent>
             </div>
           </ScrollArea>
@@ -559,6 +604,196 @@ const ProtocolTraumatisme = () => (
       <div className="bg-red-50 border-l-4 border-red-500 p-3 my-3">
         <p className="font-bold">Nu se face reimplantarea!</p>
       </div>
+    </section>
+  </div>
+);
+
+const IndicatiiTratamentCanal = () => (
+  <div className="space-y-4">
+    <h1 className="text-xl font-bold text-primary border-b-2 border-primary pb-2">
+      Indicații post-tratament endodontic
+    </h1>
+
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold text-primary">Durere și discomfort</h2>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Durerea poate varia, de la absența ei până la dureri de intensitate mai ridicată, în acest caz începem un protocol medicamentos.</li>
+        <li><strong>Durerea/Jena post-tratament endodontic este acceptată în literatura de specialitate ca fiind normală până la o lună.</strong> Nu este nici un motiv de îngrijorare.</li>
+        <li>Pentru a permite vindecarea la vârful rădăcinilor, o săptămână post-tratament evităm alimentele dure.</li>
+        <li>2 zile după tratament evităm activitatea fizică intensă.</li>
+        <li>Evită mestecatul pe partea dintelui tratat până la finalizarea definitivă a tratamentului (obturare definitivă sau coroană).</li>
+        <li>Evită alimente dure, lipicioase sau foarte fierbinți în primele zile.</li>
+      </ul>
+    </section>
+
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold text-primary">Simptome posibile</h2>
+      <div className="bg-amber-50 border-l-4 border-amber-500 p-3 my-3">
+        <p>Dacă simțiți pulsații, zvâcniri în zona tratată, umflături, scoatem pansamentul provizoriu lăsând dintele deschis (în acest caz anunțăm clinica/medicul, înainte de masă acoperim cavitatea cu o buletă de vată).</p>
+      </div>
+    </section>
+
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold text-primary">Programări ulterioare</h2>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Tratamentul de canal se finalizează, de regulă, în una sau mai multe ședințe, în funcție de caz.</li>
+        <li>După sigilarea canalului/canalelor, dintele trebuie restaurat (obturat sau acoperit cu coroană).</li>
+        <li className="font-semibold">Este esențial să nu amânați finalizarea tratamentului, pentru a preveni fractura dintelui sau reinfectarea.</li>
+      </ul>
+    </section>
+
+    <section className="space-y-4 mt-6">
+      <h2 className="text-lg font-semibold text-primary">Medicație recomandată</h2>
+      
+      <div className="bg-yellow-50 border border-yellow-400 rounded-lg p-4">
+        <h3 className="font-semibold text-yellow-800 mb-2">Durere ușoară/moderată</h3>
+        <p className="text-yellow-900">Ibuprofen 400 mg la 6h timp de 2 zile.</p>
+      </div>
+      
+      <div className="bg-orange-50 border border-orange-400 rounded-lg p-4">
+        <h3 className="font-semibold text-orange-800 mb-2">Durere intensă</h3>
+        <p className="text-orange-900">Ketoprofenum 50 mg la 6h timp de 3 zile.</p>
+      </div>
+    </section>
+  </div>
+);
+
+const IndicatiiExtractie = () => (
+  <div className="space-y-4">
+    <h1 className="text-xl font-bold text-primary border-b-2 border-primary pb-2">
+      Indicații post-extracționale pentru pacient
+    </h1>
+
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold text-primary">Imediat după extracție</h2>
+      
+      <h3 className="font-semibold mt-3">1. Compresa cu tifon</h3>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Mușcați ferm pe compresa aplicată, timp de 2 ore, fără să o schimbați des.</li>
+        <li>Dacă sângerează și după, se poate pune o compresă nouă, o oră.</li>
+      </ul>
+      
+      <div className="bg-red-50 border-l-4 border-red-500 p-3 my-3">
+        <p className="font-semibold">2. Nu clătiți gura, nu eliminați saliva în primele 24h – riscați să dislocați cheagul de sânge și să sângerați iar.</p>
+      </div>
+      
+      <div className="bg-amber-50 border-l-4 border-amber-500 p-3 my-3">
+        <p><strong>3. Nu fumați, nu consumați alcool în primele 24–48h</strong> – întârzie vindecarea și pot provoca alveolită.</p>
+      </div>
+      
+      <p className="ml-4"><strong>4.</strong> Nu folosiți scobitoare.</p>
+    </section>
+
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold text-primary">Alimentație</h2>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Evitați mâncarea fierbinte sau foarte rece în primele 24h.</li>
+        <li>Preferabil: alimente moi la temperatura camerei (iaurt, supă călduță, piure).</li>
+        <li className="font-semibold">Nu lactate, nu acidulat, nu aspirină.</li>
+        <li>Mestecați pe partea opusă extracției.</li>
+        <li>Nu folosiți paiul (efectul de sucțiune poate dizloca cheagul).</li>
+      </ul>
+    </section>
+
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold text-primary">Durere și umflare</h2>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Este normală o durere ușoară–moderată și edem local 1–3 zile.</li>
+        <li>Medicația antialgică/antiinflamatoare conform prescripției medicului.</li>
+        <li>Aplicați comprese reci (gheață înfășurată într-un prosop) extern, pe obraz, câte 10–15 min, cu pauze, în primele 6–8h.</li>
+      </ul>
+    </section>
+
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold text-primary">Igienă orală</h2>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Nu periați zona extracției în prima zi.</li>
+        <li>Din ziua următoare: periaj blând, cu periuța moale, folosită doar pe zona extracției (restul dinților cu periuța normală).</li>
+      </ul>
+      <div className="bg-blue-50 border-l-4 border-blue-500 p-3 my-3">
+        <p><strong>Cu cât veți avea o igienă bună, vă veți vindeca mai bine. Cu cât veți evita zona de igienă, cu atât vă veți vindeca mai greu și mai dureros.</strong></p>
+      </div>
+    </section>
+  </div>
+);
+
+const IndicatiiExtractieCopii = () => (
+  <div className="space-y-4">
+    <h1 className="text-xl font-bold text-primary border-b-2 border-primary pb-2">
+      Indicații post-extracționale dinți de lapte
+    </h1>
+
+    <section className="space-y-3">
+      <ol className="list-decimal list-inside space-y-3 ml-4 text-base">
+        <li className="font-medium">
+          <strong>Nu se mănâncă până nu dispare efectul anesteziei.</strong>
+        </li>
+        <li>
+          Se menține compresa pe locul unde s-a realizat extracția, cel puțin <strong>30 de minute</strong>.
+        </li>
+        <li>
+          Evităm alimentele dure, picante sau prea condimentate.
+        </li>
+        <li>
+          <strong>Nu consumăm alimente fierbinți</strong> și nu folosim paiul.
+        </li>
+        <li>
+          Alegem alimente moi, ușor de mestecat.
+        </li>
+        <li className="font-medium">
+          <strong>Nu clătim gura în primele 24 de ore.</strong>
+        </li>
+        <li>
+          În prima zi periem dinții cu grijă, <strong>fără a atinge zona extracției</strong>.
+        </li>
+      </ol>
+    </section>
+
+    <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mt-6">
+      <p className="font-medium">Pentru orice întrebări sau nelămuriri, nu ezitați să contactați clinica noastră.</p>
+    </div>
+  </div>
+);
+
+const IndicatiiProteze = () => (
+  <div className="space-y-4">
+    <h1 className="text-xl font-bold text-primary border-b-2 border-primary pb-2">
+      Indicații după predarea protezelor dentare
+    </h1>
+
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold text-primary">Adaptare și purtare</h2>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Este normal să existe o perioadă de adaptare de câteva săptămâni: senzație de corp străin, salivă mai abundentă, mici dificultăți la vorbire sau masticație.</li>
+        <li><strong>Citiți cu voce tare, vorbiți mai mult</strong> → ajută la adaptarea limbii.</li>
+        <li>La început, consumați alimente moi, tăiate mărunt, mestecând pe ambele părți simultan.</li>
+        <li>Evitați alimentele lipicioase, foarte dure sau fibroase (caramele, alune, carne cu fibre tari).</li>
+        <li>Mâncarea nu va mai avea același gust, proteza acoperă destul de mult spațiu, senzația va fi diferită.</li>
+        <li>Pentru confort sporit, lipiți protezele înainte de masă.</li>
+      </ul>
+    </section>
+
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold text-primary">Igienă</h2>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li><strong>Scoateți și curățați proteza după fiecare masă</strong> (periaj cu periuță specială, apă și săpun neutru sau soluții speciale pentru proteze).</li>
+        <li>Nu folosiți pastă de dinți (pot apărea depuneri pe proteză).</li>
+        <li>Clătiți gura și masați gingiile cu o periuță moale sau cu degetul învelit în tifon.</li>
+        <li><strong>Noaptea:</strong> în general se recomandă scoaterea protezei, pentru a odihni mucoasa, păstrând-o într-un pahar cu apă curată sau soluție dezinfectantă.</li>
+      </ul>
+      
+      <div className="bg-blue-50 border-l-4 border-blue-500 p-3 my-3">
+        <p><strong>Dezinfectare săptămânală:</strong> O dată pe săptămână putem dezinfecta proteza cu tablete Corega: punem proteza într-un pahar cu apă, adăugând tableta Corega efervescentă - cât timp se dizolvă este activă.</p>
+      </div>
+    </section>
+
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold text-primary">Confort și verificare</h2>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Pot apărea zone de presiune sau iritație; dacă durerea persistă, reveniți pentru ajustare (nu încercați să modificați singur proteza).</li>
+        <li><strong>Veniți de câte ori este nevoie de retuș.</strong></li>
+        <li>Dacă proteza se mobilizează sau creează disconfort major, anunțați medicul.</li>
+      </ul>
     </section>
   </div>
 );
