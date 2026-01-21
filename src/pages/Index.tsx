@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
-import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, Radio, FileText, Pill, UserCheck, Printer, Stethoscope } from 'lucide-react';
+import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, Radio, FileText, Pill, UserCheck, Printer, Stethoscope, ClipboardList } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { DateNavigator } from '@/components/DateNavigator';
 import { CabinetTabs } from '@/components/CabinetTabs';
@@ -16,6 +16,7 @@ import { MonthlyExpenses } from '@/components/MonthlyExpenses';
 import { TreatmentPlan } from '@/components/TreatmentPlan';
 import { RadiologyReferral } from '@/components/RadiologyReferral';
 import { SpecialistReferral } from '@/components/SpecialistReferral';
+import ProtocolsIndicatii from '@/components/ProtocolsIndicatii';
 import BillingInvoice from '@/components/BillingInvoice';
 import PrescriptionForm from '@/components/PrescriptionForm';
 import PatientInformation from '@/components/PatientInformation';
@@ -525,6 +526,10 @@ onPlanSaved={() => {
                   <Stethoscope className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span>Trimitere M. Specialist</span>
                 </TabsTrigger>
+                <TabsTrigger value="protocols" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                  <ClipboardList className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Protocoale & Indicații</span>
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="radiology-referral">
@@ -548,6 +553,10 @@ onPlanSaved={() => {
 
               <TabsContent value="specialist-referral">
                 <SpecialistReferral patients={patients} doctors={doctors} />
+              </TabsContent>
+
+              <TabsContent value="protocols">
+                <ProtocolsIndicatii />
               </TabsContent>
             </Tabs>
           </TabsContent>
