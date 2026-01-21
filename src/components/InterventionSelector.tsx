@@ -221,6 +221,7 @@ export function InterventionSelector({
         const newSelectedTeeth = i.selectedTeeth.filter(t => t !== toothNumber);
         const teethCount = newSelectedTeeth.length;
         const basePrice = i.basePrice ?? i.price;
+        // When teeth count is 0, use basePrice (single tooth price), not 0
         const newPrice = teethCount > 0 ? basePrice * teethCount : basePrice;
         
         return {
@@ -228,6 +229,7 @@ export function InterventionSelector({
           selectedTeeth: newSelectedTeeth,
           teethDetails: (i.teethDetails || []).filter(t => t.toothNumber !== toothNumber),
           price: newPrice,
+          basePrice: basePrice, // Ensure basePrice is preserved
         };
       })
     );
