@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
-import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, Radio, FileText, Pill, UserCheck } from 'lucide-react';
+import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, Radio, FileText, Pill, UserCheck, Printer } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { DateNavigator } from '@/components/DateNavigator';
 import { CabinetTabs } from '@/components/CabinetTabs';
@@ -426,21 +426,9 @@ const Index = () => {
                 <span className="hidden sm:inline">Cheltuieli</span>
               </TabsTrigger>
             )}
-            <TabsTrigger value="radiology-referral" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-              <Radio className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Radiologie</span>
-            </TabsTrigger>
-            <TabsTrigger value="billing" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-              <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Facturare</span>
-            </TabsTrigger>
-            <TabsTrigger value="prescription" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-              <Pill className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Rețetă</span>
-            </TabsTrigger>
-            <TabsTrigger value="patient-info" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-              <UserCheck className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Informare</span>
+            <TabsTrigger value="printabile" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+              <Printer className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Printabile</span>
             </TabsTrigger>
           </TabsList>
 
@@ -513,30 +501,53 @@ onPlanSaved={() => {
             />
           </TabsContent>
 
+          <TabsContent value="printabile">
+            <Tabs defaultValue="radiology-referral" className="space-y-4">
+              <TabsList className="flex flex-wrap w-full h-auto gap-1">
+                <TabsTrigger value="radiology-referral" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                  <Radio className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Radiologie</span>
+                </TabsTrigger>
+                <TabsTrigger value="billing" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                  <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Proforma</span>
+                </TabsTrigger>
+                <TabsTrigger value="prescription" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                  <Pill className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Rețetă</span>
+                </TabsTrigger>
+                <TabsTrigger value="patient-info" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                  <UserCheck className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Informare</span>
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="radiology-referral">
+                <RadiologyReferral
+                  patients={patients}
+                  doctors={doctors}
+                />
+              </TabsContent>
+
+              <TabsContent value="billing">
+                <BillingInvoice patients={patients} />
+              </TabsContent>
+
+              <TabsContent value="prescription">
+                <PrescriptionForm patients={patients} doctors={doctors} />
+              </TabsContent>
+
+              <TabsContent value="patient-info">
+                <PatientInformation patients={patients} doctors={doctors} />
+              </TabsContent>
+            </Tabs>
+          </TabsContent>
+
           {isAdmin && (
             <TabsContent value="expenses">
               <MonthlyExpenses />
             </TabsContent>
           )}
-
-          <TabsContent value="radiology-referral">
-            <RadiologyReferral
-              patients={patients}
-              doctors={doctors}
-            />
-          </TabsContent>
-
-          <TabsContent value="billing">
-            <BillingInvoice patients={patients} />
-          </TabsContent>
-
-          <TabsContent value="prescription">
-            <PrescriptionForm patients={patients} doctors={doctors} />
-          </TabsContent>
-
-          <TabsContent value="patient-info">
-            <PatientInformation patients={patients} doctors={doctors} />
-          </TabsContent>
         </Tabs>
       </main>
 
