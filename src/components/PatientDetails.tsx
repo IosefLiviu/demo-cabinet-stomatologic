@@ -69,6 +69,8 @@ interface TreatmentRecord {
   treatment_name: string;
   price: number | null;
   cas: number | null;
+  appointment_total_cas: number | null;
+  appointment_total_payable: number | null;
   tooth_numbers: number[] | null;
   tooth_data: ToothDataRecord[];
   duration: number | null;
@@ -401,6 +403,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
           treatment_name,
           price,
           decont,
+          discount_percent,
           tooth_numbers,
           tooth_data,
           duration
@@ -441,15 +444,27 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
 
         const doctorName = appointment.doctors?.name || null;
         const appointmentPrice = appointment.price || 0;
-        const paidAmount = appointment.paid_amount ?? (appointment.is_paid ? appointmentPrice : 0);
 
-        appointment.appointment_treatments?.forEach((treatment: any) => {
+        const appointmentTreatments = (appointment.appointment_treatments || []) as any[];
+        const appointmentTotalCas = appointmentTreatments.reduce((sum, t) => sum + (t.decont || 0), 0);
+        const appointmentTotalPayable = appointmentTreatments.reduce((sum, t) => {
+          const price = t.price || 0;
+          const cas = t.decont || 0;
+          const discount = t.discount_percent || 0;
+          return sum + (price - cas) * (1 - discount / 100);
+        }, 0);
+
+        const paidAmount = appointment.paid_amount ?? (appointment.is_paid ? appointmentTotalPayable : 0);
+
+        appointmentTreatments.forEach((treatment: any) => {
           records.push({
             id: treatment.id,
             appointment_id: appointment.id,
             treatment_name: treatment.treatment_name,
             price: treatment.price,
             cas: treatment.decont || 0,
+            appointment_total_cas: appointmentTotalCas,
+            appointment_total_payable: appointmentTotalPayable,
             tooth_numbers: treatment.tooth_numbers,
             tooth_data: (treatment.tooth_data || []) as ToothDataRecord[],
             duration: treatment.duration,
@@ -545,10 +560,15 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
     }
   };
 
-  const getPaymentBadge = (method: PaymentMethod | null, appointmentId?: string, paidAmount?: number | null, totalPrice?: number | null, cas?: number | null) => {
-    // Calculate payable amount (price minus CAS discount)
-    const payableAmount = (totalPrice || 0) - (cas || 0);
-    // Remaining is based on payable amount, not full price
+  const getPaymentBadge = (
+    method: PaymentMethod | null,
+    appointmentId?: string,
+    paidAmount?: number | null,
+    appointmentTotalPayable?: number | null,
+    appointmentTotalCas?: number | null
+  ) => {
+    // Remaining is based on discounted payable amount (CAS already subtracted per line)
+    const payableAmount = appointmentTotalPayable || 0;
     const remaining = payableAmount - (paidAmount || 0);
     
     switch (method) {
@@ -568,7 +588,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
         );
       case 'partial_card':
       case 'partial_cash':
-        const hasCas = cas && cas > 0;
+        const hasCas = (appointmentTotalCas || 0) > 0;
         return (
           <button
             onClick={(e) => {
@@ -580,7 +600,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
             <Badge className="bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400 gap-1 hover:bg-cyan-200">
               {method === 'partial_card' ? <CreditCard className="h-3 w-3" /> : <Banknote className="h-3 w-3" />}
               Parțial ({paidAmount?.toLocaleString()} RON)
-              {hasCas && <span className="text-cyan-600">• CAS: {cas.toLocaleString()}</span>}
+              {hasCas && <span className="text-cyan-600">• CAS: {appointmentTotalCas?.toLocaleString()}</span>}
               - Rest: {remaining.toLocaleString()} RON
             </Badge>
           </button>
@@ -916,7 +936,13 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                                       </div>
                                     </div>
                                     <div className="flex flex-col items-end gap-1 shrink-0">
-                                      {record.payment_method && getPaymentBadge(record.payment_method, record.appointment_id, record.paid_amount, record.total_price, record.cas)}
+                                      {record.payment_method && getPaymentBadge(
+                                        record.payment_method,
+                                        record.appointment_id,
+                                        record.paid_amount,
+                                        record.appointment_total_payable,
+                                        record.appointment_total_cas
+                                      )}
                                       {record.price !== null && record.price > 0 && (
                                         <div className="flex flex-col items-end gap-0.5">
                                           {record.cas && record.cas > 0 && (
