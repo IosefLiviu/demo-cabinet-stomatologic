@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/popover";
 import { supabase } from '@/integrations/supabase/client';
 import { Patient } from '@/hooks/usePatients';
+import { CLINIC, getClinicCopyright } from '@/constants/clinic';
 
 interface Doctor {
   id: string;
@@ -620,9 +621,9 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
 
               <div style={{ marginTop: '30px', paddingTop: '10px', borderTop: '2px solid #b8860b' }}>
                 <div style={{ textAlign: 'center', fontSize: '9px', color: '#666' }}>
-                  <p><strong>PERFECT SMILE GLIM SRL</strong> | Strada București 68-70, Măgurele, România</p>
-                  <p>Tel: 0721 702 820 | Email: office@perfectsmileglim.ro | www.perfectsmileglim.ro</p>
-                  <p style={{ marginTop: '5px', fontSize: '8px', color: '#999' }}>© {new Date().getFullYear()} Perfect Smile Glim. Toate drepturile rezervate.</p>
+                  <p><strong>{CLINIC.name}</strong> | {CLINIC.address}</p>
+                  <p>Tel: {CLINIC.phone} | Email: {CLINIC.email} | {CLINIC.website}</p>
+                  <p style={{ marginTop: '5px', fontSize: '8px', color: '#999' }}>{getClinicCopyright()}</p>
                 </div>
               </div>
 

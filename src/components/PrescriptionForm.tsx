@@ -31,6 +31,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Patient } from '@/hooks/usePatients';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { CLINIC, getClinicCopyright } from '@/constants/clinic';
 
 interface Doctor {
   id: string;
@@ -532,7 +533,7 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
         </head>
         <body>
           <div class="header">
-            <img src="/images/perfect-smile-logo-print.jpg" alt="Perfect Smile Logo" class="header-logo" />
+            <img src="${CLINIC.logoPrint}" alt="Perfect Smile Logo" class="header-logo" />
             <div>
               <div class="header-title">REȚETĂ MEDICALĂ</div>
             </div>
@@ -618,9 +619,9 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
           <div class="document-footer">
             <div class="footer-divider"></div>
             <div class="footer-content">
-              <p><strong>PERFECT SMILE GLIM SRL</strong> | Strada București 68-70, Măgurele, România</p>
-              <p>Tel: 0721 702 820 | Email: office@perfectsmileglim.ro | www.perfectsmileglim.ro</p>
-              <p class="copyright">© ${new Date().getFullYear()} Perfect Smile Glim. Toate drepturile rezervate.</p>
+              <p><strong>${CLINIC.name}</strong> | ${CLINIC.address}</p>
+              <p>Tel: ${CLINIC.phone} | Email: ${CLINIC.email} | ${CLINIC.website}</p>
+              <p class="copyright">${getClinicCopyright()}</p>
             </div>
           </div>
         </body>

@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Patient } from '@/hooks/usePatients';
+import { CLINIC, getClinicCopyright } from '@/constants/clinic';
 
 interface Doctor {
   id: string;
@@ -316,16 +317,16 @@ export function RadiologyReferral({ patients, doctors }: RadiologyReferralProps)
         <div ref={printRef}>
           <div className="header">
             <div className="logo-section">
-              <img src="/images/perfect-smile-logo-print.jpg" alt="Perfect Smile Logo" className="logo" />
+              <img src={CLINIC.logoPrint} alt="Perfect Smile Logo" className="logo" />
               <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
-                PERFECT SMILE GLIM
+                {CLINIC.shortName}
               </div>
             </div>
             <div className="clinic-contact">
-              <p>0721 702 820</p>
-              <p>office@perfectsmileglim.ro</p>
-              <p>www.perfectsmileglim.ro</p>
-              <p>Strada București 68-70, Măgurele, România</p>
+              <p>{CLINIC.phone}</p>
+              <p>{CLINIC.email}</p>
+              <p>{CLINIC.website}</p>
+              <p>{CLINIC.address}</p>
             </div>
           </div>
 
@@ -336,9 +337,9 @@ export function RadiologyReferral({ patients, doctors }: RadiologyReferralProps)
               <tr>
                 <td style={{ width: '50%' }}>
                   <p><span className="label">Medic:</span> Dr. {selectedDoctor?.name || '-'}</p>
-                  <p><span className="label">Unitate medicală:</span> PERFECT SMILE GLIM</p>
-                  <p><span className="label">Email:</span> office@perfectsmileglim.ro</p>
-                  <p><span className="label">Telefon:</span> 0721 702 820</p>
+                  <p><span className="label">Unitate medicală:</span> {CLINIC.shortName}</p>
+                  <p><span className="label">Email:</span> {CLINIC.email}</p>
+                  <p><span className="label">Telefon:</span> {CLINIC.phone}</p>
                 </td>
                 <td style={{ width: '50%' }}>
                   <p><span className="label">Centru:</span> {centerName}</p>
@@ -372,9 +373,9 @@ export function RadiologyReferral({ patients, doctors }: RadiologyReferralProps)
           
           <div style={{ marginTop: '30px', paddingTop: '10px', borderTop: '2px solid #b8860b' }}>
             <div style={{ textAlign: 'center', fontSize: '9px', color: '#666' }}>
-              <p><strong>PERFECT SMILE GLIM SRL</strong> | Strada București 68-70, Măgurele, România</p>
-              <p>Tel: 0721 702 820 | Email: office@perfectsmileglim.ro | www.perfectsmileglim.ro</p>
-              <p style={{ marginTop: '5px', fontSize: '8px', color: '#999' }}>© {new Date().getFullYear()} Perfect Smile Glim. Toate drepturile rezervate.</p>
+              <p><strong>{CLINIC.name}</strong> | {CLINIC.address}</p>
+              <p>Tel: {CLINIC.phone} | Email: {CLINIC.email} | {CLINIC.website}</p>
+              <p style={{ marginTop: '5px', fontSize: '8px', color: '#999' }}>{getClinicCopyright()}</p>
             </div>
           </div>
         </div>
