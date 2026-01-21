@@ -618,8 +618,8 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
           <div class="document-footer">
             <div class="footer-divider"></div>
             <div class="footer-content">
-              <p><strong>PERFECT SMILE GLIM SRL</strong> | Str. București 68-70, Vârteju, Măgurele, Ilfov</p>
-              <p>Tel: 0721.702.820 | Email: perfectsmilevarteju@gmail.com | www.perfectsmileglim.ro</p>
+              <p><strong>PERFECT SMILE GLIM SRL</strong> | Strada București 68-70, Măgurele, România</p>
+              <p>Tel: 0721 702 820 | Email: office@perfectsmileglim.ro | www.perfectsmileglim.ro</p>
               <p class="copyright">© ${new Date().getFullYear()} Perfect Smile Glim. Toate drepturile rezervate.</p>
             </div>
           </div>

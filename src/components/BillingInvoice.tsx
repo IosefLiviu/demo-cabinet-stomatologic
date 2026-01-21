@@ -253,8 +253,8 @@ const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients }) => {
             <div class="logo-section">
               <img src="/images/perfect-smile-logo-print.jpg" alt="Perfect Smile Logo" class="logo" />
               <div class="phone-email">
-                <p>0721.702.820</p>
-                <p>perfectsmilevarteju@gmail.com</p>
+                <p>0721 702 820</p>
+                <p>office@perfectsmileglim.ro</p>
               </div>
             </div>
             <div class="client-info">
@@ -339,8 +339,8 @@ const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients }) => {
           
           <div style="margin-top: 30px; padding-top: 10px; border-top: 2px solid #b8860b;">
             <div style="text-align: center; font-size: 9px; color: #666;">
-              <p><strong>PERFECT SMILE GLIM SRL</strong> | Str. București 68-70, Vârteju, Măgurele, Ilfov</p>
-              <p>Tel: 0721.702.820 | Email: perfectsmilevarteju@gmail.com | www.perfectsmileglim.ro</p>
+              <p><strong>PERFECT SMILE GLIM SRL</strong> | Strada București 68-70, Măgurele, România</p>
+              <p>Tel: 0721 702 820 | Email: office@perfectsmileglim.ro | www.perfectsmileglim.ro</p>
               <p style="margin-top: 5px; font-size: 8px; color: #999;">© ${new Date().getFullYear()} Perfect Smile Glim. Toate drepturile rezervate.</p>
             </div>
           </div>
