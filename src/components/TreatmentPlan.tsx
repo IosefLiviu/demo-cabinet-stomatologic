@@ -356,9 +356,13 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
     return item.initialPrice * quantity;
   };
 
+  // Helper to check if an item is fully paid (cash, card, or achitat all count as paid)
+  const isItemFullyPaid = (item: LocalTreatmentPlanItem) => 
+    item.paymentStatus === 'achitat' || item.paymentStatus === 'cash' || item.paymentStatus === 'card';
+
   // Filter out fully paid items for totals calculation
-  const unpaidItems = planItems.filter(item => item.paymentStatus !== 'achitat');
-  const paidItems = planItems.filter(item => item.paymentStatus === 'achitat');
+  const unpaidItems = planItems.filter(item => !isItemFullyPaid(item));
+  const paidItems = planItems.filter(item => isItemFullyPaid(item));
   
   const subtotal = planItems.reduce((sum, item) => sum + getItemTotal(item), 0);
   const totalCas = planItems.reduce((sum, item) => sum + item.cas, 0);
@@ -606,9 +610,10 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
                     const price = getPrice(item);
                     const dePlata = getDePlata(item);
                     const isCompleted = !!item.completedAt;
-                    const isPaid = item.paymentStatus === 'achitat';
+                    const isPaid = isItemFullyPaid(item);
+                    const isPartial = item.paymentStatus === 'partial';
                     return (
-                    <TableRow key={item.id} className={isPaid ? 'bg-success/10' : isCompleted ? 'bg-warning/10' : ''}>
+                    <TableRow key={item.id} className={isPaid ? 'bg-success/10' : (isCompleted || isPartial) ? 'bg-warning/10' : ''}>
                       <TableCell>
                         <Popover>
                           <PopoverTrigger asChild>
