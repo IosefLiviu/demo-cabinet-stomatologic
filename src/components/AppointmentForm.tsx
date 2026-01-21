@@ -189,33 +189,47 @@ export function AppointmentForm({
       // Get already completed teeth from completed appointments for this plan's items
       const planItemIds = selectedPlan.items.map(item => item.id).filter(Boolean);
       
-      let completedTeethByTreatment: Map<string, Set<number>> = new Map();
+      let completedTeethByPlanItem: Map<string, Set<number>> = new Map();
+      let completedTeethByTreatmentName: Map<string, Set<number>> = new Map();
       
-      if (planItemIds.length > 0) {
-        // Query appointment_treatments for completed appointments that have plan_item_id from this plan
-        const { data: completedTreatments } = await supabase
-          .from('appointment_treatments')
-          .select(`
-            plan_item_id,
-            treatment_name,
-            tooth_numbers,
-            appointments!inner(status)
-          `)
-          .in('plan_item_id', planItemIds)
-          .eq('appointments.status', 'completed');
-        
-        // Build a map of treatment_name+planItemId -> completed teeth
-        if (completedTreatments) {
-          completedTreatments.forEach(ct => {
-            const key = `${ct.plan_item_id}`;
-            if (!completedTeethByTreatment.has(key)) {
-              completedTeethByTreatment.set(key, new Set());
+      // Get patient ID for legacy reconciliation
+      const patientId = formData.patientId;
+      
+      // Query ALL completed treatments for this patient to handle legacy records without plan_item_id
+      const { data: allCompletedTreatments } = await supabase
+        .from('appointment_treatments')
+        .select(`
+          plan_item_id,
+          treatment_name,
+          tooth_numbers,
+          appointments!inner(status, patient_id)
+        `)
+        .eq('appointments.patient_id', patientId)
+        .eq('appointments.status', 'completed');
+      
+      if (allCompletedTreatments) {
+        allCompletedTreatments.forEach(ct => {
+          const teeth = ct.tooth_numbers || [];
+          
+          // Track by plan_item_id if available
+          if (ct.plan_item_id && planItemIds.includes(ct.plan_item_id)) {
+            if (!completedTeethByPlanItem.has(ct.plan_item_id)) {
+              completedTeethByPlanItem.set(ct.plan_item_id, new Set());
             }
-            (ct.tooth_numbers || []).forEach((t: number) => {
-              completedTeethByTreatment.get(key)!.add(t);
+            teeth.forEach((t: number) => {
+              completedTeethByPlanItem.get(ct.plan_item_id)!.add(t);
             });
+          }
+          
+          // Also track by treatment_name for legacy reconciliation
+          const treatmentKey = ct.treatment_name.toLowerCase().trim();
+          if (!completedTeethByTreatmentName.has(treatmentKey)) {
+            completedTeethByTreatmentName.set(treatmentKey, new Set());
+          }
+          teeth.forEach((t: number) => {
+            completedTeethByTreatmentName.get(treatmentKey)!.add(t);
           });
-        }
+        });
       }
       
       // Convert plan items to interventions - expand items with multiple teeth into separate entries
@@ -224,7 +238,14 @@ export function AppointmentForm({
       
       selectedPlan.items.forEach((item, itemIndex) => {
         const toothNumbers = item.toothNumbers || [];
-        const completedTeeth = completedTeethByTreatment.get(item.id || '') || new Set();
+        
+        // Get completed teeth: first check by plan_item_id, then by treatment name (legacy fallback)
+        const completedByPlanItem = completedTeethByPlanItem.get(item.id || '') || new Set();
+        const treatmentKey = item.treatmentName.toLowerCase().trim();
+        const completedByName = completedTeethByTreatmentName.get(treatmentKey) || new Set();
+        
+        // Merge both sources of completed teeth
+        const completedTeeth = new Set([...completedByPlanItem, ...completedByName]);
         
         // Filter out completed teeth
         const remainingTeeth = toothNumbers.filter(t => !completedTeeth.has(t));
