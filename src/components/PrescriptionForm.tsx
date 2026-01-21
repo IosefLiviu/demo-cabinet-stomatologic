@@ -614,14 +614,14 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
             <div class="signature-section">
               <div class="signature-line">
                 Semnătura și parafa<br/>medicului
-                ${doctorToPrint ? `
-                  <div style="margin-top: 8px; text-align: center; font-size: 9pt; line-height: 1.4;">
-                    <div style="font-weight: bold; color: #1a365d;">${typeof doctorToPrint === 'object' && 'name' in doctorToPrint ? doctorToPrint.name : (doctorToPrint as Doctor).name}</div>
-                    ${(typeof doctorToPrint === 'object' && doctorToPrint.specialization) ? `<div style="color: #4a5568;">${doctorToPrint.specialization}</div>` : ''}
-                    ${(typeof doctorToPrint === 'object' && doctorToPrint.doctor_code) ? `<div style="color: #b8860b; font-weight: bold;">Cod: ${doctorToPrint.doctor_code}</div>` : ''}
-                  </div>
-                ` : ''}
               </div>
+              ${doctorToPrint ? `
+                <div style="margin-top: 10px; padding: 6px 12px; border: 2px solid #1a365d; display: inline-block; text-align: center; font-family: 'Times New Roman', serif;">
+                  <div style="font-weight: bold; color: #1a365d; font-size: 10pt;">${typeof doctorToPrint === 'object' && 'name' in doctorToPrint ? doctorToPrint.name : (doctorToPrint as Doctor).name}</div>
+                  <div style="color: #1a365d; font-size: 9pt;">${(typeof doctorToPrint === 'object' && doctorToPrint.specialization) ? doctorToPrint.specialization : 'Medic Stomatolog'}</div>
+                  ${(typeof doctorToPrint === 'object' && doctorToPrint.doctor_code) ? `<div style="color: #1a365d; font-size: 9pt; font-weight: bold;">Cod:${doctorToPrint.doctor_code}</div>` : ''}
+                </div>
+              ` : ''}
             </div>
           </div>
           
