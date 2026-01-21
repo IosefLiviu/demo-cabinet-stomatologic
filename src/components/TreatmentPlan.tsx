@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { format, differenceInYears } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Plus, Printer, X, Search, Save } from 'lucide-react';
+import { Plus, Printer, X, Search, Save, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -89,6 +89,8 @@ interface TreatmentPlanProps {
   doctors: Doctor[];
   initialPatientId?: string;
   initialPlan?: InitialPlanData;
+  sourcePatient?: Patient | null;
+  onBack?: () => void;
   onPlanSaved?: () => void;
 }
 
@@ -108,7 +110,7 @@ const allTeeth = [
   ...lowerDeciduousTeeth,
 ];
 
-export function TreatmentPlan({ patients, treatments, doctors, initialPatientId, initialPlan, onPlanSaved }: TreatmentPlanProps) {
+export function TreatmentPlan({ patients, treatments, doctors, initialPatientId, initialPlan, sourcePatient, onBack, onPlanSaved }: TreatmentPlanProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string>(initialPatientId || '');
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
@@ -448,7 +450,21 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between flex-wrap gap-2">
-            <span>Plan de Tratament</span>
+            <div className="flex items-center gap-3">
+              {sourcePatient && onBack && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onBack}
+                  className="gap-1 text-muted-foreground hover:text-foreground"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  <span className="hidden sm:inline">Înapoi la fișa {sourcePatient.first_name} {sourcePatient.last_name}</span>
+                  <span className="sm:hidden">Înapoi</span>
+                </Button>
+              )}
+              <span>Plan de Tratament</span>
+            </div>
             <div className="flex gap-2 flex-wrap">
               <Button 
                 variant="outline" 
