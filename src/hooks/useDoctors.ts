@@ -7,6 +7,7 @@ export interface Doctor {
   name: string;
   color: string;
   specialization?: string;
+  doctor_code?: string;
   is_active: boolean;
   user_id?: string | null;
 }

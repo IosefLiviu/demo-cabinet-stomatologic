@@ -41,6 +41,7 @@ interface Doctor {
   name: string;
   color: string;
   specialization?: string;
+  doctor_code?: string;
   is_active: boolean;
   user_id?: string | null;
 }
@@ -74,6 +75,7 @@ export default function Admin() {
     name: '',
     color: PRESET_COLORS[0],
     specialization: '',
+    doctor_code: '',
   });
 
   // Users state
@@ -143,6 +145,7 @@ export default function Admin() {
         name: doctor.name,
         color: doctor.color,
         specialization: doctor.specialization || '',
+        doctor_code: doctor.doctor_code || '',
       });
     } else {
       setEditingDoctor(null);
@@ -150,6 +153,7 @@ export default function Admin() {
         name: '',
         color: PRESET_COLORS[0],
         specialization: '',
+        doctor_code: '',
       });
     }
     setDialogOpen(true);
@@ -173,6 +177,7 @@ export default function Admin() {
             name: formData.name,
             color: formData.color,
             specialization: formData.specialization || null,
+            doctor_code: formData.doctor_code || null,
           })
           .eq('id', editingDoctor.id);
 
@@ -185,6 +190,7 @@ export default function Admin() {
             name: formData.name,
             color: formData.color,
             specialization: formData.specialization || null,
+            doctor_code: formData.doctor_code || null,
           });
 
         if (error) throw error;
@@ -932,8 +938,20 @@ export default function Admin() {
                   id="doctor-spec"
                   value={formData.specialization}
                   onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
-                  placeholder="Stomatologie generală"
+                  placeholder="Medic Stomatolog"
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="doctor-code">Cod Parafă</Label>
+                <Input
+                  id="doctor-code"
+                  value={formData.doctor_code}
+                  onChange={(e) => setFormData({ ...formData, doctor_code: e.target.value })}
+                  placeholder="Ex: H08327"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Codul medical afișat pe rețete și documente oficiale
+                </p>
               </div>
               <div className="space-y-2">
                 <Label>Culoare</Label>
