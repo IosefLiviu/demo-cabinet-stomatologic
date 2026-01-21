@@ -37,6 +37,7 @@ interface Doctor {
   id: string;
   name: string;
   specialization?: string | null;
+  doctor_code?: string | null;
 }
 
 interface PrescriptionItem {
@@ -64,6 +65,8 @@ interface SavedPrescription {
   };
   doctors?: {
     name: string;
+    specialization?: string | null;
+    doctor_code?: string | null;
   } | null;
   prescription_items?: {
     id: string;
@@ -230,7 +233,7 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
         .select(`
           *,
           patients (first_name, last_name, cnp),
-          doctors (name),
+          doctors (name, specialization, doctor_code),
           prescription_items (id, medication, quantity, dosage, sort_order)
         `)
         .order('created_at', { ascending: false })
@@ -604,14 +607,20 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
             `).join('')}
           </div>
           
-          <div class="footer">
+            <div class="footer">
             <div class="date-section">
               <strong>Data:</strong> ${format(new Date(printDate), 'dd.MM.yyyy')}
             </div>
             <div class="signature-section">
               <div class="signature-line">
                 Semnătura și parafa<br/>medicului
-                ${doctorToPrint ? `<div style="margin-top: 5px; font-size: 9pt;">${typeof doctorToPrint === 'object' && 'name' in doctorToPrint ? doctorToPrint.name : (doctorToPrint as Doctor).name}</div>` : ''}
+                ${doctorToPrint ? `
+                  <div style="margin-top: 8px; text-align: center; font-size: 9pt; line-height: 1.4;">
+                    <div style="font-weight: bold; color: #1a365d;">${typeof doctorToPrint === 'object' && 'name' in doctorToPrint ? doctorToPrint.name : (doctorToPrint as Doctor).name}</div>
+                    ${(typeof doctorToPrint === 'object' && doctorToPrint.specialization) ? `<div style="color: #4a5568;">${doctorToPrint.specialization}</div>` : ''}
+                    ${(typeof doctorToPrint === 'object' && doctorToPrint.doctor_code) ? `<div style="color: #b8860b; font-weight: bold;">Cod: ${doctorToPrint.doctor_code}</div>` : ''}
+                  </div>
+                ` : ''}
               </div>
             </div>
           </div>
