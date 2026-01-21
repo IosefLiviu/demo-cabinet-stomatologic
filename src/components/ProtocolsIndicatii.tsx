@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Printer, FileText, Stethoscope, Baby, AlertTriangle, Scissors, Heart, Smile } from 'lucide-react';
+import { Printer, FileText, Stethoscope, Baby, AlertTriangle, Scissors, Heart, Smile, Crown, CircleDot } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const ProtocolsIndicatii = () => {
@@ -183,6 +183,18 @@ const ProtocolsIndicatii = () => {
               <Smile className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Ind. Proteze</span>
             </TabsTrigger>
+            <TabsTrigger value="ind-implant" className="gap-1 text-xs sm:text-sm py-2">
+              <CircleDot className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span>Ind. Implant</span>
+            </TabsTrigger>
+            <TabsTrigger value="ind-cimentari" className="gap-1 text-xs sm:text-sm py-2">
+              <Crown className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span>Ind. Cimentări</span>
+            </TabsTrigger>
+            <TabsTrigger value="protocol-extractii" className="gap-1 text-xs sm:text-sm py-2">
+              <Scissors className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span>Protocol Extracții</span>
+            </TabsTrigger>
           </TabsList>
 
           <ScrollArea className="h-[600px] rounded-md border p-4">
@@ -210,6 +222,15 @@ const ProtocolsIndicatii = () => {
               </TabsContent>
               <TabsContent value="ind-proteze" className="mt-0">
                 <IndicatiiProteze />
+              </TabsContent>
+              <TabsContent value="ind-implant" className="mt-0">
+                <IndicatiiImplant />
+              </TabsContent>
+              <TabsContent value="ind-cimentari" className="mt-0">
+                <IndicatiiCimentari />
+              </TabsContent>
+              <TabsContent value="protocol-extractii" className="mt-0">
+                <ProtocolExtractii />
               </TabsContent>
             </div>
           </ScrollArea>
@@ -793,6 +814,294 @@ const IndicatiiProteze = () => (
         <li>Pot apărea zone de presiune sau iritație; dacă durerea persistă, reveniți pentru ajustare (nu încercați să modificați singur proteza).</li>
         <li><strong>Veniți de câte ori este nevoie de retuș.</strong></li>
         <li>Dacă proteza se mobilizează sau creează disconfort major, anunțați medicul.</li>
+      </ul>
+    </section>
+  </div>
+);
+
+const IndicatiiImplant = () => (
+  <div className="space-y-4">
+    <h1 className="text-xl font-bold text-primary border-b-2 border-primary pb-2">
+      Indicații post-implant pentru pacient
+    </h1>
+
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold text-primary">1. Compresa cu tifon</h2>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Mușcați ferm pe compresa aplicată, timp de <strong>2 ore</strong>, fără să o schimbați des.</li>
+        <li>Dacă sângerează și după, se poate pune o compresă nouă, o oră.</li>
+      </ul>
+    </section>
+
+    <div className="bg-red-50 border-l-4 border-red-500 p-3 my-3">
+      <p className="font-semibold">2. Nu clătiți gura, nu eliminați saliva în primele 24h – riscați să dislocați cheagul de sânge și să sângerați iar.</p>
+    </div>
+
+    <div className="bg-amber-50 border-l-4 border-amber-500 p-3 my-3">
+      <p><strong>3. Nu fumați, nu consumați alcool în primele 24–48h.</strong></p>
+    </div>
+
+    <section className="space-y-2">
+      <p className="ml-4"><strong>4.</strong> Evitați efortul fizic intens, aplecările bruste, ridicarea de greutăți.</p>
+      
+      <div className="bg-blue-50 border-l-4 border-blue-500 p-3 my-3">
+        <p><strong>5. Dacă s-a efectuat ridicare de sinus:</strong> evitați obstrucția nazală (spray decongestionant la nevoie), strănut cu gura larg deschisă.</p>
+      </div>
+    </section>
+
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold text-primary">6. Alimentație</h2>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Evitați mâncarea fierbinte sau foarte rece în primele 24h.</li>
+        <li>Preferabil: alimente moi la temperatura camerei (iaurt, supă călduță, piure).</li>
+        <li>Mestecați pe partea opusă implantului.</li>
+        <li>Nu folosiți paiul (efectul de sucțiune poate dizloca cheagul).</li>
+      </ul>
+    </section>
+
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold text-primary">7. Durere și umflare</h2>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Este normală o durere ușoară–moderată și edem local 1–3 zile.</li>
+        <li>Medicația antialgică/antiinflamatoare conform prescripției medicului.</li>
+        <li>Aplicați comprese reci (gheață înfășurată într-un prosop) extern, pe obraz, câte 10–15 min, cu pauze, în primele 6–8h.</li>
+        <li><strong>Inflamația maximă apare la 48-72 de ore de la intervenție.</strong></li>
+        <li>Hematom (vânătaie) în zona facială este normal, se remite în 1-2 săptămâni.</li>
+      </ul>
+    </section>
+
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold text-primary">Igienă orală</h2>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Nu periați zona extracției în prima zi.</li>
+        <li>Din ziua următoare: periaj blând, cu periuța moale, folosită doar pe zona extracției (restul dinților cu periuța normală).</li>
+      </ul>
+    </section>
+  </div>
+);
+
+const IndicatiiCimentari = () => (
+  <div className="space-y-4">
+    <h1 className="text-xl font-bold text-primary border-b-2 border-primary pb-2">
+      Indicații cimentare provizorie/definitivă
+    </h1>
+
+    <section className="space-y-3">
+      <h2 className="text-lg font-semibold text-primary">După cimentare provizorie</h2>
+      
+      <h3 className="font-semibold">1. Alimentație</h3>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Evitați alimentele dure, lipicioase (caramele, gumă de mestecat) și foarte crocante – pot dezlipi coroana/puntea provizorie.</li>
+        <li>Mestecați pe partea opusă dintelui lucrat, cât posibil.</li>
+        <li>Evitați schimbările bruște de temperatură (foarte rece/fierbinte) dacă există sensibilitate.</li>
+      </ul>
+
+      <h3 className="font-semibold">2. Igienă orală</h3>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Periaj normal, dar cu blândețe în zona lucrării.</li>
+        <li><strong>Folosirea aței dentare:</strong> nu se scoate vertical (risc de smulgere a provizoriului), ci se trage lateral.</li>
+      </ul>
+
+      <h3 className="font-semibold">3. Confort și adaptare</h3>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Este normal să existe o ușoară sensibilitate la rece/cald sau o senzație de "coroană înaltă" primele ore.</li>
+        <li>Dacă mușcătura nu se simte corectă sau durerea este intensă și persistentă, reveniți la cabinet.</li>
+      </ul>
+
+      <h3 className="font-semibold">4. Durată și atenționări</h3>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Lucrarea provizorie este temporară: trebuie păstrată până la definitivă.</li>
+        <li className="font-semibold">Dacă se dezlipește, păstrați coroana curată și contactați medicul pentru recimentare.</li>
+      </ul>
+    </section>
+
+    <section className="space-y-3 mt-6">
+      <h2 className="text-lg font-semibold text-primary">După cimentare definitivă</h2>
+      
+      <h3 className="font-semibold">1. Alimentație</h3>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Evitați mestecatul alimentelor dure și lipicioase în primele <strong>24 de ore</strong> (cimentul are nevoie de timp să se întărească complet).</li>
+        <li>După 24h, se poate mânca normal, dar se recomandă prudență cu alimentele foarte dure.</li>
+      </ul>
+
+      <h3 className="font-semibold">2. Igienă orală</h3>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Periaj riguros, de 2–3 ori pe zi.</li>
+        <li>Folosiți ața dentară și/sau periuțele interdentare, după caz.</li>
+        <li>Apa de gură fluorurată poate fi utilă pentru protecția dinților de sub lucrare.</li>
+      </ul>
+
+      <h3 className="font-semibold">3. Confort și adaptare</h3>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>O ușoară sensibilitate la rece/cald este normală câteva zile.</li>
+        <li>Dacă apare durere persistentă, mobilitate sau senzația că "încurcă" mușcătura, anunțați medicul.</li>
+      </ul>
+
+      <h3 className="font-semibold">4. Monitorizare</h3>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Recomandare pentru controale periodice la 6 luni.</li>
+        <li>Evitați obiceiuri precum roaderea unghiilor, obiectelor dure sau deschiderea ambalajelor cu dinții.</li>
+      </ul>
+    </section>
+  </div>
+);
+
+const ProtocolExtractii = () => (
+  <div className="space-y-4">
+    <h1 className="text-xl font-bold text-primary border-b-2 border-primary pb-2">
+      Protocol pentru extracția dentară
+    </h1>
+
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold text-primary">1. Evaluare preoperatorie</h2>
+      
+      <h3 className="font-semibold">1.1. Anamneză</h3>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Alergii (în special la anestezice locale, antibiotice, analgezice)</li>
+        <li>Medicație curentă (în special anticoagulante, bifosfonați, antidiabetice)</li>
+        <li>Boli sistemice: diabet, boli cardiace, hipertensiune, boli hematologice</li>
+        <li>Episod de infecție recentă / febră</li>
+      </ul>
+
+      <h3 className="font-semibold">1.2. Examinare clinică</h3>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Mobilitatea dintelui</li>
+        <li>Gradul de distrucție coronară</li>
+        <li>Prezența fistulelor, supurației</li>
+        <li>Gingivita, parodontita locală</li>
+        <li>Relația cu dinții vecini, edentații, ocluzia</li>
+      </ul>
+
+      <h3 className="font-semibold">1.3. Examinare imagistică</h3>
+      <p className="ml-4">Radiografie retroalveolară / panoramică. Evaluarea:</p>
+      <ul className="list-disc list-inside space-y-1 ml-6">
+        <li>număr rădăcini, curbura lor</li>
+        <li>grosimea osului vestibular/lingual</li>
+        <li>relația cu structurile anatomice (sinus maxilar, canal mandibular)</li>
+        <li>prezența leziunilor periapicale</li>
+        <li>resorbții sau calcificări</li>
+      </ul>
+    </section>
+
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold text-primary">2. Pregătirea pacientului și a câmpului operator</h2>
+      
+      <h3 className="font-semibold">2.1. Pregătire pacient</h3>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Clătire orală antiseptică (ex. clorhexidină 0,12–0,2%)</li>
+        <li>Explicarea procedurii și obținerea consimțământului informat</li>
+      </ul>
+
+      <h3 className="font-semibold">2.2. Pregătirea câmpului operator</h3>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Spălarea și dezinfectarea mâinilor</li>
+        <li>Izolare cu aspirator și tampoane</li>
+        <li>Poziționarea pacientului:
+          <ul className="list-disc list-inside ml-4 mt-1">
+            <li>maxilar: planul ocluzal la 45° față de podea</li>
+            <li>mandibulă: pacientul aproape orizontal, capul ușor ridicat</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold text-primary">3. Anestezia locală</h2>
+      
+      <h3 className="font-semibold">3.1. Tipuri de anestezie</h3>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li><strong>Infiltrativă:</strong> pentru majoritatea dinților maxilari și incisivi/canini mandibulari</li>
+        <li><strong>Blocaj troncular (mandibular):</strong> pentru molarii/premolarii mandibulari</li>
+        <li>Intraligamentară / intraseptală dacă este necesar suplimentar</li>
+      </ul>
+
+      <h3 className="font-semibold">3.2. Confirmarea eficienței anesteziei</h3>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Senzația de amorțeală în buze/obraz (pentru blocaj)</li>
+        <li>Test tactil/termic la nivel gingival</li>
+      </ul>
+    </section>
+
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold text-primary">4. Etapele extracției dentare</h2>
+      
+      <h3 className="font-semibold">4.1. Faza de ancorare și inserare a instrumentelor</h3>
+      <p className="ml-4 font-medium">A. Desprinderea gingivală (sindesmotomie)</p>
+      <p className="ml-4">Se folosește elevatoare sau sindesmotom pentru: eliberarea ligamentelor parodontale; acces mai bun pentru forceps.</p>
+      
+      <p className="ml-4 font-medium mt-2">B. Luxarea inițială</p>
+      <p className="ml-4">Se folosește elevator drept, poziționat în spațiul interdentare. Mișcări: rotatorii ușoare; balansare controlată. Scop: întreruperea ligamentelor parodontale; mobilizarea dintelui.</p>
+
+      <h3 className="font-semibold">4.2. Faza de prindere cu forcepsul</h3>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Forcepsul se plasează cât mai apical pe rădăcină</li>
+        <li>Verificarea prinderii ferme, fără alunecare</li>
+      </ul>
+
+      <h3 className="font-semibold">4.3. Faza de mobilizare cu forcepsul</h3>
+      <p className="ml-4 font-medium">A. Dinți cu o singură rădăcină (incisivi, canini, premolari superiori)</p>
+      <ul className="list-disc list-inside space-y-1 ml-6">
+        <li>Mișcări buco-oral progresiv, crescând amplitudinea</li>
+        <li>Rotatorii (numai pentru dinții cu rădăcină rotundă: incisivi, canini)</li>
+      </ul>
+      
+      <p className="ml-4 font-medium mt-2">B. Dinți pluriradiculari (molari)</p>
+      <ul className="list-disc list-inside space-y-1 ml-6">
+        <li>Mișcări buco-oral cu creșterea treptată a forței</li>
+        <li className="font-semibold">Fără rotație (risc de fractură radiculară)</li>
+      </ul>
+
+      <p className="ml-4 font-medium mt-2">C. Pentru dinții superiori posteriori</p>
+      <p className="ml-6">Mișcare finală de tracțiune în jos și vestibular.</p>
+
+      <p className="ml-4 font-medium mt-2">D. Pentru dinții inferiori posteriori</p>
+      <p className="ml-6">Mișcare finală de tracțiune în sus și ușoară rotație mezială.</p>
+
+      <h3 className="font-semibold">4.4. Extracția propriu-zisă</h3>
+      <p className="ml-4">Odată ce ligamentele sunt rupte și osul a cedat elastic, dintele iese din alveolă. Control fin al forței pentru a evita: fracturi radiculare; fracturi de corticală.</p>
+    </section>
+
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold text-primary">5. Manevre postextracționale</h2>
+      
+      <h3 className="font-semibold">5.1. Chiuretaj și inspectarea alveolei</h3>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Se chiuretează resturile patologice (granulații, țesut infectat)</li>
+        <li>Se palpează alveola pentru detectarea: rădăcinilor rămase; septurilor fracturate; comunicărilor oro-sinusale</li>
+      </ul>
+
+      <h3 className="font-semibold">5.2. Lavaj</h3>
+      <p className="ml-4">Irigare cu ser fiziologic steril.</p>
+
+      <h3 className="font-semibold">5.3. Hemostază</h3>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Compresă cu tifon sterile 20–30 minute</li>
+        <li>În caz de sângerare: spongostan / colagen; suturi (simple sau în U)</li>
+      </ul>
+    </section>
+
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold text-primary">6. Instrucțiuni postoperatorii pentru pacient</h2>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li>Menține compresa 30 min</li>
+        <li className="font-semibold">Nu clăti gura și nu scuipa 24h</li>
+        <li className="font-semibold">Nu fuma 48–72h</li>
+        <li>Dietă moale, evită sucuri/carbogazoase fierbinți</li>
+        <li>Gheață extern 10–15 min, repetat</li>
+        <li>Începând cu ziua 2: clătiri cu apă de gură cu clorhexidină</li>
+        <li>Analgezice: ibuprofen/paracetamol (conform indicației medicale)</li>
+        <li className="font-semibold">Revenire dacă apar: dureri puternice, halitoză severă, febră, sângerare persistentă</li>
+      </ul>
+    </section>
+
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold text-primary">7. Complicații posibile și management scurt</h2>
+      <ul className="list-disc list-inside space-y-1 ml-4">
+        <li><strong>Fractură radiculară</strong> → extragere cu elevator sau ferăstrău piezo, dacă e accesibilă</li>
+        <li><strong>Fractură corticală vestibulară</strong> → dacă e mică: lăsată în poziție; dacă e mare: repoziționare + sutură</li>
+        <li><strong>Hemoragie</strong> → compresie, agenți hemostatici, sutură</li>
+        <li><strong>Alveolită postextracțională</strong> → lavaj + pansament cu eugenol</li>
+        <li><strong>Comunicare oro-sinuzală</strong> → test Valsalva, sutură în U sau lambou (după caz)</li>
       </ul>
     </section>
   </div>
