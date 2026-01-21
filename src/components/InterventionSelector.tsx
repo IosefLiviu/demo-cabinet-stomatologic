@@ -466,7 +466,7 @@ export function InterventionSelector({
                       )}
                     </div>
                     <div className="flex items-center gap-2 text-sm shrink-0">
-                      <span className="font-medium">{intervention.price} lei</span>
+                      <span className="font-medium">{Number(intervention.price).toFixed(2)} lei</span>
                       <Button
                         type="button"
                         variant="ghost"
