@@ -515,15 +515,15 @@ const ProtocolCariiPedo = () => (
 );
 
 const ProtocolTraumatisme = () => (
-  <div className="space-y-4">
-    <h1 className="text-xl font-bold text-primary border-b-2 border-primary pb-2">
+  <div className="space-y-2">
+    <h1 className="text-xl font-bold text-primary border-b-2 border-primary pb-1">
       PROTOCOL PEDODONȚIE - TRAUMATISME DENTO-PARODONTALE DT
     </h1>
 
-    <section className="space-y-2">
+    <section className="space-y-1">
       <h2 className="text-lg font-semibold text-primary">Prima ședință în urgență</h2>
-      <p>Examenul clinic se rezumă la aprecierea mobilității + deplasări dentare:</p>
-      <ul className="list-disc list-inside space-y-1 ml-4">
+      <p className="text-sm">Examenul clinic se rezumă la aprecierea mobilității + deplasări dentare:</p>
+      <ul className="list-disc list-inside ml-4 text-sm">
         <li>Toaleta sumară a plăgilor muco-gingivale</li>
         <li>Identifici și îndepărtezi eventuali corpi străini</li>
         <li>Extracția dinților temporari FOARTE mobili</li>
@@ -531,100 +531,87 @@ const ProtocolTraumatisme = () => (
       </ul>
     </section>
 
-    <section className="space-y-2">
+    <section className="space-y-1">
       <h2 className="text-lg font-semibold text-primary">CLASIFICAREA TRAUMATISMULUI</h2>
       
-      <h3 className="text-md font-semibold mt-4">1. Fracturi coronare necomplicate care implică smalț/smalț + dentină</h3>
-      <ul className="list-disc list-inside space-y-1 ml-4">
+      <h3 className="text-md font-semibold mt-2">1. Fracturi coronare necomplicate care implică smalț/smalț + dentină</h3>
+      <ul className="list-disc list-inside ml-4 text-sm">
         <li>Netezești marginile anfractuoase</li>
         <li>Doar în smalț faci fluorizare</li>
         <li>Implică dentina - restaurare cu sigilarea dentinei (calciu, CIS foto)</li>
         <li>Control 6-8 săptămâni și la 1 an</li>
       </ul>
 
-      <h3 className="text-md font-semibold mt-4">2. Fracturi coronare complicate cu deschiderea CP</h3>
-      <ul className="list-disc list-inside space-y-1 ml-4">
+      <h3 className="text-md font-semibold mt-2">2. Fracturi coronare complicate cu deschiderea CP</h3>
+      <ul className="list-disc list-inside ml-4 text-sm">
         <li>DT în stadiul ½ și fractură recentă - pulpotomie vitală</li>
         <li>În stadiu 2 și traumatism mai vechi - pulpectomie devitală (3/4 din rădăcină să fie prezente)</li>
         <li>Stadiu 3 - extracția</li>
         <li>Control periodic la 1 săpt, 6-8 săpt și la 1 an</li>
       </ul>
 
-      <h3 className="text-md font-semibold mt-4">3. Fracturi radiculare</h3>
-      <ul className="list-disc list-inside space-y-1 ml-4">
-        <li>În 1/3 apicală - prognostic bun (fragmentul apical se resoarbe cu erupția DP), teoretic se depune țesut de granulație și mobilitatea este redusă - necesită control 2-3 săpt, 6-8 săpt, și la 1 an Rx (dacă apar semne de necroză, mobilitate excesivă) fragmentul coronar se extrage</li>
+      <h3 className="text-md font-semibold mt-2">3. Fracturi radiculare</h3>
+      <ul className="list-disc list-inside ml-4 text-sm">
+        <li>În 1/3 apicală - prognostic bun (fragmentul apical se resoarbe cu erupția DP), se depune țesut de granulație și mobilitatea este redusă - control 2-3 săpt, 6-8 săpt, și la 1 an Rx (dacă apar semne de necroză, mobilitate excesivă) fragmentul coronar se extrage</li>
         <li>Localizare 1/3 cervicală și medie - extracție</li>
       </ul>
 
-      <h3 className="text-md font-semibold mt-4">4. Fracturi corono-radiculare</h3>
-      <ul className="list-disc list-inside space-y-1 ml-4">
+      <h3 className="text-md font-semibold mt-2">4. Fracturi corono-radiculare</h3>
+      <ul className="list-disc list-inside ml-4 text-sm">
         <li>Dacă implicarea radiculară este redusă - îndepărtarea fragmentului coronar mobil și efectuarea pulpotomiei</li>
         <li>Dacă implicarea radiculară este mai mare sau există fragmente multiple - extracția DT</li>
       </ul>
 
-      <h3 className="text-md font-semibold mt-4">5. Fracturi dento-alveolare</h3>
-      <p className="ml-4">Chirurgie (calea Dudești)</p>
+      <h3 className="text-md font-semibold mt-2">5. Fracturi dento-alveolare</h3>
+      <p className="ml-4 text-sm">Chirurgie (calea Dudești)</p>
     </section>
 
-    <section className="space-y-2">
+    <section className="space-y-1">
       <h2 className="text-lg font-semibold text-primary">TRAUMATISME LA NIVELUL ȚESUTURILOR DE SUSȚINERE</h2>
 
-      <h3 className="text-md font-semibold mt-4">1. Subluxația</h3>
-      <p className="ml-4">Lezarea + ruperea limitată a fibrelor ligamentare.</p>
-      <p className="ml-4"><strong>Clinic:</strong> sângerare gingivală, iar dintele prezintă MOBILITATE FĂRĂ DEPLASARE + SENSIBILITATE LA PERCUȚIE</p>
-      <div className="bg-blue-50 border-l-4 border-blue-500 p-3 my-3 ml-4">
-        <p><strong>Ce e de făcut?</strong> Vindecarea leziunii ligamentare prin scoaterea dintelui din ocluzie/repaus alimentar 1 săpt. + monitorizarea periodică</p>
+      <h3 className="text-md font-semibold mt-2">1. Subluxația</h3>
+      <p className="ml-4 text-sm">Lezarea + ruperea limitată a fibrelor ligamentare.</p>
+      <p className="ml-4 text-sm"><strong>Clinic:</strong> sângerare gingivală, iar dintele prezintă MOBILITATE FĂRĂ DEPLASARE + SENSIBILITATE LA PERCUȚIE</p>
+      <div className="bg-blue-50 border-l-4 border-blue-500 p-2 my-1 ml-4">
+        <p className="text-sm"><strong>Ce e de făcut?</strong> Vindecarea leziunii ligamentare prin scoaterea dintelui din ocluzie/repaus alimentar 1 săpt. + monitorizarea periodică</p>
       </div>
 
-      <h3 className="text-md font-semibold mt-4">2. Contuzie</h3>
-      <p className="ml-4">Afectarea limitată a țesutului ligamentar prin strivire fără deplasare dentară.</p>
-      <p className="ml-4"><strong>Clinic:</strong> poate o sensibilitate la percuția în ax/în ocluzie datorată inflamației ligamentului parodontal. Nu mobilitate.</p>
-      <p className="ml-4">Nu necesită tratament, doar monitorizare periodică și reguli stricte de igienă + alimentație moale timp de 1 săptămână</p>
+      <h3 className="text-md font-semibold mt-2">2. Contuzie</h3>
+      <p className="ml-4 text-sm">Afectarea limitată a țesutului ligamentar prin strivire fără deplasare dentară.</p>
+      <p className="ml-4 text-sm"><strong>Clinic:</strong> poate o sensibilitate la percuția în ax/în ocluzie datorată inflamației ligamentului parodontal. Nu mobilitate.</p>
+      <p className="ml-4 text-sm">Nu necesită tratament, doar monitorizare periodică și reguli stricte de igienă + alimentație moale timp de 1 săptămână</p>
 
-      <h3 className="text-md font-semibold mt-4">3. Luxația</h3>
-      <p className="ml-4">Ruperea mai extinsă a fibrelor ligamentare cu deplasarea dintelui din alveola dentară.</p>
+      <h3 className="text-md font-semibold mt-2">3. Luxația</h3>
+      <p className="ml-4 text-sm">Ruperea mai extinsă a fibrelor ligamentare cu deplasarea dintelui din alveola dentară.</p>
 
-      <h4 className="text-sm font-semibold mt-3 ml-4">LUXAȚIE CU EXTRUZIE</h4>
-      <p className="ml-6">Dintele se deplasează din alveolă spre planul de ocluzie</p>
-      <p className="ml-6"><strong>Clinic:</strong> sângerare gingivală, dd deplasat + mobilitate, sensibil la percuție</p>
-      <div className="bg-blue-50 border-l-4 border-blue-500 p-3 my-2 ml-6">
-        <p><strong>Ce e de făcut?</strong></p>
-        <ul className="list-disc list-inside mt-1">
-          <li>Dacă dd nu e foarte mobil - repoziție imediată sub anestezie loco-regională, prin presiune digitală ușoară și imobilizare 7-14 zile (igienă riguroasă)</li>
-          <li>Dacă dd e foarte mobil - extracție</li>
-        </ul>
+      <h4 className="text-sm font-semibold mt-1 ml-4">LUXAȚIE CU EXTRUZIE</h4>
+      <p className="ml-6 text-sm">Dintele se deplasează din alveolă spre planul de ocluzie. <strong>Clinic:</strong> sângerare gingivală, dd deplasat + mobilitate, sensibil la percuție</p>
+      <div className="bg-blue-50 border-l-4 border-blue-500 p-2 my-1 ml-6">
+        <p className="text-sm"><strong>Ce e de făcut?</strong> Dacă dd nu e foarte mobil - repoziție imediată sub anestezie loco-regională, prin presiune digitală ușoară și imobilizare 7-14 zile (igienă riguroasă). Dacă dd e foarte mobil - extracție</p>
       </div>
 
-      <h4 className="text-sm font-semibold mt-3 ml-4">LUXAȚIE LATERALĂ</h4>
-      <p className="ml-6">Dd deplasat V/O dar NU MOBILITATE</p>
+      <h4 className="text-sm font-semibold mt-1 ml-4">LUXAȚIE LATERALĂ</h4>
+      <p className="ml-6 text-sm">Dd deplasat V/O dar NU MOBILITATE</p>
 
-      <h4 className="text-sm font-semibold mt-3 ml-4">LUXAȚIE VESTIBULARĂ</h4>
-      <p className="ml-6">Percuție SUNET METALIC - RX</p>
-      <ul className="list-disc list-inside space-y-1 ml-8">
+      <h4 className="text-sm font-semibold mt-1 ml-4">LUXAȚIE VESTIBULARĂ</h4>
+      <p className="ml-6 text-sm">Percuție SUNET METALIC - RX</p>
+      <ul className="list-disc list-inside ml-8 text-sm">
         <li>Dacă mugurele DP nu este afectat = expectativă, dintele se va repoziționa treptat sub acțiunea forței exercitate de către orbicularul buzei cu condiția suprimării obiceiurilor vicioase de supt</li>
         <li>Dacă mugurele DP este afectat = extracția</li>
       </ul>
 
-      <h4 className="text-sm font-semibold mt-3 ml-4">LUXAȚIE ORALĂ - Angrenaj invers</h4>
-      <p className="ml-6">Traumă ocluzală suplimentară - repoziție manuală sub anestezie loco-regională/topică</p>
-      <p className="ml-6">Obligatoriu control la 2-3 săpt și RX la 6-8 săpt respectiv 1 an</p>
-      <p className="ml-6">Părinții: igienă orală riguroasă, dietă moale 1 săpt</p>
+      <h4 className="text-sm font-semibold mt-1 ml-4">LUXAȚIE ORALĂ - Angrenaj invers</h4>
+      <p className="ml-6 text-sm">Traumă ocluzală suplimentară - repoziție manuală sub anestezie loco-regională/topică. Obligatoriu control la 2-3 săpt și RX la 6-8 săpt respectiv 1 an. Părinții: igienă orală riguroasă, dietă moale 1 săpt</p>
 
-      <h4 className="text-sm font-semibold mt-3 ml-4">LUXAȚIA CU INTRUZIE</h4>
-      <p className="ml-6"><strong>Clinic:</strong> sângerare gingivală, vizibilitate redusă a coroanei pe arcada dentară, NU MOBILITATE, percuție sunet metalic</p>
-      <p className="ml-6">Rx obligatoriu</p>
-      <div className="bg-blue-50 border-l-4 border-blue-500 p-3 my-2 ml-6">
-        <p><strong>Ce e de făcut?</strong></p>
-        <ul className="list-disc list-inside mt-1">
-          <li>Dacă coroana nu mai e vizibilă în CB, iar dinele intrudat vine în contact cu mugurele DP = extracție</li>
-          <li>Dacă coroana parțial vizibilă și nu afectează mugurele DP = expectativă 2-4 săpt. până când își va relua erupția spontan. Dacă nu - extracția</li>
-        </ul>
-        <p className="mt-2">Monitorizare periodică pe perioada expectativă - poate apărea necroză sau infecție = extracție</p>
+      <h4 className="text-sm font-semibold mt-1 ml-4">LUXAȚIA CU INTRUZIE</h4>
+      <p className="ml-6 text-sm"><strong>Clinic:</strong> sângerare gingivală, vizibilitate redusă a coroanei pe arcada dentară, NU MOBILITATE, percuție sunet metalic. Rx obligatoriu</p>
+      <div className="bg-blue-50 border-l-4 border-blue-500 p-2 my-1 ml-6">
+        <p className="text-sm"><strong>Ce e de făcut?</strong> Dacă coroana nu mai e vizibilă în CB, iar dd intrudat vine în contact cu mugurele DP = extracție. Dacă coroana parțial vizibilă și nu afectează mugurele DP = expectativă 2-4 săpt. până când își va relua erupția spontan. Dacă nu - extracția. Monitorizare periodică pe perioada expectativă - poate apărea necroză sau infecție = extracție</p>
       </div>
 
-      <h3 className="text-md font-semibold mt-4">4. Avulsia</h3>
-      <div className="bg-red-50 border-l-4 border-red-500 p-3 my-3">
-        <p className="font-bold">Nu se face reimplantarea!</p>
+      <h3 className="text-md font-semibold mt-2">4. Avulsia</h3>
+      <div className="bg-red-50 border-l-4 border-red-500 p-2 my-1">
+        <p className="font-bold text-sm">Nu se face reimplantarea!</p>
       </div>
     </section>
   </div>
