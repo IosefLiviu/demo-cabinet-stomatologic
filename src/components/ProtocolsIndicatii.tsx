@@ -125,7 +125,7 @@ const ProtocolsIndicatii = () => {
             Tel: ${CLINIC.phone} | Email: ${CLINIC.email}
           </div>
         </div>
-        \${printContent}
+        ${printContent}
         <div class="footer">
           ${getClinicCopyright()}<br/>
           ${CLINIC.website}
