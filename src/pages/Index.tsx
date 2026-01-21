@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
-import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, ClipboardList, Printer, ChevronDown, Radio, FileText, Pill, UserCheck } from 'lucide-react';
+import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, Radio, FileText, Pill, UserCheck } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { DateNavigator } from '@/components/DateNavigator';
 import { CabinetTabs } from '@/components/CabinetTabs';
@@ -23,12 +23,6 @@ import { CompleteAppointmentDialog, PaymentData } from '@/components/CompleteApp
 import { CancelAppointmentDialog } from '@/components/CancelAppointmentDialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { usePatients, Patient } from '@/hooks/usePatients';
 import { useAppointmentsDB, AppointmentDB } from '@/hooks/useAppointmentsDB';
 import { useTreatments } from '@/hooks/useTreatments';
@@ -413,82 +407,41 @@ const Index = () => {
 
       <main className="container px-2 sm:px-4 py-4 sm:py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-3 h-auto">
+          <TabsList className="flex flex-wrap w-full h-auto gap-1">
             <TabsTrigger value="calendar" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
               <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden xs:inline">Calendar</span>
+              <span className="hidden sm:inline">Calendar</span>
             </TabsTrigger>
             <TabsTrigger value="patients" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
               <Users className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden xs:inline">Pacienți</span>
+              <span className="hidden sm:inline">Pacienți</span>
             </TabsTrigger>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button 
-                className={`inline-flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm py-2 px-3 rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-                    ['reports', 'expenses', 'radiology-referral', 'billing', 'prescription', 'patient-info'].includes(activeTab)
-                      ? 'bg-background text-foreground shadow-sm' 
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  <Printer className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden xs:inline">Printabile</span>
-                  <ChevronDown className="h-3 w-3" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center">
-                <DropdownMenuItem 
-                  onClick={() => setActiveTab('reports')} 
-                  className={`gap-2 ${activeTab === 'reports' ? 'bg-accent font-semibold' : ''}`}
-                >
-                  <BarChart3 className="h-4 w-4" />
-                  Rapoarte
-                  {activeTab === 'reports' && <span className="ml-auto text-primary">✓</span>}
-                </DropdownMenuItem>
-                {isAdmin && (
-                  <DropdownMenuItem 
-                    onClick={() => setActiveTab('expenses')} 
-                    className={`gap-2 ${activeTab === 'expenses' ? 'bg-accent font-semibold' : ''}`}
-                  >
-                    <Wallet className="h-4 w-4" />
-                    Cheltuieli
-                    {activeTab === 'expenses' && <span className="ml-auto text-primary">✓</span>}
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem 
-                  onClick={() => setActiveTab('radiology-referral')} 
-                  className={`gap-2 ${activeTab === 'radiology-referral' ? 'bg-accent font-semibold' : ''}`}
-                >
-                  <Radio className="h-4 w-4" />
-                  Trimitere Radiologie
-                  {activeTab === 'radiology-referral' && <span className="ml-auto text-primary">✓</span>}
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => setActiveTab('billing')} 
-                  className={`gap-2 ${activeTab === 'billing' ? 'bg-accent font-semibold' : ''}`}
-                >
-                  <FileText className="h-4 w-4" />
-                  Facturare
-                  {activeTab === 'billing' && <span className="ml-auto text-primary">✓</span>}
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => setActiveTab('prescription')} 
-                  className={`gap-2 ${activeTab === 'prescription' ? 'bg-accent font-semibold' : ''}`}
-                >
-                  <Pill className="h-4 w-4" />
-                  Eliberare Rețetă
-                  {activeTab === 'prescription' && <span className="ml-auto text-primary">✓</span>}
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => setActiveTab('patient-info')} 
-                  className={`gap-2 ${activeTab === 'patient-info' ? 'bg-accent font-semibold' : ''}`}
-                >
-                  <UserCheck className="h-4 w-4" />
-                  Informare Pacient
-                  {activeTab === 'patient-info' && <span className="ml-auto text-primary">✓</span>}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <TabsTrigger value="reports" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+              <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Rapoarte</span>
+            </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="expenses" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                <Wallet className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Cheltuieli</span>
+              </TabsTrigger>
+            )}
+            <TabsTrigger value="radiology-referral" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+              <Radio className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Radiologie</span>
+            </TabsTrigger>
+            <TabsTrigger value="billing" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+              <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Facturare</span>
+            </TabsTrigger>
+            <TabsTrigger value="prescription" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+              <Pill className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Rețetă</span>
+            </TabsTrigger>
+            <TabsTrigger value="patient-info" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+              <UserCheck className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Informare</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="calendar" className="space-y-4 sm:space-y-6">
