@@ -239,17 +239,22 @@ export function AppointmentForm({
           return;
         }
         
+        // Calculate base price per tooth from plan item
+        const originalTeethCount = toothNumbers.length || 1;
+        const basePricePerTooth = (item.price || 0) / originalTeethCount;
+        
         if (remainingTeeth.length > 1) {
           // Multiple teeth: create one entry per remaining tooth, dividing CAS evenly
-          const casPerTooth = (item.cas || 0) / toothNumbers.length; // Use original count for CAS division
-          const laboratorPerTooth = (item.laborator || 0) / toothNumbers.length;
+          const casPerTooth = (item.cas || 0) / originalTeethCount;
+          const laboratorPerTooth = (item.laborator || 0) / originalTeethCount;
           
           remainingTeeth.forEach((toothNumber, toothIndex) => {
             planInterventions.push({
               id: `plan-${item.id || itemIndex}-tooth-${toothNumber}-${Date.now()}-${toothIndex}`,
               treatmentId: item.treatmentId || '',
               treatmentName: item.treatmentName,
-              price: item.price || 0,
+              price: basePricePerTooth, // Price per tooth
+              basePrice: basePricePerTooth, // Store base price for scaling
               cas: Math.round(casPerTooth * 100) / 100,
               laborator: Math.round(laboratorPerTooth * 100) / 100,
               duration: item.duration || 30,
@@ -260,14 +265,15 @@ export function AppointmentForm({
           });
         } else if (remainingTeeth.length === 1) {
           // Single remaining tooth
-          const casPerTooth = (item.cas || 0) / toothNumbers.length;
-          const laboratorPerTooth = (item.laborator || 0) / toothNumbers.length;
+          const casPerTooth = (item.cas || 0) / originalTeethCount;
+          const laboratorPerTooth = (item.laborator || 0) / originalTeethCount;
           
           planInterventions.push({
             id: `plan-${item.id || itemIndex}-${Date.now()}`,
             treatmentId: item.treatmentId || '',
             treatmentName: item.treatmentName,
-            price: item.price || 0,
+            price: basePricePerTooth, // Price per tooth
+            basePrice: basePricePerTooth, // Store base price for scaling
             cas: Math.round(casPerTooth * 100) / 100,
             laborator: Math.round(laboratorPerTooth * 100) / 100,
             duration: item.duration || 30,
@@ -282,6 +288,7 @@ export function AppointmentForm({
             treatmentId: item.treatmentId || '',
             treatmentName: item.treatmentName,
             price: item.price || 0,
+            basePrice: item.price || 0, // Store base price for scaling
             cas: item.cas || 0,
             laborator: item.laborator || 0,
             duration: item.duration || 30,
