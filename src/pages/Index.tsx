@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, Radio, FileText, Pill, UserCheck, Printer, Stethoscope, ClipboardList } from 'lucide-react';
 import { Header } from '@/components/Header';
@@ -23,6 +23,7 @@ import PatientInformation from '@/components/PatientInformation';
 import { CabinetSettings } from '@/components/CabinetSettings';
 import { CompleteAppointmentDialog, PaymentData } from '@/components/CompleteAppointmentDialog';
 import { CancelAppointmentDialog } from '@/components/CancelAppointmentDialog';
+import { NavigationButtons } from '@/components/NavigationButtons';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePatients, Patient } from '@/hooks/usePatients';
@@ -33,11 +34,22 @@ import { useDoctors } from '@/hooks/useDoctors';
 import { useAuth } from '@/hooks/useAuth';
 import { TIME_SLOTS, Appointment } from '@/types/appointment';
 
+interface NavigationState {
+  tab: string;
+  patientId?: string;
+  patientName?: string;
+}
+
 const Index = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedCabinet, setSelectedCabinet] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState('calendar');
   const [showCabinetSettings, setShowCabinetSettings] = useState(false);
+
+  // Navigation history state
+  const [navHistory, setNavHistory] = useState<NavigationState[]>([{ tab: 'calendar' }]);
+  const [navIndex, setNavIndex] = useState(0);
+  const isNavigatingRef = useRef(false);
 
   // Patient state
   const [showPatientForm, setShowPatientForm] = useState(false);
@@ -99,6 +111,79 @@ const Index = () => {
   const { cabinets, updateCabinetDoctor } = useCabinets();
   const { doctors } = useDoctors();
   const { isAdmin } = useAuth();
+
+  // Navigation helpers
+  const pushNavState = useCallback((state: NavigationState) => {
+    if (isNavigatingRef.current) {
+      isNavigatingRef.current = false;
+      return;
+    }
+    
+    setNavHistory(prev => {
+      const newHistory = prev.slice(0, navIndex + 1);
+      const lastState = newHistory[newHistory.length - 1];
+      
+      // Don't push duplicate states
+      if (lastState && 
+          lastState.tab === state.tab && 
+          lastState.patientId === state.patientId) {
+        return newHistory;
+      }
+      
+      return [...newHistory, state];
+    });
+    setNavIndex(prev => prev + 1);
+  }, [navIndex]);
+
+  const handleNavBack = useCallback(() => {
+    if (navIndex > 0) {
+      isNavigatingRef.current = true;
+      const prevState = navHistory[navIndex - 1];
+      setNavIndex(navIndex - 1);
+      
+      // Apply the previous state
+      setActiveTab(prevState.tab);
+      if (prevState.patientId) {
+        const patient = patients.find(p => p.id === prevState.patientId);
+        if (patient) {
+          setSelectedPatient(patient);
+        }
+      } else {
+        setSelectedPatient(null);
+      }
+      setTreatmentPlanSourcePatient(null);
+    }
+  }, [navIndex, navHistory, patients]);
+
+  const handleNavForward = useCallback(() => {
+    if (navIndex < navHistory.length - 1) {
+      isNavigatingRef.current = true;
+      const nextState = navHistory[navIndex + 1];
+      setNavIndex(navIndex + 1);
+      
+      // Apply the next state
+      setActiveTab(nextState.tab);
+      if (nextState.patientId) {
+        const patient = patients.find(p => p.id === nextState.patientId);
+        if (patient) {
+          setSelectedPatient(patient);
+        }
+      } else {
+        setSelectedPatient(null);
+      }
+    }
+  }, [navIndex, navHistory, patients]);
+
+  const canGoBack = navIndex > 0;
+  const canGoForward = navIndex < navHistory.length - 1;
+  const previousState = navIndex > 0 ? navHistory[navIndex - 1] : null;
+  const nextState = navIndex < navHistory.length - 1 ? navHistory[navIndex + 1] : null;
+
+  // Track tab changes for navigation history
+  const handleTabChange = useCallback((tab: string) => {
+    setActiveTab(tab);
+    pushNavState({ tab });
+  }, [pushNavState]);
 
   useEffect(() => {
     if (activeTab === 'calendar') {
@@ -409,8 +494,17 @@ const Index = () => {
       <Header />
 
       <main className="container px-2 sm:px-4 py-4 sm:py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="flex flex-wrap w-full h-auto gap-1">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4 sm:space-y-6">
+          <div className="flex items-center gap-2">
+            <NavigationButtons
+              canGoBack={canGoBack}
+              canGoForward={canGoForward}
+              previousLabel={previousState?.patientName || previousState?.tab}
+              nextLabel={nextState?.patientName || nextState?.tab}
+              onBack={handleNavBack}
+              onForward={handleNavForward}
+            />
+            <TabsList className="flex flex-wrap flex-1 h-auto gap-1">
             <TabsTrigger value="calendar" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
               <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Calendar</span>
@@ -437,7 +531,8 @@ const Index = () => {
               <Printer className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Printabile</span>
             </TabsTrigger>
-          </TabsList>
+            </TabsList>
+          </div>
 
           <TabsContent value="calendar" className="space-y-4 sm:space-y-6">
             {/* Summary */}
@@ -501,15 +596,6 @@ const Index = () => {
               doctors={doctors}
               initialPatientId={treatmentPlanPatientId}
               initialPlan={editingTreatmentPlan}
-              sourcePatient={treatmentPlanSourcePatient}
-              onBack={() => {
-                if (treatmentPlanSourcePatient) {
-                  setSelectedPatient(treatmentPlanSourcePatient);
-                  setActiveTab('patients');
-                  setTreatmentPlanSourcePatient(null);
-                  setTreatmentPlanPatientId(undefined);
-                }
-              }}
               onPlanSaved={() => {
                 // Plan stays open, just clear the initial editing state
                 setEditingTreatmentPlan(undefined);
@@ -598,13 +684,30 @@ const Index = () => {
         onClose={() => setSelectedPatient(null)}
         onEdit={handleEditPatient}
         onOpenTreatmentPlan={(patient) => {
+          // Push patient state to nav history before leaving
+          pushNavState({ 
+            tab: 'patients', 
+            patientId: patient.id, 
+            patientName: `${patient.first_name} ${patient.last_name}` 
+          });
+          
           setTreatmentPlanPatientId(patient.id);
           setEditingTreatmentPlan(undefined);
           setTreatmentPlanSourcePatient(patient);
           setSelectedPatient(null);
           setActiveTab('treatment-plan');
+          
+          // Push the treatment plan state
+          pushNavState({ tab: 'treatment-plan' });
         }}
         onEditTreatmentPlan={(patient, plan) => {
+          // Push patient state to nav history before leaving
+          pushNavState({ 
+            tab: 'patients', 
+            patientId: patient.id, 
+            patientName: `${patient.first_name} ${patient.last_name}` 
+          });
+          
           setTreatmentPlanPatientId(patient.id);
           setEditingTreatmentPlan({
             id: plan.id,
@@ -628,6 +731,9 @@ const Index = () => {
           setTreatmentPlanSourcePatient(patient);
           setSelectedPatient(null);
           setActiveTab('treatment-plan');
+          
+          // Push the treatment plan state
+          pushNavState({ tab: 'treatment-plan' });
         }}
         onCreateAppointment={(patient, treatmentName, interventions, doctorId) => {
           setSelectedPatient(null);
