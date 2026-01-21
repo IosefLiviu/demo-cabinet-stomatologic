@@ -5,13 +5,23 @@
 /* Hide number input spinners/arrows */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  margin: 0 !important;
+  display: none !important;
 }
 
 input[type="number"] {
-  -moz-appearance: textfield;
-  appearance: textfield;
+  -moz-appearance: textfield !important;
+  -webkit-appearance: textfield !important;
+  appearance: textfield !important;
+}
+
+/* Fix mobile touch input issues */
+input[type="number"]:focus {
+  -webkit-user-select: text !important;
+  user-select: text !important;
 }
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
