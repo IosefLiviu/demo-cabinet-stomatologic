@@ -239,9 +239,10 @@ export function AppointmentForm({
           return;
         }
         
-        // Calculate base price per tooth from plan item
+        // item.price is already the price per tooth (initialPrice from treatment plan)
+        // So we use it directly without dividing
         const originalTeethCount = toothNumbers.length || 1;
-        const basePricePerTooth = (item.price || 0) / originalTeethCount;
+        const basePricePerTooth = item.price || 0; // Price is already per-tooth!
         
         if (remainingTeeth.length > 1) {
           // Multiple teeth: create one entry per remaining tooth, dividing CAS evenly
@@ -272,7 +273,7 @@ export function AppointmentForm({
             id: `plan-${item.id || itemIndex}-${Date.now()}`,
             treatmentId: item.treatmentId || '',
             treatmentName: item.treatmentName,
-            price: basePricePerTooth, // Price per tooth
+            price: basePricePerTooth, // Price per tooth (already correct)
             basePrice: basePricePerTooth, // Store base price for scaling
             cas: Math.round(casPerTooth * 100) / 100,
             laborator: Math.round(laboratorPerTooth * 100) / 100,
