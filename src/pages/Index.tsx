@@ -348,11 +348,24 @@ const Index = () => {
 
     let appointmentId: string | undefined;
     
+    // Get patient name for notification
+    let patientFullName = formData.patientName;
+    if (!patientFullName && formData.patientId) {
+      const patient = patients.find(p => p.id === formData.patientId);
+      if (patient) {
+        patientFullName = `${patient.first_name} ${patient.last_name}`;
+      }
+    }
+    
+    // Get cabinet name for notification
+    const cabinet = cabinets.find(c => c.id === formData.cabinetId);
+    const cabinetName = cabinet?.name || 'Cabinet';
+    
     if (editingAppointmentData) {
       await updateAppointment(editingAppointmentData.id, appointmentPayload);
       appointmentId = editingAppointmentData.id;
     } else {
-      const newAppointment = await addAppointment(appointmentPayload);
+      const newAppointment = await addAppointment(appointmentPayload, patientFullName, cabinetName);
       appointmentId = newAppointment?.id;
     }
 

@@ -42,6 +42,7 @@ interface Doctor {
   color: string;
   specialization?: string;
   doctor_code?: string;
+  email?: string | null;
   is_active: boolean;
   user_id?: string | null;
 }
@@ -76,6 +77,7 @@ export default function Admin() {
     color: PRESET_COLORS[0],
     specialization: '',
     doctor_code: '',
+    email: '',
   });
 
   // Users state
@@ -146,6 +148,7 @@ export default function Admin() {
         color: doctor.color,
         specialization: doctor.specialization || '',
         doctor_code: doctor.doctor_code || '',
+        email: doctor.email || '',
       });
     } else {
       setEditingDoctor(null);
@@ -154,6 +157,7 @@ export default function Admin() {
         color: PRESET_COLORS[0],
         specialization: '',
         doctor_code: '',
+        email: '',
       });
     }
     setDialogOpen(true);
@@ -178,6 +182,7 @@ export default function Admin() {
             color: formData.color,
             specialization: formData.specialization || null,
             doctor_code: formData.doctor_code || null,
+            email: formData.email || null,
           })
           .eq('id', editingDoctor.id);
 
@@ -191,6 +196,7 @@ export default function Admin() {
             color: formData.color,
             specialization: formData.specialization || null,
             doctor_code: formData.doctor_code || null,
+            email: formData.email || null,
           });
 
         if (error) throw error;
@@ -951,6 +957,19 @@ export default function Admin() {
                 />
                 <p className="text-xs text-muted-foreground">
                   Codul medical afișat pe rețete și documente oficiale
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="doctor-email">Email (pentru notificări)</Label>
+                <Input
+                  id="doctor-email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="doctor@exemplu.ro"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Doctorul va primi notificări prin email la programări noi
                 </p>
               </div>
               <div className="space-y-2">
