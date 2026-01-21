@@ -109,6 +109,14 @@ const lowerPermanentTeeth = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35,
 const upperDeciduousTeeth = [55, 54, 53, 52, 51, 61, 62, 63, 64, 65];
 const lowerDeciduousTeeth = [85, 84, 83, 82, 81, 71, 72, 73, 74, 75];
 
+// Quadrant-based teeth groupings (FDI notation)
+const quadrant1 = [18, 17, 16, 15, 14, 13, 12, 11]; // Upper right
+const quadrant2 = [21, 22, 23, 24, 25, 26, 27, 28]; // Upper left
+const quadrant3 = [31, 32, 33, 34, 35, 36, 37, 38]; // Lower left
+const quadrant4 = [48, 47, 46, 45, 44, 43, 42, 41]; // Lower right
+const upperArch = [...quadrant1, ...quadrant2]; // Maxilar sus
+const lowerArch = [...quadrant4, ...quadrant3]; // Mandibular jos
+
 // All teeth combined
 const allTeeth = [
   ...upperPermanentTeeth,
@@ -128,6 +136,8 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
   const [patientSearch, setPatientSearch] = useState('');
   const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [editingPlanId, setEditingPlanId] = useState<string | undefined>();
+  // Selection mode per item: 'teeth' for individual, 'arch' for quadrant/arch selection
+  const [selectionMode, setSelectionMode] = useState<Record<string, 'teeth' | 'arch'>>({});
 
 
   // Update selectedPatientId when initialPatientId changes
@@ -321,6 +331,37 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
           : [...item.toothNumbers, tooth].sort((a, b) => a - b)
       };
     }));
+  };
+
+  // Handle selecting/deselecting an entire arch or quadrant
+  const handleArchSelection = (itemId: string, teethToToggle: number[]) => {
+    setPlanItems(planItems.map(item => {
+      if (item.id !== itemId) return item;
+      
+      // Check if all teeth in this group are already selected
+      const allSelected = teethToToggle.every(t => item.toothNumbers.includes(t));
+      
+      let newToothNumbers: number[];
+      
+      if (allSelected) {
+        // Deselect all teeth in the group
+        newToothNumbers = item.toothNumbers.filter(t => !teethToToggle.includes(t));
+      } else {
+        // Select all teeth in the group that aren't already selected
+        const teethToAdd = teethToToggle.filter(t => !item.toothNumbers.includes(t));
+        newToothNumbers = [...item.toothNumbers, ...teethToAdd].sort((a, b) => a - b);
+      }
+      
+      return {
+        ...item,
+        toothNumbers: newToothNumbers,
+      };
+    }));
+  };
+
+  // Get the current selection mode for an item
+  const getSelectionMode = (itemId: string): 'teeth' | 'arch' => {
+    return selectionMode[itemId] || 'teeth';
   };
 
   const handleRemoveItem = (itemId: string) => {
@@ -625,78 +666,183 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
                                 : '-'}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-auto p-3" align="start">
+                          <PopoverContent className="w-auto p-3 bg-popover" align="start">
                             <div className="space-y-3">
-                              <p className="text-sm font-medium">Selectează dinții</p>
-                              
-                              {/* Selection buttons */}
-                              <div className="space-y-1">
-                                <div className="text-[10px] text-muted-foreground text-center">Superior permanent</div>
-                                <div className="flex justify-center gap-1">
-                                  {upperPermanentTeeth.map(tooth => (
-                                    <Button
-                                      key={tooth}
-                                      variant={item.toothNumbers.includes(tooth) ? "default" : "outline"}
-                                      size="sm"
-                                      className="h-7 w-7 p-0 text-xs"
-                                      onClick={() => handleToggleTooth(item.id, tooth)}
-                                    >
-                                      {tooth}
-                                    </Button>
-                                  ))}
-                                </div>
-                              </div>
-                              <div className="space-y-1">
-                                <div className="text-[10px] text-muted-foreground text-center">De lapte superior</div>
-                                <div className="flex justify-center gap-1">
-                                  {upperDeciduousTeeth.map(tooth => (
-                                    <Button
-                                      key={tooth}
-                                      variant={item.toothNumbers.includes(tooth) ? "default" : "outline"}
-                                      size="sm"
-                                      className="h-7 w-7 p-0 text-xs rounded-full border-dashed"
-                                      onClick={() => handleToggleTooth(item.id, tooth)}
-                                    >
-                                      {tooth}
-                                    </Button>
-                                  ))}
+                              <div className="flex items-center justify-between gap-4">
+                                <p className="text-sm font-medium">Selectează dinții</p>
+                                <div className="flex gap-1">
+                                  <Button
+                                    type="button"
+                                    variant={getSelectionMode(item.id) === 'teeth' ? 'default' : 'outline'}
+                                    size="sm"
+                                    className="h-7 text-xs"
+                                    onClick={() => setSelectionMode(prev => ({ ...prev, [item.id]: 'teeth' }))}
+                                  >
+                                    Dinți
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant={getSelectionMode(item.id) === 'arch' ? 'default' : 'outline'}
+                                    size="sm"
+                                    className="h-7 text-xs"
+                                    onClick={() => setSelectionMode(prev => ({ ...prev, [item.id]: 'arch' }))}
+                                  >
+                                    Maxilar
+                                  </Button>
                                 </div>
                               </div>
                               
-                              <div className="border-t my-2" />
-                              
-                              <div className="space-y-1">
-                                <div className="text-[10px] text-muted-foreground text-center">De lapte inferior</div>
-                                <div className="flex justify-center gap-1">
-                                  {lowerDeciduousTeeth.map(tooth => (
-                                    <Button
-                                      key={tooth}
-                                      variant={item.toothNumbers.includes(tooth) ? "default" : "outline"}
-                                      size="sm"
-                                      className="h-7 w-7 p-0 text-xs rounded-full border-dashed"
-                                      onClick={() => handleToggleTooth(item.id, tooth)}
-                                    >
-                                      {tooth}
-                                    </Button>
-                                  ))}
+                              {getSelectionMode(item.id) === 'teeth' ? (
+                                <>
+                                  {/* Individual teeth selection */}
+                                  <div className="space-y-1">
+                                    <div className="text-[10px] text-muted-foreground text-center">Superior permanent</div>
+                                    <div className="flex justify-center gap-1">
+                                      {upperPermanentTeeth.map(tooth => (
+                                        <Button
+                                          key={tooth}
+                                          variant={item.toothNumbers.includes(tooth) ? "default" : "outline"}
+                                          size="sm"
+                                          className="h-7 w-7 p-0 text-xs"
+                                          onClick={() => handleToggleTooth(item.id, tooth)}
+                                        >
+                                          {tooth}
+                                        </Button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <div className="text-[10px] text-muted-foreground text-center">De lapte superior</div>
+                                    <div className="flex justify-center gap-1">
+                                      {upperDeciduousTeeth.map(tooth => (
+                                        <Button
+                                          key={tooth}
+                                          variant={item.toothNumbers.includes(tooth) ? "default" : "outline"}
+                                          size="sm"
+                                          className="h-7 w-7 p-0 text-xs rounded-full border-dashed"
+                                          onClick={() => handleToggleTooth(item.id, tooth)}
+                                        >
+                                          {tooth}
+                                        </Button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="border-t my-2" />
+                                  
+                                  <div className="space-y-1">
+                                    <div className="text-[10px] text-muted-foreground text-center">De lapte inferior</div>
+                                    <div className="flex justify-center gap-1">
+                                      {lowerDeciduousTeeth.map(tooth => (
+                                        <Button
+                                          key={tooth}
+                                          variant={item.toothNumbers.includes(tooth) ? "default" : "outline"}
+                                          size="sm"
+                                          className="h-7 w-7 p-0 text-xs rounded-full border-dashed"
+                                          onClick={() => handleToggleTooth(item.id, tooth)}
+                                        >
+                                          {tooth}
+                                        </Button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <div className="text-[10px] text-muted-foreground text-center">Inferior permanent</div>
+                                    <div className="flex justify-center gap-1">
+                                      {lowerPermanentTeeth.map(tooth => (
+                                        <Button
+                                          key={tooth}
+                                          variant={item.toothNumbers.includes(tooth) ? "default" : "outline"}
+                                          size="sm"
+                                          className="h-7 w-7 p-0 text-xs"
+                                          onClick={() => handleToggleTooth(item.id, tooth)}
+                                        >
+                                          {tooth}
+                                        </Button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </>
+                              ) : (
+                                /* Arch/Quadrant Selection Mode */
+                                <div className="space-y-3">
+                                  {/* Arcade (Maxilar sus / Mandibular jos) */}
+                                  <div className="space-y-2">
+                                    <div className="text-[10px] text-muted-foreground font-medium">Arcade</div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <Button
+                                        variant={upperArch.every(t => item.toothNumbers.includes(t)) ? "default" : 
+                                                upperArch.some(t => item.toothNumbers.includes(t)) ? "secondary" : "outline"}
+                                        size="sm"
+                                        className="h-12 flex flex-col gap-0.5"
+                                        onClick={() => handleArchSelection(item.id, upperArch)}
+                                      >
+                                        <span className="font-bold text-xs">Maxilar Sus</span>
+                                        <span className="text-[10px] opacity-70">{upperArch.filter(t => item.toothNumbers.includes(t)).length}/16</span>
+                                      </Button>
+                                      <Button
+                                        variant={lowerArch.every(t => item.toothNumbers.includes(t)) ? "default" : 
+                                                lowerArch.some(t => item.toothNumbers.includes(t)) ? "secondary" : "outline"}
+                                        size="sm"
+                                        className="h-12 flex flex-col gap-0.5"
+                                        onClick={() => handleArchSelection(item.id, lowerArch)}
+                                      >
+                                        <span className="font-bold text-xs">Mandibular Jos</span>
+                                        <span className="text-[10px] opacity-70">{lowerArch.filter(t => item.toothNumbers.includes(t)).length}/16</span>
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="border-t my-2" />
+                                  
+                                  {/* Cadrane (1-4) */}
+                                  <div className="space-y-2">
+                                    <div className="text-[10px] text-muted-foreground font-medium">Cadrane</div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <Button
+                                        variant={quadrant1.every(t => item.toothNumbers.includes(t)) ? "default" : 
+                                                quadrant1.some(t => item.toothNumbers.includes(t)) ? "secondary" : "outline"}
+                                        size="sm"
+                                        className="h-12 flex flex-col gap-0.5"
+                                        onClick={() => handleArchSelection(item.id, quadrant1)}
+                                      >
+                                        <span className="font-bold text-xs">Cadran 1</span>
+                                        <span className="text-[10px] opacity-70">Superior dreapta ({quadrant1.filter(t => item.toothNumbers.includes(t)).length}/8)</span>
+                                      </Button>
+                                      <Button
+                                        variant={quadrant2.every(t => item.toothNumbers.includes(t)) ? "default" : 
+                                                quadrant2.some(t => item.toothNumbers.includes(t)) ? "secondary" : "outline"}
+                                        size="sm"
+                                        className="h-12 flex flex-col gap-0.5"
+                                        onClick={() => handleArchSelection(item.id, quadrant2)}
+                                      >
+                                        <span className="font-bold text-xs">Cadran 2</span>
+                                        <span className="text-[10px] opacity-70">Superior stânga ({quadrant2.filter(t => item.toothNumbers.includes(t)).length}/8)</span>
+                                      </Button>
+                                      <Button
+                                        variant={quadrant4.every(t => item.toothNumbers.includes(t)) ? "default" : 
+                                                quadrant4.some(t => item.toothNumbers.includes(t)) ? "secondary" : "outline"}
+                                        size="sm"
+                                        className="h-12 flex flex-col gap-0.5"
+                                        onClick={() => handleArchSelection(item.id, quadrant4)}
+                                      >
+                                        <span className="font-bold text-xs">Cadran 4</span>
+                                        <span className="text-[10px] opacity-70">Inferior dreapta ({quadrant4.filter(t => item.toothNumbers.includes(t)).length}/8)</span>
+                                      </Button>
+                                      <Button
+                                        variant={quadrant3.every(t => item.toothNumbers.includes(t)) ? "default" : 
+                                                quadrant3.some(t => item.toothNumbers.includes(t)) ? "secondary" : "outline"}
+                                        size="sm"
+                                        className="h-12 flex flex-col gap-0.5"
+                                        onClick={() => handleArchSelection(item.id, quadrant3)}
+                                      >
+                                        <span className="font-bold text-xs">Cadran 3</span>
+                                        <span className="text-[10px] opacity-70">Inferior stânga ({quadrant3.filter(t => item.toothNumbers.includes(t)).length}/8)</span>
+                                      </Button>
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                              <div className="space-y-1">
-                                <div className="text-[10px] text-muted-foreground text-center">Inferior permanent</div>
-                                <div className="flex justify-center gap-1">
-                                  {lowerPermanentTeeth.map(tooth => (
-                                    <Button
-                                      key={tooth}
-                                      variant={item.toothNumbers.includes(tooth) ? "default" : "outline"}
-                                      size="sm"
-                                      className="h-7 w-7 p-0 text-xs"
-                                      onClick={() => handleToggleTooth(item.id, tooth)}
-                                    >
-                                      {tooth}
-                                    </Button>
-                                  ))}
-                                </div>
-                              </div>
+                              )}
                               
                               <div className="flex items-center justify-between pt-2 border-t">
                                 <p className="text-xs text-muted-foreground">
