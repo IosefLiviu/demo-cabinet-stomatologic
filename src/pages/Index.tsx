@@ -45,6 +45,7 @@ const Index = () => {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [treatmentPlanPatientId, setTreatmentPlanPatientId] = useState<string | undefined>();
   const [editingTreatmentPlan, setEditingTreatmentPlan] = useState<any>(undefined);
+  const [treatmentPlanSourcePatient, setTreatmentPlanSourcePatient] = useState<Patient | null>(null);
 
   // Appointment form state
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);
@@ -500,7 +501,16 @@ const Index = () => {
               doctors={doctors}
               initialPatientId={treatmentPlanPatientId}
               initialPlan={editingTreatmentPlan}
-onPlanSaved={() => {
+              sourcePatient={treatmentPlanSourcePatient}
+              onBack={() => {
+                if (treatmentPlanSourcePatient) {
+                  setSelectedPatient(treatmentPlanSourcePatient);
+                  setActiveTab('patients');
+                  setTreatmentPlanSourcePatient(null);
+                  setTreatmentPlanPatientId(undefined);
+                }
+              }}
+              onPlanSaved={() => {
                 // Plan stays open, just clear the initial editing state
                 setEditingTreatmentPlan(undefined);
               }}
@@ -590,6 +600,8 @@ onPlanSaved={() => {
         onOpenTreatmentPlan={(patient) => {
           setTreatmentPlanPatientId(patient.id);
           setEditingTreatmentPlan(undefined);
+          setTreatmentPlanSourcePatient(patient);
+          setSelectedPatient(null);
           setActiveTab('treatment-plan');
         }}
         onEditTreatmentPlan={(patient, plan) => {
@@ -613,6 +625,8 @@ onPlanSaved={() => {
               discountPercent: item.discountPercent || 0,
             })),
           });
+          setTreatmentPlanSourcePatient(patient);
+          setSelectedPatient(null);
           setActiveTab('treatment-plan');
         }}
         onCreateAppointment={(patient, treatmentName, interventions, doctorId) => {
