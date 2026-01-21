@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChart, UserCircle, Filter, Download, FlaskConical, ClipboardList } from 'lucide-react';
+import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChart, UserCircle, Filter, Download, FlaskConical, ClipboardList, Percent } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AppointmentsPatientReport } from './AppointmentsPatientReport';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -98,21 +98,32 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     let totalRevenue = 0;
     let totalCas = 0;
     let totalLaborator = 0;
+    let totalDiscount = 0;
+    let totalGrossPrice = 0;
     
     completed.forEach(a => {
-      // Calculate net payable for this appointment
-      const netPayable = a.appointment_treatments?.length
-        ? a.appointment_treatments.reduce((sum, t) => {
-            const tPrice = t.price || 0;
-            const tCas = t.decont || 0;
-            const discountPercent = (t as any).discount_percent || 0;
-            const priceAfterCas = tPrice - tCas;
-            const discountAmount = priceAfterCas * (discountPercent / 100);
-            return sum + (priceAfterCas - discountAmount);
-          }, 0)
-        : (a.price || 0);
+      // Calculate gross price, discount amount, and net payable for this appointment
+      let appointmentGross = 0;
+      let appointmentDiscount = 0;
       
-      totalRevenue += netPayable;
+      if (a.appointment_treatments?.length) {
+        a.appointment_treatments.forEach(t => {
+          const tPrice = t.price || 0;
+          const tCas = t.decont || 0;
+          const discountPercent = (t as any).discount_percent || 0;
+          const priceAfterCas = tPrice - tCas;
+          const discountAmount = priceAfterCas * (discountPercent / 100);
+          
+          appointmentGross += priceAfterCas;
+          appointmentDiscount += discountAmount;
+        });
+      } else {
+        appointmentGross = a.price || 0;
+      }
+      
+      totalGrossPrice += appointmentGross;
+      totalDiscount += appointmentDiscount;
+      totalRevenue += (appointmentGross - appointmentDiscount);
       
       // Calculate CAS and Laborator from appointment treatments (only for non-100% discounted)
       if (a.appointment_treatments && a.appointment_treatments.length > 0) {
@@ -195,6 +206,8 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       scheduled: scheduled.length,
       noShow: statusCounts['no_show'] || 0,
       totalRevenue,
+      totalGrossPrice,
+      totalDiscount,
       paidRevenue,
       cardRevenue,
       cashRevenue,
@@ -235,6 +248,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         acc[doctorName] = { 
           name: doctorName, 
           revenue: 0, 
+          discount: 0, // Total discount amount
           paid: 0,
           paidCard: 0,
           paidCash: 0,
@@ -258,6 +272,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       if (a.status === 'completed') {
         // Calculate payable amount including discount_percent per treatment FIRST
         // payable = sum( (price - decont) * (1 - discount_percent/100) )
+        let appointmentDiscount = 0;
         const payableAmount = a.appointment_treatments?.length
           ? a.appointment_treatments.reduce((sum, t) => {
               const tPrice = t.price || 0;
@@ -265,12 +280,14 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
               const discountPercent = (t as any).discount_percent || 0;
               const priceAfterCas = tPrice - tCas;
               const discountAmount = priceAfterCas * (discountPercent / 100);
+              appointmentDiscount += discountAmount;
               return sum + (priceAfterCas - discountAmount);
             }, 0)
           : price;
         
         // Revenue should reflect the net payable amount (after discounts)
         acc[doctorName].revenue += payableAmount;
+        acc[doctorName].discount += appointmentDiscount;
         
         // Calculate CAS and Laborator from appointment treatments (only from non-100% discounted treatments)
         if (a.appointment_treatments && a.appointment_treatments.length > 0) {
@@ -331,7 +348,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       acc[doctorName].fortyPercentTotal = Math.round(acc[doctorName].totalWithNetLab * 0.4);
       
       return acc;
-    }, {} as Record<string, { name: string; revenue: number; paid: number; paidCard: number; paidCash: number; unpaid: number; scheduled: number; cas: number; laborator: number; netLabRevenue: number; totalWithNetLab: number; totalWithNetLabAndUnpaid: number; sixtPercentTotal: number; fortyPercentTotal: number; appointments: number; color: string }>);
+    }, {} as Record<string, { name: string; revenue: number; discount: number; paid: number; paidCard: number; paidCash: number; unpaid: number; scheduled: number; cas: number; laborator: number; netLabRevenue: number; totalWithNetLab: number; totalWithNetLabAndUnpaid: number; sixtPercentTotal: number; fortyPercentTotal: number; appointments: number; color: string }>);
 
     return Object.values(doctorStats).sort((a, b) => (b.revenue + b.scheduled) - (a.revenue + a.scheduled));
   }, [filteredAppointments]);
@@ -413,7 +430,9 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       ['Anulate', stats.cancelled],
       ['Programate', stats.scheduled],
       ['', ''],
-      ['Venituri Totale (RON)', stats.totalRevenue],
+      ['Preț Brut (RON)', stats.totalGrossPrice],
+      ['Discount Total (RON)', stats.totalDiscount],
+      ['Venituri Nete (RON)', stats.totalRevenue],
       ['Card (RON)', stats.cardRevenue],
       ['Cash (RON)', stats.cashRevenue],
       ['Neachitat (RON)', stats.unpaidRevenue],
@@ -429,10 +448,11 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     
     // Sheet 2: Doctor Revenue
     const doctorData = [
-      ['Doctor', 'Programări', 'Card (RON)', 'Cash (RON)', 'Neachitat (RON)', 'Planificat (RON)', 'CAS (RON)', 'Laborator (RON)', 'Venit Net Lab. (RON)', 'Încasări + Net Lab. (RON)', 'Clinică (RON)', 'Medic (RON)', 'Total (RON)'],
+      ['Doctor', 'Programări', 'Discount (RON)', 'Card (RON)', 'Cash (RON)', 'Neachitat (RON)', 'Planificat (RON)', 'CAS (RON)', 'Laborator (RON)', 'Venit Net Lab. (RON)', 'Încasări + Net Lab. (RON)', 'Clinică (RON)', 'Medic (RON)', 'Total (RON)'],
       ...doctorRevenueData.map(d => [
         d.name,
         d.appointments,
+        d.discount,
         d.paidCard,
         d.paidCash,
         d.unpaid,
@@ -445,9 +465,10 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         d.fortyPercentTotal,
         d.revenue + d.scheduled
       ]),
-      ['', '', '', '', '', '', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', '', '', '', '', '', '', ''],
       ['TOTAL', 
         doctorRevenueData.reduce((sum, d) => sum + d.appointments, 0),
+        doctorRevenueData.reduce((sum, d) => sum + d.discount, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.paidCard, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.paidCash, 0),
         doctorRevenueData.reduce((sum, d) => sum + d.unpaid, 0),
@@ -462,7 +483,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       ]
     ];
     const doctorSheet = XLSX.utils.aoa_to_sheet(doctorData);
-    doctorSheet['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 18 }, { wch: 22 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+    doctorSheet['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 18 }, { wch: 22 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
     XLSX.utils.book_append_sheet(workbook, doctorSheet, 'Încasări Doctori');
     
     // Sheet 3: Unpaid by Patient
@@ -622,7 +643,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
           </div>
 
           {/* KPI Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Programări</CardTitle>
@@ -638,13 +659,26 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Venituri Brute</CardTitle>
+            <CardTitle className="text-sm font-medium">Venituri Nete</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalRevenue.toLocaleString()} RON</div>
             <p className="text-xs text-muted-foreground">
               {stats.paidRevenue.toLocaleString()} încasați, {stats.unpaidRevenue.toLocaleString()} restanți
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-rose-200 bg-rose-50/50 dark:border-rose-800 dark:bg-rose-950/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-rose-700 dark:text-rose-400">Discount Acordat</CardTitle>
+            <Percent className="h-4 w-4 text-rose-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-rose-700 dark:text-rose-400">{stats.totalDiscount.toLocaleString()} RON</div>
+            <p className="text-xs text-muted-foreground">
+              din {stats.totalGrossPrice.toLocaleString()} brut
             </p>
           </CardContent>
         </Card>
@@ -747,6 +781,13 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                           <span className="font-medium text-green-600">{doctor.paidCash.toLocaleString()} RON</span>
                         </div>
                       )}
+                      {doctor.discount > 0 && (
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-rose-500" />
+                          <span className="text-muted-foreground">Discount:</span>
+                          <span className="font-medium text-rose-600">{doctor.discount.toLocaleString()} RON</span>
+                        </div>
+                      )}
                       {doctor.unpaid > 0 && (
                         <div className="flex items-center gap-1">
                           <div className="w-2 h-2 rounded-full bg-orange-500" />
@@ -846,6 +887,9 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                   </span>
                   <span className="text-green-600 font-medium">
                     Cash: {doctorRevenueData.reduce((sum, d) => sum + d.paidCash, 0).toLocaleString()} RON
+                  </span>
+                  <span className="text-rose-600 font-medium">
+                    Discount: {doctorRevenueData.reduce((sum, d) => sum + d.discount, 0).toLocaleString()} RON
                   </span>
                   <span className="text-orange-600 font-medium">
                     Neachitat: {doctorRevenueData.reduce((sum, d) => sum + d.unpaid, 0).toLocaleString()} RON
