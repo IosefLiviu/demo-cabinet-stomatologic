@@ -120,8 +120,8 @@ const ProtocolsIndicatii = () => {
           <img src="/images/perfect-smile-logo-print.jpg" alt="Perfect Smile" class="logo" />
           <div class="clinic-info">
             <strong>PERFECT SMILE GLIM SRL</strong><br/>
-            Str. Câmpulung Nr. 36, Sector 1, București<br/>
-            Tel: 0770 450 180 | Email: office@perfectsmile.ro
+            Strada București 68-70, Măgurele, România<br/>
+            Tel: 0721 702 820 | Email: office@perfectsmileglim.ro
           </div>
         </div>
         ${printContent}
