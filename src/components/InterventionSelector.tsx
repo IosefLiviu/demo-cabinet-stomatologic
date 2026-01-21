@@ -61,6 +61,14 @@ const lowerTeeth = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 
 const upperDeciduousTeeth = [55, 54, 53, 52, 51, 61, 62, 63, 64, 65];
 const lowerDeciduousTeeth = [85, 84, 83, 82, 81, 71, 72, 73, 74, 75];
 
+// Quadrant-based teeth groupings (FDI notation)
+const quadrant1 = [18, 17, 16, 15, 14, 13, 12, 11]; // Upper right
+const quadrant2 = [21, 22, 23, 24, 25, 26, 27, 28]; // Upper left
+const quadrant3 = [31, 32, 33, 34, 35, 36, 37, 38]; // Lower left
+const quadrant4 = [48, 47, 46, 45, 44, 43, 42, 41]; // Lower right
+const upperArch = [...quadrant1, ...quadrant2]; // Maxilar sus
+const lowerArch = [...quadrant4, ...quadrant3]; // Mandibular jos
+
 // Fallback status colors for legacy/enum-based statuses
 const fallbackStatusColors: Record<string, string> = {
   healthy: 'bg-success/20 border-success text-success',
@@ -98,6 +106,8 @@ export function InterventionSelector({
     notes: string;
   } | null>(null);
   const [hoveredTooth, setHoveredTooth] = useState<{ interventionId: string; toothNumber: number } | null>(null);
+  // Selection mode per intervention: 'teeth' for individual, 'arch' for quadrant/arch selection
+  const [selectionMode, setSelectionMode] = useState<Record<string, 'teeth' | 'arch'>>({});
   
   // Fetch custom tooth statuses from database
   const { activeStatuses } = useToothStatuses();
@@ -267,6 +277,57 @@ export function InterventionSelector({
     return intervention.teethDetails?.find(t => t.toothNumber === toothNumber);
   };
 
+  // Get the current selection mode for an intervention
+  const getSelectionMode = (interventionId: string): 'teeth' | 'arch' => {
+    return selectionMode[interventionId] || 'teeth';
+  };
+
+  // Handle selecting/deselecting an entire arch or quadrant
+  const handleArchSelection = (interventionId: string, teethToToggle: number[], defaultStatus: string = 'Sănătos') => {
+    onInterventionsChange(
+      interventions.map(i => {
+        if (i.id !== interventionId) return i;
+        
+        // Check if all teeth in this group are already selected
+        const allSelected = teethToToggle.every(t => i.selectedTeeth.includes(t));
+        
+        let newSelectedTeeth: number[];
+        let newTeethDetails = i.teethDetails || [];
+        
+        if (allSelected) {
+          // Deselect all teeth in the group
+          newSelectedTeeth = i.selectedTeeth.filter(t => !teethToToggle.includes(t));
+          newTeethDetails = newTeethDetails.filter(t => !teethToToggle.includes(t.toothNumber));
+        } else {
+          // Select all teeth in the group that aren't already selected
+          const teethToAdd = teethToToggle.filter(t => !i.selectedTeeth.includes(t));
+          newSelectedTeeth = [...i.selectedTeeth, ...teethToAdd];
+          // Add default status for newly added teeth
+          for (const tooth of teethToAdd) {
+            if (!newTeethDetails.find(t => t.toothNumber === tooth)) {
+              newTeethDetails.push({
+                toothNumber: tooth,
+                status: defaultStatus,
+              });
+            }
+          }
+        }
+        
+        const teethCount = newSelectedTeeth.length;
+        const basePrice = i.basePrice ?? i.price;
+        const newPrice = teethCount > 0 ? basePrice * teethCount : basePrice;
+        
+        return {
+          ...i,
+          selectedTeeth: newSelectedTeeth,
+          teethDetails: newTeethDetails,
+          basePrice: basePrice,
+          price: newPrice,
+        };
+      })
+    );
+  };
+
   const renderToothButton = (toothNumber: number, interventionId: string, intervention: SelectedIntervention, isDeciduous: boolean = false) => {
     const isSelected = intervention.selectedTeeth.includes(toothNumber);
     const toothDetails = getToothDetails(intervention, toothNumber);
@@ -315,6 +376,38 @@ export function InterventionSelector({
           </div>
         )}
       </div>
+    );
+  };
+
+  // Render an arch/quadrant selection button
+  const renderArchButton = (
+    interventionId: string, 
+    intervention: SelectedIntervention, 
+    teethGroup: number[], 
+    label: string,
+    description: string
+  ) => {
+    const selectedCount = teethGroup.filter(t => intervention.selectedTeeth.includes(t)).length;
+    const allSelected = selectedCount === teethGroup.length;
+    const someSelected = selectedCount > 0 && selectedCount < teethGroup.length;
+    
+    return (
+      <button
+        type="button"
+        onClick={() => handleArchSelection(interventionId, teethGroup)}
+        className={cn(
+          'p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 hover:scale-105',
+          allSelected ? 'bg-primary/20 border-primary text-primary' :
+          someSelected ? 'bg-warning/20 border-warning text-warning' :
+          'bg-muted/30 border-muted-foreground/30 hover:border-primary/50'
+        )}
+      >
+        <span className="font-bold text-lg">{label}</span>
+        <span className="text-xs text-muted-foreground">{description}</span>
+        <span className="text-sm">
+          {selectedCount}/{teethGroup.length} dinți
+        </span>
+      </button>
     );
   };
 
@@ -484,75 +577,138 @@ export function InterventionSelector({
 
                   {/* Dental Chart for Tooth Selection */}
                   <div className="space-y-4">
-                    <Label className="text-xs">Selectează dinții tratați</Label>
+                    {/* Mode Toggle Buttons */}
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs">Selectează dinții tratați</Label>
+                      <div className="flex gap-1 ml-auto">
+                        <Button
+                          type="button"
+                          variant={getSelectionMode(intervention.id) === 'teeth' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setSelectionMode(prev => ({ ...prev, [intervention.id]: 'teeth' }))}
+                        >
+                          Dinți
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={getSelectionMode(intervention.id) === 'arch' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setSelectionMode(prev => ({ ...prev, [intervention.id]: 'arch' }))}
+                        >
+                          Maxilar
+                        </Button>
+                      </div>
+                    </div>
                     
-                    {/* Legend - Full status categories from database */}
-                    <div className="flex flex-wrap gap-2 text-xs">
-                      {activeStatuses.map((status) => {
-                        const hexColor = status.color;
-                        return (
-                          <div
-                            key={status.id}
-                            className="px-2 py-1 rounded-md border flex items-center gap-1.5"
-                            style={{
-                              backgroundColor: `${hexColor}20`,
-                              borderColor: hexColor,
-                              color: hexColor,
-                            }}
-                          >
-                            <span>{status.name}</span>
+                    {getSelectionMode(intervention.id) === 'teeth' ? (
+                      <>
+                        {/* Legend - Full status categories from database */}
+                        <div className="flex flex-wrap gap-2 text-xs">
+                          {activeStatuses.map((status) => {
+                            const hexColor = status.color;
+                            return (
+                              <div
+                                key={status.id}
+                                className="px-2 py-1 rounded-md border flex items-center gap-1.5"
+                                style={{
+                                  backgroundColor: `${hexColor}20`,
+                                  borderColor: hexColor,
+                                  color: hexColor,
+                                }}
+                              >
+                                <span>{status.name}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Dental Chart */}
+                        <div className="space-y-4">
+                          {/* Upper jaw - permanent teeth */}
+                          <div className="space-y-1">
+                            <div className="text-xs text-muted-foreground text-center mb-2">
+                              Maxilar superior (dinți permanenți)
+                            </div>
+                            <div className="flex justify-center gap-1">
+                              {upperTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention, false))}
+                            </div>
                           </div>
-                        );
-                      })}
-                    </div>
 
-                    {/* Dental Chart */}
-                    <div className="space-y-4">
-                      {/* Upper jaw - permanent teeth */}
-                      <div className="space-y-1">
-                        <div className="text-xs text-muted-foreground text-center mb-2">
-                          Maxilar superior (dinți permanenți)
-                        </div>
-                        <div className="flex justify-center gap-1">
-                          {upperTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention, false))}
-                        </div>
-                      </div>
+                          {/* Upper jaw - deciduous teeth */}
+                          <div className="space-y-1">
+                            <div className="text-xs text-muted-foreground text-center mb-2">
+                              Dinți temporari (de lapte) - superior
+                            </div>
+                            <div className="flex justify-center gap-1">
+                              {upperDeciduousTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention, true))}
+                            </div>
+                          </div>
 
-                      {/* Upper jaw - deciduous teeth */}
-                      <div className="space-y-1">
-                        <div className="text-xs text-muted-foreground text-center mb-2">
-                          Dinți temporari (de lapte) - superior
-                        </div>
-                        <div className="flex justify-center gap-1">
-                          {upperDeciduousTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention, true))}
-                        </div>
-                      </div>
+                          {/* Divider */}
+                          <div className="flex justify-center">
+                            <div className="w-full max-w-2xl border-b-2 border-muted-foreground/30 my-2" />
+                          </div>
 
-                      {/* Divider */}
-                      <div className="flex justify-center">
-                        <div className="w-full max-w-2xl border-b-2 border-muted-foreground/30 my-2" />
-                      </div>
+                          {/* Lower jaw - deciduous teeth */}
+                          <div className="space-y-1">
+                            <div className="flex justify-center gap-1">
+                              {lowerDeciduousTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention, true))}
+                            </div>
+                            <div className="text-xs text-muted-foreground text-center mt-2">
+                              Dinți temporari (de lapte) - inferior
+                            </div>
+                          </div>
 
-                      {/* Lower jaw - deciduous teeth */}
-                      <div className="space-y-1">
-                        <div className="flex justify-center gap-1">
-                          {lowerDeciduousTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention, true))}
+                          {/* Lower jaw - permanent teeth */}
+                          <div className="space-y-1">
+                            <div className="flex justify-center gap-1">
+                              {lowerTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention, false))}
+                            </div>
+                            <div className="text-xs text-muted-foreground text-center mt-2">
+                              Maxilar inferior (dinți permanenți)
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-xs text-muted-foreground text-center mt-2">
-                          Dinți temporari (de lapte) - inferior
+                      </>
+                    ) : (
+                      /* Arch/Quadrant Selection Mode */
+                      <div className="space-y-4">
+                        {/* Arcade (Maxilar sus / Mandibular jos) */}
+                        <div className="space-y-2">
+                          <div className="text-xs text-muted-foreground font-medium">Arcade</div>
+                          <div className="grid grid-cols-2 gap-3">
+                            {renderArchButton(intervention.id, intervention, upperArch, 'Maxilar Sus', 'Arcada superioară (16 dinți)')}
+                            {renderArchButton(intervention.id, intervention, lowerArch, 'Mandibular Jos', 'Arcada inferioară (16 dinți)')}
+                          </div>
                         </div>
+                        
+                        {/* Divider */}
+                        <div className="flex justify-center">
+                          <div className="w-full border-b border-muted-foreground/20 my-2" />
+                        </div>
+                        
+                        {/* Cadrane (1-4) */}
+                        <div className="space-y-2">
+                          <div className="text-xs text-muted-foreground font-medium">Cadrane</div>
+                          <div className="grid grid-cols-2 gap-3">
+                            {renderArchButton(intervention.id, intervention, quadrant1, 'Cadran 1', 'Superior dreapta (18-11)')}
+                            {renderArchButton(intervention.id, intervention, quadrant2, 'Cadran 2', 'Superior stânga (21-28)')}
+                            {renderArchButton(intervention.id, intervention, quadrant4, 'Cadran 4', 'Inferior dreapta (48-41)')}
+                            {renderArchButton(intervention.id, intervention, quadrant3, 'Cadran 3', 'Inferior stânga (31-38)')}
+                          </div>
+                        </div>
+                        
+                        {/* Selected teeth summary */}
+                        {intervention.selectedTeeth.length > 0 && (
+                          <div className="p-3 bg-muted/30 rounded-lg">
+                            <div className="text-sm font-medium mb-1">Dinți selectați: {intervention.selectedTeeth.length}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {intervention.selectedTeeth.sort((a, b) => a - b).join(', ')}
+                            </div>
+                          </div>
+                        )}
                       </div>
-
-                      {/* Lower jaw - permanent teeth */}
-                      <div className="space-y-1">
-                        <div className="flex justify-center gap-1">
-                          {lowerTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention, false))}
-                        </div>
-                        <div className="text-xs text-muted-foreground text-center mt-2">
-                          Maxilar inferior (dinți permanenți)
-                        </div>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </CollapsibleContent>
