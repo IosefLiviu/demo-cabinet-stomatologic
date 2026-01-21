@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { TreatmentListDialog } from './TreatmentListDialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ToothStatus } from './DentalChart';
+import { useToothStatuses } from '@/hooks/useToothStatuses';
 import {
   Dialog,
   DialogContent,
@@ -25,7 +26,7 @@ interface Treatment {
 
 export interface ToothSelection {
   toothNumber: number;
-  status: ToothStatus;
+  status: string; // Changed to string to support custom statuses from database
   notes?: string;
 }
 
@@ -60,8 +61,8 @@ const lowerTeeth = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 
 const upperDeciduousTeeth = [55, 54, 53, 52, 51, 61, 62, 63, 64, 65];
 const lowerDeciduousTeeth = [85, 84, 83, 82, 81, 71, 72, 73, 74, 75];
 
-// Status colors from DentalChart
-const statusColors: Record<ToothStatus, string> = {
+// Fallback status colors for legacy/enum-based statuses
+const fallbackStatusColors: Record<string, string> = {
   healthy: 'bg-success/20 border-success text-success',
   cavity: 'bg-destructive/20 border-destructive text-destructive',
   filled: 'bg-cabinet-2/20 border-cabinet-2 text-cabinet-2',
@@ -72,15 +73,13 @@ const statusColors: Record<ToothStatus, string> = {
   extraction_needed: 'bg-destructive/30 border-destructive text-destructive',
 };
 
-const statusLabels: Record<ToothStatus, string> = {
-  healthy: 'Sănătos',
-  cavity: 'Carie',
-  filled: 'Plombat',
-  crown: 'Coroană',
-  missing: 'Lipsă',
-  implant: 'Implant',
-  root_canal: 'Canal',
-  extraction_needed: 'De extras',
+// Helper to generate color classes from hex color
+const getColorClassesFromHex = (hexColor: string) => {
+  return {
+    bg: hexColor,
+    border: hexColor,
+    text: hexColor,
+  };
 };
 
 export function InterventionSelector({
@@ -95,10 +94,32 @@ export function InterventionSelector({
     open: boolean;
     interventionId: string;
     toothNumber: number;
-    status: ToothStatus;
+    status: string; // Changed from ToothStatus to string to support custom statuses
     notes: string;
   } | null>(null);
   const [hoveredTooth, setHoveredTooth] = useState<{ interventionId: string; toothNumber: number } | null>(null);
+  
+  // Fetch custom tooth statuses from database
+  const { activeStatuses } = useToothStatuses();
+  
+  // Build dynamic status colors and labels from database
+  const getStatusColor = (statusName: string): string => {
+    const dbStatus = activeStatuses.find(s => s.name.toLowerCase() === statusName.toLowerCase());
+    if (dbStatus) {
+      return ''; // Will use inline style instead
+    }
+    return fallbackStatusColors[statusName] || fallbackStatusColors.healthy;
+  };
+  
+  const getStatusHexColor = (statusName: string): string | null => {
+    const dbStatus = activeStatuses.find(s => s.name.toLowerCase() === statusName.toLowerCase());
+    return dbStatus?.color || null;
+  };
+  
+  const getStatusLabel = (statusName: string): string => {
+    const dbStatus = activeStatuses.find(s => s.name.toLowerCase() === statusName.toLowerCase());
+    return dbStatus?.name || statusName;
+  };
 
   const toggleExpanded = (interventionId: string) => {
     setExpandedInterventions(prev => {
@@ -250,7 +271,12 @@ export function InterventionSelector({
     const isSelected = intervention.selectedTeeth.includes(toothNumber);
     const toothDetails = getToothDetails(intervention, toothNumber);
     const isHovered = hoveredTooth?.interventionId === interventionId && hoveredTooth?.toothNumber === toothNumber;
-    const status: ToothStatus = toothDetails?.status || 'healthy';
+    const status = toothDetails?.status || 'Sănătos';
+    
+    const hexColor = getStatusHexColor(status);
+    const fallbackClass = getStatusColor(status);
+    const healthyHexColor = getStatusHexColor('Sănătos');
+    const healthyFallbackClass = getStatusColor('Sănătos');
     
     return (
       <div key={toothNumber} className="relative">
@@ -261,15 +287,22 @@ export function InterventionSelector({
           onMouseLeave={() => setHoveredTooth(null)}
           className={cn(
             'flex items-center justify-center font-medium transition-all hover:scale-110 cursor-pointer',
-            isSelected
-              ? statusColors[status]
-              : statusColors.healthy,
+            !hexColor && (isSelected ? fallbackClass : healthyFallbackClass),
+            !healthyHexColor && !isSelected && healthyFallbackClass,
             isHovered && 'ring-2 ring-primary ring-offset-2',
-            // Deciduous teeth: circular shape with dashed border
             isDeciduous 
               ? 'w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 text-xs border-dashed' 
               : 'w-8 h-10 sm:w-10 sm:h-12 rounded-lg border-2 text-xs'
           )}
+          style={isSelected && hexColor ? {
+            backgroundColor: `${hexColor}20`,
+            borderColor: hexColor,
+            color: hexColor,
+          } : (!isSelected && healthyHexColor ? {
+            backgroundColor: `${healthyHexColor}20`,
+            borderColor: healthyHexColor,
+            color: healthyHexColor,
+          } : undefined)}
         >
           {toothNumber}
         </button>
@@ -277,7 +310,7 @@ export function InterventionSelector({
         {/* Tooltip */}
         {isHovered && (
           <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded bg-popover border shadow-lg text-xs whitespace-nowrap">
-            <div className="font-medium">{isSelected ? statusLabels[status] : 'Click pentru a selecta'}</div>
+            <div className="font-medium">{isSelected ? getStatusLabel(status) : 'Click pentru a selecta'}</div>
             {toothDetails?.notes && <div className="text-muted-foreground max-w-[150px] truncate">{toothDetails.notes}</div>}
           </div>
         )}
@@ -453,19 +486,24 @@ export function InterventionSelector({
                   <div className="space-y-4">
                     <Label className="text-xs">Selectează dinții tratați</Label>
                     
-                    {/* Legend - Full status categories */}
+                    {/* Legend - Full status categories from database */}
                     <div className="flex flex-wrap gap-2 text-xs">
-                      {Object.entries(statusLabels).map(([status, label]) => (
-                        <div
-                          key={status}
-                          className={cn(
-                            'px-2 py-1 rounded-md border flex items-center gap-1.5',
-                            statusColors[status as ToothStatus]
-                          )}
-                        >
-                          <span>{label}</span>
-                        </div>
-                      ))}
+                      {activeStatuses.map((status) => {
+                        const hexColor = status.color;
+                        return (
+                          <div
+                            key={status.id}
+                            className="px-2 py-1 rounded-md border flex items-center gap-1.5"
+                            style={{
+                              backgroundColor: `${hexColor}20`,
+                              borderColor: hexColor,
+                              color: hexColor,
+                            }}
+                          >
+                            <span>{status.name}</span>
+                          </div>
+                        );
+                      })}
                     </div>
 
                     {/* Dental Chart */}
@@ -561,20 +599,28 @@ export function InterventionSelector({
             <div className="space-y-2">
               <Label>Status</Label>
               <div className="grid grid-cols-4 gap-2">
-                {Object.entries(statusLabels).map(([status, label]) => (
-                  <button
-                    key={status}
-                    type="button"
-                    onClick={() => setToothDialog(prev => prev ? { ...prev, status: status as ToothStatus } : null)}
-                    className={cn(
-                      'px-2 py-2 rounded-lg border-2 text-xs font-medium transition-all',
-                      statusColors[status as ToothStatus],
-                      toothDialog?.status === status && 'ring-2 ring-primary ring-offset-2'
-                    )}
-                  >
-                    {label}
-                  </button>
-                ))}
+                {activeStatuses.map((status) => {
+                  const hexColor = status.color;
+                  const isSelected = toothDialog?.status === status.name;
+                  return (
+                    <button
+                      key={status.id}
+                      type="button"
+                      onClick={() => setToothDialog(prev => prev ? { ...prev, status: status.name } : null)}
+                      className={cn(
+                        'px-2 py-2 rounded-lg border-2 text-xs font-medium transition-all',
+                        isSelected && 'ring-2 ring-primary ring-offset-2'
+                      )}
+                      style={{
+                        backgroundColor: `${hexColor}20`,
+                        borderColor: hexColor,
+                        color: hexColor,
+                      }}
+                    >
+                      {status.name}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
