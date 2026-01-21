@@ -730,19 +730,16 @@ export function AppointmentForm({
             {/* Action buttons - stacked on mobile */}
             <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2 sm:gap-3 pt-2 sm:pt-4">
               <div>
-                {editingAppointment && onDelete && (
-                  // Only show delete button if not completed OR if user is admin
-                  (editingAppointment.status !== 'completed' || isAdmin) && (
-                    <Button 
-                      type="button" 
-                      variant="destructive" 
-                      onClick={onDelete}
-                      className="gap-2 w-full sm:w-auto text-sm h-9 sm:h-10"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Șterge
-                    </Button>
-                  )
+                {editingAppointment && onDelete && isAdmin && (
+                  <Button 
+                    type="button" 
+                    variant="destructive" 
+                    onClick={onDelete}
+                    className="gap-2 w-full sm:w-auto text-sm h-9 sm:h-10"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Șterge
+                  </Button>
                 )}
               </div>
               <div className="flex gap-2 sm:gap-3">
