@@ -686,9 +686,11 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
                           <PopoverTrigger asChild>
                             <Button variant="outline" className="w-auto min-w-16 h-8 text-xs">
                               {item.toothNumbers.length > 0 
-                                ? (item.toothNumbers.length <= 3 
-                                    ? item.toothNumbers.join(', ') 
-                                    : `${item.toothNumbers.length} dinți`)
+                                ? (item.isArchMode || getSelectionMode(item.id) === 'arch'
+                                    ? `${countArchGroups(item.toothNumbers)} ${countArchGroups(item.toothNumbers) === 1 ? 'cadran' : 'cadrane'}`
+                                    : (item.toothNumbers.length <= 3 
+                                        ? item.toothNumbers.join(', ') 
+                                        : `${item.toothNumbers.length} dinți`))
                                 : '-'}
                             </Button>
                           </PopoverTrigger>
