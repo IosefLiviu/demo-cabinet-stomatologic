@@ -368,7 +368,7 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
     const printJudet = prescription?.judet || judet;
     const printLocalitate = prescription?.localitate || localitate;
     const printUnitate = prescription?.unitate_sanitara || unitateSanitara;
-    const printCNP = patientToPrint?.cnp || '';
+    const printNrFisa = prescription?.nr_fisa || nrFisa || patientToPrint?.cnp || '';
     const printDiagnostic = prescription?.diagnostic || diagnostic;
     const printDate = prescription?.prescription_date || prescriptionDate;
 
@@ -586,8 +586,8 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
           </div>
           
           <div class="form-row">
-            <span class="form-label">CNP:</span>
-            <span class="form-value">${printCNP}</span>
+            <span class="form-label">Nr. fișă:</span>
+            <span class="form-value">${printNrFisa}</span>
           </div>
           
           <div class="form-row">
@@ -776,7 +776,15 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
               )}
 
               {/* Prescription Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Nr. fișă (CNP)</Label>
+                  <Input 
+                    value={nrFisa} 
+                    onChange={(e) => setNrFisa(e.target.value)}
+                    placeholder={selectedPatient?.cnp || 'Nr. fișă sau CNP'}
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label>Data</Label>
                   <Input 
