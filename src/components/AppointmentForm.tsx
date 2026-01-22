@@ -717,9 +717,6 @@ export function AppointmentForm({
                       </SelectContent>
                     </Select>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Durată: {calculateDurationFromInterval(formData.time, formData.endTime)} min
-                  </p>
                 </div>
               </div>
             </div>
