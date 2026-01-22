@@ -452,9 +452,6 @@ export function InterventionSelector({
       <div className="flex items-center justify-between">
         <Label>Intervenții *</Label>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">
-            Durată totală: {totalDuration} min
-          </span>
           <Button
             type="button"
             variant="default"
@@ -523,21 +520,8 @@ export function InterventionSelector({
               {/* Collapsible Content */}
               <CollapsibleContent>
                 <div className="p-3 space-y-4 border-t">
-                  {/* Duration and Prices Row */}
-                  <div className="grid grid-cols-7 gap-2">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-blue-600">Durată (min)</Label>
-                      <Input
-                        type="number"
-                        value={intervention.duration}
-                        onChange={(e) =>
-                          handleUpdateIntervention(intervention.id, 'duration', parseInt(e.target.value) || 30)
-                        }
-                        className="h-8"
-                        min={5}
-                        step={5}
-                      />
-                    </div>
+                  {/* Prices Row */}
+                  <div className="grid grid-cols-6 gap-2">
                     <div className="space-y-1">
                       <Label className="text-xs">Preț inițial</Label>
                       <Input
