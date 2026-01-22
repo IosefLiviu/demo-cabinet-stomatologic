@@ -47,6 +47,21 @@ export default function Auth() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const logLoginAttempt = async (userId: string | null, success: boolean, errorMessage: string | null) => {
+    try {
+      await supabase.functions.invoke('log-login', {
+        body: { 
+          username, 
+          user_id: userId,
+          success, 
+          error_message: errorMessage 
+        }
+      });
+    } catch (err) {
+      console.error('Failed to log login attempt:', err);
+    }
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -60,6 +75,7 @@ export default function Auth() {
       });
 
       if (edgeFnError || !lookupData?.email) {
+        await logLoginAttempt(null, false, 'Utilizator negăsit');
         toast({
           title: 'Eroare la autentificare',
           description: 'Nume de utilizator sau parolă incorectă.',
@@ -72,11 +88,17 @@ export default function Auth() {
       // Now sign in with the email
       const { error } = await signIn(lookupData.email, password);
       
-      if (!error) {
+      if (error) {
+        await logLoginAttempt(lookupData.user_id || null, false, error.message || 'Parolă incorectă');
+      } else {
+        // Get the user ID from the session for successful login
+        const { data: sessionData } = await supabase.auth.getSession();
+        await logLoginAttempt(sessionData?.session?.user?.id || null, true, null);
         navigate('/');
       }
     } catch (error) {
       console.error('Sign in error:', error);
+      await logLoginAttempt(null, false, 'Eroare internă');
       toast({
         title: 'Eroare',
         description: 'A apărut o eroare la autentificare.',
