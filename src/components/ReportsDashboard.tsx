@@ -879,6 +879,10 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                               style={{ width: `${(doctor.paidCash / totalValueWithCas) * 100}%` }}
                             />
                             <div 
+                              className="h-full bg-cyan-500 transition-all"
+                              style={{ width: `${(doctor.cas / totalValueWithCas) * 100}%` }}
+                            />
+                            <div 
                               className="h-full bg-orange-500 transition-all"
                               style={{ width: `${(doctor.unpaid / totalValueWithCas) * 100}%` }}
                             />
