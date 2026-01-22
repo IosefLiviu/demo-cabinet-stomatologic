@@ -323,6 +323,39 @@ export function useAppointmentsDB() {
     );
   };
 
+  // Check if a new appointment would overlap with existing appointments
+  const checkOverlap = (
+    date: string, 
+    startTime: string, 
+    endTime: string, 
+    cabinetId: number, 
+    excludeId?: string
+  ): { hasOverlap: boolean; conflictingAppointment?: AppointmentDB } => {
+    const timeToMinutes = (time: string): number => {
+      const [hours, minutes] = time.split(':').map(Number);
+      return hours * 60 + minutes;
+    };
+
+    const newStart = timeToMinutes(startTime);
+    const newEnd = timeToMinutes(endTime);
+
+    for (const apt of appointments) {
+      // Skip cancelled appointments and the one being edited
+      if (apt.appointment_date !== date || apt.cabinet_id !== cabinetId || apt.status === 'cancelled') continue;
+      if (excludeId && apt.id === excludeId) continue;
+
+      const aptStart = timeToMinutes(apt.start_time);
+      const aptEnd = aptStart + (apt.duration || 30);
+
+      // Check for overlap: new appointment starts before existing ends AND new appointment ends after existing starts
+      if (newStart < aptEnd && newEnd > aptStart) {
+        return { hasOverlap: true, conflictingAppointment: apt };
+      }
+    }
+
+    return { hasOverlap: false };
+  };
+
   const saveAppointmentTreatments = async (appointmentId: string, treatments: AppointmentTreatmentInsert[]) => {
     try {
       // First delete existing treatments for this appointment
@@ -669,6 +702,7 @@ export function useAppointmentsDB() {
     cancelAppointment,
     getAppointmentsForDate,
     isSlotOccupied,
+    checkOverlap,
     saveAppointmentTreatments,
     fetchAppointmentTreatments,
   };
