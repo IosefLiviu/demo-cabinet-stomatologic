@@ -32,6 +32,7 @@ import { Patient } from '@/hooks/usePatients';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { CLINIC, getClinicCopyright } from '@/constants/clinic';
+import { escapeHtml } from '@/lib/print-utils';
 
 interface Doctor {
   id: string;
@@ -376,7 +377,7 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Rețetă - ${patientToPrint.first_name} ${patientToPrint.last_name}</title>
+          <title>Rețetă - ${escapeHtml(patientToPrint.first_name)} ${escapeHtml(patientToPrint.last_name)}</title>
           <style>
             @page {
               size: 100mm 210mm;
@@ -545,27 +546,27 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
           <div class="form-row-split">
             <div>
               <span class="form-label">Județul:</span>
-              <span class="form-value">${printJudet}</span>
+              <span class="form-value">${escapeHtml(printJudet)}</span>
             </div>
             <div>
               <span class="form-label">Localitatea:</span>
-              <span class="form-value">${printLocalitate}</span>
+              <span class="form-value">${escapeHtml(printLocalitate)}</span>
             </div>
           </div>
           
           <div class="form-row">
             <span class="form-label">Unitatea sanitară:</span>
-            <span class="form-value">${printUnitate}</span>
+            <span class="form-value">${escapeHtml(printUnitate)}</span>
           </div>
           
           <div class="form-row-split">
             <div>
               <span class="form-label">Numele:</span>
-              <span class="form-value">${patientToPrint.last_name}</span>
+              <span class="form-value">${escapeHtml(patientToPrint.last_name)}</span>
             </div>
             <div>
               <span class="form-label">Prenumele:</span>
-              <span class="form-value">${patientToPrint.first_name}</span>
+              <span class="form-value">${escapeHtml(patientToPrint.first_name)}</span>
             </div>
           </div>
           
@@ -582,17 +583,17 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
           
           <div class="form-row">
             <span class="form-label">Domiciliul:</span>
-            <span class="form-value">${patientAddress}</span>
+            <span class="form-value">${escapeHtml(patientAddress)}</span>
           </div>
           
           <div class="form-row">
             <span class="form-label">CNP:</span>
-            <span class="form-value">${printNrFisa}</span>
+            <span class="form-value">${escapeHtml(printNrFisa)}</span>
           </div>
           
           <div class="form-row">
             <span class="form-label">Diagnostic:</span>
-            <span class="form-value">${printDiagnostic}</span>
+            <span class="form-value">${escapeHtml(printDiagnostic)}</span>
           </div>
           
           <div class="prescription-section">
@@ -600,9 +601,9 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
             ${itemsToPrint.map((item, index) => `
               <div class="prescription-item">
                 <span class="prescription-number">${index + 1})</span>
-                <span class="medication-name">${item.medication}</span>
-                ${item.quantity ? `<div class="quantity">Nr. ${item.quantity}</div>` : ''}
-                ${item.dosage ? `<div class="dosage">Ds.int. ${item.dosage}</div>` : ''}
+                <span class="medication-name">${escapeHtml(item.medication)}</span>
+                ${item.quantity ? `<div class="quantity">Nr. ${escapeHtml(item.quantity)}</div>` : ''}
+                ${item.dosage ? `<div class="dosage">Ds.int. ${escapeHtml(item.dosage)}</div>` : ''}
               </div>
             `).join('')}
           </div>
@@ -617,9 +618,9 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
               </div>
               ${doctorToPrint ? `
                 <div style="margin-top: 10px; padding: 6px 12px; border: 2px solid #1a365d; display: inline-block; text-align: center; font-family: 'Times New Roman', serif;">
-                  <div style="font-weight: bold; color: #1a365d; font-size: 10pt;">${typeof doctorToPrint === 'object' && 'name' in doctorToPrint ? doctorToPrint.name : (doctorToPrint as Doctor).name}</div>
-                  <div style="color: #1a365d; font-size: 9pt;">${(typeof doctorToPrint === 'object' && doctorToPrint.specialization) ? doctorToPrint.specialization : 'Medic Stomatolog'}</div>
-                  ${(typeof doctorToPrint === 'object' && doctorToPrint.doctor_code) ? `<div style="color: #1a365d; font-size: 9pt; font-weight: bold;">Cod:${doctorToPrint.doctor_code}</div>` : ''}
+                  <div style="font-weight: bold; color: #1a365d; font-size: 10pt;">${escapeHtml(typeof doctorToPrint === 'object' && 'name' in doctorToPrint ? doctorToPrint.name : (doctorToPrint as Doctor).name)}</div>
+                  <div style="color: #1a365d; font-size: 9pt;">${escapeHtml((typeof doctorToPrint === 'object' && doctorToPrint.specialization) ? doctorToPrint.specialization : 'Medic Stomatolog')}</div>
+                  ${(typeof doctorToPrint === 'object' && doctorToPrint.doctor_code) ? `<div style="color: #1a365d; font-size: 9pt; font-weight: bold;">Cod:${escapeHtml(doctorToPrint.doctor_code)}</div>` : ''}
                 </div>
               ` : ''}
             </div>

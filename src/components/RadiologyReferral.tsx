@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select';
 import { Patient } from '@/hooks/usePatients';
 import { CLINIC, getClinicCopyright } from '@/constants/clinic';
+import { escapeHtml } from '@/lib/print-utils';
 
 interface Doctor {
   id: string;
@@ -336,22 +337,22 @@ export function RadiologyReferral({ patients, doctors }: RadiologyReferralProps)
             <tbody>
               <tr>
                 <td style={{ width: '50%' }}>
-                  <p><span className="label">Medic:</span> Dr. {selectedDoctor?.name || '-'}</p>
+                  <p><span className="label">Medic:</span> Dr. {escapeHtml(selectedDoctor?.name) || '-'}</p>
                   <p><span className="label">Unitate medicală:</span> {CLINIC.shortName}</p>
                   <p><span className="label">Email:</span> {CLINIC.email}</p>
                   <p><span className="label">Telefon:</span> {CLINIC.phone}</p>
                 </td>
                 <td style={{ width: '50%' }}>
-                  <p><span className="label">Centru:</span> {centerName}</p>
-                  <p><span className="label">Adresă:</span> {centerAddress}</p>
-                  <p><span className="label">Telefon:</span> {centerPhone}</p>
-                  <p><span className="label">Program de lucru:</span> {centerSchedule}</p>
+                  <p><span className="label">Centru:</span> {escapeHtml(centerName)}</p>
+                  <p><span className="label">Adresă:</span> {escapeHtml(centerAddress)}</p>
+                  <p><span className="label">Telefon:</span> {escapeHtml(centerPhone)}</p>
+                  <p><span className="label">Program de lucru:</span> {escapeHtml(centerSchedule)}</p>
                 </td>
               </tr>
               <tr>
                 <td>
                   <p><span className="label">Dată:</span> {referralDate ? format(new Date(referralDate), 'dd.MM.yyyy', { locale: ro }) : '-'}</p>
-                  <p><span className="label">Pacient:</span> {selectedPatient ? `${selectedPatient.last_name} ${selectedPatient.first_name}` : '-'}</p>
+                  <p><span className="label">Pacient:</span> {selectedPatient ? `${escapeHtml(selectedPatient.last_name)} ${escapeHtml(selectedPatient.first_name)}` : '-'}</p>
                 </td>
                 <td>
                   <p><span className="label">Vârsta:</span> {patientAge !== null ? `${patientAge} ani` : '-'}</p>
@@ -363,12 +364,12 @@ export function RadiologyReferral({ patients, doctors }: RadiologyReferralProps)
 
           <div className="section-title">Detalii</div>
           <div className="section-content">
-            {details || '-'}
+            {escapeHtml(details) || '-'}
           </div>
 
           <div className="section-title" style={{ marginTop: '15px' }}>Observații</div>
           <div className="section-content observations-content">
-            {observations || '-'}
+            {escapeHtml(observations) || '-'}
           </div>
           
           <div style={{ marginTop: '30px', paddingTop: '10px', borderTop: '2px solid #b8860b' }}>

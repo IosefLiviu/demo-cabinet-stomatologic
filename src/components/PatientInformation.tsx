@@ -24,6 +24,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { Patient } from '@/hooks/usePatients';
 import { CLINIC, getClinicCopyright } from '@/constants/clinic';
+import { escapeHtml, escapeNumberArray } from '@/lib/print-utils';
 
 interface Doctor {
   id: string;
@@ -555,7 +556,7 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
                     {(() => {
                       const g = selectedPatient.gender?.toLowerCase();
                       return (g === 'f' || g === 'female' || g === 'feminin') ? 'Dna.' : 'Dl.';
-                    })()} {selectedPatient.last_name} {selectedPatient.first_name}
+                    })()} {escapeHtml(selectedPatient.last_name)} {escapeHtml(selectedPatient.first_name)}
                   </div>
                   <div className="patient-details-left">
                     <div>
@@ -569,8 +570,8 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
                   </div>
                 </div>
                 <div className="patient-details-right">
-                  <div>Telefon: {selectedPatient.phone || '-'}</div>
-                  <div>Email: {selectedPatient.email || '-'}</div>
+                  <div>Telefon: {escapeHtml(selectedPatient.phone) || '-'}</div>
+                  <div>Email: {escapeHtml(selectedPatient.email) || '-'}</div>
                 </div>
               </div>
 
@@ -598,9 +599,9 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
                     <tr key={record.id}>
                       <td>{formatDate(record.performed_at)}</td>
                       <td className="text-center">{getTreatmentCode(record, index)}</td>
-                      <td>{record.tooth_numbers?.join(', ') || '-'}</td>
-                      <td>{record.treatment_name}</td>
-                      <td>{getDoctorName(record)}</td>
+                      <td>{escapeNumberArray(record.tooth_numbers, ', ') || '-'}</td>
+                      <td>{escapeHtml(record.treatment_name)}</td>
+                      <td>{escapeHtml(getDoctorName(record))}</td>
                       <td className="text-right">{(record.editedPrice ?? record.price)?.toLocaleString('ro-RO')} LEI</td>
                     </tr>
                   ))}

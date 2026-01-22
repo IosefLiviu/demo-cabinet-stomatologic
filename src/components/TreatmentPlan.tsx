@@ -33,6 +33,7 @@ import { useTreatmentPlans, TreatmentPlanItem as TreatmentPlanItemType } from '@
 import { MiniDentalChart } from './MiniDentalChart';
 import { supabase } from '@/integrations/supabase/client';
 import { CLINIC, getClinicCopyright } from '@/constants/clinic';
+import { escapeHtml, escapeNumberArray } from '@/lib/print-utils';
 
 interface Treatment {
   id: string;
@@ -1048,11 +1049,11 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
           </div>
 
           <div className="section">
-            <p><strong>Medic:</strong> {selectedDoctor?.name || '-'}</p>
+            <p><strong>Medic:</strong> {escapeHtml(selectedDoctor?.name) || '-'}</p>
           </div>
 
           <div className="section">
-            <p><strong>Pacient:</strong> {selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : '-'}</p>
+            <p><strong>Pacient:</strong> {selectedPatient ? `${escapeHtml(selectedPatient.first_name)} ${escapeHtml(selectedPatient.last_name)}` : '-'}</p>
             {patientAge !== null && <p style={{ marginLeft: '60px' }}>Vârsta: {patientAge} ani</p>}
           </div>
 
@@ -1110,9 +1111,9 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
                   const itemTotal = getItemTotal(item);
                   return (
                     <tr key={item.id}>
-                      <td>{item.toothNumbers.length > 0 ? item.toothNumbers.join(', ') : '-'}</td>
-                      <td>{item.treatmentName}</td>
-                      <td>{doctor?.name || '-'}</td>
+                      <td>{item.toothNumbers.length > 0 ? escapeNumberArray(item.toothNumbers, ', ') : '-'}</td>
+                      <td>{escapeHtml(item.treatmentName)}</td>
+                      <td>{escapeHtml(doctor?.name) || '-'}</td>
                       <td style={{ textAlign: 'center' }}>{quantity}</td>
                       <td style={{ textAlign: 'right' }}>{itemTotal.toFixed(0)}</td>
                     </tr>
