@@ -771,7 +771,9 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
           ) : (
             <div className="space-y-4">
               {doctorRevenueData.map((doctor) => {
-                const totalValue = doctor.revenue + doctor.scheduled;
+                // Total value includes revenue (payable amount) + CAS + scheduled
+                // This represents the full initial price before CAS deduction
+                const totalValueWithCas = doctor.revenue + doctor.cas + doctor.scheduled;
                 return (
                   <div key={doctor.name} className="p-4 rounded-lg border bg-card">
                     <div className="flex items-center justify-between mb-2">
@@ -783,7 +785,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                         <span className="font-medium">{doctor.name}</span>
                         <span className="text-sm text-muted-foreground">({doctor.appointments} programări)</span>
                       </div>
-                      <span className="text-lg font-bold">{totalValue.toLocaleString()} RON</span>
+                      <span className="text-lg font-bold">{totalValueWithCas.toLocaleString()} RON</span>
                     </div>
                     <div className="flex flex-wrap gap-4 text-sm">
                       {doctor.paidCard > 0 && (
@@ -866,23 +868,23 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                     </div>
                     <div className="mt-2">
                       <div className="h-2 rounded-full bg-muted overflow-hidden flex">
-                        {totalValue > 0 && (
+                        {totalValueWithCas > 0 && (
                           <>
                             <div 
                               className="h-full bg-blue-500 transition-all"
-                              style={{ width: `${(doctor.paidCard / totalValue) * 100}%` }}
+                              style={{ width: `${(doctor.paidCard / totalValueWithCas) * 100}%` }}
                             />
                             <div 
                               className="h-full bg-green-500 transition-all"
-                              style={{ width: `${(doctor.paidCash / totalValue) * 100}%` }}
+                              style={{ width: `${(doctor.paidCash / totalValueWithCas) * 100}%` }}
                             />
                             <div 
                               className="h-full bg-orange-500 transition-all"
-                              style={{ width: `${(doctor.unpaid / totalValue) * 100}%` }}
+                              style={{ width: `${(doctor.unpaid / totalValueWithCas) * 100}%` }}
                             />
                             <div 
                               className="h-full bg-purple-500 transition-all"
-                              style={{ width: `${(doctor.scheduled / totalValue) * 100}%` }}
+                              style={{ width: `${(doctor.scheduled / totalValueWithCas) * 100}%` }}
                             />
                           </>
                         )}
