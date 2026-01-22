@@ -67,14 +67,17 @@ export function TimeSlotGrid({
   };
 
   // Check if a slot is covered by an ongoing appointment (not the start)
+  // A slot is covered if the appointment hasn't ended by the END of this slot
   const getAppointmentCoveringSlot = (time: string, cabinetId: number) => {
-    const slotMinutes = timeToMinutes(time);
+    const slotStartMinutes = timeToMinutes(time);
+    const slotEndMinutes = slotStartMinutes + 30; // Each slot is 30 minutes
     return appointments.find((apt) => {
       if (apt.date !== dateStr || apt.cabinetId !== cabinetId) return false;
       const aptStartMinutes = timeToMinutes(apt.time);
       const aptEndMinutes = aptStartMinutes + (apt.duration || 30);
-      // This slot is covered if it's after the start but before the end
-      return slotMinutes > aptStartMinutes && slotMinutes < aptEndMinutes;
+      // This slot is covered if appointment starts before this slot 
+      // AND appointment ends after this slot starts
+      return aptStartMinutes < slotStartMinutes && aptEndMinutes > slotStartMinutes;
     });
   };
 
@@ -135,11 +138,14 @@ export function TimeSlotGrid({
                 const slotIndex = TIME_SLOTS.indexOf(time);
                 
                 // Check if this is the last slot of a multi-slot appointment
+                // (i.e., the appointment ends within or at the end of this slot)
                 const isLastContinuationSlot = appointmentCovering && (() => {
                   const aptStartMinutes = timeToMinutes(appointmentCovering.time);
                   const aptEndMinutes = aptStartMinutes + (appointmentCovering.duration || 30);
-                  const nextSlotMinutes = timeToMinutes(time) + 30;
-                  return nextSlotMinutes >= aptEndMinutes;
+                  const slotStartMinutes = timeToMinutes(time);
+                  const slotEndMinutes = slotStartMinutes + 30;
+                  // This is the last slot if the appointment ends within this slot's time range
+                  return aptEndMinutes <= slotEndMinutes && aptEndMinutes > slotStartMinutes;
                 })();
                 
                 // Check if starting appointment spans multiple slots
