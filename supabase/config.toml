@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.delete-user]
 verify_jwt = false
 
+[functions.log-login]
+verify_jwt = false
+
 [functions.lookup-user-email]
 verify_jwt = false
 

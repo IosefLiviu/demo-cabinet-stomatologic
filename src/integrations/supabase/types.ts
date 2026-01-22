@@ -344,6 +344,39 @@ export type Database = {
           },
         ]
       }
+      login_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          ip_address: string | null
+          success: boolean
+          user_agent: string | null
+          user_id: string | null
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+          username: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+          username?: string
+        }
+        Relationships: []
+      }
       monthly_expenses: {
         Row: {
           amount: number | null
