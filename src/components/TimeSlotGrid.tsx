@@ -52,11 +52,36 @@ export function TimeSlotGrid({
     ? cabinets.filter((c) => c.id === selectedCabinet)
     : cabinets;
 
-  const getAppointmentForSlot = (time: string, cabinetId: number) => {
+  // Helper to convert time string to minutes
+  const timeToMinutes = (time: string): number => {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+
+  // Get appointment that starts at this exact slot
+  const getAppointmentStartingAt = (time: string, cabinetId: number) => {
     return appointments.find(
       (apt) =>
         apt.date === dateStr && apt.time === time && apt.cabinetId === cabinetId
     );
+  };
+
+  // Check if a slot is covered by an ongoing appointment (not the start)
+  const getAppointmentCoveringSlot = (time: string, cabinetId: number) => {
+    const slotMinutes = timeToMinutes(time);
+    return appointments.find((apt) => {
+      if (apt.date !== dateStr || apt.cabinetId !== cabinetId) return false;
+      const aptStartMinutes = timeToMinutes(apt.time);
+      const aptEndMinutes = aptStartMinutes + (apt.duration || 30);
+      // This slot is covered if it's after the start but before the end
+      return slotMinutes > aptStartMinutes && slotMinutes < aptEndMinutes;
+    });
+  };
+
+  // Calculate how many slots an appointment spans
+  const getAppointmentSpan = (appointment: Appointment): number => {
+    const duration = appointment.duration || 30;
+    return Math.ceil(duration / 30);
   };
 
   return (
@@ -105,54 +130,97 @@ export function TimeSlotGrid({
               </div>
               {/* Cabinet columns for this time slot */}
               {cabinetsToShow.map((cabinet) => {
-                const appointment = getAppointmentForSlot(time, cabinet.id);
+                const appointmentStarting = getAppointmentStartingAt(time, cabinet.id);
+                const appointmentCovering = getAppointmentCoveringSlot(time, cabinet.id);
+                const slotIndex = TIME_SLOTS.indexOf(time);
+                
+                // If this slot is covered by an ongoing appointment, render continuation
+                if (appointmentCovering) {
+                  return (
+                    <div
+                      key={`${time}-${cabinet.id}`}
+                      className="border-r border-b border-border last:border-r-0 h-[50px] sm:h-[60px] min-w-0 overflow-hidden"
+                    >
+                      {/* Continuation of appointment - just show colored background */}
+                      <div
+                        className={cn(
+                          "w-full h-full mx-1 sm:mx-1.5",
+                          appointmentCovering.status === 'completed' 
+                            ? "bg-green-100 dark:bg-green-950/30"
+                            : appointmentCovering.status === 'cancelled'
+                            ? "bg-red-100 dark:bg-red-950/30 opacity-60"
+                            : !appointmentCovering.doctorColor && cabinetBgColors[cabinet.id] && "bg-opacity-15"
+                        )}
+                        style={
+                          appointmentCovering.status !== 'completed' && 
+                          appointmentCovering.status !== 'cancelled' && 
+                          appointmentCovering.doctorColor 
+                            ? { backgroundColor: `${appointmentCovering.doctorColor}20` } 
+                            : appointmentCovering.status !== 'completed' && 
+                              appointmentCovering.status !== 'cancelled'
+                            ? { backgroundColor: `hsl(var(--cabinet-${cabinet.id}) / 0.15)` }
+                            : undefined
+                        }
+                        onClick={() => onAppointmentClick(appointmentCovering)}
+                      />
+                    </div>
+                  );
+                }
+                
+                // Regular slot - either with starting appointment or empty
                 return (
                   <div
                     key={`${time}-${cabinet.id}`}
                     className="p-1 sm:p-1.5 border-r border-b border-border last:border-r-0 h-[50px] sm:h-[60px] min-w-0 overflow-hidden"
                   >
-                    {appointment ? (
+                    {appointmentStarting ? (
                       <div
                         className={cn(
                           "w-full h-full rounded-md p-1 sm:p-2 text-left transition-all overflow-hidden min-w-0 flex items-center gap-1 border",
-                          appointment.status === 'completed' 
+                          appointmentStarting.status === 'completed' 
                             ? "bg-green-100 dark:bg-green-950/30 border-green-300 dark:border-green-800"
-                            : appointment.status === 'cancelled'
+                            : appointmentStarting.status === 'cancelled'
                             ? "bg-red-100 dark:bg-red-950/30 border-red-300 dark:border-red-800 opacity-60"
-                            : !appointment.doctorColor && cabinetBgLightColors[cabinet.id]
+                            : !appointmentStarting.doctorColor && cabinetBgLightColors[cabinet.id]
                         )}
                         style={
-                          appointment.status !== 'completed' && 
-                          appointment.status !== 'cancelled' && 
-                          appointment.doctorColor 
+                          appointmentStarting.status !== 'completed' && 
+                          appointmentStarting.status !== 'cancelled' && 
+                          appointmentStarting.doctorColor 
                             ? { 
-                                backgroundColor: `${appointment.doctorColor}20`, 
-                                borderColor: `${appointment.doctorColor}50` 
+                                backgroundColor: `${appointmentStarting.doctorColor}20`, 
+                                borderColor: `${appointmentStarting.doctorColor}50` 
                               } 
                             : undefined
                         }
                       >
                         <button
-                          onClick={() => onAppointmentClick(appointment)}
+                          onClick={() => onAppointmentClick(appointmentStarting)}
                           className="flex-1 min-w-0 h-full flex flex-col justify-center cursor-pointer"
                         >
                           <div className="flex items-center gap-1 min-w-0">
                             <User className="h-3 w-3 flex-shrink-0 text-foreground/70" />
                             <span className={cn(
                               "text-[10px] sm:text-xs font-medium text-foreground truncate leading-tight",
-                              appointment.status === 'cancelled' && "line-through"
+                              appointmentStarting.status === 'cancelled' && "line-through"
                             )}>
-                              {appointment.patientName}
+                              {appointmentStarting.patientName}
                             </span>
                           </div>
                           <p className={cn(
                             "text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 truncate leading-tight",
-                            appointment.status === 'cancelled' && "line-through"
+                            appointmentStarting.status === 'cancelled' && "line-through"
                           )}>
-                            {appointment.treatment}
+                            {appointmentStarting.time} - {(() => {
+                              const [hours, minutes] = appointmentStarting.time.split(':').map(Number);
+                              const endMinutes = hours * 60 + minutes + (appointmentStarting.duration || 30);
+                              const endHours = Math.floor(endMinutes / 60);
+                              const endMins = endMinutes % 60;
+                              return `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
+                            })()} • {appointmentStarting.treatment}
                           </p>
                         </button>
-                        {appointment.status !== 'completed' && appointment.status !== 'cancelled' && (
+                        {appointmentStarting.status !== 'completed' && appointmentStarting.status !== 'cancelled' && (
                           <div className="flex flex-col gap-0.5 flex-shrink-0">
                             {onAppointmentComplete && (
                               <TooltipProvider>
@@ -161,7 +229,7 @@ export function TimeSlotGrid({
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        onAppointmentComplete(appointment.id);
+                                        onAppointmentComplete(appointmentStarting.id);
                                       }}
                                       className="p-0.5 rounded hover:bg-green-200 dark:hover:bg-green-800 transition-colors"
                                     >
@@ -181,7 +249,7 @@ export function TimeSlotGrid({
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        onAppointmentCancel(appointment.id);
+                                        onAppointmentCancel(appointmentStarting.id);
                                       }}
                                       className="p-0.5 rounded hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
                                     >
@@ -196,10 +264,10 @@ export function TimeSlotGrid({
                             )}
                           </div>
                         )}
-                        {appointment.status === 'completed' && (
+                        {appointmentStarting.status === 'completed' && (
                           <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
                         )}
-                        {appointment.status === 'cancelled' && (
+                        {appointmentStarting.status === 'cancelled' && (
                           <XCircle className="h-3 w-3 sm:h-4 sm:w-4 text-red-500 flex-shrink-0" />
                         )}
                       </div>

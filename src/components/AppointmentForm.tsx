@@ -661,6 +661,17 @@ export function AppointmentForm({
                       ))}
                     </SelectContent>
                   </Select>
+                  {formData.time && totalDuration > 0 && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Interval: {formData.time} - {(() => {
+                        const [hours, minutes] = formData.time.split(':').map(Number);
+                        const endMinutes = hours * 60 + minutes + totalDuration;
+                        const endHours = Math.floor(endMinutes / 60);
+                        const endMins = endMinutes % 60;
+                        return `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
+                      })()}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
