@@ -110,7 +110,10 @@ const Index = () => {
   const { treatments } = useTreatments();
   const { cabinets, updateCabinetDoctor } = useCabinets();
   const { doctors } = useDoctors();
-  const { isAdmin } = useAuth();
+  const { isAdmin, doctorId } = useAuth();
+  
+  // Reception user = not admin AND not a doctor
+  const isReception = !isAdmin && !doctorId;
 
   // Navigation helpers
   const pushNavState = useCallback((state: NavigationState) => {
@@ -526,10 +529,12 @@ const Index = () => {
               <Users className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Pacienți</span>
             </TabsTrigger>
-            <TabsTrigger value="reports" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-              <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Rapoarte</span>
-            </TabsTrigger>
+            {!isReception && (
+              <TabsTrigger value="reports" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Rapoarte</span>
+              </TabsTrigger>
+            )}
             {isAdmin && (
               <TabsTrigger value="expenses" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
                 <Wallet className="h-3 w-3 sm:h-4 sm:w-4" />
