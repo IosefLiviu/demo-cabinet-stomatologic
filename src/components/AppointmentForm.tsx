@@ -155,8 +155,33 @@ export function AppointmentForm({
     cabinetId: 1,
     doctorId: '',
     time: TIME_SLOTS[0],
+    endTime: TIME_SLOTS[1], // Default 30 minutes after start
     notes: '',
   });
+
+  // Calculate end time based on start time + duration from interventions
+  const calculateEndTime = (startTime: string, durationMinutes: number): string => {
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const endMinutes = hours * 60 + minutes + durationMinutes;
+    const endHours = Math.floor(endMinutes / 60);
+    const endMins = endMinutes % 60;
+    return `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
+  };
+
+  // Calculate duration from time interval
+  const calculateDurationFromInterval = (startTime: string, endTime: string): number => {
+    const [startHours, startMinutes] = startTime.split(':').map(Number);
+    const [endHours, endMinutes] = endTime.split(':').map(Number);
+    const startTotalMinutes = startHours * 60 + startMinutes;
+    const endTotalMinutes = endHours * 60 + endMinutes;
+    return Math.max(30, endTotalMinutes - startTotalMinutes);
+  };
+
+  // Get available end times (must be after start time)
+  const getAvailableEndTimes = (startTime: string): string[] => {
+    const startIndex = TIME_SLOTS.indexOf(startTime);
+    return TIME_SLOTS.slice(startIndex + 1);
+  };
 
   // Calculate totals from interventions
   const totalPrice = interventions.reduce((sum, i) => sum + i.price, 0);
@@ -333,6 +358,8 @@ export function AppointmentForm({
   useEffect(() => {
     if (open) {
       if (editingAppointment) {
+        const duration = editingAppointment.duration || 30;
+        const endTimeCalculated = calculateEndTime(editingAppointment.time, duration);
         setFormData({
           patientId: editingAppointment.patientId || '',
           patientName: editingAppointment.patientName,
@@ -340,6 +367,7 @@ export function AppointmentForm({
           cabinetId: editingAppointment.cabinetId,
           doctorId: editingAppointment.doctorId || '',
           time: editingAppointment.time,
+          endTime: endTimeCalculated,
           notes: editingAppointment.notes || '',
         });
         // Load existing interventions if provided
@@ -368,13 +396,16 @@ export function AppointmentForm({
         }
         setIsNewPatient(false);
       } else {
+        const startTime = selectedTime || TIME_SLOTS[0];
+        const defaultEndTime = TIME_SLOTS[TIME_SLOTS.indexOf(startTime) + 1] || TIME_SLOTS[TIME_SLOTS.length - 1];
         setFormData({
           patientId: '',
           patientName: '',
           patientPhone: '',
           cabinetId: selectedCabinet || 1,
           doctorId: '',
-          time: selectedTime || TIME_SLOTS[0],
+          time: startTime,
+          endTime: defaultEndTime,
           notes: '',
         });
         setInterventions([]);
@@ -438,7 +469,7 @@ export function AppointmentForm({
       doctorId: formData.doctorId || undefined,
       time: formData.time,
       notes: formData.notes,
-      duration: totalDuration,
+      duration: calculateDurationFromInterval(formData.time, formData.endTime),
       treatmentId: firstTreatment?.treatmentId,
       treatmentName: selectedTreatments.map(t => t.treatmentName).join(', '),
       price: totalPrice,
@@ -643,35 +674,52 @@ export function AppointmentForm({
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="time" className="text-xs sm:text-sm">Ora *</Label>
-                  <Select
-                    value={formData.time}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, time: value })
-                    }
-                  >
-                    <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border shadow-lg z-[100] pointer-events-auto max-h-[300px]">
-                      {TIME_SLOTS.map((time) => (
-                        <SelectItem key={time} value={time} className="text-sm">
-                          {time}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {formData.time && totalDuration > 0 && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Interval: {formData.time} - {(() => {
-                        const [hours, minutes] = formData.time.split(':').map(Number);
-                        const endMinutes = hours * 60 + minutes + totalDuration;
-                        const endHours = Math.floor(endMinutes / 60);
-                        const endMins = endMinutes % 60;
-                        return `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
-                      })()}
-                    </p>
-                  )}
+                  <Label htmlFor="time" className="text-xs sm:text-sm">Interval orar *</Label>
+                  <div className="flex items-center gap-2">
+                    <Select
+                      value={formData.time}
+                      onValueChange={(value) => {
+                        // When start time changes, adjust end time if needed
+                        const availableEndTimes = getAvailableEndTimes(value);
+                        const newEndTime = availableEndTimes.includes(formData.endTime) 
+                          ? formData.endTime 
+                          : availableEndTimes[0] || value;
+                        setFormData({ ...formData, time: value, endTime: newEndTime });
+                      }}
+                    >
+                      <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm flex-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border shadow-lg z-[100] pointer-events-auto max-h-[300px]">
+                        {TIME_SLOTS.slice(0, -1).map((time) => (
+                          <SelectItem key={time} value={time} className="text-sm">
+                            {time}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <span className="text-muted-foreground text-sm">-</span>
+                    <Select
+                      value={formData.endTime}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, endTime: value })
+                      }
+                    >
+                      <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm flex-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border shadow-lg z-[100] pointer-events-auto max-h-[300px]">
+                        {getAvailableEndTimes(formData.time).map((time) => (
+                          <SelectItem key={time} value={time} className="text-sm">
+                            {time}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Durată: {calculateDurationFromInterval(formData.time, formData.endTime)} min
+                  </p>
                 </div>
               </div>
             </div>
