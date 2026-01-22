@@ -872,7 +872,11 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
                               
                               <div className="flex items-center justify-between pt-2 border-t">
                                 <p className="text-xs text-muted-foreground">
-                                  Selectați: <span className="font-medium text-foreground">{item.toothNumbers.length}</span> dinți
+                                  Selectați: <span className="font-medium text-foreground">
+                                    {item.isArchMode || getSelectionMode(item.id) === 'arch' 
+                                      ? `${countArchGroups(item.toothNumbers)} ${countArchGroups(item.toothNumbers) === 1 ? 'cadran/arcadă' : 'cadrane/arcade'}`
+                                      : `${item.toothNumbers.length} dinți`}
+                                  </span>
                                 </p>
                                 {item.toothNumbers.length > 0 && (
                                   <Button 
