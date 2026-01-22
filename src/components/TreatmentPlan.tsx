@@ -67,6 +67,8 @@ interface LocalTreatmentPlanItem {
   completedAt?: string;
   paymentStatus?: string;
   paidAmount?: number;
+  // When true, price is NOT multiplied by teeth count (arch/quadrant mode)
+  isArchMode?: boolean;
 }
 
 interface InitialPlanData {
@@ -334,6 +336,17 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
     }));
   };
 
+  // Helper to count how many full arch groups are selected
+  const countArchGroups = (toothNumbers: number[]): number => {
+    let count = 0;
+    // Check each quadrant
+    if (quadrant1.every(t => toothNumbers.includes(t))) count++;
+    if (quadrant2.every(t => toothNumbers.includes(t))) count++;
+    if (quadrant3.every(t => toothNumbers.includes(t))) count++;
+    if (quadrant4.every(t => toothNumbers.includes(t))) count++;
+    return Math.max(1, count); // At least 1 if any teeth are selected
+  };
+
   // Handle selecting/deselecting an entire arch or quadrant
   const handleArchSelection = (itemId: string, teethToToggle: number[]) => {
     setPlanItems(planItems.map(item => {
@@ -356,6 +369,7 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
       return {
         ...item,
         toothNumbers: newToothNumbers,
+        isArchMode: true, // Mark as arch mode when using arch selection
       };
     }));
   };
@@ -375,10 +389,21 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
     ));
   };
 
+  // Helper to get quantity based on mode
+  const getQuantity = (item: LocalTreatmentPlanItem): number => {
+    if (item.toothNumbers.length === 0) return 1;
+    if (item.isArchMode) {
+      // In arch mode, quantity = number of complete arch groups
+      return countArchGroups(item.toothNumbers);
+    }
+    // Individual teeth mode - quantity = number of teeth
+    return item.toothNumbers.length;
+  };
+
   // CAS is treated as TOTAL for the whole line item (not per-tooth).
-  // Initial price is per tooth and multiplied by selected teeth count.
+  // Initial price is per tooth and multiplied by quantity (teeth or arch groups).
   const getPrice = (item: LocalTreatmentPlanItem) => {
-    const quantity = item.toothNumbers.length > 0 ? item.toothNumbers.length : 1;
+    const quantity = getQuantity(item);
     const casPerUnit = item.cas / quantity;
     return Math.max(0, item.initialPrice - casPerUnit);
   };
@@ -386,7 +411,7 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
   // Calculate "De plată" considering quantity, TOTAL CAS and discount
   // Formula: ((initialPrice * quantity) - cas_total) * (1 - discount/100)
   const getDePlata = (item: LocalTreatmentPlanItem) => {
-    const quantity = item.toothNumbers.length > 0 ? item.toothNumbers.length : 1;
+    const quantity = getQuantity(item);
     const totalInitialPrice = item.initialPrice * quantity;
     const subtotalAfterCas = totalInitialPrice - item.cas;
     const discount = subtotalAfterCas * (item.discountPercent / 100);
@@ -394,7 +419,7 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
   };
 
   const getItemTotal = (item: LocalTreatmentPlanItem) => {
-    const quantity = item.toothNumbers.length > 0 ? item.toothNumbers.length : 1;
+    const quantity = getQuantity(item);
     return item.initialPrice * quantity;
   };
 
@@ -409,7 +434,7 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
   const subtotal = planItems.reduce((sum, item) => sum + getItemTotal(item), 0);
   const totalCas = planItems.reduce((sum, item) => sum + item.cas, 0);
   const totalLaborator = planItems.reduce((sum, item) => {
-    const quantity = item.toothNumbers.length > 0 ? item.toothNumbers.length : 1;
+    const quantity = getQuantity(item);
     return sum + (item.laborator * quantity);
   }, 0);
   

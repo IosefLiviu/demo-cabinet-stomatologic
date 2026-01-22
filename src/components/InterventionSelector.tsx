@@ -44,6 +44,10 @@ export interface SelectedIntervention {
   teethDetails?: ToothSelection[];
   // Link to treatment plan item for tracking completion
   planItemId?: string;
+  // When true, price is NOT multiplied by teeth count (arch/quadrant mode)
+  isArchMode?: boolean;
+  // Count of selected arch/quadrant groups for pricing
+  archGroupCount?: number;
 }
 
 interface InterventionSelectorProps {
@@ -226,10 +230,18 @@ export function InterventionSelector({
           ? i.selectedTeeth 
           : [...i.selectedTeeth, toothDialog.toothNumber];
         
-        // Calculate new price based on teeth count if basePrice exists
-        const teethCount = newSelectedTeeth.length;
+        // Calculate new price based on mode
         const basePrice = i.basePrice ?? i.price;
-        const newPrice = teethCount > 0 ? basePrice * teethCount : basePrice;
+        let newPrice: number;
+        if (i.isArchMode) {
+          // In arch mode, count complete arch groups
+          const archGroupCount = countArchGroups(newSelectedTeeth);
+          newPrice = newSelectedTeeth.length > 0 ? basePrice * archGroupCount : basePrice;
+        } else {
+          // Individual teeth mode - price per tooth
+          const teethCount = newSelectedTeeth.length;
+          newPrice = teethCount > 0 ? basePrice * teethCount : basePrice;
+        }
         
         return {
           ...i,
@@ -244,6 +256,7 @@ export function InterventionSelector({
           ],
           basePrice: basePrice,
           price: newPrice,
+          archGroupCount: i.isArchMode ? countArchGroups(newSelectedTeeth) : undefined,
         };
       })
     );
@@ -257,17 +270,26 @@ export function InterventionSelector({
         if (i.id !== interventionId) return i;
         
         const newSelectedTeeth = i.selectedTeeth.filter(t => t !== toothNumber);
-        const teethCount = newSelectedTeeth.length;
         const basePrice = i.basePrice ?? i.price;
-        // When teeth count is 0, use basePrice (single tooth price), not 0
-        const newPrice = teethCount > 0 ? basePrice * teethCount : basePrice;
+        
+        let newPrice: number;
+        if (i.isArchMode) {
+          // In arch mode, count complete arch groups
+          const archGroupCount = countArchGroups(newSelectedTeeth);
+          newPrice = newSelectedTeeth.length > 0 ? basePrice * archGroupCount : basePrice;
+        } else {
+          // Individual teeth mode - price per tooth
+          const teethCount = newSelectedTeeth.length;
+          newPrice = teethCount > 0 ? basePrice * teethCount : basePrice;
+        }
         
         return {
           ...i,
           selectedTeeth: newSelectedTeeth,
           teethDetails: (i.teethDetails || []).filter(t => t.toothNumber !== toothNumber),
           price: newPrice,
-          basePrice: basePrice, // Ensure basePrice is preserved
+          basePrice: basePrice,
+          archGroupCount: i.isArchMode ? countArchGroups(newSelectedTeeth) : undefined,
         };
       })
     );
@@ -280,6 +302,17 @@ export function InterventionSelector({
   // Get the current selection mode for an intervention
   const getSelectionMode = (interventionId: string): 'teeth' | 'arch' => {
     return selectionMode[interventionId] || 'teeth';
+  };
+
+  // Helper to count how many full arch groups are selected
+  const countArchGroups = (selectedTeeth: number[]): number => {
+    let count = 0;
+    // Check each quadrant
+    if (quadrant1.every(t => selectedTeeth.includes(t))) count++;
+    if (quadrant2.every(t => selectedTeeth.includes(t))) count++;
+    if (quadrant3.every(t => selectedTeeth.includes(t))) count++;
+    if (quadrant4.every(t => selectedTeeth.includes(t))) count++;
+    return Math.max(1, count); // At least 1 if any teeth are selected
   };
 
   // Handle selecting/deselecting an entire arch or quadrant
@@ -313,9 +346,10 @@ export function InterventionSelector({
           }
         }
         
-        const teethCount = newSelectedTeeth.length;
+        // In arch mode, price = basePrice * number of selected arch groups (not teeth)
         const basePrice = i.basePrice ?? i.price;
-        const newPrice = teethCount > 0 ? basePrice * teethCount : basePrice;
+        const archGroupCount = countArchGroups(newSelectedTeeth);
+        const newPrice = newSelectedTeeth.length > 0 ? basePrice * archGroupCount : basePrice;
         
         return {
           ...i,
@@ -323,6 +357,8 @@ export function InterventionSelector({
           teethDetails: newTeethDetails,
           basePrice: basePrice,
           price: newPrice,
+          isArchMode: true,
+          archGroupCount: archGroupCount,
         };
       })
     );
