@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, ArrowLeft, Save, X, Users, Stethoscope, Shield, ShieldCheck, Palette, Mail } from 'lucide-react';
+import { Plus, Edit, Trash2, ArrowLeft, Save, X, Users, Stethoscope, Shield, ShieldCheck, Palette, Mail, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -542,6 +543,35 @@ export default function Admin() {
     }
   };
 
+  const exportUsersToExcel = () => {
+    const exportData = users.map((u) => ({
+      'Nume Complet': u.full_name || '-',
+      'Nume Utilizator': u.username || '-',
+      'Rol': u.role === 'admin' ? 'Administrator' : 'Utilizator',
+      'Data Creare': u.created_at ? new Date(u.created_at).toLocaleDateString('ro-RO') : '-',
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Utilizatori');
+    
+    // Auto-size columns
+    const colWidths = [
+      { wch: 25 }, // Nume Complet
+      { wch: 20 }, // Nume Utilizator
+      { wch: 15 }, // Rol
+      { wch: 15 }, // Data Creare
+    ];
+    ws['!cols'] = colWidths;
+
+    XLSX.writeFile(wb, `utilizatori_${new Date().toISOString().split('T')[0]}.xlsx`);
+    
+    toast({
+      title: 'Succes',
+      description: 'Lista utilizatorilor a fost exportată',
+    });
+  };
+
   // ============ TOOTH STATUSES FUNCTIONS ============
   const handleOpenStatusDialog = (status?: ToothStatusCustom) => {
     if (status) {
@@ -723,9 +753,12 @@ export default function Admin() {
             )}
           </TabsContent>
 
-          {/* ============ USERS TAB ============ */}
           <TabsContent value="users" className="space-y-4">
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={exportUsersToExcel} className="gap-2">
+                <Download className="h-4 w-4" />
+                Exportă
+              </Button>
               <Button onClick={() => setNewUserDialogOpen(true)} className="gap-2">
                 <Plus className="h-4 w-4" />
                 Creează Utilizator
