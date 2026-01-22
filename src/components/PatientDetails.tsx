@@ -56,6 +56,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { MiniDentalChart, ToothData } from './MiniDentalChart';
 import { useTreatmentPlans, TreatmentPlan } from '@/hooks/useTreatmentPlans';
 import { PatientRadiographs } from './PatientRadiographs';
+import { escapeHtml, escapeHtmlArray, escapeNumberArray } from '@/lib/print-utils';
 
 interface ToothDataRecord {
   toothNumber: number;
@@ -286,9 +287,9 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
             <p>Str. București, Nr 68-70, Vârteju, Ilfov</p>
           </div>
           <div class="section">
-            <p><strong>Pacient:</strong> ${patient?.first_name} ${patient?.last_name}</p>
+            <p><strong>Pacient:</strong> ${escapeHtml(patient?.first_name)} ${escapeHtml(patient?.last_name)}</p>
             <p><strong>Data:</strong> ${format(new Date(plan.createdAt), 'dd.MM.yyyy', { locale: ro })}</p>
-            ${plan.nextAppointmentDate ? `<p><strong>Următoarea programare:</strong> ${format(new Date(plan.nextAppointmentDate), 'dd.MM.yyyy', { locale: ro })} ${plan.nextAppointmentTime || ''}</p>` : ''}
+            ${plan.nextAppointmentDate ? `<p><strong>Următoarea programare:</strong> ${format(new Date(plan.nextAppointmentDate), 'dd.MM.yyyy', { locale: ro })} ${escapeHtml(plan.nextAppointmentTime) || ''}</p>` : ''}
           </div>
           
           <div class="section">
@@ -320,14 +321,14 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                 </tr>
               </thead>
               <tbody>
-                ${plan.items.map(item => {
+              ${plan.items.map(item => {
                   const teethDisplay = item.toothNumbers && item.toothNumbers.length > 0 
-                    ? item.toothNumbers.join(', ') 
+                    ? escapeNumberArray(item.toothNumbers, ', ')
                     : (item.toothNumber || '-');
                   return `
                   <tr>
                     <td>${teethDisplay}</td>
-                    <td>${item.treatmentName}</td>
+                    <td>${escapeHtml(item.treatmentName)}</td>
                     <td style="text-align: center">${item.quantity}</td>
                     <td style="text-align: right">${(item.price * item.quantity).toFixed(0)} RON</td>
                   </tr>

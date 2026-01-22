@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select';
 import { Patient } from '@/hooks/usePatients';
 import { CLINIC, getClinicCopyright } from '@/constants/clinic';
+import { escapeHtml } from '@/lib/print-utils';
 
 interface Doctor {
   id: string;
@@ -318,7 +319,7 @@ export function SpecialistReferral({ patients, doctors }: SpecialistReferralProp
 
           <div className="content">
             <p>
-              Subsemnatul(a) <span className="patient-name">{selectedPatient ? `${selectedPatient.last_name} ${selectedPatient.first_name}` : '___________________'}</span> necesită intervenții stomatologice ({interventionType})
+              Subsemnatul(a) <span className="patient-name">{selectedPatient ? `${escapeHtml(selectedPatient.last_name)} ${escapeHtml(selectedPatient.first_name)}` : '___________________'}</span> necesită intervenții stomatologice ({escapeHtml(interventionType)})
             </p>
 
             <p>
@@ -326,8 +327,8 @@ export function SpecialistReferral({ patients, doctors }: SpecialistReferralProp
             </p>
 
             <ul className="medication-list">
-              <li>[Ex.: {anesthetic}] sau, la nevoie, [alternativ: {alternativeAnesthetic}].</li>
-              <li>Menționăm că în protocolul terapeutic al cabinetului se utilizează <strong>{antibiotic}</strong> ca antibiotic și <strong>{antiInflammatory}</strong> ca antiinflamator. Solicităm confirmarea toleranței pacientului la aceste medicamente.</li>
+              <li>[Ex.: {escapeHtml(anesthetic)}] sau, la nevoie, [alternativ: {escapeHtml(alternativeAnesthetic)}].</li>
+              <li>Menționăm că în protocolul terapeutic al cabinetului se utilizează <strong>{escapeHtml(antibiotic)}</strong> ca antibiotic și <strong>{escapeHtml(antiInflammatory)}</strong> ca antiinflamator. Solicităm confirmarea toleranței pacientului la aceste medicamente.</li>
             </ul>
 
             <div className="questions-section">
@@ -353,7 +354,7 @@ export function SpecialistReferral({ patients, doctors }: SpecialistReferralProp
 
           <div className="signature">
             <p>Cu stimă,</p>
-            <p style={{ marginTop: '20px' }}><strong>Dr. {selectedDoctor?.name || '___________________'}</strong></p>
+            <p style={{ marginTop: '20px' }}><strong>Dr. {escapeHtml(selectedDoctor?.name) || '___________________'}</strong></p>
             <p style={{ fontSize: '11px', color: '#666' }}>Data: {referralDate ? format(new Date(referralDate), 'dd.MM.yyyy', { locale: ro }) : '-'}</p>
           </div>
 
