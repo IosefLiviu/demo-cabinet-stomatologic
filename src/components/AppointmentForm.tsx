@@ -117,6 +117,13 @@ interface AppointmentFormProps {
   cabinets: Cabinet[];
   doctors: Doctor[];
   isAdmin?: boolean;
+  checkOverlap?: (
+    date: string, 
+    startTime: string, 
+    endTime: string, 
+    cabinetId: number, 
+    excludeId?: string
+  ) => { hasOverlap: boolean; conflictingAppointment?: { start_time: string; duration: number; patients?: { first_name: string; last_name: string } } };
 }
 
 export function AppointmentForm({
@@ -134,6 +141,7 @@ export function AppointmentForm({
   cabinets,
   doctors,
   isAdmin = false,
+  checkOverlap,
 }: AppointmentFormProps) {
   const [patientSearch, setPatientSearch] = useState('');
   const [patientPopoverOpen, setPatientPopoverOpen] = useState(false);
@@ -441,6 +449,38 @@ export function AppointmentForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check for overlapping appointments
+    if (checkOverlap) {
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      const { hasOverlap, conflictingAppointment } = checkOverlap(
+        dateStr,
+        formData.time,
+        formData.endTime,
+        formData.cabinetId,
+        editingAppointment?.id
+      );
+      
+      if (hasOverlap && conflictingAppointment) {
+        const patientName = conflictingAppointment.patients 
+          ? `${conflictingAppointment.patients.first_name} ${conflictingAppointment.patients.last_name}`
+          : 'Alt pacient';
+        const endMinutes = 
+          parseInt(conflictingAppointment.start_time.split(':')[0]) * 60 + 
+          parseInt(conflictingAppointment.start_time.split(':')[1]) + 
+          (conflictingAppointment.duration || 30);
+        const endHours = Math.floor(endMinutes / 60);
+        const endMins = endMinutes % 60;
+        const endTime = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
+        
+        toast({
+          title: 'Suprapunere detectată',
+          description: `Intervalul se suprapune cu programarea lui ${patientName} (${conflictingAppointment.start_time} - ${endTime})`,
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
     
     // Convert interventions to selectedTreatments format
     const selectedTreatments: SelectedTreatment[] = interventions.map(i => ({

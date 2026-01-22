@@ -106,6 +106,7 @@ const Index = () => {
     deleteAppointment,
     completeAppointment,
     cancelAppointment,
+    checkOverlap,
     saveAppointmentTreatments,
     fetchAppointmentTreatments 
   } = useAppointmentsDB();
@@ -832,6 +833,7 @@ const Index = () => {
         cabinets={cabinets}
         doctors={doctors}
         isAdmin={isAdmin}
+        checkOverlap={checkOverlap}
       />
 
       {/* Cabinet Settings */}
