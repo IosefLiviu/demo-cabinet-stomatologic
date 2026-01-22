@@ -903,7 +903,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
                 <div className="flex items-center justify-between">
                   <span className="font-semibold">Total</span>
                   <span className="text-xl font-bold">
-                    {doctorRevenueData.reduce((sum, d) => sum + d.revenue + d.scheduled, 0).toLocaleString()} RON
+                    {doctorRevenueData.reduce((sum, d) => sum + d.revenue + d.cas + d.scheduled, 0).toLocaleString()} RON
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-4 text-sm mt-1">
