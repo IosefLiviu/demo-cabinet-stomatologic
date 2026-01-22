@@ -134,31 +134,52 @@ export function TimeSlotGrid({
                 const appointmentCovering = getAppointmentCoveringSlot(time, cabinet.id);
                 const slotIndex = TIME_SLOTS.indexOf(time);
                 
+                // Check if this is the last slot of a multi-slot appointment
+                const isLastContinuationSlot = appointmentCovering && (() => {
+                  const aptStartMinutes = timeToMinutes(appointmentCovering.time);
+                  const aptEndMinutes = aptStartMinutes + (appointmentCovering.duration || 30);
+                  const nextSlotMinutes = timeToMinutes(time) + 30;
+                  return nextSlotMinutes >= aptEndMinutes;
+                })();
+                
+                // Check if starting appointment spans multiple slots
+                const appointmentSpan = appointmentStarting ? getAppointmentSpan(appointmentStarting) : 1;
+                const isMultiSlot = appointmentSpan > 1;
+                
                 // If this slot is covered by an ongoing appointment, render continuation
                 if (appointmentCovering) {
                   return (
                     <div
                       key={`${time}-${cabinet.id}`}
-                      className="border-r border-b border-border last:border-r-0 h-[50px] sm:h-[60px] min-w-0 overflow-hidden"
+                      className="border-r border-b border-border last:border-r-0 h-[50px] sm:h-[60px] min-w-0 overflow-hidden px-1 sm:px-1.5"
                     >
-                      {/* Continuation of appointment - just show colored background */}
+                      {/* Continuation of appointment - seamless colored background with side borders */}
                       <div
                         className={cn(
-                          "w-full h-full mx-1 sm:mx-1.5",
+                          "w-full h-full cursor-pointer border-l border-r",
+                          isLastContinuationSlot && "rounded-b-md border-b",
                           appointmentCovering.status === 'completed' 
-                            ? "bg-green-100 dark:bg-green-950/30"
+                            ? "bg-green-100 dark:bg-green-950/30 border-green-300 dark:border-green-800"
                             : appointmentCovering.status === 'cancelled'
-                            ? "bg-red-100 dark:bg-red-950/30 opacity-60"
-                            : !appointmentCovering.doctorColor && cabinetBgColors[cabinet.id] && "bg-opacity-15"
+                            ? "bg-red-100 dark:bg-red-950/30 border-red-300 dark:border-red-800 opacity-60"
+                            : ""
                         )}
                         style={
                           appointmentCovering.status !== 'completed' && 
                           appointmentCovering.status !== 'cancelled' && 
                           appointmentCovering.doctorColor 
-                            ? { backgroundColor: `${appointmentCovering.doctorColor}20` } 
+                            ? { 
+                                backgroundColor: `${appointmentCovering.doctorColor}20`,
+                                borderColor: `${appointmentCovering.doctorColor}50`
+                              } 
                             : appointmentCovering.status !== 'completed' && 
                               appointmentCovering.status !== 'cancelled'
-                            ? { backgroundColor: `hsl(var(--cabinet-${cabinet.id}) / 0.15)` }
+                            ? { 
+                                backgroundColor: cabinetBgLightColors[cabinet.id]?.includes('bg-cabinet') 
+                                  ? undefined 
+                                  : `hsl(var(--cabinet-${cabinet.id}) / 0.15)`,
+                                borderColor: `hsl(var(--cabinet-${cabinet.id}) / 0.3)`
+                              }
                             : undefined
                         }
                         onClick={() => onAppointmentClick(appointmentCovering)}
@@ -171,12 +192,18 @@ export function TimeSlotGrid({
                 return (
                   <div
                     key={`${time}-${cabinet.id}`}
-                    className="p-1 sm:p-1.5 border-r border-b border-border last:border-r-0 h-[50px] sm:h-[60px] min-w-0 overflow-hidden"
+                    className={cn(
+                      "border-r border-b border-border last:border-r-0 h-[50px] sm:h-[60px] min-w-0 overflow-hidden",
+                      !appointmentStarting && "p-1 sm:p-1.5",
+                      appointmentStarting && "px-1 sm:px-1.5 pt-1 sm:pt-1.5",
+                      appointmentStarting && !isMultiSlot && "pb-1 sm:pb-1.5"
+                    )}
                   >
                     {appointmentStarting ? (
                       <div
                         className={cn(
-                          "w-full h-full rounded-md p-1 sm:p-2 text-left transition-all overflow-hidden min-w-0 flex items-center gap-1 border",
+                          "w-full h-full p-1 sm:p-2 text-left transition-all overflow-hidden min-w-0 flex items-center gap-1 border border-b-0",
+                          isMultiSlot ? "rounded-t-md" : "rounded-md border-b",
                           appointmentStarting.status === 'completed' 
                             ? "bg-green-100 dark:bg-green-950/30 border-green-300 dark:border-green-800"
                             : appointmentStarting.status === 'cancelled'
