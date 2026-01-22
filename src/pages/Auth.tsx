@@ -54,42 +54,7 @@ export default function Auth() {
     setIsSubmitting(true);
     
     try {
-      // First, lookup the email by username
-      const { data: profileData, error: lookupError } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('username', username)
-        .maybeSingle();
-
-      if (lookupError) {
-        console.error('Error looking up username:', lookupError);
-        toast({
-          title: 'Eroare',
-          description: 'A apărut o eroare la autentificare.',
-          variant: 'destructive',
-        });
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (!profileData) {
-        toast({
-          title: 'Eroare la autentificare',
-          description: 'Nume de utilizator sau parolă incorectă.',
-          variant: 'destructive',
-        });
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Get the user's email from auth.users via admin lookup
-      // We need to use a different approach - get email from profiles or use the user_id
-      const { data: userData, error: userError } = await supabase.auth.admin?.getUserById?.(profileData.user_id);
-      
-      // Since we can't access admin API from client, we need an edge function
-      // Alternative: store email in profiles table or use a lookup edge function
-      // For now, let's call an edge function to get the email
-      
+      // Use edge function to lookup email by username (bypasses RLS)
       const { data: lookupData, error: edgeFnError } = await supabase.functions.invoke('lookup-user-email', {
         body: { username }
       });
