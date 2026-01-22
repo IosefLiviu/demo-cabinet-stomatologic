@@ -673,7 +673,10 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
                 </TableHeader>
                 <TableBody>
                   {planItems.map(item => {
-                    const quantity = item.toothNumbers.length > 0 ? item.toothNumbers.length : 1;
+                    // IMPORTANT: quantity must follow selection mode.
+                    // - Dinți: number of teeth
+                    // - Maxilar (cadrane/arcade): number of selected arch groups
+                    const quantity = getQuantity(item);
                     const price = getPrice(item);
                     const dePlata = getDePlata(item);
                     const isCompleted = !!item.completedAt;
