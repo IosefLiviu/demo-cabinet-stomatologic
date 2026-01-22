@@ -653,7 +653,7 @@ export function AppointmentForm({
                     <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-background border shadow-lg z-50">
+                    <SelectContent className="bg-background border shadow-lg z-[100] pointer-events-auto max-h-[300px]">
                       {TIME_SLOTS.map((time) => (
                         <SelectItem key={time} value={time} className="text-sm">
                           {time}
