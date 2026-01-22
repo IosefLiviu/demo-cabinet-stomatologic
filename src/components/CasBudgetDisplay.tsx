@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useCasBudget } from '@/hooks/useCasBudget';
+import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
@@ -11,6 +12,7 @@ import { toast } from 'sonner';
 
 export function CasBudgetDisplay() {
   const { remainingBudget, initialBudget, usedBudget, setMonthlyBudget, resetBudget, loading } = useCasBudget();
+  const { isAdmin } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -81,7 +83,7 @@ export function CasBudgetDisplay() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h4 className="font-semibold text-sm">Buget CAS - {currentMonth}</h4>
-            {!isEditing && (
+            {!isEditing && isAdmin && (
               <div className="flex items-center gap-1">
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleReset} title="Resetare buget utilizat">
                   <RotateCcw className="h-3 w-3" />
