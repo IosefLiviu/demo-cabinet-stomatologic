@@ -25,6 +25,7 @@ import { CabinetSettings } from '@/components/CabinetSettings';
 import { CompleteAppointmentDialog, PaymentData } from '@/components/CompleteAppointmentDialog';
 import { CancelAppointmentDialog } from '@/components/CancelAppointmentDialog';
 import { NavigationButtons } from '@/components/NavigationButtons';
+import { AvailableSlotsSearch } from '@/components/AvailableSlotsSearch';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePatients, Patient } from '@/hooks/usePatients';
@@ -560,10 +561,21 @@ const Index = () => {
             {/* Controls */}
             <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
               <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
-              <Button className="gap-2 w-full sm:w-auto" onClick={handleNewAppointment}>
-                <Plus className="h-4 w-4" />
-                Programare nouă
-              </Button>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <AvailableSlotsSearch
+                  appointments={legacyAppointments}
+                  cabinets={cabinets}
+                  onSlotSelect={(date, time, cabinetId) => {
+                    setSelectedDate(date);
+                    setSelectedCabinet(cabinetId);
+                    handleSlotClick(time, cabinetId);
+                  }}
+                />
+                <Button className="gap-2 flex-1 sm:flex-none" onClick={handleNewAppointment}>
+                  <Plus className="h-4 w-4" />
+                  Programare nouă
+                </Button>
+              </div>
             </div>
 
             {/* Cabinet tabs */}
