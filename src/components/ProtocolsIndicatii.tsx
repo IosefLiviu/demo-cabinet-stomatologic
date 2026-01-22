@@ -150,91 +150,120 @@ const ProtocolsIndicatii = () => {
         </Button>
       </CardHeader>
       <CardContent>
-        <Tabs value={activeProtocol} onValueChange={setActiveProtocol} className="space-y-4">
-          <TabsList className="flex flex-wrap w-full h-auto gap-1">
-            <TabsTrigger value="consult" className="gap-1 text-xs sm:text-sm py-2">
-              <Stethoscope className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Consultație</span>
+        <Tabs defaultValue="protocoale" className="space-y-4">
+          <TabsList className="w-full justify-start">
+            <TabsTrigger value="protocoale" className="gap-2">
+              <FileText className="h-4 w-4" />
+              Protocoale
             </TabsTrigger>
-            <TabsTrigger value="endodontie" className="gap-1 text-xs sm:text-sm py-2">
-              <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Endodonție</span>
-            </TabsTrigger>
-            <TabsTrigger value="carii-pedo" className="gap-1 text-xs sm:text-sm py-2">
-              <Baby className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Carii Pedodonție</span>
-            </TabsTrigger>
-            <TabsTrigger value="traumatisme" className="gap-1 text-xs sm:text-sm py-2">
-              <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Traumatisme</span>
-            </TabsTrigger>
-            <TabsTrigger value="ind-canal" className="gap-1 text-xs sm:text-sm py-2">
-              <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Ind. Tratament Canal</span>
-            </TabsTrigger>
-            <TabsTrigger value="ind-extractie" className="gap-1 text-xs sm:text-sm py-2">
-              <Scissors className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Ind. Extracție</span>
-            </TabsTrigger>
-            <TabsTrigger value="ind-extractie-copii" className="gap-1 text-xs sm:text-sm py-2">
-              <Baby className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Ind. Extracție Copii</span>
-            </TabsTrigger>
-            <TabsTrigger value="ind-proteze" className="gap-1 text-xs sm:text-sm py-2">
-              <Smile className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Ind. Proteze</span>
-            </TabsTrigger>
-            <TabsTrigger value="ind-implant" className="gap-1 text-xs sm:text-sm py-2">
-              <CircleDot className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Ind. Implant</span>
-            </TabsTrigger>
-            <TabsTrigger value="ind-cimentari" className="gap-1 text-xs sm:text-sm py-2">
-              <Crown className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Ind. Cimentări</span>
-            </TabsTrigger>
-            <TabsTrigger value="protocol-extractii" className="gap-1 text-xs sm:text-sm py-2">
-              <Scissors className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Protocol Extracții</span>
+            <TabsTrigger value="indicatii" className="gap-2">
+              <Stethoscope className="h-4 w-4" />
+              Indicații
             </TabsTrigger>
           </TabsList>
 
-          <ScrollArea className="h-[600px] rounded-md border p-4">
-            <div ref={printRef}>
-              <TabsContent value="consult" className="mt-0">
-                <ProtocolConsult />
-              </TabsContent>
-              <TabsContent value="endodontie" className="mt-0">
-                <ProtocolEndodontie />
-              </TabsContent>
-              <TabsContent value="carii-pedo" className="mt-0">
-                <ProtocolCariiPedo />
-              </TabsContent>
-              <TabsContent value="traumatisme" className="mt-0">
-                <ProtocolTraumatisme />
-              </TabsContent>
-              <TabsContent value="ind-canal" className="mt-0">
-                <IndicatiiTratamentCanal />
-              </TabsContent>
-              <TabsContent value="ind-extractie" className="mt-0">
-                <IndicatiiExtractie />
-              </TabsContent>
-              <TabsContent value="ind-extractie-copii" className="mt-0">
-                <IndicatiiExtractieCopii />
-              </TabsContent>
-              <TabsContent value="ind-proteze" className="mt-0">
-                <IndicatiiProteze />
-              </TabsContent>
-              <TabsContent value="ind-implant" className="mt-0">
-                <IndicatiiImplant />
-              </TabsContent>
-              <TabsContent value="ind-cimentari" className="mt-0">
-                <IndicatiiCimentari />
-              </TabsContent>
-              <TabsContent value="protocol-extractii" className="mt-0">
-                <ProtocolExtractii />
-              </TabsContent>
-            </div>
-          </ScrollArea>
+          {/* Protocoale Section */}
+          <TabsContent value="protocoale" className="mt-4">
+            <Tabs value={activeProtocol} onValueChange={setActiveProtocol} className="space-y-4">
+              <TabsList className="flex flex-wrap w-full h-auto gap-1">
+                <TabsTrigger value="consult" className="gap-1 text-xs sm:text-sm py-2">
+                  <Stethoscope className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Consultație</span>
+                </TabsTrigger>
+                <TabsTrigger value="endodontie" className="gap-1 text-xs sm:text-sm py-2">
+                  <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Endodonție</span>
+                </TabsTrigger>
+                <TabsTrigger value="carii-pedo" className="gap-1 text-xs sm:text-sm py-2">
+                  <Baby className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Carii Pedodonție</span>
+                </TabsTrigger>
+                <TabsTrigger value="traumatisme" className="gap-1 text-xs sm:text-sm py-2">
+                  <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Traumatisme</span>
+                </TabsTrigger>
+                <TabsTrigger value="protocol-extractii" className="gap-1 text-xs sm:text-sm py-2">
+                  <Scissors className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Extracții</span>
+                </TabsTrigger>
+              </TabsList>
+
+              <ScrollArea className="h-[550px] rounded-md border p-4">
+                <div ref={printRef}>
+                  <TabsContent value="consult" className="mt-0">
+                    <ProtocolConsult />
+                  </TabsContent>
+                  <TabsContent value="endodontie" className="mt-0">
+                    <ProtocolEndodontie />
+                  </TabsContent>
+                  <TabsContent value="carii-pedo" className="mt-0">
+                    <ProtocolCariiPedo />
+                  </TabsContent>
+                  <TabsContent value="traumatisme" className="mt-0">
+                    <ProtocolTraumatisme />
+                  </TabsContent>
+                  <TabsContent value="protocol-extractii" className="mt-0">
+                    <ProtocolExtractii />
+                  </TabsContent>
+                </div>
+              </ScrollArea>
+            </Tabs>
+          </TabsContent>
+
+          {/* Indicații Section */}
+          <TabsContent value="indicatii" className="mt-4">
+            <Tabs value={activeProtocol} onValueChange={setActiveProtocol} className="space-y-4">
+              <TabsList className="flex flex-wrap w-full h-auto gap-1">
+                <TabsTrigger value="ind-canal" className="gap-1 text-xs sm:text-sm py-2">
+                  <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Tratament Canal</span>
+                </TabsTrigger>
+                <TabsTrigger value="ind-extractie" className="gap-1 text-xs sm:text-sm py-2">
+                  <Scissors className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Extracție</span>
+                </TabsTrigger>
+                <TabsTrigger value="ind-extractie-copii" className="gap-1 text-xs sm:text-sm py-2">
+                  <Baby className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Extracție Copii</span>
+                </TabsTrigger>
+                <TabsTrigger value="ind-proteze" className="gap-1 text-xs sm:text-sm py-2">
+                  <Smile className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Proteze</span>
+                </TabsTrigger>
+                <TabsTrigger value="ind-implant" className="gap-1 text-xs sm:text-sm py-2">
+                  <CircleDot className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Implant</span>
+                </TabsTrigger>
+                <TabsTrigger value="ind-cimentari" className="gap-1 text-xs sm:text-sm py-2">
+                  <Crown className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Cimentări</span>
+                </TabsTrigger>
+              </TabsList>
+
+              <ScrollArea className="h-[550px] rounded-md border p-4">
+                <div ref={printRef}>
+                  <TabsContent value="ind-canal" className="mt-0">
+                    <IndicatiiTratamentCanal />
+                  </TabsContent>
+                  <TabsContent value="ind-extractie" className="mt-0">
+                    <IndicatiiExtractie />
+                  </TabsContent>
+                  <TabsContent value="ind-extractie-copii" className="mt-0">
+                    <IndicatiiExtractieCopii />
+                  </TabsContent>
+                  <TabsContent value="ind-proteze" className="mt-0">
+                    <IndicatiiProteze />
+                  </TabsContent>
+                  <TabsContent value="ind-implant" className="mt-0">
+                    <IndicatiiImplant />
+                  </TabsContent>
+                  <TabsContent value="ind-cimentari" className="mt-0">
+                    <IndicatiiCimentari />
+                  </TabsContent>
+                </div>
+              </ScrollArea>
+            </Tabs>
+          </TabsContent>
         </Tabs>
       </CardContent>
     </Card>
