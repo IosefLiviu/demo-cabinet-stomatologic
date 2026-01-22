@@ -32,11 +32,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Lookup user_id by username in profiles
+    // Lookup user_id by username in profiles (case-insensitive)
     const { data: profileData, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('user_id')
-      .eq('username', username)
+      .ilike('username', username)
       .maybeSingle();
 
     if (profileError) {
