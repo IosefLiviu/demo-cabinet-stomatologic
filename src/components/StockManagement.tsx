@@ -186,29 +186,28 @@ export function StockManagement() {
         const workbook = XLSX.read(data, { type: "binary" });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet) as Array<{
-          name?: string;
-          quantity?: number;
-          unit?: string;
-          category?: string;
-          // Romanian column names support
-          nume?: string;
-          cantitate?: number;
-          unitate?: string;
-          categorie?: string;
-        }>;
+        const jsonData = XLSX.utils.sheet_to_json(worksheet) as Array<Record<string, unknown>>;
 
-        const itemsToImport: StockItemInsert[] = jsonData.map((row) => ({
-          name: row.name || row.nume || "",
-          quantity: Number(row.quantity || row.cantitate) || 0,
-          unit: row.unit || row.unitate || "buc",
-          category: row.category || row.categorie || null,
-        })).filter((item) => item.name);
+        const itemsToImport: StockItemInsert[] = jsonData.map((row) => {
+          // Support multiple column name formats
+          const name = (row.name || row.Name || row.nume || row.Nume || "") as string;
+          const quantity = Number(row.quantity || row.Quantity || row.cantitate || row.Cantitate) || 0;
+          // Support "U.M.", "unit", "unitate" variations
+          const unit = (row.unit || row.Unit || row.unitate || row.Unitate || row["U.M."] || row["u.m."] || "buc") as string;
+          const category = (row.category || row.Category || row.categorie || row.Categorie || null) as string | null;
+          
+          return {
+            name: name.trim(),
+            quantity,
+            unit: unit.trim(),
+            category: category?.trim() || null,
+          };
+        }).filter((item) => item.name);
 
         if (itemsToImport.length === 0) {
           toast({
             title: "Fișier gol sau format invalid",
-            description: "Asigură-te că fișierul conține coloanele: name/nume, quantity/cantitate, unit/unitate, category/categorie",
+            description: "Asigură-te că fișierul conține coloanele: Nume, Cantitate, U.M./Unitate, Categorie",
             variant: "destructive",
           });
           return;
