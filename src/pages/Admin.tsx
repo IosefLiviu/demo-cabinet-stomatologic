@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, ArrowLeft, Save, X, Users, Stethoscope, Shield, ShieldCheck, Palette, Mail, Download } from 'lucide-react';
+import { Plus, Edit, Trash2, ArrowLeft, Save, X, Users, Stethoscope, Shield, ShieldCheck, Palette, Mail, Download, FileText, CheckCircle, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +37,25 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useToothStatuses, ToothStatusCustom } from '@/hooks/useToothStatuses';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+
+interface LoginLog {
+  id: string;
+  username: string;
+  user_id: string | null;
+  success: boolean;
+  ip_address: string | null;
+  user_agent: string | null;
+  error_message: string | null;
+  created_at: string;
+}
 
 interface Doctor {
   id: string;
@@ -110,16 +129,77 @@ export default function Admin() {
     color: PRESET_COLORS[0],
   });
 
+  // Login logs state
+  const [loginLogs, setLoginLogs] = useState<LoginLog[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+  const [logsPage, setLogsPage] = useState(1);
+  const [totalLogs, setTotalLogs] = useState(0);
+  const [logsFilter, setLogsFilter] = useState<'all' | 'success' | 'failed'>('all');
+  const LOGS_PER_PAGE = 20;
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
     }
   }, [user, loading, navigate]);
 
+  // ============ LOGIN LOGS FUNCTIONS ============
+  const fetchLoginLogs = async () => {
+    try {
+      setLoadingLogs(true);
+      
+      let query = supabase
+        .from('login_logs')
+        .select('*', { count: 'exact' });
+      
+      if (logsFilter === 'success') {
+        query = query.eq('success', true);
+      } else if (logsFilter === 'failed') {
+        query = query.eq('success', false);
+      }
+      
+      query = query
+        .order('created_at', { ascending: false })
+        .range((logsPage - 1) * LOGS_PER_PAGE, logsPage * LOGS_PER_PAGE - 1);
+      
+      const { data, error, count } = await query;
+
+      if (error) throw error;
+      setLoginLogs(data || []);
+      setTotalLogs(count || 0);
+    } catch (error: any) {
+      console.error('Error fetching login logs:', error);
+      toast({
+        title: 'Eroare',
+        description: 'Nu s-au putut încărca logurile de autentificare',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingLogs(false);
+    }
+  };
+
+  const formatUserAgent = (ua: string | null): string => {
+    if (!ua) return '-';
+    if (ua.includes('iPhone')) return 'iPhone';
+    if (ua.includes('Android')) return 'Android';
+    if (ua.includes('Windows')) return 'Windows';
+    if (ua.includes('Mac')) return 'Mac';
+    if (ua.includes('Linux')) return 'Linux';
+    return 'Altul';
+  };
+
+  const totalLogsPages = Math.ceil(totalLogs / LOGS_PER_PAGE);
+
   useEffect(() => {
     fetchDoctors();
     fetchUsers();
+    fetchLoginLogs();
   }, []);
+
+  useEffect(() => {
+    fetchLoginLogs();
+  }, [logsPage, logsFilter]);
 
   // ============ DOCTORS FUNCTIONS ============
   const fetchDoctors = async () => {
@@ -630,7 +710,7 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="doctors" className="space-y-6">
-          <TabsList className="grid w-full max-w-lg grid-cols-3">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4">
             <TabsTrigger value="doctors" className="gap-2">
               <Stethoscope className="h-4 w-4" />
               Doctori
@@ -642,6 +722,10 @@ export default function Admin() {
             <TabsTrigger value="statuses" className="gap-2">
               <Palette className="h-4 w-4" />
               Statusuri
+            </TabsTrigger>
+            <TabsTrigger value="logs" className="gap-2">
+              <FileText className="h-4 w-4" />
+              Loguri
             </TabsTrigger>
           </TabsList>
 
@@ -956,6 +1040,123 @@ export default function Admin() {
                   </Card>
                 )}
               </div>
+            )}
+          </TabsContent>
+
+          {/* ============ LOGIN LOGS TAB ============ */}
+          <TabsContent value="logs" className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Filtrare:</span>
+                <Select
+                  value={logsFilter}
+                  onValueChange={(value: 'all' | 'success' | 'failed') => {
+                    setLogsFilter(value);
+                    setLogsPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toate</SelectItem>
+                    <SelectItem value="success">Reușite</SelectItem>
+                    <SelectItem value="failed">Eșuate</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Total: {totalLogs} înregistrări
+              </p>
+            </div>
+
+            {loadingLogs ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <>
+                <Card>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Stare</TableHead>
+                          <TableHead>Utilizator</TableHead>
+                          <TableHead>IP</TableHead>
+                          <TableHead>Dispozitiv</TableHead>
+                          <TableHead>Data/Ora</TableHead>
+                          <TableHead>Eroare</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {loginLogs.map((log) => (
+                          <TableRow key={log.id}>
+                            <TableCell>
+                              {log.success ? (
+                                <CheckCircle className="h-5 w-5 text-green-500" />
+                              ) : (
+                                <XCircle className="h-5 w-5 text-destructive" />
+                              )}
+                            </TableCell>
+                            <TableCell className="font-medium">{log.username}</TableCell>
+                            <TableCell className="text-muted-foreground text-sm">
+                              {log.ip_address || '-'}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm">
+                              {formatUserAgent(log.user_agent)}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm">
+                              {new Date(log.created_at).toLocaleString('ro-RO', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </TableCell>
+                            <TableCell className="text-destructive text-sm max-w-[200px] truncate">
+                              {log.error_message || '-'}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {loginLogs.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                              Nu există loguri de autentificare
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </Card>
+
+                {/* Pagination */}
+                {totalLogsPages > 1 && (
+                  <div className="flex items-center justify-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setLogsPage((p) => Math.max(1, p - 1))}
+                      disabled={logsPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                      Pagina {logsPage} din {totalLogsPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setLogsPage((p) => Math.min(totalLogsPages, p + 1))}
+                      disabled={logsPage === totalLogsPages}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </TabsContent>
         </Tabs>
