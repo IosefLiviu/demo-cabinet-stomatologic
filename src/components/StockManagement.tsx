@@ -80,6 +80,12 @@ export function StockManagement() {
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [movementType, setMovementType] = useState<"in" | "out">("in");
 
+  // Inline edit state
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editingType, setEditingType] = useState<"in" | "out">("in");
+  const [inlineQuantity, setInlineQuantity] = useState(1);
+  const [inlineNote, setInlineNote] = useState("");
+
   const [itemForm, setItemForm] = useState({
     name: "",
     quantity: 0,
@@ -177,16 +183,32 @@ export function StockManagement() {
     setIsMovementDialogOpen(false);
   };
 
-  // Quick quantity adjustment (+1 or -1)
-  const handleQuickAdjust = async (item: StockItem, type: "in" | "out") => {
+  // Open inline edit mode
+  const handleStartInlineEdit = (item: StockItem, type: "in" | "out") => {
+    setEditingItemId(item.id);
+    setEditingType(type);
+    setInlineQuantity(1);
+    setInlineNote("");
+  };
+
+  // Cancel inline edit
+  const handleCancelInlineEdit = () => {
+    setEditingItemId(null);
+    setInlineQuantity(1);
+    setInlineNote("");
+  };
+
+  // Confirm inline edit
+  const handleConfirmInlineEdit = async (item: StockItem) => {
     const payload: StockMovementInsert = {
       item_id: item.id,
       item_name: item.name,
-      quantity: 1,
-      type,
-      notes: null,
+      quantity: inlineQuantity,
+      type: editingType,
+      notes: inlineNote || null,
     };
     await createMovement.mutateAsync(payload);
+    handleCancelInlineEdit();
   };
 
   const handleImportCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -377,76 +399,139 @@ export function StockManagement() {
             </div>
           ) : (
             <div className="space-y-2">
-              {filteredItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-4 p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors"
-                >
-                  {/* Item info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-medium text-sm truncate" title={item.name}>
-                        {item.name}
-                      </h4>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 opacity-50 hover:opacity-100"
-                        onClick={() => handleOpenItemDialog(item)}
-                        title="Editează"
-                      >
-                        <Pencil className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    {item.category && (
-                      <span className="text-xs text-muted-foreground">{item.category}</span>
-                    )}
-                  </div>
+              {filteredItems.map((item) => {
+                const isEditing = editingItemId === item.id;
+                
+                return (
+                  <div
+                    key={item.id}
+                    className={`rounded-lg border bg-card transition-colors ${isEditing ? "ring-2 ring-primary/20" : "hover:bg-muted/30"}`}
+                  >
+                    {/* Normal view */}
+                    {!isEditing ? (
+                      <div className="flex items-center gap-4 p-3">
+                        {/* Item info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium text-sm truncate" title={item.name}>
+                              {item.name}
+                            </h4>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 opacity-50 hover:opacity-100"
+                              onClick={() => handleOpenItemDialog(item)}
+                              title="Editează"
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          {item.category && (
+                            <span className="text-xs text-muted-foreground">{item.category}</span>
+                          )}
+                        </div>
 
-                  {/* Quantity with low stock warning */}
-                  <div className="flex items-center gap-1.5">
-                    {item.quantity < 5 && (
-                      <AlertTriangle className="h-4 w-4 text-amber-500" />
-                    )}
-                    <span className={`text-sm font-medium ${item.quantity < 5 ? "text-amber-600" : ""}`}>
-                      {item.quantity}
-                    </span>
-                    {item.quantity < 5 && (
-                      <span className="text-xs text-amber-600">Scăzut</span>
-                    )}
-                  </div>
+                        {/* Quantity with low stock warning */}
+                        <div className="flex items-center gap-1.5">
+                          {item.quantity < 5 && (
+                            <AlertTriangle className="h-4 w-4 text-amber-500" />
+                          )}
+                          <span className={`text-sm font-medium ${item.quantity < 5 ? "text-amber-600" : ""}`}>
+                            {item.quantity}
+                          </span>
+                          {item.quantity < 5 && (
+                            <span className="text-xs text-amber-600">Scăzut</span>
+                          )}
+                        </div>
 
-                  {/* Action buttons - circular, subtle */}
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      className="h-8 w-8 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center transition-colors disabled:opacity-50"
-                      onClick={() => handleQuickAdjust(item, "in")}
-                      disabled={createMovement.isPending}
-                      title="Adaugă 1"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                    <button
-                      className="h-8 w-8 rounded-full bg-red-400 hover:bg-red-500 text-white flex items-center justify-center transition-colors disabled:opacity-50"
-                      onClick={() => handleQuickAdjust(item, "out")}
-                      disabled={createMovement.isPending || item.quantity < 1}
-                      title="Scade 1"
-                    >
-                      <Minus className="h-4 w-4" />
-                    </button>
-                    <button
-                      className="h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center transition-colors text-muted-foreground hover:text-destructive"
-                      onClick={() => {
-                        setItemToDelete(item.id);
-                        setIsDeleteDialogOpen(true);
-                      }}
-                      title="Șterge"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                        {/* Action buttons - circular, subtle */}
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            className="h-8 w-8 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center transition-colors disabled:opacity-50"
+                            onClick={() => handleStartInlineEdit(item, "in")}
+                            disabled={createMovement.isPending}
+                            title="Adaugă"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </button>
+                          <button
+                            className="h-8 w-8 rounded-full bg-red-400 hover:bg-red-500 text-white flex items-center justify-center transition-colors disabled:opacity-50"
+                            onClick={() => handleStartInlineEdit(item, "out")}
+                            disabled={createMovement.isPending || item.quantity < 1}
+                            title="Scade"
+                          >
+                            <Minus className="h-4 w-4" />
+                          </button>
+                          <button
+                            className="h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center transition-colors text-muted-foreground hover:text-destructive"
+                            onClick={() => {
+                              setItemToDelete(item.id);
+                              setIsDeleteDialogOpen(true);
+                            }}
+                            title="Șterge"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Expanded inline edit view */
+                      <div className="p-3">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <span className="font-medium text-sm">{item.name}</span>
+                          
+                          <Input
+                            type="number"
+                            min={1}
+                            max={editingType === "out" ? item.quantity : undefined}
+                            value={inlineQuantity}
+                            onChange={(e) => setInlineQuantity(Math.max(1, Number(e.target.value)))}
+                            className="w-16 h-8 text-center"
+                          />
+                          
+                          <Input
+                            placeholder="Notă"
+                            value={inlineNote}
+                            onChange={(e) => setInlineNote(e.target.value)}
+                            className="w-32 h-8"
+                          />
+                          
+                          <div className="flex items-center gap-2 ml-auto">
+                            <Button
+                              size="sm"
+                              className="bg-green-500 hover:bg-green-600 text-white h-8 px-3"
+                              onClick={() => handleConfirmInlineEdit(item)}
+                              disabled={createMovement.isPending || (editingType === "out" && inlineQuantity > item.quantity)}
+                            >
+                              <Plus className="h-3.5 w-3.5 mr-1" />
+                              +{inlineQuantity}
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="bg-red-500 hover:bg-red-600 text-white h-8 px-3"
+                              onClick={() => {
+                                setEditingType(editingType === "in" ? "out" : "in");
+                              }}
+                              disabled={editingType === "out" && inlineQuantity > item.quantity}
+                            >
+                              <Minus className="h-3.5 w-3.5 mr-1" />
+                              -{inlineQuantity}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 text-muted-foreground"
+                              onClick={handleCancelInlineEdit}
+                            >
+                              Anulează
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </TabsContent>
