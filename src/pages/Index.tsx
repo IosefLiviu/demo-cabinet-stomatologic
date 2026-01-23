@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
-import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, Radio, FileText, Pill, UserCheck, Printer, Stethoscope, ClipboardList, FlaskConical } from 'lucide-react';
+import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, Radio, FileText, Pill, UserCheck, Printer, Stethoscope, ClipboardList, FlaskConical, Package } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { DateNavigator } from '@/components/DateNavigator';
 import { CabinetTabs } from '@/components/CabinetTabs';
@@ -26,6 +26,7 @@ import { CompleteAppointmentDialog, PaymentData } from '@/components/CompleteApp
 import { CancelAppointmentDialog } from '@/components/CancelAppointmentDialog';
 import { NavigationButtons } from '@/components/NavigationButtons';
 import { AvailableSlotsSearch } from '@/components/AvailableSlotsSearch';
+import { StockManagement } from '@/components/StockManagement';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePatients, Patient } from '@/hooks/usePatients';
@@ -552,6 +553,10 @@ const Index = () => {
               <Printer className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Printabile</span>
             </TabsTrigger>
+            <TabsTrigger value="stock" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+              <Package className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Stoc</span>
+            </TabsTrigger>
             </TabsList>
           </div>
 
@@ -714,6 +719,10 @@ const Index = () => {
               <MonthlyExpenses />
             </TabsContent>
           )}
+
+          <TabsContent value="stock">
+            <StockManagement />
+          </TabsContent>
         </Tabs>
       </main>
 
