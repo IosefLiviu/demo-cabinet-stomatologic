@@ -42,6 +42,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Plus,
+  Minus,
   Pencil,
   Trash2,
   ArrowDownCircle,
@@ -51,6 +52,7 @@ import {
   Search,
   Package,
   History,
+  AlertTriangle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
@@ -173,6 +175,18 @@ export function StockManagement() {
 
     await createMovement.mutateAsync(payload);
     setIsMovementDialogOpen(false);
+  };
+
+  // Quick quantity adjustment (+1 or -1)
+  const handleQuickAdjust = async (item: StockItem, type: "in" | "out") => {
+    const payload: StockMovementInsert = {
+      item_id: item.id,
+      item_name: item.name,
+      quantity: 1,
+      type,
+      notes: null,
+    };
+    await createMovement.mutateAsync(payload);
   };
 
   const handleImportCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -356,89 +370,89 @@ export function StockManagement() {
             </div>
           </div>
 
-          {/* Items Table */}
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nume</TableHead>
-                  <TableHead>Categorie</TableHead>
-                  <TableHead className="text-right">Cantitate</TableHead>
-                  <TableHead>Unitate</TableHead>
-                  <TableHead className="text-right">Acțiuni</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredItems.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
-                      Nu există articole
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredItems.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.name}</TableCell>
-                      <TableCell>
+          {/* Items Grid with Quick Actions */}
+          {filteredItems.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Nu există articole
+            </div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {filteredItems.map((item) => (
+                <Card key={item.id} className={`relative ${item.quantity < 5 ? "border-destructive/50" : ""}`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm truncate" title={item.name}>
+                          {item.name}
+                        </h4>
                         {item.category && (
-                          <Badge variant="secondary">{item.category}</Badge>
+                          <Badge variant="secondary" className="text-xs mt-1">
+                            {item.category}
+                          </Badge>
                         )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <span
-                          className={
-                            item.quantity < 5
-                              ? "text-destructive font-semibold"
-                              : ""
-                          }
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => handleOpenItemDialog(item)}
+                          title="Editează"
                         >
-                          {item.quantity}
-                        </span>
-                      </TableCell>
-                      <TableCell>{item.unit}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenMovementDialog("in", item)}
-                            title="Intrare stoc"
-                          >
-                            <ArrowDownCircle className="h-4 w-4 text-green-600" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenMovementDialog("out", item)}
-                            title="Ieșire stoc"
-                          >
-                            <ArrowUpCircle className="h-4 w-4 text-orange-600" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenItemDialog(item)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setItemToDelete(item.id);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-destructive hover:text-destructive"
+                          onClick={() => {
+                            setItemToDelete(item.id);
+                            setIsDeleteDialogOpen(true);
+                          }}
+                          title="Șterge"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {/* Quantity display with low stock warning */}
+                    <div className="flex items-center justify-center gap-2 mb-3">
+                      {item.quantity < 5 && (
+                        <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+                      )}
+                      <span className={`text-2xl font-bold ${item.quantity < 5 ? "text-destructive" : ""}`}>
+                        {item.quantity}
+                      </span>
+                      <span className="text-sm text-muted-foreground">{item.unit}</span>
+                    </div>
+                    
+                    {/* Quick +/- buttons */}
+                    <div className="flex gap-2">
+                      <Button
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                        size="sm"
+                        onClick={() => handleQuickAdjust(item, "in")}
+                        disabled={createMovement.isPending}
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        +1
+                      </Button>
+                      <Button
+                        className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                        size="sm"
+                        onClick={() => handleQuickAdjust(item, "out")}
+                        disabled={createMovement.isPending || item.quantity < 1}
+                      >
+                        <Minus className="h-4 w-4 mr-1" />
+                        -1
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="movements" className="space-y-4">
