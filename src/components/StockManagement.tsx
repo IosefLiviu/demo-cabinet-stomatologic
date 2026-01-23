@@ -376,80 +376,76 @@ export function StockManagement() {
               Nu există articole
             </div>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="space-y-2">
               {filteredItems.map((item) => (
-                <Card key={item.id} className={`relative ${item.quantity < 5 ? "border-destructive/50" : ""}`}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-2 mb-3">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm truncate" title={item.name}>
-                          {item.name}
-                        </h4>
-                        {item.category && (
-                          <Badge variant="secondary" className="text-xs mt-1">
-                            {item.category}
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex gap-1 shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => handleOpenItemDialog(item)}
-                          title="Editează"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-destructive hover:text-destructive"
-                          onClick={() => {
-                            setItemToDelete(item.id);
-                            setIsDeleteDialogOpen(true);
-                          }}
-                          title="Șterge"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    {/* Quantity display with low stock warning */}
-                    <div className="flex items-center justify-center gap-2 mb-3">
-                      {item.quantity < 5 && (
-                        <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
-                      )}
-                      <span className={`text-2xl font-bold ${item.quantity < 5 ? "text-destructive" : ""}`}>
-                        {item.quantity}
-                      </span>
-                      <span className="text-sm text-muted-foreground">{item.unit}</span>
-                    </div>
-                    
-                    {/* Quick +/- buttons */}
-                    <div className="flex gap-2">
+                <div
+                  key={item.id}
+                  className="flex items-center gap-4 p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors"
+                >
+                  {/* Item info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium text-sm truncate" title={item.name}>
+                        {item.name}
+                      </h4>
                       <Button
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                        size="sm"
-                        onClick={() => handleQuickAdjust(item, "in")}
-                        disabled={createMovement.isPending}
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 opacity-50 hover:opacity-100"
+                        onClick={() => handleOpenItemDialog(item)}
+                        title="Editează"
                       >
-                        <Plus className="h-4 w-4 mr-1" />
-                        +1
-                      </Button>
-                      <Button
-                        className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-                        size="sm"
-                        onClick={() => handleQuickAdjust(item, "out")}
-                        disabled={createMovement.isPending || item.quantity < 1}
-                      >
-                        <Minus className="h-4 w-4 mr-1" />
-                        -1
+                        <Pencil className="h-3 w-3" />
                       </Button>
                     </div>
-                  </CardContent>
-                </Card>
+                    {item.category && (
+                      <span className="text-xs text-muted-foreground">{item.category}</span>
+                    )}
+                  </div>
+
+                  {/* Quantity with low stock warning */}
+                  <div className="flex items-center gap-1.5">
+                    {item.quantity < 5 && (
+                      <AlertTriangle className="h-4 w-4 text-amber-500" />
+                    )}
+                    <span className={`text-sm font-medium ${item.quantity < 5 ? "text-amber-600" : ""}`}>
+                      {item.quantity}
+                    </span>
+                    {item.quantity < 5 && (
+                      <span className="text-xs text-amber-600">Scăzut</span>
+                    )}
+                  </div>
+
+                  {/* Action buttons - circular, subtle */}
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      className="h-8 w-8 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center transition-colors disabled:opacity-50"
+                      onClick={() => handleQuickAdjust(item, "in")}
+                      disabled={createMovement.isPending}
+                      title="Adaugă 1"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                    <button
+                      className="h-8 w-8 rounded-full bg-red-400 hover:bg-red-500 text-white flex items-center justify-center transition-colors disabled:opacity-50"
+                      onClick={() => handleQuickAdjust(item, "out")}
+                      disabled={createMovement.isPending || item.quantity < 1}
+                      title="Scade 1"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <button
+                      className="h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center transition-colors text-muted-foreground hover:text-destructive"
+                      onClick={() => {
+                        setItemToDelete(item.id);
+                        setIsDeleteDialogOpen(true);
+                      }}
+                      title="Șterge"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           )}
