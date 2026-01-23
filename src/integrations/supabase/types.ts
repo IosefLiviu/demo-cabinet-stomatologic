@@ -698,6 +698,74 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_items: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          name: string
+          quantity: number
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          quantity?: number
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          quantity?: number
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      stock_movements: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          item_name: string
+          notes: string | null
+          quantity: number
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          item_name: string
+          notes?: string | null
+          quantity: number
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          item_name?: string
+          notes?: string | null
+          quantity?: number
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "stock_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tooth_statuses: {
         Row: {
           color: string
