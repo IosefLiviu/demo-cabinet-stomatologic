@@ -198,13 +198,13 @@ export function StockManagement() {
     setInlineNote("");
   };
 
-  // Confirm inline edit
-  const handleConfirmInlineEdit = async (item: StockItem) => {
+  // Confirm inline edit with explicit type
+  const handleConfirmInlineEdit = async (item: StockItem, type: "in" | "out") => {
     const payload: StockMovementInsert = {
       item_id: item.id,
       item_name: item.name,
       quantity: inlineQuantity,
-      type: editingType,
+      type: type,
       notes: inlineNote || null,
     };
     await createMovement.mutateAsync(payload);
@@ -500,8 +500,8 @@ export function StockManagement() {
                             <Button
                               size="sm"
                               className="bg-green-500 hover:bg-green-600 text-white h-8 px-3"
-                              onClick={() => handleConfirmInlineEdit(item)}
-                              disabled={createMovement.isPending || (editingType === "out" && inlineQuantity > item.quantity)}
+                              onClick={() => handleConfirmInlineEdit(item, "in")}
+                              disabled={createMovement.isPending}
                             >
                               <Plus className="h-3.5 w-3.5 mr-1" />
                               +{inlineQuantity}
@@ -509,10 +509,8 @@ export function StockManagement() {
                             <Button
                               size="sm"
                               className="bg-red-500 hover:bg-red-600 text-white h-8 px-3"
-                              onClick={() => {
-                                setEditingType(editingType === "in" ? "out" : "in");
-                              }}
-                              disabled={editingType === "out" && inlineQuantity > item.quantity}
+                              onClick={() => handleConfirmInlineEdit(item, "out")}
+                              disabled={createMovement.isPending || inlineQuantity > item.quantity}
                             >
                               <Minus className="h-3.5 w-3.5 mr-1" />
                               -{inlineQuantity}
