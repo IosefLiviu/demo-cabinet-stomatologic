@@ -521,12 +521,7 @@ export function Tooth3DViewer({
           </div>
         </div>
 
-        {/* Attribution - CC-BY required */}
-        <div className="absolute bottom-2 right-3 pointer-events-none">
-          <div className="bg-background/60 backdrop-blur-sm rounded px-2 py-1 text-[9px] text-muted-foreground/60 max-w-[150px] leading-tight">
-            Model: University of Dundee (CC-BY-4.0)
-          </div>
-        </div>
+        {/* Attribution kept in license.txt files per CC-BY-4.0 requirements */}
       </div>
 
       {/* Diagnostic input panel - BELOW the canvas */}
