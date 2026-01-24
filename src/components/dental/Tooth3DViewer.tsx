@@ -132,6 +132,13 @@ function DrawingPreview({ points }: { points: [number, number, number][] }) {
   );
 }
 
+// Helper to transform point for upper teeth (rotate by PI around X axis)
+function transformPointForUpper(point: [number, number, number], isUpper: boolean): [number, number, number] {
+  if (!isUpper) return point;
+  // When the group is rotated by PI around X, we need to inverse the Y and Z coordinates
+  return [point[0], -point[1], -point[2]];
+}
+
 // Interactive 3D Tooth Mesh using loaded GLTF model
 function ToothMesh({ 
   toothNumber, 
@@ -169,6 +176,7 @@ function ToothMesh({
   const toothType = getToothType(toothNumber);
   const deciduous = isDeciduous(toothNumber);
   const lower = isLowerTooth(toothNumber);
+  const isUpper = !lower;
   
   // Load the 3D model
   const { scene } = useGLTF(MODEL_PATHS[toothType]);
@@ -222,25 +230,29 @@ function ToothMesh({
   const handlePointerDown = useCallback((event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
     const point = event.point;
+    // Transform point to account for group rotation on upper teeth
+    const transformedPoint = transformPointForUpper([point.x, point.y, point.z], isUpper);
     
     if (drawMode === 'line') {
       // Disable orbit controls while drawing
       if (orbitControlsRef.current) {
         orbitControlsRef.current.enabled = false;
       }
-      onDrawStart([point.x, point.y, point.z]);
+      onDrawStart(transformedPoint);
     } else {
-      onPointClick([point.x, point.y, point.z]);
+      onPointClick(transformedPoint);
     }
-  }, [drawMode, onPointClick, onDrawStart, orbitControlsRef]);
+  }, [drawMode, onPointClick, onDrawStart, orbitControlsRef, isUpper]);
 
   // Handle pointer move - continue drawing
   const handlePointerMove = useCallback((event: ThreeEvent<PointerEvent>) => {
     if (isDrawing && drawMode === 'line') {
       const point = event.point;
-      onDrawMove([point.x, point.y, point.z]);
+      // Transform point to account for group rotation on upper teeth
+      const transformedPoint = transformPointForUpper([point.x, point.y, point.z], isUpper);
+      onDrawMove(transformedPoint);
     }
-  }, [isDrawing, drawMode, onDrawMove]);
+  }, [isDrawing, drawMode, onDrawMove, isUpper]);
 
   // Handle pointer up - finish drawing
   const handlePointerUp = useCallback(() => {
