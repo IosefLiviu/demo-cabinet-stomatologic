@@ -302,13 +302,20 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
     const toothImage = getToothImage(toothNumber);
     const hexColor = getStatusHexColor(status);
     const hasStatus = status !== 'Sănătos' && status !== 'healthy';
+    const isMissing = status === 'missing' || status === 'Absent';
 
     return (
-      <div key={toothNumber} className="relative flex flex-col items-center">
+      <div 
+        key={toothNumber} 
+        className="relative flex flex-col items-center group"
+        style={{ perspective: '500px' }}
+      >
+        {/* Tooth number - above for upper teeth */}
         {!isLower && (
           <span className={cn(
-            "text-[10px] font-medium mb-0.5",
-            hasStatus ? 'text-foreground' : 'text-muted-foreground'
+            "text-[10px] font-semibold mb-1 transition-all duration-300",
+            hasStatus ? 'text-foreground' : 'text-muted-foreground',
+            isHovered && 'text-primary scale-110'
           )}>
             {toothNumber}
           </span>
@@ -320,58 +327,142 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
           onMouseEnter={() => setHoveredTooth(toothNumber)}
           onMouseLeave={() => setHoveredTooth(null)}
           className={cn(
-            'relative flex items-center justify-center transition-all rounded-md overflow-hidden',
-            'hover:scale-105 cursor-pointer',
-            isHovered && 'ring-2 ring-offset-1 ring-primary',
-            hasStatus && 'ring-2',
+            'relative flex items-center justify-center rounded-xl overflow-hidden',
+            'transition-all duration-300 ease-out',
+            'bg-gradient-to-b from-white/10 to-transparent',
+            'shadow-[0_4px_15px_-3px_rgba(0,0,0,0.2)]',
+            'cursor-pointer',
+            isHovered && 'ring-2 ring-offset-2 ring-primary',
+            hasStatus && !isMissing && 'ring-2',
+            // Larger sizes for better 3D effect
             isDeciduous 
-              ? 'w-7 h-9 sm:w-8 sm:h-10' 
-              : 'w-8 h-11 sm:w-9 sm:h-13'
+              ? 'w-10 h-12 sm:w-11 sm:h-14' 
+              : 'w-11 h-14 sm:w-13 sm:h-16'
           )}
-          style={hasStatus && hexColor ? {
-            boxShadow: `0 0 0 2px ${hexColor}`,
-          } : undefined}
+          style={{
+            transform: isHovered 
+              ? `rotateX(${isLower ? '8deg' : '-8deg'}) rotateY(${toothNumber % 2 === 0 ? '5deg' : '-5deg'}) scale(1.15) translateZ(10px)`
+              : 'rotateX(0) rotateY(0) scale(1) translateZ(0)',
+            transformStyle: 'preserve-3d',
+            backfaceVisibility: 'hidden',
+            boxShadow: hasStatus && hexColor 
+              ? `0 0 0 2px ${hexColor}, ${isHovered ? `0 8px 25px -5px ${hexColor}80` : '0 4px 15px -3px rgba(0,0,0,0.2)'}`
+              : isHovered 
+                ? '0 8px 25px -5px rgba(34,197,94,0.4)' 
+                : '0 4px 15px -3px rgba(0,0,0,0.2)',
+          }}
         >
+          {/* 3D Depth layer */}
+          <div 
+            className={cn(
+              "absolute inset-0 rounded-xl transition-opacity duration-300",
+              isHovered ? 'opacity-100' : 'opacity-0'
+            )}
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.1) 100%)',
+              transform: 'translateZ(-5px)',
+            }}
+          />
+
+          {/* Tooth image with 3D effect */}
           {toothImage ? (
             <img 
               src={toothImage} 
               alt={`Dinte ${toothNumber}`}
               className={cn(
-                "w-full h-full object-contain",
+                "w-full h-full object-contain transition-all duration-300",
+                "drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]",
+                isMissing && 'opacity-20 grayscale blur-[0.5px]',
                 isLower && 'rotate-180',
-                status === 'missing' || status === 'Absent' ? 'opacity-30 grayscale' : ''
+                isHovered && 'drop-shadow-[0_4px_8px_rgba(0,0,0,0.25)]'
               )}
+              style={{
+                filter: isHovered && !isMissing 
+                  ? 'brightness(1.1) contrast(1.05)' 
+                  : undefined,
+              }}
             />
           ) : (
             <div className={cn(
-              "w-full h-full flex items-center justify-center bg-muted/20 border rounded text-xs",
-              isDeciduous && 'rounded-full border-dashed'
+              "w-full h-full flex items-center justify-center",
+              "bg-gradient-to-b from-muted/40 to-muted/20 border-2 rounded-lg",
+              isDeciduous && 'border-dashed'
             )}>
-              {toothNumber}
+              <span className="text-xs font-medium text-muted-foreground">
+                {toothNumber}
+              </span>
             </div>
           )}
           
-          {hasStatus && hexColor && (
+          {/* Status overlay with gradient */}
+          {hasStatus && hexColor && !isMissing && (
             <div 
-              className="absolute inset-0 rounded-md"
+              className={cn(
+                "absolute inset-0 pointer-events-none rounded-xl",
+                "transition-opacity duration-300",
+                isHovered && 'opacity-70'
+              )}
               style={{ backgroundColor: `${hexColor}40` }}
+            >
+              {/* Shine effect */}
+              <div 
+                className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-transparent"
+                style={{ mixBlendMode: 'overlay' }}
+              />
+            </div>
+          )}
+
+          {/* Highlight shine on hover */}
+          {isHovered && (
+            <div 
+              className="absolute inset-0 pointer-events-none rounded-xl animate-pulse"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 50%, transparent 100%)',
+              }}
             />
           )}
         </button>
         
+        {/* Tooth number - below for lower teeth */}
         {isLower && (
           <span className={cn(
-            "text-[10px] font-medium mt-0.5",
-            hasStatus ? 'text-foreground' : 'text-muted-foreground'
+            "text-[10px] font-semibold mt-1 transition-all duration-300",
+            hasStatus ? 'text-foreground' : 'text-muted-foreground',
+            isHovered && 'text-primary scale-110'
           )}>
             {toothNumber}
           </span>
         )}
         
+        {/* Enhanced 3D Tooltip */}
         {isHovered && (
-          <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded bg-popover border shadow-lg text-xs whitespace-nowrap">
-            <div className="font-medium">{status}</div>
-            {notes && <div className="text-muted-foreground max-w-[150px] truncate">{notes}</div>}
+          <div 
+            className={cn(
+              "absolute z-50 px-3 py-2 rounded-xl",
+              "bg-popover/95 backdrop-blur-sm border shadow-xl",
+              "text-xs whitespace-nowrap",
+              "animate-in fade-in-0 zoom-in-95 duration-200",
+              isLower ? 'top-full mt-2' : 'bottom-full mb-2',
+              "left-1/2 -translate-x-1/2"
+            )}
+            style={{
+              boxShadow: '0 10px 40px -10px rgba(0,0,0,0.3)',
+            }}
+          >
+            <div className="font-semibold text-foreground">{status}</div>
+            {notes && (
+              <div className="text-muted-foreground max-w-[180px] truncate mt-0.5">
+                {notes}
+              </div>
+            )}
+            {/* Tooltip arrow */}
+            <div 
+              className={cn(
+                "absolute left-1/2 -translate-x-1/2 w-2 h-2 rotate-45",
+                "bg-popover/95 border",
+                isLower ? '-top-1 border-t border-l' : '-bottom-1 border-b border-r'
+              )}
+            />
           </div>
         )}
       </div>
@@ -380,69 +471,106 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
 
   return (
     <div className="space-y-6">
-      {/* Legend */}
-      <div className="flex flex-wrap gap-2 text-xs">
+      {/* Enhanced 3D Legend */}
+      <div className="flex flex-wrap justify-center gap-2 text-xs">
         {activeStatuses.map((status) => (
           <div
             key={status.id}
-            className="px-2 py-1 rounded-md border flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-lg border-2 flex items-center gap-2 shadow-sm transition-all duration-200 hover:scale-105 cursor-default"
             style={{
               backgroundColor: `${status.color}20`,
               borderColor: status.color,
               color: status.color,
             }}
           >
-            <span>{status.name}</span>
+            {/* Status indicator dot with glow */}
+            <div 
+              className="w-2 h-2 rounded-full"
+              style={{
+                backgroundColor: status.color,
+                boxShadow: `0 0 6px ${status.color}99`,
+              }}
+            />
+            <span className="font-medium">{status.name}</span>
           </div>
         ))}
       </div>
 
-      {/* Dental Chart */}
-      <div className="space-y-4">
-        {/* Upper jaw - permanent teeth */}
-        <div className="space-y-1">
-          <div className="text-xs text-muted-foreground text-center mb-2">
-            Maxilar superior (dinți permanenți)
+      {/* 3D Dental Chart Container */}
+      <div 
+        className="relative rounded-2xl p-6 overflow-hidden"
+        style={{
+          background: 'linear-gradient(180deg, hsl(var(--muted)/0.3) 0%, hsl(var(--muted)/0.1) 100%)',
+          boxShadow: 'inset 0 2px 20px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1)',
+        }}
+      >
+        {/* Ambient light effect */}
+        <div 
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 pointer-events-none"
+          style={{
+            background: 'radial-gradient(ellipse at center top, rgba(255,255,255,0.15) 0%, transparent 70%)',
+          }}
+        />
+
+        <div className="space-y-4 relative z-10">
+          {/* Upper jaw - permanent teeth */}
+          <div className="space-y-2">
+            <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase">
+              Maxilar Superior — Dinți Permanenți
+            </div>
+            <div className="flex justify-center gap-1">
+              {upperTeeth.map(tooth => renderTooth(tooth, false, false))}
+            </div>
           </div>
-          <div className="flex justify-center gap-0.5">
-            {upperTeeth.map(tooth => renderTooth(tooth, false, false))}
+
+          {/* Upper jaw - deciduous teeth */}
+          <div className="space-y-2 mt-4">
+            <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase opacity-70">
+              Dinți Temporari — Superior
+            </div>
+            <div className="flex justify-center gap-1">
+              {upperDeciduousTeeth.map(tooth => renderTooth(tooth, true, false))}
+            </div>
+          </div>
+
+          {/* Enhanced Divider with glow */}
+          <div className="flex justify-center py-4">
+            <div 
+              className="w-full max-w-3xl h-px"
+              style={{
+                background: 'linear-gradient(90deg, transparent 0%, hsl(var(--muted-foreground)/0.3) 20%, hsl(var(--muted-foreground)/0.5) 50%, hsl(var(--muted-foreground)/0.3) 80%, transparent 100%)',
+              }}
+            />
+          </div>
+
+          {/* Lower jaw - deciduous teeth */}
+          <div className="space-y-2">
+            <div className="flex justify-center gap-1">
+              {lowerDeciduousTeeth.map(tooth => renderTooth(tooth, true, true))}
+            </div>
+            <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase opacity-70">
+              Dinți Temporari — Inferior
+            </div>
+          </div>
+
+          {/* Lower jaw - permanent teeth */}
+          <div className="space-y-2 mt-4">
+            <div className="flex justify-center gap-1">
+              {lowerTeeth.map(tooth => renderTooth(tooth, false, true))}
+            </div>
+            <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase">
+              Maxilar Inferior — Dinți Permanenți
+            </div>
           </div>
         </div>
 
-        {/* Upper jaw - deciduous teeth */}
-        <div className="space-y-1">
-          <div className="text-xs text-muted-foreground text-center mb-2">
-            Dinți temporari (de lapte) - superior
-          </div>
-          <div className="flex justify-center gap-0.5">
-            {upperDeciduousTeeth.map(tooth => renderTooth(tooth, true, false))}
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div className="flex justify-center">
-          <div className="w-full max-w-2xl border-b-2 border-muted-foreground/30 my-2" />
-        </div>
-
-        {/* Lower jaw - deciduous teeth */}
-        <div className="space-y-1">
-          <div className="flex justify-center gap-0.5">
-            {lowerDeciduousTeeth.map(tooth => renderTooth(tooth, true, true))}
-          </div>
-          <div className="text-xs text-muted-foreground text-center mt-2">
-            Dinți temporari (de lapte) - inferior
-          </div>
-        </div>
-
-        {/* Lower jaw - permanent teeth */}
-        <div className="space-y-1">
-          <div className="flex justify-center gap-0.5">
-            {lowerTeeth.map(tooth => renderTooth(tooth, false, true))}
-          </div>
-          <div className="text-xs text-muted-foreground text-center mt-2">
-            Maxilar inferior (dinți permanenți)
-          </div>
-        </div>
+        {/* Bottom shadow gradient */}
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none"
+          style={{
+            background: 'linear-gradient(to top, hsl(var(--muted)/0.2) 0%, transparent 100%)',
+          }}
+        />
       </div>
 
       {/* History Section - visible below the chart */}
