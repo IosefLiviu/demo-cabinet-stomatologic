@@ -410,7 +410,7 @@ export function Tooth3DDialog({
                 />
               </div>
 
-              {/* History Section */}
+              {/* History Section - grouped by date */}
               <Collapsible open={historyExpanded} onOpenChange={setHistoryExpanded}>
                 <CollapsibleTrigger asChild>
                   <Button variant="ghost" className="w-full justify-between">
@@ -436,70 +436,96 @@ export function Tooth3DDialog({
                         Nu există istoric pentru acest dinte
                       </div>
                     ) : (
-                      <ScrollArea className="h-[150px]">
+                      <ScrollArea className="h-[200px]">
                         <div className="divide-y">
-                          {toothHistory.map((entry) => {
-                            const oldColor = getStatusHexColor(getStatusDisplayName(entry.old_status || 'healthy'));
-                            const newColor = getStatusHexColor(getStatusDisplayName(entry.new_status));
-                            
-                            return (
-                              <div key={entry.id} className="p-3 space-y-1">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2 text-sm">
-                                    {entry.old_status && (
-                                      <>
-                                        <Badge 
-                                          variant="outline" 
-                                          className="text-xs"
-                                          style={{
-                                            backgroundColor: oldColor ? `${oldColor}20` : undefined,
-                                            borderColor: oldColor || undefined,
-                                            color: oldColor || undefined,
-                                          }}
-                                        >
-                                          {getStatusDisplayName(entry.old_status)}
-                                        </Badge>
-                                        <span className="text-muted-foreground">→</span>
-                                      </>
-                                    )}
-                                    <Badge 
-                                      variant="outline"
-                                      className="text-xs"
-                                      style={{
-                                        backgroundColor: newColor ? `${newColor}20` : undefined,
-                                        borderColor: newColor || undefined,
-                                        color: newColor || undefined,
-                                      }}
-                                    >
-                                      {getStatusDisplayName(entry.new_status)}
-                                    </Badge>
+                          {/* Group entries by date */}
+                          {(() => {
+                            const groupedByDate = toothHistory.reduce((acc, entry) => {
+                              const dateKey = format(new Date(entry.changed_at), 'yyyy-MM-dd');
+                              if (!acc[dateKey]) {
+                                acc[dateKey] = [];
+                              }
+                              acc[dateKey].push(entry);
+                              return acc;
+                            }, {} as Record<string, typeof toothHistory>);
+
+                            return Object.entries(groupedByDate)
+                              .sort(([a], [b]) => b.localeCompare(a)) // Sort dates descending
+                              .map(([dateKey, entries]) => (
+                                <div key={dateKey} className="border-b last:border-b-0">
+                                  {/* Date Header */}
+                                  <div className="bg-muted/50 px-3 py-2 sticky top-0">
+                                    <span className="text-xs font-semibold text-muted-foreground">
+                                      Istoric Modificări • {format(new Date(dateKey), 'd MMMM yyyy', { locale: ro })}
+                                    </span>
                                   </div>
-                                  <span className="text-xs text-muted-foreground">
-                                    {entry.doctor_name && (
-                                      <span className="font-medium mr-1">{entry.doctor_name} •</span>
-                                    )}
-                                    {format(new Date(entry.changed_at), 'dd MMM yyyy, HH:mm', { locale: ro })}
-                                  </span>
-                                </div>
-                                {entry.notes && (
-                                  <div className="space-y-1">
-                                    {getCleanNotes(entry.notes) && (
-                                      <p className="text-xs text-muted-foreground">{getCleanNotes(entry.notes)}</p>
-                                    )}
-                                    {getDiagnosticLabels(entry.notes).length > 0 && (
-                                      <div className="flex flex-wrap gap-1">
-                                        {getDiagnosticLabels(entry.notes).map((label) => (
-                                          <Badge key={`${entry.id}-${label}`} variant="outline" className="text-[10px]">
-                                            {label}
-                                          </Badge>
-                                        ))}
+                                  
+                                  {/* Entries for this date */}
+                                  {entries.map((entry) => {
+                                    const oldColor = getStatusHexColor(getStatusDisplayName(entry.old_status || 'healthy'));
+                                    const newColor = getStatusHexColor(getStatusDisplayName(entry.new_status));
+                                    
+                                    return (
+                                      <div key={entry.id} className="p-3 space-y-1">
+                                        <div className="flex items-center justify-between">
+                                          <div className="flex items-center gap-2 text-sm">
+                                            {entry.old_status && (
+                                              <>
+                                                <Badge 
+                                                  variant="outline" 
+                                                  className="text-xs"
+                                                  style={{
+                                                    backgroundColor: oldColor ? `${oldColor}20` : undefined,
+                                                    borderColor: oldColor || undefined,
+                                                    color: oldColor || undefined,
+                                                  }}
+                                                >
+                                                  {getStatusDisplayName(entry.old_status)}
+                                                </Badge>
+                                                <span className="text-muted-foreground">→</span>
+                                              </>
+                                            )}
+                                            <Badge 
+                                              variant="outline"
+                                              className="text-xs"
+                                              style={{
+                                                backgroundColor: newColor ? `${newColor}20` : undefined,
+                                                borderColor: newColor || undefined,
+                                                color: newColor || undefined,
+                                              }}
+                                            >
+                                              {getStatusDisplayName(entry.new_status)}
+                                            </Badge>
+                                          </div>
+                                          <span className="text-xs text-muted-foreground">
+                                            {entry.doctor_name && (
+                                              <span className="font-medium mr-1">{entry.doctor_name} •</span>
+                                            )}
+                                            {format(new Date(entry.changed_at), 'HH:mm', { locale: ro })}
+                                          </span>
+                                        </div>
+                                        {entry.notes && (
+                                          <div className="space-y-1">
+                                            {getCleanNotes(entry.notes) && (
+                                              <p className="text-xs text-muted-foreground">{getCleanNotes(entry.notes)}</p>
+                                            )}
+                                            {getDiagnosticLabels(entry.notes).length > 0 && (
+                                              <div className="flex flex-wrap gap-1">
+                                                {getDiagnosticLabels(entry.notes).map((label) => (
+                                                  <Badge key={`${entry.id}-${label}`} variant="outline" className="text-[10px]">
+                                                    {label}
+                                                  </Badge>
+                                                ))}
+                                              </div>
+                                            )}
+                                          </div>
+                                        )}
                                       </div>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
+                                    );
+                                  })}
+                                </div>
+                              ));
+                          })()}
                         </div>
                       </ScrollArea>
                     )}
