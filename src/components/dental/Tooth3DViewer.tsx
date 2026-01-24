@@ -309,29 +309,30 @@ function ToothMesh({
         />
       )}
 
-      {/* Diagnostic Points Markers */}
+      {/* Diagnostic Points Markers - larger on mobile for touch */}
       {diagnosticPoints.map((point) => (
         <group key={point.id} position={point.position.map(p => p / scale) as [number, number, number]}>
           <mesh>
-            <sphereGeometry args={[0.05, 12, 12]} />
+            {/* Larger sphere for better touch targets */}
+            <sphereGeometry args={[0.08, 16, 16]} />
             <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={0.5} />
           </mesh>
           <Html
-            position={[0.25, 0.25, 0]}
+            position={[0.2, 0.2, 0]}
             className="pointer-events-none"
             style={{ transform: 'translate(-50%, -100%)' }}
           >
-            <div className="bg-destructive text-destructive-foreground text-xs px-2 py-1 rounded-md shadow-lg whitespace-nowrap max-w-[150px] truncate">
+            <div className="bg-destructive text-destructive-foreground text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md shadow-lg whitespace-nowrap max-w-[100px] sm:max-w-[150px] truncate">
               {point.label}
             </div>
           </Html>
         </group>
       ))}
 
-      {/* Selected point indicator */}
+      {/* Selected point indicator - larger for mobile visibility */}
       {selectedPoint && (
         <mesh position={selectedPoint.map(p => p / scale) as [number, number, number]}>
-          <sphereGeometry args={[0.06, 12, 12]} />
+          <sphereGeometry args={[0.1, 16, 16]} />
           <meshStandardMaterial color="#22c55e" emissive="#22c55e" emissiveIntensity={0.8} transparent opacity={0.8} />
         </mesh>
       )}
@@ -434,12 +435,13 @@ export function Tooth3DViewer({
   const totalDiagnostics = diagnosticPoints.length + diagnosticLines.length;
 
   return (
-    <div className="flex flex-col w-full h-full">
-      {/* 3D Canvas Container */}
-      <div className="relative flex-1 min-h-[350px]">
+    <div className="flex flex-col w-full h-full touch-none">
+      {/* 3D Canvas Container - responsive height */}
+      <div className="relative flex-1 min-h-[280px] sm:min-h-[350px]">
         <Canvas
           camera={{ position: [0, 0, 4], fov: 45 }}
-          className="rounded-lg bg-gradient-to-b from-slate-900 to-slate-800"
+          className="rounded-lg bg-gradient-to-b from-slate-900 to-slate-800 touch-none"
+          style={{ touchAction: 'none' }}
         >
           <Suspense fallback={<LoadingFallback />}>
             {/* Lighting */}
@@ -478,7 +480,7 @@ export function Tooth3DViewer({
               orbitControlsRef={orbitControlsRef}
             />
             
-            {/* Controls */}
+            {/* Controls - enable touch for mobile */}
             <OrbitControls 
               ref={orbitControlsRef}
               enablePan={false}
@@ -486,47 +488,51 @@ export function Tooth3DViewer({
               maxDistance={10}
               minPolarAngle={Math.PI * 0.1}
               maxPolarAngle={Math.PI * 0.9}
+              touches={{
+                ONE: THREE.TOUCH.ROTATE,
+                TWO: THREE.TOUCH.DOLLY_ROTATE
+              }}
             />
           </Suspense>
         </Canvas>
 
-        {/* Drawing mode toggle */}
-        <div className="absolute top-3 left-3 flex gap-1 bg-background/90 backdrop-blur-sm rounded-lg p-1 shadow-lg border">
+        {/* Drawing mode toggle - larger touch targets on mobile */}
+        <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex gap-1 bg-background/90 backdrop-blur-sm rounded-lg p-1 shadow-lg border">
           <Button
             size="sm"
             variant={drawMode === 'point' ? 'default' : 'ghost'}
-            className="h-8 px-2"
+            className="h-10 w-10 sm:h-8 sm:w-auto sm:px-2 p-0"
             onClick={() => setDrawMode('point')}
             title="Mod punct"
           >
-            <MousePointer className="h-4 w-4" />
+            <MousePointer className="h-5 w-5 sm:h-4 sm:w-4" />
           </Button>
           <Button
             size="sm"
             variant={drawMode === 'line' ? 'default' : 'ghost'}
-            className="h-8 px-2"
+            className="h-10 w-10 sm:h-8 sm:w-auto sm:px-2 p-0"
             onClick={() => setDrawMode('line')}
             title="Mod linie (drag)"
           >
-            <Pencil className="h-4 w-4" />
+            <Pencil className="h-5 w-5 sm:h-4 sm:w-4" />
           </Button>
         </div>
 
-        {/* Instructions overlay */}
-        <div className="absolute top-3 left-24 right-3 flex justify-between items-start pointer-events-none">
-          <div className="bg-background/80 backdrop-blur-sm rounded-lg px-3 py-2 text-xs text-muted-foreground">
+        {/* Instructions overlay - responsive text */}
+        <div className="absolute top-2 sm:top-3 left-24 sm:left-24 right-2 sm:right-3 flex justify-between items-start pointer-events-none">
+          <div className="hidden sm:block bg-background/80 backdrop-blur-sm rounded-lg px-3 py-2 text-xs text-muted-foreground">
             {drawMode === 'point' ? (
-              <>
-                <p>🖱️ Trage pentru a roti | 🔍 Scroll zoom | 📍 Click = punct</p>
-              </>
+              <p>🖱️ Trage pentru a roti | 🔍 Scroll zoom | 📍 Click = punct</p>
             ) : (
-              <>
-                <p>✏️ Ține apăsat și trage | 🔍 Scroll zoom | 💡 Eliberează = linie</p>
-              </>
+              <p>✏️ Ține apăsat și trage | 🔍 Scroll zoom | 💡 Eliberează = linie</p>
             )}
           </div>
+          {/* Mobile instructions - shorter */}
+          <div className="sm:hidden bg-background/80 backdrop-blur-sm rounded-lg px-2 py-1 text-[10px] text-muted-foreground">
+            {drawMode === 'point' ? '📍 Tap = punct' : '✏️ Trage = linie'}
+          </div>
           <div className={cn(
-            "px-3 py-1.5 rounded-lg text-xs font-medium",
+            "px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-medium",
             statusColor ? 'text-white' : 'text-foreground bg-muted'
           )} style={statusColor ? { backgroundColor: statusColor } : undefined}>
             {status}
@@ -536,41 +542,43 @@ export function Tooth3DViewer({
         {/* Attribution kept in license.txt files per CC-BY-4.0 requirements */}
       </div>
 
-      {/* Diagnostic input panel - BELOW the canvas */}
+      {/* Diagnostic input panel - BELOW the canvas, mobile optimized */}
       {isAdding && (selectedPoint || pendingLine) && (
-        <div className="mt-3 bg-muted/50 rounded-lg p-3 border animate-in slide-in-from-bottom-2">
+        <div className="mt-2 sm:mt-3 bg-muted/50 rounded-lg p-2 sm:p-3 border animate-in slide-in-from-bottom-2">
           <div className="flex items-center gap-2 mb-2">
-            <Plus className="h-4 w-4 text-green-500" />
-            <span className="text-sm font-medium">
-              {drawMode === 'line' ? 'Adaugă diagnostic pentru linie' : 'Adaugă diagnostic pentru punct'}
+            <Plus className="h-4 w-4 text-green-500 flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-medium truncate">
+              {drawMode === 'line' ? 'Adaugă diagnostic linie' : 'Adaugă diagnostic punct'}
             </span>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Input
               value={newDiagnostic}
               onChange={(e) => setNewDiagnostic(e.target.value)}
-              placeholder={drawMode === 'line' ? 'ex: Canal radicular, Nerv...' : 'Introdu diagnosticul...'}
-              className="flex-1"
+              placeholder={drawMode === 'line' ? 'ex: Canal radicular...' : 'Diagnostic...'}
+              className="flex-1 text-base sm:text-sm"
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleAddDiagnostic();
                 if (e.key === 'Escape') handleCancel();
               }}
             />
-            <Button size="sm" onClick={handleAddDiagnostic} disabled={!newDiagnostic.trim()}>
-              Adaugă
-            </Button>
-            <Button size="sm" variant="outline" onClick={handleCancel}>
-              Anulează
-            </Button>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={handleAddDiagnostic} disabled={!newDiagnostic.trim()} className="flex-1 sm:flex-none h-10 sm:h-8">
+                Adaugă
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleCancel} className="flex-1 sm:flex-none h-10 sm:h-8">
+                Anulează
+              </Button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Diagnostic items list - BELOW the canvas */}
+      {/* Diagnostic items list - BELOW the canvas, mobile optimized */}
       {totalDiagnostics > 0 && !isAdding && (
-        <div className="mt-3 bg-muted/50 rounded-lg p-2 border max-h-[120px] overflow-y-auto">
-          <div className="text-xs font-medium text-muted-foreground mb-1.5 px-1">
+        <div className="mt-2 sm:mt-3 bg-muted/50 rounded-lg p-2 border max-h-[100px] sm:max-h-[120px] overflow-y-auto">
+          <div className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-1.5 px-1">
             Diagnostice ({totalDiagnostics})
           </div>
           <div className="space-y-1">
@@ -578,15 +586,15 @@ export function Tooth3DViewer({
             {diagnosticPoints.map((point) => (
               <div 
                 key={point.id}
-                className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-md bg-background/50 hover:bg-background transition-colors"
+                className="flex items-center justify-between gap-2 px-2 py-1.5 sm:py-1.5 rounded-md bg-background/50 hover:bg-background transition-colors"
               >
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-destructive" />
-                  <span className="text-sm">{point.label}</span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-2 h-2 rounded-full bg-destructive flex-shrink-0" />
+                  <span className="text-xs sm:text-sm truncate">{point.label}</span>
                 </div>
                 <button
                   onClick={() => onRemoveDiagnostic(point.id)}
-                  className="text-muted-foreground hover:text-destructive transition-colors text-xs"
+                  className="text-muted-foreground hover:text-destructive transition-colors text-sm p-1 flex-shrink-0"
                 >
                   ✕
                 </button>
@@ -596,16 +604,16 @@ export function Tooth3DViewer({
             {diagnosticLines.map((line) => (
               <div 
                 key={line.id}
-                className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-md bg-background/50 hover:bg-background transition-colors"
+                className="flex items-center justify-between gap-2 px-2 py-1.5 sm:py-1.5 rounded-md bg-background/50 hover:bg-background transition-colors"
               >
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-0.5 bg-destructive rounded" />
-                  <span className="text-sm">{line.label}</span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-4 h-0.5 bg-destructive rounded flex-shrink-0" />
+                  <span className="text-xs sm:text-sm truncate">{line.label}</span>
                 </div>
                 {onRemoveDiagnosticLine && (
                   <button
                     onClick={() => onRemoveDiagnosticLine(line.id)}
-                    className="text-muted-foreground hover:text-destructive transition-colors text-xs"
+                    className="text-muted-foreground hover:text-destructive transition-colors text-sm p-1 flex-shrink-0"
                   >
                     ✕
                   </button>
