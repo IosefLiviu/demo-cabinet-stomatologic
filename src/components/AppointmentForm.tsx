@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Search, Trash2, UserPlus, FileText, Smile } from 'lucide-react';
+import { Search, Trash2, UserPlus, FileText, Smile, FileImage } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -95,6 +95,7 @@ interface AppointmentFormProps {
   onDelete?: () => void;
   onViewPatient?: (patient: Patient) => void;
   onViewDentalStatus?: (patient: Patient) => void;
+  onViewRadiographs?: (patient: Patient) => void;
   selectedDate: Date;
   selectedTime?: string;
   selectedCabinet?: number;
@@ -135,6 +136,7 @@ export function AppointmentForm({
   onDelete,
   onViewPatient,
   onViewDentalStatus,
+  onViewRadiographs,
   selectedDate,
   selectedTime,
   selectedCabinet,
@@ -656,6 +658,23 @@ export function AppointmentForm({
                     >
                       <Smile className="h-3.5 w-3.5" />
                       Status Dentar
+                    </Button>
+                  )}
+                  {formData.patientId && onViewRadiographs && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="text-xs sm:text-sm gap-1"
+                      onClick={() => {
+                        const patient = patients.find(p => p.id === formData.patientId);
+                        if (patient) {
+                          onViewRadiographs(patient);
+                        }
+                      }}
+                    >
+                      <FileImage className="h-3.5 w-3.5" />
+                      Imagistică
                     </Button>
                   )}
                   <Button
