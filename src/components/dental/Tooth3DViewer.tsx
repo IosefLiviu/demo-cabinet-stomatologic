@@ -223,7 +223,7 @@ export function Tooth3DViewer({
   }, []);
 
   return (
-    <div className="relative w-full h-full min-h-[300px]">
+    <div className="relative w-full h-full min-h-[450px]">
       {/* 3D Canvas */}
       <Canvas
         camera={{ position: [0, 0, 4], fov: 45 }}
@@ -260,8 +260,8 @@ export function Tooth3DViewer({
           {/* Controls */}
           <OrbitControls 
             enablePan={false}
-            minDistance={2}
-            maxDistance={8}
+            minDistance={1}
+            maxDistance={10}
             minPolarAngle={Math.PI * 0.1}
             maxPolarAngle={Math.PI * 0.9}
           />
