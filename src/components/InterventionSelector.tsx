@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDown, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,12 +10,14 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ToothStatus } from './DentalChart';
 import { useToothStatuses } from '@/hooks/useToothStatuses';
 import { getToothImage } from './dental/toothImages';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+
 interface Treatment {
   id: string;
   name: string;
@@ -51,11 +53,18 @@ export interface SelectedIntervention {
   archGroupCount?: number;
 }
 
+interface PatientToothStatus {
+  tooth_number: number;
+  status: string;
+  notes?: string;
+}
+
 interface InterventionSelectorProps {
   treatments: Treatment[];
   interventions: SelectedIntervention[];
   onInterventionsChange: (interventions: SelectedIntervention[]) => void;
   isCasDisabled?: boolean;
+  patientId?: string;
 }
 
 // FDI notation - permanent teeth
@@ -95,11 +104,24 @@ const getColorClassesFromHex = (hexColor: string) => {
   };
 };
 
+// Map DB enum values to display names
+const statusEnumToName: Record<string, string> = {
+  'healthy': 'Sănătos',
+  'cavity': 'Carie',
+  'filled': 'Obt Foto',
+  'crown': 'Coroană',
+  'missing': 'Absent',
+  'implant': 'Implant',
+  'root_canal': 'OBT Canal',
+  'extraction_needed': 'Rest Radicular',
+};
+
 export function InterventionSelector({
   treatments,
   interventions,
   onInterventionsChange,
   isCasDisabled = false,
+  patientId,
 }: InterventionSelectorProps) {
   const [treatmentDialogOpen, setTreatmentDialogOpen] = useState(false);
   const [expandedInterventions, setExpandedInterventions] = useState<Set<string>>(new Set());
@@ -113,9 +135,47 @@ export function InterventionSelector({
   const [hoveredTooth, setHoveredTooth] = useState<{ interventionId: string; toothNumber: number } | null>(null);
   // Selection mode per intervention: 'teeth' for individual, 'arch' for quadrant/arch selection
   const [selectionMode, setSelectionMode] = useState<Record<string, 'teeth' | 'arch'>>({});
+  // Patient dental status loaded from database
+  const [patientDentalStatus, setPatientDentalStatus] = useState<PatientToothStatus[]>([]);
   
   // Fetch custom tooth statuses from database
   const { activeStatuses } = useToothStatuses();
+
+  // Load patient dental status when patientId changes
+  useEffect(() => {
+    const loadPatientDentalStatus = async () => {
+      if (!patientId) {
+        setPatientDentalStatus([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('dental_status')
+        .select('tooth_number, status, notes')
+        .eq('patient_id', patientId);
+
+      if (error) {
+        console.error('Error loading patient dental status:', error);
+        return;
+      }
+
+      // Convert DB enum status to display names
+      const convertedData = (data || []).map(d => ({
+        tooth_number: d.tooth_number,
+        status: statusEnumToName[d.status] || d.status,
+        notes: d.notes || undefined,
+      }));
+
+      setPatientDentalStatus(convertedData);
+    };
+
+    loadPatientDentalStatus();
+  }, [patientId]);
+
+  // Get patient's saved dental status for a tooth
+  const getPatientToothStatus = (toothNumber: number): PatientToothStatus | undefined => {
+    return patientDentalStatus.find(t => t.tooth_number === toothNumber);
+  };
   
   // Build dynamic status colors and labels from database
   const getStatusColor = (statusName: string): string => {
@@ -369,11 +429,19 @@ export function InterventionSelector({
     const isSelected = intervention.selectedTeeth.includes(toothNumber);
     const toothDetails = getToothDetails(intervention, toothNumber);
     const isHovered = hoveredTooth?.interventionId === interventionId && hoveredTooth?.toothNumber === toothNumber;
-    const status = toothDetails?.status || 'Sănătos';
     const toothImage = getToothImage(toothNumber);
     
+    // Get patient's saved dental status for this tooth
+    const patientStatus = getPatientToothStatus(toothNumber);
+    
+    // Use intervention status if selected, otherwise use patient's saved status
+    const status = isSelected 
+      ? (toothDetails?.status || patientStatus?.status || 'Sănătos')
+      : (patientStatus?.status || 'Sănătos');
+    
     const hexColor = getStatusHexColor(status);
-    const healthyHexColor = getStatusHexColor('Sănătos');
+    const hasPatientStatus = patientStatus && patientStatus.status !== 'Sănătos';
+    const isMissingTooth = status === 'Absent' || status === 'missing';
     
     return (
       <div key={toothNumber} className="relative flex flex-col items-center">
@@ -381,7 +449,7 @@ export function InterventionSelector({
         {!isLower && (
           <span className={cn(
             "text-[10px] font-medium mb-0.5",
-            isSelected ? 'text-foreground' : 'text-muted-foreground'
+            isSelected ? 'text-foreground' : hasPatientStatus ? 'text-foreground' : 'text-muted-foreground'
           )}>
             {toothNumber}
           </span>
@@ -397,13 +465,18 @@ export function InterventionSelector({
             'hover:scale-105 cursor-pointer',
             isHovered && 'ring-2 ring-offset-1 ring-primary',
             isSelected && 'ring-2',
+            hasPatientStatus && !isSelected && 'ring-1',
             isDeciduous 
               ? 'w-7 h-9 sm:w-8 sm:h-10' 
               : 'w-8 h-11 sm:w-9 sm:h-13'
           )}
-          style={isSelected && hexColor ? {
-            boxShadow: `0 0 0 2px ${hexColor}`,
-          } : undefined}
+          style={
+            isSelected && hexColor 
+              ? { boxShadow: `0 0 0 2px ${hexColor}` }
+              : hasPatientStatus && hexColor 
+                ? { boxShadow: `0 0 0 1px ${hexColor}` }
+                : undefined
+          }
         >
           {/* Tooth image */}
           {toothImage ? (
@@ -412,7 +485,8 @@ export function InterventionSelector({
               alt={`Dinte ${toothNumber}`}
               className={cn(
                 "w-full h-full object-contain",
-                isLower && 'rotate-180'
+                isLower && 'rotate-180',
+                isMissingTooth && 'opacity-30 grayscale'
               )}
             />
           ) : (
@@ -431,13 +505,21 @@ export function InterventionSelector({
               style={{ backgroundColor: `${hexColor}40` }}
             />
           )}
+          
+          {/* Patient status overlay when NOT selected but has status */}
+          {!isSelected && hasPatientStatus && hexColor && !isMissingTooth && (
+            <div 
+              className="absolute inset-0 rounded-md"
+              style={{ backgroundColor: `${hexColor}30` }}
+            />
+          )}
         </button>
         
         {/* Tooth number - show below for lower teeth */}
         {isLower && (
           <span className={cn(
             "text-[10px] font-medium mt-0.5",
-            isSelected ? 'text-foreground' : 'text-muted-foreground'
+            isSelected ? 'text-foreground' : hasPatientStatus ? 'text-foreground' : 'text-muted-foreground'
           )}>
             {toothNumber}
           </span>
@@ -446,8 +528,14 @@ export function InterventionSelector({
         {/* Tooltip */}
         {isHovered && (
           <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded bg-popover border shadow-lg text-xs whitespace-nowrap">
-            <div className="font-medium">{isSelected ? getStatusLabel(status) : 'Click pentru a selecta'}</div>
-            {toothDetails?.notes && <div className="text-muted-foreground max-w-[150px] truncate">{toothDetails.notes}</div>}
+            <div className="font-medium">
+              {isSelected ? getStatusLabel(status) : hasPatientStatus ? getStatusLabel(status) : 'Click pentru a selecta'}
+            </div>
+            {(toothDetails?.notes || patientStatus?.notes) && (
+              <div className="text-muted-foreground max-w-[150px] truncate">
+                {toothDetails?.notes || patientStatus?.notes}
+              </div>
+            )}
           </div>
         )}
       </div>
