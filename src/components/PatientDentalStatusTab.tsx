@@ -402,71 +402,78 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
           <div className="space-y-4 max-h-[400px] overflow-y-auto">
             {Object.entries(historyByDate)
               .sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime())
-              .map(([dateKey, entries]) => (
-                <div key={dateKey} className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                    <span className="bg-muted px-2 py-1 rounded">
-                      {format(new Date(dateKey), 'dd MMMM yyyy', { locale: ro })}
-                    </span>
-                    <span className="text-xs">
-                      {entries.length} {entries.length === 1 ? 'modificare' : 'modificări'}
-                    </span>
-                  </div>
-                  <div className="space-y-2 pl-2 border-l-2 border-muted">
-                    {entries.map((entry) => {
-                      const oldColor = getStatusHexColor(getStatusDisplayName(entry.old_status || 'healthy'));
-                      const newColor = getStatusHexColor(getStatusDisplayName(entry.new_status));
-                      
-                      return (
-                        <div 
-                          key={entry.id} 
-                          className="flex items-start gap-3 p-3 bg-background rounded-md border"
-                        >
-                          <div className="flex-shrink-0 w-10 h-10 rounded-md bg-muted flex items-center justify-center">
-                            <span className="text-sm font-bold">{entry.tooth_number}</span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              {entry.old_status && (
-                                <>
-                                  <Badge 
-                                    variant="outline" 
-                                    className="text-xs"
-                                    style={{
-                                      backgroundColor: oldColor ? `${oldColor}20` : undefined,
-                                      borderColor: oldColor || undefined,
-                                      color: oldColor || undefined,
-                                    }}
-                                  >
-                                    {getStatusDisplayName(entry.old_status)}
-                                  </Badge>
-                                  <span className="text-muted-foreground">→</span>
-                                </>
-                              )}
-                              <Badge 
-                                variant="outline"
-                                className="text-xs"
-                                style={{
-                                  backgroundColor: newColor ? `${newColor}20` : undefined,
-                                  borderColor: newColor || undefined,
-                                  color: newColor || undefined,
-                                }}
-                              >
-                                {getStatusDisplayName(entry.new_status)}
-                              </Badge>
-                              <span className="text-xs text-muted-foreground ml-auto">
-                                {format(new Date(entry.changed_at), 'HH:mm', { locale: ro })}
-                              </span>
+              .map(([dateKey, entries], index) => (
+                <Collapsible key={dateKey} defaultOpen={index === 0}>
+                  <CollapsibleTrigger asChild>
+                    <button className="w-full flex items-center justify-between gap-2 text-sm font-medium text-muted-foreground hover:bg-muted/50 p-2 rounded-lg transition-colors">
+                      <div className="flex items-center gap-2">
+                        <span className="bg-muted px-2 py-1 rounded">
+                          {format(new Date(dateKey), 'dd MMMM yyyy', { locale: ro })}
+                        </span>
+                        <span className="text-xs">
+                          {entries.length} {entries.length === 1 ? 'modificare' : 'modificări'}
+                        </span>
+                      </div>
+                      <ChevronDown className="h-4 w-4 transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
+                    </button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="space-y-2 pl-2 border-l-2 border-muted mt-2">
+                      {entries.map((entry) => {
+                        const oldColor = getStatusHexColor(getStatusDisplayName(entry.old_status || 'healthy'));
+                        const newColor = getStatusHexColor(getStatusDisplayName(entry.new_status));
+                        
+                        return (
+                          <div 
+                            key={entry.id} 
+                            className="flex items-start gap-3 p-3 bg-background rounded-md border"
+                          >
+                            <div className="flex-shrink-0 w-10 h-10 rounded-md bg-muted flex items-center justify-center">
+                              <span className="text-sm font-bold">{entry.tooth_number}</span>
                             </div>
-                            {entry.notes && (
-                              <p className="text-sm text-muted-foreground mt-1">{entry.notes}</p>
-                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {entry.old_status && (
+                                  <>
+                                    <Badge 
+                                      variant="outline" 
+                                      className="text-xs"
+                                      style={{
+                                        backgroundColor: oldColor ? `${oldColor}20` : undefined,
+                                        borderColor: oldColor || undefined,
+                                        color: oldColor || undefined,
+                                      }}
+                                    >
+                                      {getStatusDisplayName(entry.old_status)}
+                                    </Badge>
+                                    <span className="text-muted-foreground">→</span>
+                                  </>
+                                )}
+                                <Badge 
+                                  variant="outline"
+                                  className="text-xs"
+                                  style={{
+                                    backgroundColor: newColor ? `${newColor}20` : undefined,
+                                    borderColor: newColor || undefined,
+                                    color: newColor || undefined,
+                                  }}
+                                >
+                                  {getStatusDisplayName(entry.new_status)}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground ml-auto">
+                                  {format(new Date(entry.changed_at), 'HH:mm', { locale: ro })}
+                                </span>
+                              </div>
+                              {entry.notes && (
+                                <p className="text-sm text-muted-foreground mt-1">{entry.notes}</p>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                        );
+                      })}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               ))}
           </div>
         </div>
