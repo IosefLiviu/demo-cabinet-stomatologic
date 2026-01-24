@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { ChevronDown, ChevronUp, History } from 'lucide-react';
+import { ChevronDown, ChevronUp, History, MapPin, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -16,6 +16,45 @@ import {
 } from '@/components/ui/collapsible';
 import { Tooth3DDialog } from './dental/Tooth3DDialog';
 import { DiagnosticPoint, DiagnosticLine } from './dental/Tooth3DViewer';
+
+// Helper function to parse diagnostic data from notes
+function parseDiagnosticData(notes: string | null): { points: number; lines: number } {
+  if (!notes) return { points: 0, lines: 0 };
+  
+  let points = 0;
+  let lines = 0;
+  
+  const pointsMatch = notes.match(/\[DIAGNOSTICS:(\[[\s\S]*?\])\]/);
+  if (pointsMatch) {
+    try {
+      const parsed = JSON.parse(pointsMatch[1]);
+      points = Array.isArray(parsed) ? parsed.length : 0;
+    } catch (e) {
+      // Ignore parse errors
+    }
+  }
+  
+  const linesMatch = notes.match(/\[DIAGLINES:(\[[\s\S]*?\])\]/);
+  if (linesMatch) {
+    try {
+      const parsed = JSON.parse(linesMatch[1]);
+      lines = Array.isArray(parsed) ? parsed.length : 0;
+    } catch (e) {
+      // Ignore parse errors
+    }
+  }
+  
+  return { points, lines };
+}
+
+// Helper to get clean notes without diagnostic data
+function getCleanNotes(notes: string | null): string {
+  if (!notes) return '';
+  return notes
+    .replace(/\n?\[DIAGNOSTICS:[\s\S]*?\]/g, '')
+    .replace(/\n?\[DIAGLINES:[\s\S]*?\]/g, '')
+    .trim();
+}
 
 export interface ToothData {
   tooth_number: number;
@@ -548,6 +587,10 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
                       {entries.map((entry) => {
                         const oldColor = getStatusHexColor(getStatusDisplayName(entry.old_status || 'healthy'));
                         const newColor = getStatusHexColor(getStatusDisplayName(entry.new_status));
+                        const diagnosticData = parseDiagnosticData(entry.notes);
+                        const cleanNotes = getCleanNotes(entry.notes);
+                        const hasDiagnostics = diagnosticData.points > 0 || diagnosticData.lines > 0;
+                        const statusChanged = entry.old_status !== entry.new_status;
                         
                         return (
                           <div 
@@ -559,7 +602,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                                {entry.old_status && (
+                                {statusChanged && entry.old_status && (
                                   <>
                                     <Badge 
                                       variant="outline" 
@@ -586,6 +629,25 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
                                 >
                                   {getStatusDisplayName(entry.new_status)}
                                 </Badge>
+                                
+                                {/* Diagnostic summary badges */}
+                                {hasDiagnostics && (
+                                  <div className="flex items-center gap-1 ml-1">
+                                    {diagnosticData.points > 0 && (
+                                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 gap-1">
+                                        <MapPin className="h-3 w-3" />
+                                        {diagnosticData.points} {diagnosticData.points === 1 ? 'punct' : 'puncte'}
+                                      </Badge>
+                                    )}
+                                    {diagnosticData.lines > 0 && (
+                                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 gap-1">
+                                        <Pencil className="h-3 w-3" />
+                                        {diagnosticData.lines} {diagnosticData.lines === 1 ? 'linie' : 'linii'}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                )}
+                                
                                 <span className="text-xs text-muted-foreground ml-auto">
                                   {entry.doctor_name && (
                                     <span className="font-medium mr-1">{entry.doctor_name} •</span>
@@ -593,8 +655,8 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
                                   {format(new Date(entry.changed_at), 'HH:mm', { locale: ro })}
                                 </span>
                               </div>
-                              {entry.notes && (
-                                <p className="text-sm text-muted-foreground mt-1">{entry.notes}</p>
+                              {cleanNotes && (
+                                <p className="text-sm text-muted-foreground mt-1">{cleanNotes}</p>
                               )}
                             </div>
                           </div>
