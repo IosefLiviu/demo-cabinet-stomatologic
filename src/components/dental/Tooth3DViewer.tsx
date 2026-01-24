@@ -1,6 +1,6 @@
-import { useRef, useState, Suspense, useCallback, useMemo } from 'react';
+import { useRef, useState, Suspense, useCallback } from 'react';
 import { Canvas, useFrame, ThreeEvent } from '@react-three/fiber';
-import { OrbitControls, Environment, Html, ContactShadows } from '@react-three/drei';
+import { OrbitControls, Environment, Html, ContactShadows, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { cn } from '@/lib/utils';
 import { Loader2, Plus } from 'lucide-react';
@@ -22,7 +22,21 @@ interface Tooth3DViewerProps {
   onRemoveDiagnostic: (id: string) => void;
 }
 
-// Procedural 3D tooth geometry based on tooth type
+// Model paths for each tooth type
+const MODEL_PATHS = {
+  molar: '/models/molar.glb',
+  premolar: '/models/premolar.glb',
+  canine: '/models/canine.glb',
+  incisor: '/models/incisor.glb',
+};
+
+// Preload all models
+useGLTF.preload(MODEL_PATHS.molar);
+useGLTF.preload(MODEL_PATHS.premolar);
+useGLTF.preload(MODEL_PATHS.canine);
+useGLTF.preload(MODEL_PATHS.incisor);
+
+// Determine tooth type based on FDI notation
 function getToothType(toothNumber: number): 'molar' | 'premolar' | 'canine' | 'incisor' {
   const lastDigit = toothNumber % 10;
   if (lastDigit >= 6 && lastDigit <= 8) return 'molar';
@@ -40,105 +54,7 @@ function isLowerTooth(toothNumber: number): boolean {
   return firstDigit === 3 || firstDigit === 4 || firstDigit === 7 || firstDigit === 8;
 }
 
-// Create realistic tooth geometry using LatheGeometry for smooth organic shapes
-function createToothGeometry(toothType: 'molar' | 'premolar' | 'canine' | 'incisor') {
-  const points: THREE.Vector2[] = [];
-  
-  if (toothType === 'molar') {
-    // Molar profile - wide crown with multiple roots
-    points.push(new THREE.Vector2(0, -0.9));      // Root tip
-    points.push(new THREE.Vector2(0.08, -0.85));
-    points.push(new THREE.Vector2(0.12, -0.7));
-    points.push(new THREE.Vector2(0.15, -0.5));   // Root neck
-    points.push(new THREE.Vector2(0.18, -0.3));
-    points.push(new THREE.Vector2(0.35, -0.1));   // CEJ (cervical line)
-    points.push(new THREE.Vector2(0.45, 0.1));    // Crown begins
-    points.push(new THREE.Vector2(0.5, 0.25));
-    points.push(new THREE.Vector2(0.48, 0.4));    // Crown bulge
-    points.push(new THREE.Vector2(0.42, 0.5));
-    points.push(new THREE.Vector2(0.35, 0.55));   // Occlusal surface start
-    points.push(new THREE.Vector2(0.25, 0.52));
-    points.push(new THREE.Vector2(0.15, 0.58));   // Cusp
-    points.push(new THREE.Vector2(0.08, 0.5));
-    points.push(new THREE.Vector2(0, 0.55));      // Central fissure
-  } else if (toothType === 'premolar') {
-    // Premolar profile - smaller crown with 2 cusps
-    points.push(new THREE.Vector2(0, -0.85));
-    points.push(new THREE.Vector2(0.06, -0.8));
-    points.push(new THREE.Vector2(0.1, -0.6));
-    points.push(new THREE.Vector2(0.12, -0.4));
-    points.push(new THREE.Vector2(0.15, -0.2));
-    points.push(new THREE.Vector2(0.28, 0));      // CEJ
-    points.push(new THREE.Vector2(0.35, 0.15));
-    points.push(new THREE.Vector2(0.38, 0.3));
-    points.push(new THREE.Vector2(0.35, 0.45));
-    points.push(new THREE.Vector2(0.28, 0.55));   // Cusp
-    points.push(new THREE.Vector2(0.15, 0.48));
-    points.push(new THREE.Vector2(0.08, 0.55));   // Second cusp
-    points.push(new THREE.Vector2(0, 0.5));
-  } else if (toothType === 'canine') {
-    // Canine profile - pointed single cusp
-    points.push(new THREE.Vector2(0, -0.95));     // Long root
-    points.push(new THREE.Vector2(0.05, -0.9));
-    points.push(new THREE.Vector2(0.1, -0.7));
-    points.push(new THREE.Vector2(0.12, -0.5));
-    points.push(new THREE.Vector2(0.14, -0.3));
-    points.push(new THREE.Vector2(0.18, -0.1));
-    points.push(new THREE.Vector2(0.3, 0.1));     // CEJ
-    points.push(new THREE.Vector2(0.35, 0.25));
-    points.push(new THREE.Vector2(0.32, 0.4));
-    points.push(new THREE.Vector2(0.25, 0.55));
-    points.push(new THREE.Vector2(0.15, 0.65));
-    points.push(new THREE.Vector2(0.08, 0.72));
-    points.push(new THREE.Vector2(0, 0.78));      // Sharp cusp tip
-  } else {
-    // Incisor profile - flat edge
-    points.push(new THREE.Vector2(0, -0.8));
-    points.push(new THREE.Vector2(0.05, -0.75));
-    points.push(new THREE.Vector2(0.08, -0.6));
-    points.push(new THREE.Vector2(0.1, -0.4));
-    points.push(new THREE.Vector2(0.12, -0.2));
-    points.push(new THREE.Vector2(0.22, 0));      // CEJ
-    points.push(new THREE.Vector2(0.3, 0.15));
-    points.push(new THREE.Vector2(0.32, 0.3));
-    points.push(new THREE.Vector2(0.3, 0.45));
-    points.push(new THREE.Vector2(0.25, 0.55));
-    points.push(new THREE.Vector2(0.2, 0.58));    // Incisal edge
-    points.push(new THREE.Vector2(0, 0.6));
-  }
-  
-  return new THREE.LatheGeometry(points, 32);
-}
-
-// Realistic Tooth Materials
-function useToothMaterials(statusColor: string | undefined, hovered: boolean) {
-  return useMemo(() => {
-    // Enamel material (crown) - slightly translucent, pearly
-    const enamelColor = statusColor || '#f8f6f0';
-    const enamel = new THREE.MeshPhysicalMaterial({
-      color: enamelColor,
-      roughness: 0.15,
-      metalness: 0.05,
-      clearcoat: 0.8,
-      clearcoatRoughness: 0.1,
-      transmission: 0.05,
-      thickness: 0.5,
-      emissive: hovered ? '#ffffff' : '#000000',
-      emissiveIntensity: hovered ? 0.15 : 0,
-    });
-    
-    // Dentin/Root material - more yellow, rougher
-    const dentin = new THREE.MeshStandardMaterial({
-      color: '#e8d8c0',
-      roughness: 0.6,
-      metalness: 0,
-    });
-    
-    return { enamel, dentin };
-  }, [statusColor, hovered]);
-}
-
-// Interactive 3D Tooth Mesh with realistic geometry
+// Interactive 3D Tooth Mesh using loaded GLB model
 function ToothMesh({ 
   toothNumber, 
   statusColor,
@@ -158,10 +74,28 @@ function ToothMesh({
   const deciduous = isDeciduous(toothNumber);
   const lower = isLowerTooth(toothNumber);
   
-  const { enamel, dentin } = useToothMaterials(statusColor, hovered);
+  // Load the appropriate 3D model
+  const { scene } = useGLTF(MODEL_PATHS[toothType]);
   
-  // Create the tooth geometry
-  const toothGeometry = useMemo(() => createToothGeometry(toothType), [toothType]);
+  // Clone the scene to avoid sharing materials
+  const clonedScene = scene.clone(true);
+  
+  // Apply custom material with status color
+  clonedScene.traverse((child) => {
+    if (child instanceof THREE.Mesh) {
+      child.material = new THREE.MeshPhysicalMaterial({
+        color: statusColor || '#f8f6f0',
+        roughness: 0.15,
+        metalness: 0.02,
+        clearcoat: 0.6,
+        clearcoatRoughness: 0.2,
+        emissive: hovered ? '#ffffff' : '#000000',
+        emissiveIntensity: hovered ? 0.12 : 0,
+      });
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
   
   // Gentle rotation animation
   useFrame((state) => {
@@ -177,115 +111,31 @@ function ToothMesh({
     onPointClick([point.x, point.y, point.z]);
   }, [onPointClick]);
 
-  const scale = deciduous ? 0.8 : 1;
+  const scale = deciduous ? 0.015 : 0.02; // Adjust scale for GLB models
 
   return (
-    <group ref={meshRef} rotation={[lower ? Math.PI : 0, 0, 0]} scale={scale}>
-      {/* Main tooth body */}
-      <mesh 
-        geometry={toothGeometry}
+    <group 
+      ref={meshRef} 
+      rotation={[lower ? Math.PI : 0, 0, 0]} 
+      scale={scale}
+    >
+      {/* Main tooth model */}
+      <primitive 
+        object={clonedScene}
         onClick={handleClick}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
-        castShadow
-        receiveShadow
-      >
-        <meshPhysicalMaterial
-          color={statusColor || '#f8f6f0'}
-          roughness={0.15}
-          metalness={0.02}
-          clearcoat={0.6}
-          clearcoatRoughness={0.2}
-          emissive={hovered ? '#ffffff' : '#000000'}
-          emissiveIntensity={hovered ? 0.12 : 0}
-        />
-      </mesh>
-      
-      {/* Add extra geometry for molars - additional cusps */}
-      {toothType === 'molar' && (
-        <group>
-          {/* Extra cusp bumps */}
-          {[
-            [-0.2, 0.5, -0.15],
-            [0.2, 0.5, -0.15],
-            [-0.2, 0.5, 0.15],
-            [0.2, 0.5, 0.15],
-          ].map((pos, i) => (
-            <mesh 
-              key={i} 
-              position={pos as [number, number, number]} 
-              onClick={handleClick}
-              castShadow
-            >
-              <sphereGeometry args={[0.12, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
-              <meshPhysicalMaterial
-                color={statusColor || '#f8f6f0'}
-                roughness={0.15}
-                metalness={0.02}
-                clearcoat={0.6}
-              />
-            </mesh>
-          ))}
-          {/* Central fissure groove */}
-          <mesh position={[0, 0.48, 0]} rotation={[0, 0, 0]}>
-            <torusGeometry args={[0.15, 0.02, 8, 32]} />
-            <meshStandardMaterial color="#d4c4a8" roughness={0.8} />
-          </mesh>
-        </group>
-      )}
-      
-      {/* Add second cusp for premolars */}
-      {toothType === 'premolar' && (
-        <group>
-          <mesh position={[-0.12, 0.5, 0]} onClick={handleClick} castShadow>
-            <sphereGeometry args={[0.1, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
-            <meshPhysicalMaterial
-              color={statusColor || '#f8f6f0'}
-              roughness={0.15}
-              metalness={0.02}
-              clearcoat={0.6}
-            />
-          </mesh>
-          <mesh position={[0.12, 0.5, 0]} onClick={handleClick} castShadow>
-            <sphereGeometry args={[0.08, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
-            <meshPhysicalMaterial
-              color={statusColor || '#f8f6f0'}
-              roughness={0.15}
-              metalness={0.02}
-              clearcoat={0.6}
-            />
-          </mesh>
-        </group>
-      )}
-      
-      {/* Root bifurcation for molars */}
-      {toothType === 'molar' && (
-        <group>
-          {/* Additional roots */}
-          <mesh position={[-0.15, -0.7, 0.1]} rotation={[0.15, 0, 0.1]}>
-            <coneGeometry args={[0.08, 0.4, 12]} />
-            <meshStandardMaterial color="#e0d0b8" roughness={0.5} />
-          </mesh>
-          <mesh position={[0.15, -0.7, 0.1]} rotation={[0.15, 0, -0.1]}>
-            <coneGeometry args={[0.08, 0.4, 12]} />
-            <meshStandardMaterial color="#e0d0b8" roughness={0.5} />
-          </mesh>
-          <mesh position={[0, -0.7, -0.12]} rotation={[-0.15, 0, 0]}>
-            <coneGeometry args={[0.07, 0.35, 12]} />
-            <meshStandardMaterial color="#e0d0b8" roughness={0.5} />
-          </mesh>
-        </group>
-      )}
+      />
 
-      {/* Diagnostic Points Markers */}
+      {/* Diagnostic Points Markers - scale adjusted for model size */}
       {diagnosticPoints.map((point) => (
-        <group key={point.id} position={point.position}>
+        <group key={point.id} position={point.position.map(p => p / scale) as [number, number, number]}>
           <mesh>
-            <sphereGeometry args={[0.08, 16, 16]} />
+            <sphereGeometry args={[4, 16, 16]} />
             <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={0.5} />
           </mesh>
           <Html
-            position={[0.15, 0.15, 0]}
+            position={[8, 8, 0]}
             className="pointer-events-none"
             style={{ transform: 'translate(-50%, -100%)' }}
           >
@@ -298,8 +148,8 @@ function ToothMesh({
 
       {/* Selected point indicator */}
       {selectedPoint && (
-        <mesh position={selectedPoint}>
-          <sphereGeometry args={[0.1, 16, 16]} />
+        <mesh position={selectedPoint.map(p => p / scale) as [number, number, number]}>
+          <sphereGeometry args={[5, 16, 16]} />
           <meshStandardMaterial color="#22c55e" emissive="#22c55e" emissiveIntensity={0.8} transparent opacity={0.8} />
         </mesh>
       )}
@@ -313,7 +163,7 @@ function LoadingFallback() {
     <Html center>
       <div className="flex items-center gap-2 text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin" />
-        <span>Se încarcă...</span>
+        <span>Se încarcă modelul 3D...</span>
       </div>
     </Html>
   );
@@ -389,10 +239,10 @@ export function Tooth3DViewer({
           {/* Controls */}
           <OrbitControls 
             enablePan={false}
-            minDistance={2}
-            maxDistance={5}
-            minPolarAngle={Math.PI * 0.2}
-            maxPolarAngle={Math.PI * 0.8}
+            minDistance={1.5}
+            maxDistance={6}
+            minPolarAngle={Math.PI * 0.1}
+            maxPolarAngle={Math.PI * 0.9}
           />
         </Suspense>
       </Canvas>
@@ -401,6 +251,7 @@ export function Tooth3DViewer({
       <div className="absolute top-3 left-3 right-3 flex justify-between items-start pointer-events-none">
         <div className="bg-background/80 backdrop-blur-sm rounded-lg px-3 py-2 text-xs text-muted-foreground">
           <p>🖱️ Trage pentru a roti</p>
+          <p>🔍 Scroll pentru zoom</p>
           <p>📍 Click pe dinte pentru diagnostic</p>
         </div>
         <div className={cn(
@@ -408,6 +259,13 @@ export function Tooth3DViewer({
           statusColor ? 'text-white' : 'text-foreground bg-muted'
         )} style={statusColor ? { backgroundColor: statusColor } : undefined}>
           {status}
+        </div>
+      </div>
+
+      {/* Attribution - CC Attribution required */}
+      <div className="absolute top-3 right-3 bottom-auto left-auto">
+        <div className="bg-background/60 backdrop-blur-sm rounded px-2 py-1 text-[10px] text-muted-foreground/70">
+          Model: University of Dundee
         </div>
       </div>
 
