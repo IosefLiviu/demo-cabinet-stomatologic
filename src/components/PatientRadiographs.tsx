@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import {
@@ -11,12 +11,15 @@ import {
   Loader2,
   X,
   ZoomIn,
+  ZoomOut,
+  RotateCcw,
   ChevronLeft,
   ChevronRight,
   Columns2,
   Check,
   HardDrive,
   TrendingDown,
+  Move,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -85,6 +88,13 @@ export function PatientRadiographs({ patientId, patientName }: PatientRadiograph
   const [compareDialogOpen, setCompareDialogOpen] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState<PatientRadiograph[]>([]);
 
+  // Zoom and pan state for viewer
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+
   // Upload form state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [description, setDescription] = useState('');
@@ -144,17 +154,91 @@ export function PatientRadiographs({ patientId, patientName }: PatientRadiograph
       toggleCompareSelection(radiographs[index]);
     } else {
       setSelectedIndex(index);
+      resetZoom();
       setViewerOpen(true);
     }
   };
 
   const navigateViewer = (direction: 'prev' | 'next') => {
+    resetZoom();
     if (direction === 'prev') {
       setSelectedIndex((i) => (i > 0 ? i - 1 : radiographs.length - 1));
     } else {
       setSelectedIndex((i) => (i < radiographs.length - 1 ? i + 1 : 0));
     }
   };
+
+  // Zoom functions
+  const resetZoom = useCallback(() => {
+    setZoomLevel(1);
+    setPanPosition({ x: 0, y: 0 });
+  }, []);
+
+  const handleZoomIn = useCallback(() => {
+    setZoomLevel((prev) => Math.min(prev + 0.5, 5));
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    setZoomLevel((prev) => {
+      const newZoom = Math.max(prev - 0.5, 1);
+      if (newZoom === 1) {
+        setPanPosition({ x: 0, y: 0 });
+      }
+      return newZoom;
+    });
+  }, []);
+
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    if (e.deltaY < 0) {
+      handleZoomIn();
+    } else {
+      handleZoomOut();
+    }
+  }, [handleZoomIn, handleZoomOut]);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (zoomLevel > 1) {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - panPosition.x, y: e.clientY - panPosition.y });
+    }
+  }, [zoomLevel, panPosition]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (isDragging && zoomLevel > 1) {
+      setPanPosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y,
+      });
+    }
+  }, [isDragging, zoomLevel, dragStart]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (zoomLevel > 1 && e.touches.length === 1) {
+      setIsDragging(true);
+      setDragStart({ 
+        x: e.touches[0].clientX - panPosition.x, 
+        y: e.touches[0].clientY - panPosition.y 
+      });
+    }
+  }, [zoomLevel, panPosition]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (isDragging && zoomLevel > 1 && e.touches.length === 1) {
+      setPanPosition({
+        x: e.touches[0].clientX - dragStart.x,
+        y: e.touches[0].clientY - dragStart.y,
+      });
+    }
+  }, [isDragging, zoomLevel, dragStart]);
+
+  const handleTouchEnd = useCallback(() => {
+    setIsDragging(false);
+  }, []);
 
   const toggleCompareSelection = (radiograph: PatientRadiograph) => {
     setSelectedForCompare((prev) => {
@@ -544,9 +628,47 @@ export function PatientRadiographs({ patientId, patientName }: PatientRadiograph
       </Dialog>
 
       {/* Image Viewer Dialog */}
-      <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden">
+      <Dialog open={viewerOpen} onOpenChange={(open) => {
+        setViewerOpen(open);
+        if (!open) resetZoom();
+      }}>
+        <DialogContent className="max-w-5xl max-h-[90vh] p-0 overflow-hidden">
           <div className="relative">
+            {/* Zoom Controls */}
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 bg-black/70 rounded-full px-2 py-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-white hover:bg-white/20"
+                onClick={handleZoomOut}
+                disabled={zoomLevel <= 1}
+              >
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              <span className="text-white text-sm font-medium min-w-[3rem] text-center">
+                {Math.round(zoomLevel * 100)}%
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-white hover:bg-white/20"
+                onClick={handleZoomIn}
+                disabled={zoomLevel >= 5}
+              >
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+              {zoomLevel > 1 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-white hover:bg-white/20"
+                  onClick={resetZoom}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
             {/* Navigation */}
             {radiographs.length > 1 && (
               <>
@@ -579,14 +701,43 @@ export function PatientRadiographs({ patientId, patientName }: PatientRadiograph
               <X className="h-5 w-5" />
             </Button>
 
-            {/* Image */}
+            {/* Image with zoom/pan */}
             {selectedRadiograph?.url && (
-              <div className="bg-black flex items-center justify-center min-h-[400px] max-h-[70vh]">
+              <div 
+                ref={imageContainerRef}
+                className={`bg-black flex items-center justify-center min-h-[400px] max-h-[70vh] overflow-hidden ${
+                  zoomLevel > 1 ? 'cursor-grab' : 'cursor-zoom-in'
+                } ${isDragging ? 'cursor-grabbing' : ''}`}
+                onWheel={handleWheel}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                onClick={() => {
+                  if (zoomLevel === 1) handleZoomIn();
+                }}
+              >
                 <img
                   src={selectedRadiograph.url}
                   alt={selectedRadiograph.file_name}
-                  className="max-w-full max-h-[70vh] object-contain"
+                  className="max-w-full max-h-[70vh] object-contain select-none"
+                  style={{
+                    transform: `scale(${zoomLevel}) translate(${panPosition.x / zoomLevel}px, ${panPosition.y / zoomLevel}px)`,
+                    transition: isDragging ? 'none' : 'transform 0.2s ease-out',
+                  }}
+                  draggable={false}
                 />
+              </div>
+            )}
+
+            {/* Zoom hint */}
+            {zoomLevel > 1 && (
+              <div className="absolute bottom-24 left-1/2 -translate-x-1/2 bg-black/60 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                <Move className="h-3 w-3" />
+                Trage pentru a mișca
               </div>
             )}
 
