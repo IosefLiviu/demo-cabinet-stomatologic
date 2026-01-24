@@ -132,11 +132,25 @@ function DrawingPreview({ points }: { points: [number, number, number][] }) {
   );
 }
 
-// Helper to transform point for upper teeth (rotate by PI around X axis)
-function transformPointForUpper(point: [number, number, number], isUpper: boolean): [number, number, number] {
-  if (!isUpper) return point;
-  // When the group is rotated by PI around X, we need to inverse the Y and Z coordinates
-  return [point[0], -point[1], -point[2]];
+// Convert world point to local coordinates within the group
+function worldToLocal(
+  worldPoint: THREE.Vector3, 
+  groupRef: React.RefObject<THREE.Group>,
+  scale: number
+): [number, number, number] {
+  if (!groupRef.current) {
+    return [worldPoint.x, worldPoint.y, worldPoint.z];
+  }
+  
+  // Create inverse matrix of the group's world transform
+  const inverseMatrix = new THREE.Matrix4();
+  inverseMatrix.copy(groupRef.current.matrixWorld).invert();
+  
+  // Transform world point to local space
+  const localPoint = worldPoint.clone().applyMatrix4(inverseMatrix);
+  
+  // Apply scale back (since we divide by scale when rendering)
+  return [localPoint.x * scale, localPoint.y * scale, localPoint.z * scale];
 }
 
 // Interactive 3D Tooth Mesh using loaded GLTF model
@@ -176,7 +190,6 @@ function ToothMesh({
   const toothType = getToothType(toothNumber);
   const deciduous = isDeciduous(toothNumber);
   const lower = isLowerTooth(toothNumber);
-  const isUpper = !lower;
   
   // Load the 3D model
   const { scene } = useGLTF(MODEL_PATHS[toothType]);
@@ -230,29 +243,29 @@ function ToothMesh({
   const handlePointerDown = useCallback((event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
     const point = event.point;
-    // Transform point to account for group rotation on upper teeth
-    const transformedPoint = transformPointForUpper([point.x, point.y, point.z], isUpper);
+    // Convert world point to local coordinates within the group
+    const localPoint = worldToLocal(point, meshRef, deciduous ? 0.35 : 0.4);
     
     if (drawMode === 'line') {
       // Disable orbit controls while drawing
       if (orbitControlsRef.current) {
         orbitControlsRef.current.enabled = false;
       }
-      onDrawStart(transformedPoint);
+      onDrawStart(localPoint);
     } else {
-      onPointClick(transformedPoint);
+      onPointClick(localPoint);
     }
-  }, [drawMode, onPointClick, onDrawStart, orbitControlsRef, isUpper]);
+  }, [drawMode, onPointClick, onDrawStart, orbitControlsRef, deciduous]);
 
   // Handle pointer move - continue drawing
   const handlePointerMove = useCallback((event: ThreeEvent<PointerEvent>) => {
     if (isDrawing && drawMode === 'line') {
       const point = event.point;
-      // Transform point to account for group rotation on upper teeth
-      const transformedPoint = transformPointForUpper([point.x, point.y, point.z], isUpper);
-      onDrawMove(transformedPoint);
+      // Convert world point to local coordinates within the group
+      const localPoint = worldToLocal(point, meshRef, deciduous ? 0.35 : 0.4);
+      onDrawMove(localPoint);
     }
-  }, [isDrawing, drawMode, onDrawMove, isUpper]);
+  }, [isDrawing, drawMode, onDrawMove, deciduous]);
 
   // Handle pointer up - finish drawing
   const handlePointerUp = useCallback(() => {
