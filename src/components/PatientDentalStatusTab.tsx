@@ -278,6 +278,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             'transition-all duration-300 ease-out',
             'bg-muted/30',
             'cursor-pointer p-1',
+            'hover:bg-muted/50',
             isHovered && 'ring-2 ring-offset-1 ring-primary z-10',
             hasStatus && !isMissing && 'ring-2',
             // Adjusted sizes for proper image framing
@@ -287,13 +288,16 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
           )}
           style={{
             transform: isHovered 
-              ? 'scale(1.1)'
-              : 'scale(1)',
-            boxShadow: hasStatus && hexColor 
-              ? `0 0 0 2px ${hexColor}`
-              : isHovered 
-                ? '0 4px 12px rgba(0,0,0,0.15)' 
+              ? 'scale(1.15) translateY(-4px)'
+              : 'scale(1) translateY(0)',
+            boxShadow: isHovered 
+              ? hasStatus && hexColor 
+                ? `0 0 0 2px ${hexColor}, 0 8px 20px -4px ${hexColor}60, 0 4px 12px rgba(0,0,0,0.15)`
+                : '0 8px 20px -4px rgba(34,197,94,0.3), 0 4px 12px rgba(0,0,0,0.15)'
+              : hasStatus && hexColor 
+                ? `0 0 0 2px ${hexColor}`
                 : 'none',
+            transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease-out',
           }}
         >
           {/* Tooth image - properly framed */}
@@ -303,32 +307,52 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
               alt={`Dinte ${toothNumber}`}
               className={cn(
                 "w-full h-full object-contain",
-                "transition-all duration-200",
+                "transition-all duration-300",
                 isMissing && 'opacity-20 grayscale',
                 isLower && 'rotate-180',
               )}
               style={{
                 maxWidth: '100%',
                 maxHeight: '100%',
+                filter: isHovered && !isMissing 
+                  ? 'brightness(1.1) drop-shadow(0 2px 4px rgba(0,0,0,0.2))' 
+                  : undefined,
               }}
             />
           ) : (
             <div className={cn(
               "w-full h-full flex items-center justify-center",
               "bg-gradient-to-b from-muted/40 to-muted/20 border-2 rounded-lg",
-              isDeciduous && 'border-dashed'
+              "transition-all duration-300",
+              isDeciduous && 'border-dashed',
+              isHovered && 'from-muted/60 to-muted/40'
             )}>
-              <span className="text-xs font-medium text-muted-foreground">
+              <span className={cn(
+                "text-xs font-medium text-muted-foreground transition-colors duration-300",
+                isHovered && 'text-foreground'
+              )}>
                 {toothNumber}
               </span>
             </div>
           )}
           
-          {/* Status overlay */}
+          {/* Status overlay with hover glow */}
           {hasStatus && hexColor && !isMissing && (
             <div 
-              className="absolute inset-0 pointer-events-none rounded-lg"
-              style={{ backgroundColor: `${hexColor}30` }}
+              className="absolute inset-0 pointer-events-none rounded-lg transition-all duration-300"
+              style={{ 
+                backgroundColor: isHovered ? `${hexColor}50` : `${hexColor}30`,
+              }}
+            />
+          )}
+
+          {/* Shine effect on hover */}
+          {isHovered && (
+            <div 
+              className="absolute inset-0 pointer-events-none rounded-lg overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 50%, transparent 100%)',
+              }}
             />
           )}
         </button>
