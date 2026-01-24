@@ -116,12 +116,12 @@ function ToothMesh({
     });
   }, [hovered, clonedScene]);
   
-  // Gentle rotation animation
-  useFrame((state) => {
-    if (meshRef.current && !hovered) {
-      meshRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.15;
-    }
-  });
+  // Center the model by computing bounding box
+  useMemo(() => {
+    const box = new THREE.Box3().setFromObject(clonedScene);
+    const center = box.getCenter(new THREE.Vector3());
+    clonedScene.position.sub(center);
+  }, [clonedScene]);
 
   // Handle click on tooth to add diagnostic point
   const handleClick = useCallback((event: ThreeEvent<MouseEvent>) => {
