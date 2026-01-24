@@ -66,7 +66,7 @@ export function Tooth3DDialog({
   getStatusDisplayName,
 }: Tooth3DDialogProps) {
   const [status, setStatus] = useState(currentStatus);
-  const [notes, setNotes] = useState(currentNotes);
+  const [notes, setNotes] = useState('');
   const [diagnosticPoints, setDiagnosticPoints] = useState<DiagnosticPoint[]>([]);
   const [diagnosticLines, setDiagnosticLines] = useState<DiagnosticLine[]>([]);
   const [saving, setSaving] = useState(false);
@@ -75,11 +75,62 @@ export function Tooth3DDialog({
   const [historyExpanded, setHistoryExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('3d');
 
+  // Helper to extract balanced JSON array from string
+  const extractBalancedJson = (str: string, startIndex: number): string | null => {
+    if (str[startIndex] !== '[') return null;
+    
+    let depth = 0;
+    let endIndex = startIndex;
+    
+    for (let i = startIndex; i < str.length; i++) {
+      if (str[i] === '[') depth++;
+      else if (str[i] === ']') depth--;
+      
+      if (depth === 0) {
+        endIndex = i;
+        break;
+      }
+    }
+    
+    if (depth !== 0) return null;
+    return str.slice(startIndex, endIndex + 1);
+  };
+
+  // Helper to get clean notes without diagnostic data
+  const getCleanNotes = (rawNotes: string | null): string => {
+    if (!rawNotes) return '';
+    
+    let result = rawNotes;
+    
+    // Remove DIAGNOSTICS tag with balanced JSON
+    const pointsStartIndex = result.indexOf('[DIAGNOSTICS:');
+    if (pointsStartIndex !== -1) {
+      const jsonStart = pointsStartIndex + '[DIAGNOSTICS:'.length;
+      const jsonContent = extractBalancedJson(result, jsonStart);
+      if (jsonContent) {
+        result = result.replace(`[DIAGNOSTICS:${jsonContent}]`, '');
+      }
+    }
+    
+    // Remove DIAGLINES tag with balanced JSON
+    const linesStartIndex = result.indexOf('[DIAGLINES:');
+    if (linesStartIndex !== -1) {
+      const jsonStart = linesStartIndex + '[DIAGLINES:'.length;
+      const jsonContent = extractBalancedJson(result, jsonStart);
+      if (jsonContent) {
+        result = result.replace(`[DIAGLINES:${jsonContent}]`, '');
+      }
+    }
+    
+    return result.replace(/^\n+|\n+$/g, '').trim();
+  };
+
   // Reset state when dialog opens with new tooth
   useEffect(() => {
     if (open) {
       setStatus(currentStatus);
-      setNotes(currentNotes);
+      // Clean notes before displaying (remove diagnostic JSON data)
+      setNotes(getCleanNotes(currentNotes));
       setDiagnosticPoints([]);
       setDiagnosticLines([]);
       setHistoryExpanded(false);
@@ -177,26 +228,6 @@ export function Tooth3DDialog({
     }
   };
 
-  // Helper to extract balanced JSON array from string
-  const extractBalancedJson = (str: string, startIndex: number): string | null => {
-    if (str[startIndex] !== '[') return null;
-    
-    let depth = 0;
-    let endIndex = startIndex;
-    
-    for (let i = startIndex; i < str.length; i++) {
-      if (str[i] === '[') depth++;
-      else if (str[i] === ']') depth--;
-      
-      if (depth === 0) {
-        endIndex = i;
-        break;
-      }
-    }
-    
-    if (depth !== 0) return null;
-    return str.slice(startIndex, endIndex + 1);
-  };
 
   const handleAddDiagnostic = (position: [number, number, number], label: string) => {
     const newPoint: DiagnosticPoint = {
