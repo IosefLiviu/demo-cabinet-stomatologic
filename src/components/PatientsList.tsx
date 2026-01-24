@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import {
@@ -13,6 +13,8 @@ import {
   Calendar,
   FileText,
   Upload,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,6 +52,8 @@ interface PatientsListProps {
   onRefetch?: () => void;
 }
 
+const PATIENTS_PER_PAGE = 10;
+
 export function PatientsList({
   patients,
   loading,
@@ -61,16 +65,32 @@ export function PatientsList({
 }: PatientsListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const filteredPatients = searchQuery
-    ? patients.filter(
-        (p) =>
-          p.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.phone.includes(searchQuery) ||
-          (p.email && p.email.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
-    : patients;
+  const filteredPatients = useMemo(() => {
+    return searchQuery
+      ? patients.filter(
+          (p) =>
+            p.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            p.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            p.phone.includes(searchQuery) ||
+            (p.email && p.email.toLowerCase().includes(searchQuery.toLowerCase()))
+        )
+      : patients;
+  }, [patients, searchQuery]);
+
+  const totalPages = Math.ceil(filteredPatients.length / PATIENTS_PER_PAGE);
+  
+  const paginatedPatients = useMemo(() => {
+    const startIndex = (currentPage - 1) * PATIENTS_PER_PAGE;
+    return filteredPatients.slice(startIndex, startIndex + PATIENTS_PER_PAGE);
+  }, [filteredPatients, currentPage]);
+
+  // Reset to page 1 when search changes
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  };
 
   const calculateAge = (dateOfBirth?: string) => {
     if (!dateOfBirth) return null;
@@ -101,7 +121,7 @@ export function PatientsList({
           <Input
             placeholder="Caută pacient (nume, telefon, email)..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-10"
           />
         </div>
@@ -140,7 +160,7 @@ export function PatientsList({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredPatients.length === 0 ? (
+            {paginatedPatients.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   {searchQuery
@@ -149,7 +169,7 @@ export function PatientsList({
                 </TableCell>
               </TableRow>
             ) : (
-              filteredPatients.map((patient) => (
+              paginatedPatients.map((patient) => (
                 <TableRow
                   key={patient.id}
                   className="cursor-pointer hover:bg-muted/50"
@@ -267,9 +287,66 @@ export function PatientsList({
         </Table>
       </div>
 
-      <div className="text-sm text-muted-foreground">
-        {filteredPatients.length} pacient{filteredPatients.length !== 1 ? 'i' : ''} 
-        {searchQuery && ` găsiți din ${patients.length} total`}
+      {/* Pagination */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="text-sm text-muted-foreground">
+          {filteredPatients.length} pacient{filteredPatients.length !== 1 ? 'i' : ''} 
+          {searchQuery && ` găsiți din ${patients.length} total`}
+          {totalPages > 1 && ` • Pagina ${currentPage} din ${totalPages}`}
+        </div>
+        
+        {totalPages > 1 && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="gap-1"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Anterior
+            </Button>
+            
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum: number;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+                
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? "default" : "outline"}
+                    size="sm"
+                    className="w-8 h-8 p-0"
+                    onClick={() => setCurrentPage(pageNum)}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="gap-1"
+            >
+              Următor
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
