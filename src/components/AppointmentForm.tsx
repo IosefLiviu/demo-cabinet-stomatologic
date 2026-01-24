@@ -93,6 +93,7 @@ interface AppointmentFormProps {
   onClose: () => void;
   onSubmit: (data: AppointmentFormData) => void;
   onDelete?: () => void;
+  onViewPatient?: (patient: Patient) => void;
   selectedDate: Date;
   selectedTime?: string;
   selectedCabinet?: number;
@@ -131,6 +132,7 @@ export function AppointmentForm({
   onClose,
   onSubmit,
   onDelete,
+  onViewPatient,
   selectedDate,
   selectedTime,
   selectedCabinet,
@@ -620,6 +622,23 @@ export function AppointmentForm({
                       <div className="text-xs text-muted-foreground">{formData.patientPhone}</div>
                     )}
                   </div>
+                  {formData.patientId && onViewPatient && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="text-xs sm:text-sm gap-1"
+                      onClick={() => {
+                        const patient = patients.find(p => p.id === formData.patientId);
+                        if (patient) {
+                          onViewPatient(patient);
+                        }
+                      }}
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      Fișă
+                    </Button>
+                  )}
                   <Button
                     type="button"
                     variant="ghost"
