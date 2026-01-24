@@ -1,6 +1,6 @@
 import { useRef, useState, Suspense, useCallback, useMemo } from 'react';
 import { Canvas, useFrame, ThreeEvent } from '@react-three/fiber';
-import { OrbitControls, Environment, Html, ContactShadows } from '@react-three/drei';
+import { OrbitControls, Environment, Html, ContactShadows, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { cn } from '@/lib/utils';
 import { Loader2, Plus } from 'lucide-react';
@@ -22,6 +22,18 @@ interface Tooth3DViewerProps {
   onRemoveDiagnostic: (id: string) => void;
 }
 
+// Model paths - currently only molar is available from Sketchfab
+const MODEL_PATHS = {
+  molar: '/models/molar/scene.gltf',
+  // Other types will use the molar model for now until more are uploaded
+  premolar: '/models/molar/scene.gltf',
+  canine: '/models/molar/scene.gltf',
+  incisor: '/models/molar/scene.gltf',
+};
+
+// Preload molar model
+useGLTF.preload(MODEL_PATHS.molar);
+
 // Determine tooth type based on FDI notation
 function getToothType(toothNumber: number): 'molar' | 'premolar' | 'canine' | 'incisor' {
   const lastDigit = toothNumber % 10;
@@ -40,167 +52,7 @@ function isLowerTooth(toothNumber: number): boolean {
   return firstDigit === 3 || firstDigit === 4 || firstDigit === 7 || firstDigit === 8;
 }
 
-// Create realistic anatomical tooth geometry using multiple shapes
-function createAnatomicalTooth(toothType: 'molar' | 'premolar' | 'canine' | 'incisor'): THREE.Group {
-  const group = new THREE.Group();
-  
-  // Tooth colors
-  const enamelColor = '#f5f3ed';
-  const dentinColor = '#e8dcc8';
-  const rootColor = '#d4c4a8';
-  
-  const enamelMaterial = new THREE.MeshPhysicalMaterial({
-    color: enamelColor,
-    roughness: 0.12,
-    metalness: 0.02,
-    clearcoat: 0.8,
-    clearcoatRoughness: 0.15,
-  });
-  
-  const rootMaterial = new THREE.MeshStandardMaterial({
-    color: rootColor,
-    roughness: 0.5,
-    metalness: 0,
-  });
-
-  if (toothType === 'molar') {
-    // Crown - wide, flat top with cusps
-    const crownGeom = new THREE.CylinderGeometry(0.45, 0.42, 0.5, 32);
-    const crown = new THREE.Mesh(crownGeom, enamelMaterial);
-    crown.position.y = 0.25;
-    group.add(crown);
-    
-    // Add 4 cusps
-    const cuspPositions = [
-      [-0.18, 0.55, -0.18],
-      [0.18, 0.55, -0.18],
-      [-0.18, 0.55, 0.18],
-      [0.18, 0.55, 0.18],
-    ];
-    cuspPositions.forEach(pos => {
-      const cuspGeom = new THREE.SphereGeometry(0.15, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-      const cusp = new THREE.Mesh(cuspGeom, enamelMaterial);
-      cusp.position.set(pos[0], pos[1], pos[2]);
-      group.add(cusp);
-    });
-    
-    // Central fissure
-    const fissureGeom = new THREE.TorusGeometry(0.12, 0.025, 8, 16);
-    const fissureMat = new THREE.MeshStandardMaterial({ color: '#c4b496', roughness: 0.8 });
-    const fissure = new THREE.Mesh(fissureGeom, fissureMat);
-    fissure.position.y = 0.52;
-    fissure.rotation.x = Math.PI / 2;
-    group.add(fissure);
-    
-    // Neck (CEJ)
-    const neckGeom = new THREE.CylinderGeometry(0.35, 0.25, 0.15, 24);
-    const neck = new THREE.Mesh(neckGeom, enamelMaterial);
-    neck.position.y = -0.05;
-    group.add(neck);
-    
-    // 3 Roots
-    const rootGeom = new THREE.ConeGeometry(0.1, 0.6, 12);
-    const root1 = new THREE.Mesh(rootGeom, rootMaterial);
-    root1.position.set(-0.15, -0.45, 0.08);
-    root1.rotation.z = 0.1;
-    group.add(root1);
-    
-    const root2 = new THREE.Mesh(rootGeom.clone(), rootMaterial);
-    root2.position.set(0.15, -0.45, 0.08);
-    root2.rotation.z = -0.1;
-    group.add(root2);
-    
-    const root3 = new THREE.Mesh(rootGeom.clone(), rootMaterial);
-    root3.position.set(0, -0.45, -0.12);
-    group.add(root3);
-    
-  } else if (toothType === 'premolar') {
-    // Crown - oval shape with 2 cusps
-    const crownGeom = new THREE.CylinderGeometry(0.32, 0.3, 0.5, 24);
-    const crown = new THREE.Mesh(crownGeom, enamelMaterial);
-    crown.position.y = 0.25;
-    group.add(crown);
-    
-    // 2 cusps
-    const cusp1Geom = new THREE.SphereGeometry(0.14, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-    const cusp1 = new THREE.Mesh(cusp1Geom, enamelMaterial);
-    cusp1.position.set(-0.1, 0.52, 0);
-    group.add(cusp1);
-    
-    const cusp2Geom = new THREE.SphereGeometry(0.12, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-    const cusp2 = new THREE.Mesh(cusp2Geom, enamelMaterial);
-    cusp2.position.set(0.1, 0.5, 0);
-    group.add(cusp2);
-    
-    // Neck
-    const neckGeom = new THREE.CylinderGeometry(0.25, 0.18, 0.12, 20);
-    const neck = new THREE.Mesh(neckGeom, enamelMaterial);
-    neck.position.y = -0.03;
-    group.add(neck);
-    
-    // Single root
-    const rootGeom = new THREE.ConeGeometry(0.1, 0.7, 12);
-    const root = new THREE.Mesh(rootGeom, rootMaterial);
-    root.position.y = -0.45;
-    group.add(root);
-    
-  } else if (toothType === 'canine') {
-    // Crown - pointed, conical
-    const crownGeom = new THREE.ConeGeometry(0.28, 0.65, 24);
-    const crown = new THREE.Mesh(crownGeom, enamelMaterial);
-    crown.position.y = 0.35;
-    group.add(crown);
-    
-    // Base of crown
-    const baseGeom = new THREE.CylinderGeometry(0.28, 0.22, 0.2, 20);
-    const base = new THREE.Mesh(baseGeom, enamelMaterial);
-    base.position.y = 0;
-    group.add(base);
-    
-    // Neck
-    const neckGeom = new THREE.CylinderGeometry(0.2, 0.12, 0.1, 16);
-    const neck = new THREE.Mesh(neckGeom, enamelMaterial);
-    neck.position.y = -0.12;
-    group.add(neck);
-    
-    // Long single root
-    const rootGeom = new THREE.ConeGeometry(0.08, 0.85, 12);
-    const root = new THREE.Mesh(rootGeom, rootMaterial);
-    root.position.y = -0.55;
-    group.add(root);
-    
-  } else {
-    // Incisor - flat, shovel-shaped
-    const crownGeom = new THREE.BoxGeometry(0.35, 0.55, 0.15);
-    crownGeom.translate(0, 0.28, 0);
-    // Round the edges
-    const crown = new THREE.Mesh(crownGeom, enamelMaterial);
-    group.add(crown);
-    
-    // Incisal edge - slightly rounded
-    const edgeGeom = new THREE.CylinderGeometry(0.08, 0.08, 0.35, 16);
-    edgeGeom.rotateZ(Math.PI / 2);
-    const edge = new THREE.Mesh(edgeGeom, enamelMaterial);
-    edge.position.y = 0.55;
-    group.add(edge);
-    
-    // Neck
-    const neckGeom = new THREE.CylinderGeometry(0.15, 0.1, 0.1, 16);
-    const neck = new THREE.Mesh(neckGeom, enamelMaterial);
-    neck.position.y = -0.03;
-    group.add(neck);
-    
-    // Root
-    const rootGeom = new THREE.ConeGeometry(0.07, 0.65, 12);
-    const root = new THREE.Mesh(rootGeom, rootMaterial);
-    root.position.y = -0.4;
-    group.add(root);
-  }
-  
-  return group;
-}
-
-// Interactive 3D Tooth Mesh
+// Interactive 3D Tooth Mesh using loaded GLTF model
 function ToothMesh({ 
   toothNumber, 
   statusColor,
@@ -220,31 +72,47 @@ function ToothMesh({
   const deciduous = isDeciduous(toothNumber);
   const lower = isLowerTooth(toothNumber);
   
-  // Create the anatomical tooth
-  const toothGroup = useMemo(() => {
-    const tooth = createAnatomicalTooth(toothType);
+  // Load the 3D model
+  const { scene } = useGLTF(MODEL_PATHS[toothType]);
+  
+  // Clone the scene to avoid sharing issues
+  const clonedScene = useMemo(() => {
+    const clone = scene.clone(true);
     
-    // Apply status color if present
-    if (statusColor) {
-      tooth.traverse((child) => {
-        if (child instanceof THREE.Mesh && child.material) {
-          if (child.material instanceof THREE.MeshPhysicalMaterial) {
-            child.material = new THREE.MeshPhysicalMaterial({
-              color: statusColor,
-              roughness: 0.12,
-              metalness: 0.02,
-              clearcoat: 0.8,
-              clearcoatRoughness: 0.15,
-              transparent: true,
-              opacity: 0.9,
-            });
-          }
+    // Apply custom material if status color is provided
+    clone.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        // Clone the material to avoid affecting other instances
+        if (child.material) {
+          const originalMaterial = child.material as THREE.MeshStandardMaterial;
+          const newMaterial = new THREE.MeshPhysicalMaterial({
+            color: statusColor || originalMaterial.color || '#f8f6f0',
+            roughness: 0.2,
+            metalness: 0.02,
+            clearcoat: 0.5,
+            clearcoatRoughness: 0.2,
+            map: originalMaterial.map,
+            normalMap: originalMaterial.normalMap,
+          });
+          child.material = newMaterial;
+          child.castShadow = true;
+          child.receiveShadow = true;
         }
-      });
-    }
+      }
+    });
     
-    return tooth;
-  }, [toothType, statusColor]);
+    return clone;
+  }, [scene, statusColor]);
+  
+  // Update emissive on hover
+  useMemo(() => {
+    clonedScene.traverse((child) => {
+      if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshPhysicalMaterial) {
+        child.material.emissive = new THREE.Color(hovered ? '#ffffff' : '#000000');
+        child.material.emissiveIntensity = hovered ? 0.1 : 0;
+      }
+    });
+  }, [hovered, clonedScene]);
   
   // Gentle rotation animation
   useFrame((state) => {
@@ -260,40 +128,33 @@ function ToothMesh({
     onPointClick([point.x, point.y, point.z]);
   }, [onPointClick]);
 
-  const scale = deciduous ? 0.8 : 1;
-
-  // Update materials on hover
-  useMemo(() => {
-    toothGroup.traverse((child) => {
-      if (child instanceof THREE.Mesh && child.material) {
-        if (child.material instanceof THREE.MeshPhysicalMaterial) {
-          child.material.emissive = new THREE.Color(hovered ? '#ffffff' : '#000000');
-          child.material.emissiveIntensity = hovered ? 0.15 : 0;
-        }
-      }
-    });
-  }, [hovered, toothGroup]);
+  // Scale and positioning - the model needs to be centered and scaled
+  const scale = deciduous ? 0.35 : 0.4;
 
   return (
     <group 
       ref={meshRef} 
-      rotation={[lower ? Math.PI : 0, 0, 0]} 
+      rotation={[lower ? 0 : Math.PI, 0, 0]}
+      position={[0, 0, 0]}
       scale={scale}
-      onClick={handleClick}
-      onPointerOver={() => setHovered(true)}
-      onPointerOut={() => setHovered(false)}
     >
-      <primitive object={toothGroup} />
+      {/* Main tooth model */}
+      <primitive 
+        object={clonedScene}
+        onClick={handleClick}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+      />
 
       {/* Diagnostic Points Markers */}
       {diagnosticPoints.map((point) => (
-        <group key={point.id} position={point.position}>
+        <group key={point.id} position={point.position.map(p => p / scale) as [number, number, number]}>
           <mesh>
-            <sphereGeometry args={[0.06, 16, 16]} />
+            <sphereGeometry args={[0.15, 16, 16]} />
             <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={0.5} />
           </mesh>
           <Html
-            position={[0.12, 0.12, 0]}
+            position={[0.25, 0.25, 0]}
             className="pointer-events-none"
             style={{ transform: 'translate(-50%, -100%)' }}
           >
@@ -306,8 +167,8 @@ function ToothMesh({
 
       {/* Selected point indicator */}
       {selectedPoint && (
-        <mesh position={selectedPoint}>
-          <sphereGeometry args={[0.08, 16, 16]} />
+        <mesh position={selectedPoint.map(p => p / scale) as [number, number, number]}>
+          <sphereGeometry args={[0.2, 16, 16]} />
           <meshStandardMaterial color="#22c55e" emissive="#22c55e" emissiveIntensity={0.8} transparent opacity={0.8} />
         </mesh>
       )}
@@ -321,7 +182,7 @@ function LoadingFallback() {
     <Html center>
       <div className="flex items-center gap-2 text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin" />
-        <span>Se încarcă...</span>
+        <span>Se încarcă modelul 3D...</span>
       </div>
     </Html>
   );
@@ -363,26 +224,26 @@ export function Tooth3DViewer({
     <div className="relative w-full h-full min-h-[300px]">
       {/* 3D Canvas */}
       <Canvas
-        camera={{ position: [0, 0, 2.5], fov: 50 }}
+        camera={{ position: [0, 0, 4], fov: 45 }}
         className="rounded-lg bg-gradient-to-b from-slate-900 to-slate-800"
       >
         <Suspense fallback={<LoadingFallback />}>
           {/* Lighting */}
-          <ambientLight intensity={0.5} />
-          <directionalLight position={[5, 5, 5]} intensity={1} castShadow />
-          <directionalLight position={[-5, 3, -5]} intensity={0.5} />
-          <pointLight position={[0, 2, 2]} intensity={0.5} color="#fff5e6" />
+          <ambientLight intensity={0.6} />
+          <directionalLight position={[5, 5, 5]} intensity={1.2} castShadow />
+          <directionalLight position={[-5, 3, -5]} intensity={0.6} />
+          <pointLight position={[0, 3, 3]} intensity={0.5} color="#fff5e6" />
           
           {/* Environment for realistic reflections */}
           <Environment preset="studio" />
           
           {/* Contact shadow for grounding */}
           <ContactShadows 
-            position={[0, -1, 0]} 
+            position={[0, -1.5, 0]} 
             opacity={0.4} 
-            scale={2} 
+            scale={4} 
             blur={2} 
-            far={1.5} 
+            far={2} 
           />
           
           {/* The 3D Tooth */}
@@ -397,10 +258,10 @@ export function Tooth3DViewer({
           {/* Controls */}
           <OrbitControls 
             enablePan={false}
-            minDistance={1.5}
-            maxDistance={5}
-            minPolarAngle={Math.PI * 0.15}
-            maxPolarAngle={Math.PI * 0.85}
+            minDistance={2}
+            maxDistance={8}
+            minPolarAngle={Math.PI * 0.1}
+            maxPolarAngle={Math.PI * 0.9}
           />
         </Suspense>
       </Canvas>
@@ -417,6 +278,13 @@ export function Tooth3DViewer({
           statusColor ? 'text-white' : 'text-foreground bg-muted'
         )} style={statusColor ? { backgroundColor: statusColor } : undefined}>
           {status}
+        </div>
+      </div>
+
+      {/* Attribution - CC-BY required */}
+      <div className="absolute bottom-auto top-12 right-3">
+        <div className="bg-background/60 backdrop-blur-sm rounded px-2 py-1 text-[9px] text-muted-foreground/60 max-w-[120px] leading-tight">
+          Model: University of Dundee, School of Dentistry (CC-BY-4.0)
         </div>
       </div>
 
