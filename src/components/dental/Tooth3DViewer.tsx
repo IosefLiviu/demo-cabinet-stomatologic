@@ -301,7 +301,7 @@ function ToothMesh({
       {diagnosticPoints.map((point) => (
         <group key={point.id} position={point.position.map(p => p / scale) as [number, number, number]}>
           <mesh>
-            <sphereGeometry args={[0.15, 16, 16]} />
+            <sphereGeometry args={[0.05, 12, 12]} />
             <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={0.5} />
           </mesh>
           <Html
@@ -319,7 +319,7 @@ function ToothMesh({
       {/* Selected point indicator */}
       {selectedPoint && (
         <mesh position={selectedPoint.map(p => p / scale) as [number, number, number]}>
-          <sphereGeometry args={[0.2, 16, 16]} />
+          <sphereGeometry args={[0.06, 12, 12]} />
           <meshStandardMaterial color="#22c55e" emissive="#22c55e" emissiveIntensity={0.8} transparent opacity={0.8} />
         </mesh>
       )}
