@@ -9,6 +9,7 @@ import { TreatmentListDialog } from './TreatmentListDialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ToothStatus } from './DentalChart';
 import { useToothStatuses } from '@/hooks/useToothStatuses';
+import { getToothImage } from './dental/toothImages';
 import {
   Dialog,
   DialogContent,
@@ -364,45 +365,83 @@ export function InterventionSelector({
     );
   };
 
-  const renderToothButton = (toothNumber: number, interventionId: string, intervention: SelectedIntervention, isDeciduous: boolean = false) => {
+  const renderToothButton = (toothNumber: number, interventionId: string, intervention: SelectedIntervention, isDeciduous: boolean = false, isLower: boolean = false) => {
     const isSelected = intervention.selectedTeeth.includes(toothNumber);
     const toothDetails = getToothDetails(intervention, toothNumber);
     const isHovered = hoveredTooth?.interventionId === interventionId && hoveredTooth?.toothNumber === toothNumber;
     const status = toothDetails?.status || 'Sănătos';
+    const toothImage = getToothImage(toothNumber);
     
     const hexColor = getStatusHexColor(status);
-    const fallbackClass = getStatusColor(status);
     const healthyHexColor = getStatusHexColor('Sănătos');
-    const healthyFallbackClass = getStatusColor('Sănătos');
     
     return (
-      <div key={toothNumber} className="relative">
+      <div key={toothNumber} className="relative flex flex-col items-center">
+        {/* Tooth number - show above for upper teeth */}
+        {!isLower && (
+          <span className={cn(
+            "text-[10px] font-medium mb-0.5",
+            isSelected ? 'text-foreground' : 'text-muted-foreground'
+          )}>
+            {toothNumber}
+          </span>
+        )}
+        
         <button
           type="button"
           onClick={() => openToothDialog(interventionId, toothNumber)}
           onMouseEnter={() => setHoveredTooth({ interventionId, toothNumber })}
           onMouseLeave={() => setHoveredTooth(null)}
           className={cn(
-            'flex items-center justify-center font-medium transition-all hover:scale-110 cursor-pointer',
-            !hexColor && (isSelected ? fallbackClass : healthyFallbackClass),
-            !healthyHexColor && !isSelected && healthyFallbackClass,
-            isHovered && 'ring-2 ring-primary ring-offset-2',
+            'relative flex items-center justify-center transition-all rounded-md overflow-hidden',
+            'hover:scale-105 cursor-pointer',
+            isHovered && 'ring-2 ring-offset-1 ring-primary',
+            isSelected && 'ring-2',
             isDeciduous 
-              ? 'w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 text-xs border-dashed' 
-              : 'w-8 h-10 sm:w-10 sm:h-12 rounded-lg border-2 text-xs'
+              ? 'w-7 h-9 sm:w-8 sm:h-10' 
+              : 'w-8 h-11 sm:w-9 sm:h-13'
           )}
           style={isSelected && hexColor ? {
-            backgroundColor: `${hexColor}20`,
-            borderColor: hexColor,
-            color: hexColor,
-          } : (!isSelected && healthyHexColor ? {
-            backgroundColor: `${healthyHexColor}20`,
-            borderColor: healthyHexColor,
-            color: healthyHexColor,
-          } : undefined)}
+            boxShadow: `0 0 0 2px ${hexColor}`,
+          } : undefined}
         >
-          {toothNumber}
+          {/* Tooth image */}
+          {toothImage ? (
+            <img 
+              src={toothImage} 
+              alt={`Dinte ${toothNumber}`}
+              className={cn(
+                "w-full h-full object-contain",
+                isLower && 'rotate-180'
+              )}
+            />
+          ) : (
+            <div className={cn(
+              "w-full h-full flex items-center justify-center bg-muted/20 border rounded text-xs",
+              isDeciduous && 'rounded-full border-dashed'
+            )}>
+              {toothNumber}
+            </div>
+          )}
+          
+          {/* Status overlay when selected */}
+          {isSelected && hexColor && (
+            <div 
+              className="absolute inset-0 rounded-md"
+              style={{ backgroundColor: `${hexColor}40` }}
+            />
+          )}
         </button>
+        
+        {/* Tooth number - show below for lower teeth */}
+        {isLower && (
+          <span className={cn(
+            "text-[10px] font-medium mt-0.5",
+            isSelected ? 'text-foreground' : 'text-muted-foreground'
+          )}>
+            {toothNumber}
+          </span>
+        )}
         
         {/* Tooltip */}
         {isHovered && (
@@ -649,8 +688,8 @@ export function InterventionSelector({
                             <div className="text-xs text-muted-foreground text-center mb-2">
                               Maxilar superior (dinți permanenți)
                             </div>
-                            <div className="flex justify-center gap-1">
-                              {upperTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention, false))}
+                            <div className="flex justify-center gap-0.5">
+                              {upperTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention, false, false))}
                             </div>
                           </div>
 
@@ -659,8 +698,8 @@ export function InterventionSelector({
                             <div className="text-xs text-muted-foreground text-center mb-2">
                               Dinți temporari (de lapte) - superior
                             </div>
-                            <div className="flex justify-center gap-1">
-                              {upperDeciduousTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention, true))}
+                            <div className="flex justify-center gap-0.5">
+                              {upperDeciduousTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention, true, false))}
                             </div>
                           </div>
 
@@ -671,8 +710,8 @@ export function InterventionSelector({
 
                           {/* Lower jaw - deciduous teeth */}
                           <div className="space-y-1">
-                            <div className="flex justify-center gap-1">
-                              {lowerDeciduousTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention, true))}
+                            <div className="flex justify-center gap-0.5">
+                              {lowerDeciduousTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention, true, true))}
                             </div>
                             <div className="text-xs text-muted-foreground text-center mt-2">
                               Dinți temporari (de lapte) - inferior
@@ -681,8 +720,8 @@ export function InterventionSelector({
 
                           {/* Lower jaw - permanent teeth */}
                           <div className="space-y-1">
-                            <div className="flex justify-center gap-1">
-                              {lowerTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention, false))}
+                            <div className="flex justify-center gap-0.5">
+                              {lowerTeeth.map(tooth => renderToothButton(tooth, intervention.id, intervention, false, true))}
                             </div>
                             <div className="text-xs text-muted-foreground text-center mt-2">
                               Maxilar inferior (dinți permanenți)
