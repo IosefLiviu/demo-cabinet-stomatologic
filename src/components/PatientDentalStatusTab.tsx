@@ -404,6 +404,72 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
         </div>
       </div>
 
+      {/* History Section - visible below the chart */}
+      {Object.keys(allTeethHistory).length > 0 && (
+        <div className="mt-6 border rounded-lg bg-muted/20 p-4">
+          <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+            <History className="h-4 w-4" />
+            Istoric modificări status dentar
+          </h4>
+          <div className="space-y-2 max-h-[300px] overflow-y-auto">
+            {Object.entries(allTeethHistory)
+              .sort(([, a], [, b]) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime())
+              .map(([toothNum, entry]) => {
+                const oldColor = getStatusHexColor(getStatusDisplayName(entry.old_status || 'healthy'));
+                const newColor = getStatusHexColor(getStatusDisplayName(entry.new_status));
+                
+                return (
+                  <div 
+                    key={entry.id} 
+                    className="flex items-start gap-3 p-3 bg-background rounded-md border"
+                  >
+                    <div className="flex-shrink-0 w-10 h-10 rounded-md bg-muted flex items-center justify-center">
+                      <span className="text-sm font-bold">{toothNum}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {entry.old_status && (
+                          <>
+                            <Badge 
+                              variant="outline" 
+                              className="text-xs"
+                              style={{
+                                backgroundColor: oldColor ? `${oldColor}20` : undefined,
+                                borderColor: oldColor || undefined,
+                                color: oldColor || undefined,
+                              }}
+                            >
+                              {getStatusDisplayName(entry.old_status)}
+                            </Badge>
+                            <span className="text-muted-foreground">→</span>
+                          </>
+                        )}
+                        <Badge 
+                          variant="outline"
+                          className="text-xs"
+                          style={{
+                            backgroundColor: newColor ? `${newColor}20` : undefined,
+                            borderColor: newColor || undefined,
+                            color: newColor || undefined,
+                          }}
+                        >
+                          {getStatusDisplayName(entry.new_status)}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground ml-auto">
+                          {format(new Date(entry.changed_at), 'dd MMM yyyy, HH:mm', { locale: ro })}
+                        </span>
+                      </div>
+                      {entry.notes && (
+                        <p className="text-sm text-muted-foreground mt-1">{entry.notes}</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
+
       {/* Tooth Edit Dialog with History */}
       <Dialog open={!!toothDialog?.open} onOpenChange={() => setToothDialog(null)}>
         <DialogContent className="sm:max-w-[500px]">
