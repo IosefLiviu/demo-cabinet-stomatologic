@@ -408,7 +408,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
 
       {/* 3D Dental Chart Container */}
       <div 
-        className="relative rounded-2xl p-6 overflow-hidden"
+        className="relative rounded-2xl p-4 sm:p-6 lg:p-8 overflow-x-auto"
         style={{
           background: 'linear-gradient(180deg, hsl(var(--muted)/0.3) 0%, hsl(var(--muted)/0.1) 100%)',
           boxShadow: 'inset 0 2px 20px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1)',
@@ -428,7 +428,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase">
               Maxilar Superior — Dinți Permanenți
             </div>
-            <div className="flex justify-center gap-1">
+            <div className="flex justify-center gap-0.5 sm:gap-1 min-w-max px-2">
               {upperTeeth.map(tooth => renderTooth(tooth, false, false))}
             </div>
           </div>
@@ -438,7 +438,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase opacity-70">
               Dinți Temporari — Superior
             </div>
-            <div className="flex justify-center gap-1">
+            <div className="flex justify-center gap-0.5 sm:gap-1 min-w-max px-2">
               {upperDeciduousTeeth.map(tooth => renderTooth(tooth, true, false))}
             </div>
           </div>
@@ -453,9 +453,8 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             />
           </div>
 
-          {/* Lower jaw - deciduous teeth */}
           <div className="space-y-2">
-            <div className="flex justify-center gap-1">
+            <div className="flex justify-center gap-0.5 sm:gap-1 min-w-max px-2">
               {lowerDeciduousTeeth.map(tooth => renderTooth(tooth, true, true))}
             </div>
             <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase opacity-70">
@@ -465,7 +464,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
 
           {/* Lower jaw - permanent teeth */}
           <div className="space-y-2 mt-4">
-            <div className="flex justify-center gap-1">
+            <div className="flex justify-center gap-0.5 sm:gap-1 min-w-max px-2">
               {lowerTeeth.map(tooth => renderTooth(tooth, false, true))}
             </div>
             <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase">
