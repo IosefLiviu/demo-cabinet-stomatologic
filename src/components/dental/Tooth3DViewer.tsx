@@ -22,17 +22,19 @@ interface Tooth3DViewerProps {
   onRemoveDiagnostic: (id: string) => void;
 }
 
-// Model paths - currently only molar is available from Sketchfab
+// Model paths for each tooth type
 const MODEL_PATHS = {
   molar: '/models/molar/scene.gltf',
-  // Other types will use the molar model for now until more are uploaded
-  premolar: '/models/molar/scene.gltf',
-  canine: '/models/molar/scene.gltf',
-  incisor: '/models/molar/scene.gltf',
+  premolar: '/models/premolar/scene.gltf',
+  canine: '/models/canine/scene.gltf',
+  // Incisor will use canine model for now until uploaded
+  incisor: '/models/canine/scene.gltf',
 };
 
-// Preload molar model
+// Preload all models
 useGLTF.preload(MODEL_PATHS.molar);
+useGLTF.preload(MODEL_PATHS.premolar);
+useGLTF.preload(MODEL_PATHS.canine);
 
 // Determine tooth type based on FDI notation
 function getToothType(toothNumber: number): 'molar' | 'premolar' | 'canine' | 'incisor' {
