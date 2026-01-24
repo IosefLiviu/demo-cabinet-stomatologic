@@ -566,7 +566,8 @@ export function useAppointmentsDB() {
               console.error('Error updating dental status:', statusError);
             }
 
-            // Insert history entry (always record for completed appointments)
+            // Insert history entry with the appointment date (not current date)
+            const appointmentDateTime = new Date(`${completedAppointment.appointment_date}T${completedAppointment.start_time}`);
             const { error: historyError } = await supabase
               .from('dental_status_history')
               .insert({
@@ -575,7 +576,8 @@ export function useAppointmentsDB() {
                 old_status: oldDbStatus,
                 new_status: dbStatus,
                 notes: historyNote,
-                changed_by: null, // Could be enhanced to include doctor_id
+                changed_by: completedAppointment.doctor_id || null,
+                changed_at: appointmentDateTime.toISOString(),
               });
 
             if (historyError) {
