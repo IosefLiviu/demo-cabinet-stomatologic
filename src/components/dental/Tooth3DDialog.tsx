@@ -142,31 +142,60 @@ export function Tooth3DDialog({
         .single();
       
       if (data?.notes) {
-        // Parse diagnostic points
-        const pointsMatch = data.notes.match(/\[DIAGNOSTICS:(\[[\s\S]*?\])\]/);
-        if (pointsMatch) {
-          try {
-            const points = JSON.parse(pointsMatch[1]);
-            setDiagnosticPoints(points);
-          } catch (e) {
-            console.error('Error parsing diagnostic points:', e);
+        // Parse diagnostic points - find balanced JSON array
+        const pointsStartIndex = data.notes.indexOf('[DIAGNOSTICS:');
+        if (pointsStartIndex !== -1) {
+          const jsonStart = pointsStartIndex + '[DIAGNOSTICS:'.length;
+          const jsonContent = extractBalancedJson(data.notes, jsonStart);
+          if (jsonContent) {
+            try {
+              const points = JSON.parse(jsonContent);
+              setDiagnosticPoints(points);
+            } catch (e) {
+              console.error('Error parsing diagnostic points:', e);
+            }
           }
         }
         
-        // Parse diagnostic lines
-        const linesMatch = data.notes.match(/\[DIAGLINES:(\[[\s\S]*?\])\]/);
-        if (linesMatch) {
-          try {
-            const lines = JSON.parse(linesMatch[1]);
-            setDiagnosticLines(lines);
-          } catch (e) {
-            console.error('Error parsing diagnostic lines:', e);
+        // Parse diagnostic lines - find balanced JSON array
+        const linesStartIndex = data.notes.indexOf('[DIAGLINES:');
+        if (linesStartIndex !== -1) {
+          const jsonStart = linesStartIndex + '[DIAGLINES:'.length;
+          const jsonContent = extractBalancedJson(data.notes, jsonStart);
+          if (jsonContent) {
+            try {
+              const lines = JSON.parse(jsonContent);
+              setDiagnosticLines(lines);
+            } catch (e) {
+              console.error('Error parsing diagnostic lines:', e);
+            }
           }
         }
       }
     } catch (error) {
       // Tooth might not exist yet, ignore
     }
+  };
+
+  // Helper to extract balanced JSON array from string
+  const extractBalancedJson = (str: string, startIndex: number): string | null => {
+    if (str[startIndex] !== '[') return null;
+    
+    let depth = 0;
+    let endIndex = startIndex;
+    
+    for (let i = startIndex; i < str.length; i++) {
+      if (str[i] === '[') depth++;
+      else if (str[i] === ']') depth--;
+      
+      if (depth === 0) {
+        endIndex = i;
+        break;
+      }
+    }
+    
+    if (depth !== 0) return null;
+    return str.slice(startIndex, endIndex + 1);
   };
 
   const handleAddDiagnostic = (position: [number, number, number], label: string) => {

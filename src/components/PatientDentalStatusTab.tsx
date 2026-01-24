@@ -17,6 +17,27 @@ import {
 import { Tooth3DDialog } from './dental/Tooth3DDialog';
 import { DiagnosticPoint, DiagnosticLine } from './dental/Tooth3DViewer';
 
+// Helper to extract balanced JSON array from string
+function extractBalancedJson(str: string, startIndex: number): string | null {
+  if (str[startIndex] !== '[') return null;
+  
+  let depth = 0;
+  let endIndex = startIndex;
+  
+  for (let i = startIndex; i < str.length; i++) {
+    if (str[i] === '[') depth++;
+    else if (str[i] === ']') depth--;
+    
+    if (depth === 0) {
+      endIndex = i;
+      break;
+    }
+  }
+  
+  if (depth !== 0) return null;
+  return str.slice(startIndex, endIndex + 1);
+}
+
 // Helper function to parse diagnostic data from notes
 function parseDiagnosticData(notes: string | null): { points: number; lines: number } {
   if (!notes) return { points: 0, lines: 0 };
@@ -24,23 +45,33 @@ function parseDiagnosticData(notes: string | null): { points: number; lines: num
   let points = 0;
   let lines = 0;
   
-  const pointsMatch = notes.match(/\[DIAGNOSTICS:(\[[\s\S]*?\])\]/);
-  if (pointsMatch) {
-    try {
-      const parsed = JSON.parse(pointsMatch[1]);
-      points = Array.isArray(parsed) ? parsed.length : 0;
-    } catch (e) {
-      // Ignore parse errors
+  // Parse diagnostic points - find balanced JSON array
+  const pointsStartIndex = notes.indexOf('[DIAGNOSTICS:');
+  if (pointsStartIndex !== -1) {
+    const jsonStart = pointsStartIndex + '[DIAGNOSTICS:'.length;
+    const jsonContent = extractBalancedJson(notes, jsonStart);
+    if (jsonContent) {
+      try {
+        const parsed = JSON.parse(jsonContent);
+        points = Array.isArray(parsed) ? parsed.length : 0;
+      } catch (e) {
+        // Ignore parse errors
+      }
     }
   }
   
-  const linesMatch = notes.match(/\[DIAGLINES:(\[[\s\S]*?\])\]/);
-  if (linesMatch) {
-    try {
-      const parsed = JSON.parse(linesMatch[1]);
-      lines = Array.isArray(parsed) ? parsed.length : 0;
-    } catch (e) {
-      // Ignore parse errors
+  // Parse diagnostic lines - find balanced JSON array
+  const linesStartIndex = notes.indexOf('[DIAGLINES:');
+  if (linesStartIndex !== -1) {
+    const jsonStart = linesStartIndex + '[DIAGLINES:'.length;
+    const jsonContent = extractBalancedJson(notes, jsonStart);
+    if (jsonContent) {
+      try {
+        const parsed = JSON.parse(jsonContent);
+        lines = Array.isArray(parsed) ? parsed.length : 0;
+      } catch (e) {
+        // Ignore parse errors
+      }
     }
   }
   
@@ -50,10 +81,30 @@ function parseDiagnosticData(notes: string | null): { points: number; lines: num
 // Helper to get clean notes without diagnostic data
 function getCleanNotes(notes: string | null): string {
   if (!notes) return '';
-  return notes
-    .replace(/\n?\[DIAGNOSTICS:[\s\S]*?\]/g, '')
-    .replace(/\n?\[DIAGLINES:[\s\S]*?\]/g, '')
-    .trim();
+  
+  let result = notes;
+  
+  // Remove DIAGNOSTICS tag with balanced JSON
+  const pointsStartIndex = result.indexOf('[DIAGNOSTICS:');
+  if (pointsStartIndex !== -1) {
+    const jsonStart = pointsStartIndex + '[DIAGNOSTICS:'.length;
+    const jsonContent = extractBalancedJson(result, jsonStart);
+    if (jsonContent) {
+      result = result.replace(`[DIAGNOSTICS:${jsonContent}]`, '');
+    }
+  }
+  
+  // Remove DIAGLINES tag with balanced JSON
+  const linesStartIndex = result.indexOf('[DIAGLINES:');
+  if (linesStartIndex !== -1) {
+    const jsonStart = linesStartIndex + '[DIAGLINES:'.length;
+    const jsonContent = extractBalancedJson(result, jsonStart);
+    if (jsonContent) {
+      result = result.replace(`[DIAGLINES:${jsonContent}]`, '');
+    }
+  }
+  
+  return result.replace(/^\n+|\n+$/g, '').trim();
 }
 
 export interface ToothData {
