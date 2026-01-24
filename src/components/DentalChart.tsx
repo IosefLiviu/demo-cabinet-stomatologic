@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
+// Re-export from new ImageDentalChart for modern usage
+export { ImageDentalChart } from './dental/ImageDentalChart';
+
 export type ToothStatus = 
   | 'healthy'
   | 'cavity'
@@ -21,6 +24,8 @@ interface DentalChartProps {
   dentalStatus: ToothData[];
   onToothClick?: (toothNumber: number) => void;
   readonly?: boolean;
+  /** Use image-based dental chart instead of simple boxes */
+  useImages?: boolean;
 }
 
 const statusColors: Record<ToothStatus, string> = {
