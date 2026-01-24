@@ -315,22 +315,9 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
         )}
         
         {isHovered && (
-          <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg bg-popover border shadow-lg text-xs max-w-[250px]">
-            <div className="font-medium text-foreground">{status}</div>
-            {notes && <div className="text-muted-foreground mt-1">{notes}</div>}
-            {allTeethHistory[toothNumber] && (
-              <div className="mt-2 pt-2 border-t border-border space-y-1">
-                <div className="text-[10px] text-muted-foreground font-medium">Ultima modificare:</div>
-                <div className="text-[10px] text-muted-foreground">
-                  {format(new Date(allTeethHistory[toothNumber].changed_at), 'dd MMM yyyy, HH:mm', { locale: ro })}
-                </div>
-                {allTeethHistory[toothNumber].notes && (
-                  <div className="text-[10px] text-foreground/80 italic">
-                    {allTeethHistory[toothNumber].notes}
-                  </div>
-                )}
-              </div>
-            )}
+          <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded bg-popover border shadow-lg text-xs whitespace-nowrap">
+            <div className="font-medium">{status}</div>
+            {notes && <div className="text-muted-foreground max-w-[150px] truncate">{notes}</div>}
           </div>
         )}
       </div>
