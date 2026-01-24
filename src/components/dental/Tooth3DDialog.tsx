@@ -121,6 +121,16 @@ export function Tooth3DDialog({
         result = result.replace(`[DIAGLINES:${jsonContent}]`, '');
       }
     }
+
+    // Heuristic cleanup for older broken saves where note starts with coordinate JSON arrays
+    // (e.g. leftover from a failed regex strip of nested arrays)
+    const trimmed = result.trimStart();
+    if (trimmed.startsWith('[[') && !/[a-zA-ZăâîșțĂÂÎȘȚ]/.test(trimmed)) {
+      const leading = extractBalancedJson(trimmed, 0);
+      if (leading) {
+        result = trimmed.slice(leading.length).replace(/^\s*\n+/, '').trimStart();
+      }
+    }
     
     return result.replace(/^\n+|\n+$/g, '').trim();
   };
@@ -427,7 +437,7 @@ export function Tooth3DDialog({
                                   </span>
                                 </div>
                                 {entry.notes && (
-                                  <p className="text-xs text-muted-foreground">{entry.notes}</p>
+                                  <p className="text-xs text-muted-foreground">{getCleanNotes(entry.notes)}</p>
                                 )}
                               </div>
                             );
