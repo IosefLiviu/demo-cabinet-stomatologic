@@ -935,18 +935,6 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                                             </>
                                           )}
                                         </div>
-                                        {record.tooth_numbers && record.tooth_numbers.length > 0 && (
-                                          <div className="mt-3">
-                                            <MiniDentalChart 
-                                              treatedTeeth={record.tooth_numbers} 
-                                              teethData={record.tooth_data.map(td => ({
-                                                tooth_number: td.toothNumber,
-                                                status: td.status as any,
-                                                notes: td.notes,
-                                              }))}
-                                            />
-                                          </div>
-                                        )}
                                       </div>
                                     </div>
                                     <div className="flex flex-col items-end gap-1 shrink-0">
