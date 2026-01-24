@@ -1,15 +1,21 @@
-import { useRef, useState, Suspense, useCallback, useMemo } from 'react';
-import { Canvas, useFrame, ThreeEvent } from '@react-three/fiber';
-import { OrbitControls, Environment, Html, ContactShadows, useGLTF } from '@react-three/drei';
+import { useRef, useState, Suspense, useCallback, useMemo, useEffect } from 'react';
+import { Canvas, useFrame, useThree, ThreeEvent } from '@react-three/fiber';
+import { OrbitControls, Environment, Html, ContactShadows, useGLTF, Tube } from '@react-three/drei';
 import * as THREE from 'three';
 import { cn } from '@/lib/utils';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, Pencil, MousePointer } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
-interface DiagnosticPoint {
+export interface DiagnosticPoint {
   id: string;
   position: [number, number, number];
+  label: string;
+}
+
+export interface DiagnosticLine {
+  id: string;
+  points: [number, number, number][];
   label: string;
 }
 
@@ -18,8 +24,11 @@ interface Tooth3DViewerProps {
   status: string;
   statusColor?: string;
   diagnosticPoints: DiagnosticPoint[];
+  diagnosticLines?: DiagnosticLine[];
   onAddDiagnostic: (position: [number, number, number], label: string) => void;
+  onAddDiagnosticLine?: (points: [number, number, number][], label: string) => void;
   onRemoveDiagnostic: (id: string) => void;
+  onRemoveDiagnosticLine?: (id: string) => void;
 }
 
 // Model paths for each tooth type
@@ -54,19 +63,104 @@ function isLowerTooth(toothNumber: number): boolean {
   return firstDigit === 3 || firstDigit === 4 || firstDigit === 7 || firstDigit === 8;
 }
 
+// 3D Tube component for diagnostic lines
+function DiagnosticTube({ points, label }: { points: [number, number, number][]; label: string }) {
+  if (points.length < 2) return null;
+  
+  const curve = useMemo(() => {
+    const vectors = points.map(p => new THREE.Vector3(...p));
+    return new THREE.CatmullRomCurve3(vectors, false, 'catmullrom', 0.5);
+  }, [points]);
+
+  // Get middle point for label
+  const midPoint = useMemo(() => {
+    return curve.getPoint(0.5);
+  }, [curve]);
+
+  return (
+    <group>
+      <Tube args={[curve, 64, 0.03, 8, false]}>
+        <meshStandardMaterial 
+          color="#ef4444" 
+          emissive="#ef4444" 
+          emissiveIntensity={0.3}
+          roughness={0.3}
+        />
+      </Tube>
+      {/* End caps */}
+      <mesh position={points[0]}>
+        <sphereGeometry args={[0.04, 16, 16]} />
+        <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={0.5} />
+      </mesh>
+      <mesh position={points[points.length - 1]}>
+        <sphereGeometry args={[0.04, 16, 16]} />
+        <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={0.5} />
+      </mesh>
+      {/* Label at midpoint */}
+      <Html
+        position={[midPoint.x, midPoint.y + 0.15, midPoint.z]}
+        className="pointer-events-none"
+        style={{ transform: 'translate(-50%, -100%)' }}
+      >
+        <div className="bg-destructive text-destructive-foreground text-xs px-2 py-1 rounded-md shadow-lg whitespace-nowrap max-w-[150px] truncate">
+          {label}
+        </div>
+      </Html>
+    </group>
+  );
+}
+
+// Drawing line preview during drag
+function DrawingPreview({ points }: { points: [number, number, number][] }) {
+  if (points.length < 2) return null;
+  
+  const curve = useMemo(() => {
+    const vectors = points.map(p => new THREE.Vector3(...p));
+    return new THREE.CatmullRomCurve3(vectors, false, 'catmullrom', 0.5);
+  }, [points]);
+
+  return (
+    <Tube args={[curve, 64, 0.03, 8, false]}>
+      <meshStandardMaterial 
+        color="#22c55e" 
+        emissive="#22c55e" 
+        emissiveIntensity={0.5}
+        transparent
+        opacity={0.7}
+      />
+    </Tube>
+  );
+}
+
 // Interactive 3D Tooth Mesh using loaded GLTF model
 function ToothMesh({ 
   toothNumber, 
   statusColor,
   diagnosticPoints,
+  diagnosticLines,
   onPointClick,
   selectedPoint,
+  drawMode,
+  isDrawing,
+  drawingPoints,
+  onDrawStart,
+  onDrawMove,
+  onDrawEnd,
+  orbitControlsRef,
 }: { 
   toothNumber: number;
   statusColor?: string;
   diagnosticPoints: DiagnosticPoint[];
+  diagnosticLines: DiagnosticLine[];
   onPointClick: (position: [number, number, number]) => void;
   selectedPoint: [number, number, number] | null;
+  drawMode: 'point' | 'line';
+  isDrawing: boolean;
+  drawingPoints: [number, number, number][];
+  onDrawStart: (position: [number, number, number]) => void;
+  onDrawMove: (position: [number, number, number]) => void;
+  onDrawEnd: () => void;
+  orbitControlsRef: React.RefObject<any>;
 }) {
   const meshRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
@@ -84,7 +178,6 @@ function ToothMesh({
     // Apply custom material if status color is provided
     clone.traverse((child) => {
       if (child instanceof THREE.Mesh) {
-        // Clone the material to avoid affecting other instances
         if (child.material) {
           const originalMaterial = child.material as THREE.MeshStandardMaterial;
           const newMaterial = new THREE.MeshPhysicalMaterial({
@@ -123,14 +216,42 @@ function ToothMesh({
     clonedScene.position.sub(center);
   }, [clonedScene]);
 
-  // Handle click on tooth to add diagnostic point
-  const handleClick = useCallback((event: ThreeEvent<MouseEvent>) => {
+  // Handle pointer down - start drawing or add point
+  const handlePointerDown = useCallback((event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
     const point = event.point;
-    onPointClick([point.x, point.y, point.z]);
-  }, [onPointClick]);
+    
+    if (drawMode === 'line') {
+      // Disable orbit controls while drawing
+      if (orbitControlsRef.current) {
+        orbitControlsRef.current.enabled = false;
+      }
+      onDrawStart([point.x, point.y, point.z]);
+    } else {
+      onPointClick([point.x, point.y, point.z]);
+    }
+  }, [drawMode, onPointClick, onDrawStart, orbitControlsRef]);
 
-  // Scale and positioning - the model needs to be centered and scaled
+  // Handle pointer move - continue drawing
+  const handlePointerMove = useCallback((event: ThreeEvent<PointerEvent>) => {
+    if (isDrawing && drawMode === 'line') {
+      const point = event.point;
+      onDrawMove([point.x, point.y, point.z]);
+    }
+  }, [isDrawing, drawMode, onDrawMove]);
+
+  // Handle pointer up - finish drawing
+  const handlePointerUp = useCallback(() => {
+    if (isDrawing && drawMode === 'line') {
+      // Re-enable orbit controls
+      if (orbitControlsRef.current) {
+        orbitControlsRef.current.enabled = true;
+      }
+      onDrawEnd();
+    }
+  }, [isDrawing, drawMode, onDrawEnd, orbitControlsRef]);
+
+  // Scale and positioning
   const scale = deciduous ? 0.35 : 0.4;
 
   return (
@@ -143,10 +264,29 @@ function ToothMesh({
       {/* Main tooth model */}
       <primitive 
         object={clonedScene}
-        onClick={handleClick}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
       />
+
+      {/* Diagnostic Lines (Tubes) */}
+      {diagnosticLines.map((line) => (
+        <DiagnosticTube 
+          key={line.id} 
+          points={line.points.map(p => [p[0] / scale, p[1] / scale, p[2] / scale] as [number, number, number])} 
+          label={line.label} 
+        />
+      ))}
+
+      {/* Drawing preview */}
+      {isDrawing && drawingPoints.length >= 2 && (
+        <DrawingPreview 
+          points={drawingPoints.map(p => [p[0] / scale, p[1] / scale, p[2] / scale] as [number, number, number])} 
+        />
+      )}
 
       {/* Diagnostic Points Markers */}
       {diagnosticPoints.map((point) => (
@@ -195,32 +335,82 @@ export function Tooth3DViewer({
   status,
   statusColor,
   diagnosticPoints,
+  diagnosticLines = [],
   onAddDiagnostic,
+  onAddDiagnosticLine,
   onRemoveDiagnostic,
+  onRemoveDiagnosticLine,
 }: Tooth3DViewerProps) {
   const [selectedPoint, setSelectedPoint] = useState<[number, number, number] | null>(null);
   const [newDiagnostic, setNewDiagnostic] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const [drawMode, setDrawMode] = useState<'point' | 'line'>('point');
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [drawingPoints, setDrawingPoints] = useState<[number, number, number][]>([]);
+  const [pendingLine, setPendingLine] = useState<[number, number, number][] | null>(null);
+  const orbitControlsRef = useRef<any>(null);
 
   const handlePointClick = useCallback((position: [number, number, number]) => {
-    setSelectedPoint(position);
-    setIsAdding(true);
+    if (drawMode === 'point') {
+      setSelectedPoint(position);
+      setIsAdding(true);
+    }
+  }, [drawMode]);
+
+  const handleDrawStart = useCallback((position: [number, number, number]) => {
+    setIsDrawing(true);
+    setDrawingPoints([position]);
   }, []);
 
+  const handleDrawMove = useCallback((position: [number, number, number]) => {
+    setDrawingPoints(prev => {
+      // Only add point if it's far enough from the last point (to avoid too many points)
+      if (prev.length > 0) {
+        const last = prev[prev.length - 1];
+        const dist = Math.sqrt(
+          Math.pow(position[0] - last[0], 2) +
+          Math.pow(position[1] - last[1], 2) +
+          Math.pow(position[2] - last[2], 2)
+        );
+        if (dist < 0.02) return prev; // Skip if too close
+      }
+      return [...prev, position];
+    });
+  }, []);
+
+  const handleDrawEnd = useCallback(() => {
+    setIsDrawing(false);
+    if (drawingPoints.length >= 2) {
+      setPendingLine(drawingPoints);
+      setIsAdding(true);
+    }
+    setDrawingPoints([]);
+  }, [drawingPoints]);
+
   const handleAddDiagnostic = useCallback(() => {
-    if (selectedPoint && newDiagnostic.trim()) {
+    if (drawMode === 'point' && selectedPoint && newDiagnostic.trim()) {
       onAddDiagnostic(selectedPoint, newDiagnostic.trim());
       setNewDiagnostic('');
       setSelectedPoint(null);
       setIsAdding(false);
+    } else if (drawMode === 'line' && pendingLine && newDiagnostic.trim() && onAddDiagnosticLine) {
+      onAddDiagnosticLine(pendingLine, newDiagnostic.trim());
+      setNewDiagnostic('');
+      setPendingLine(null);
+      setIsAdding(false);
     }
-  }, [selectedPoint, newDiagnostic, onAddDiagnostic]);
+  }, [drawMode, selectedPoint, pendingLine, newDiagnostic, onAddDiagnostic, onAddDiagnosticLine]);
 
   const handleCancel = useCallback(() => {
     setSelectedPoint(null);
+    setPendingLine(null);
     setNewDiagnostic('');
     setIsAdding(false);
+    setDrawingPoints([]);
+    setIsDrawing(false);
   }, []);
+
+  const totalDiagnostics = diagnosticPoints.length + diagnosticLines.length;
 
   return (
     <div className="relative w-full h-full min-h-[450px]">
@@ -253,12 +443,21 @@ export function Tooth3DViewer({
             toothNumber={toothNumber}
             statusColor={statusColor}
             diagnosticPoints={diagnosticPoints}
+            diagnosticLines={diagnosticLines}
             onPointClick={handlePointClick}
             selectedPoint={selectedPoint}
+            drawMode={drawMode}
+            isDrawing={isDrawing}
+            drawingPoints={drawingPoints}
+            onDrawStart={handleDrawStart}
+            onDrawMove={handleDrawMove}
+            onDrawEnd={handleDrawEnd}
+            orbitControlsRef={orbitControlsRef}
           />
           
           {/* Controls */}
           <OrbitControls 
+            ref={orbitControlsRef}
             enablePan={false}
             minDistance={1}
             maxDistance={10}
@@ -268,12 +467,44 @@ export function Tooth3DViewer({
         </Suspense>
       </Canvas>
 
+      {/* Drawing mode toggle */}
+      <div className="absolute top-3 left-3 flex gap-1 bg-background/90 backdrop-blur-sm rounded-lg p-1 shadow-lg border">
+        <Button
+          size="sm"
+          variant={drawMode === 'point' ? 'default' : 'ghost'}
+          className="h-8 px-2"
+          onClick={() => setDrawMode('point')}
+          title="Mod punct"
+        >
+          <MousePointer className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant={drawMode === 'line' ? 'default' : 'ghost'}
+          className="h-8 px-2"
+          onClick={() => setDrawMode('line')}
+          title="Mod linie (drag)"
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+      </div>
+
       {/* Instructions overlay */}
-      <div className="absolute top-3 left-3 right-3 flex justify-between items-start pointer-events-none">
+      <div className="absolute top-14 left-3 right-3 flex justify-between items-start pointer-events-none">
         <div className="bg-background/80 backdrop-blur-sm rounded-lg px-3 py-2 text-xs text-muted-foreground">
-          <p>🖱️ Trage pentru a roti</p>
-          <p>🔍 Scroll pentru zoom</p>
-          <p>📍 Click pe dinte pentru diagnostic</p>
+          {drawMode === 'point' ? (
+            <>
+              <p>🖱️ Trage pentru a roti</p>
+              <p>🔍 Scroll pentru zoom</p>
+              <p>📍 Click pe dinte pentru punct</p>
+            </>
+          ) : (
+            <>
+              <p>✏️ Ține apăsat și trage pentru a desena</p>
+              <p>🔍 Scroll pentru zoom</p>
+              <p>💡 Eliberează pentru a termina linia</p>
+            </>
+          )}
         </div>
         <div className={cn(
           "px-3 py-1.5 rounded-lg text-xs font-medium",
@@ -284,24 +515,26 @@ export function Tooth3DViewer({
       </div>
 
       {/* Attribution - CC-BY required */}
-      <div className="absolute bottom-auto top-12 right-3">
+      <div className="absolute top-24 right-3 pointer-events-none">
         <div className="bg-background/60 backdrop-blur-sm rounded px-2 py-1 text-[9px] text-muted-foreground/60 max-w-[120px] leading-tight">
           Model: University of Dundee, School of Dentistry (CC-BY-4.0)
         </div>
       </div>
 
       {/* Diagnostic input panel */}
-      {isAdding && selectedPoint && (
+      {isAdding && (selectedPoint || pendingLine) && (
         <div className="absolute bottom-3 left-3 right-3 bg-background/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border animate-in slide-in-from-bottom-2">
           <div className="flex items-center gap-2 mb-2">
             <Plus className="h-4 w-4 text-green-500" />
-            <span className="text-sm font-medium">Adaugă diagnostic</span>
+            <span className="text-sm font-medium">
+              {drawMode === 'line' ? 'Adaugă diagnostic pentru linie' : 'Adaugă diagnostic pentru punct'}
+            </span>
           </div>
           <div className="flex gap-2">
             <Input
               value={newDiagnostic}
               onChange={(e) => setNewDiagnostic(e.target.value)}
-              placeholder="Introdu diagnosticul..."
+              placeholder={drawMode === 'line' ? 'ex: Canal radicular, Nerv...' : 'Introdu diagnosticul...'}
               className="flex-1"
               autoFocus
               onKeyDown={(e) => {
@@ -319,13 +552,14 @@ export function Tooth3DViewer({
         </div>
       )}
 
-      {/* Diagnostic points list */}
-      {diagnosticPoints.length > 0 && !isAdding && (
+      {/* Diagnostic items list */}
+      {totalDiagnostics > 0 && !isAdding && (
         <div className="absolute bottom-3 left-3 right-3 bg-background/95 backdrop-blur-sm rounded-lg p-2 shadow-lg border max-h-[120px] overflow-y-auto">
           <div className="text-xs font-medium text-muted-foreground mb-1.5 px-1">
-            Diagnostice ({diagnosticPoints.length})
+            Diagnostice ({totalDiagnostics})
           </div>
           <div className="space-y-1">
+            {/* Points */}
             {diagnosticPoints.map((point) => (
               <div 
                 key={point.id}
@@ -341,6 +575,26 @@ export function Tooth3DViewer({
                 >
                   ✕
                 </button>
+              </div>
+            ))}
+            {/* Lines */}
+            {diagnosticLines.map((line) => (
+              <div 
+                key={line.id}
+                className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-md bg-muted/50 hover:bg-muted transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-0.5 bg-destructive rounded" />
+                  <span className="text-sm">{line.label}</span>
+                </div>
+                {onRemoveDiagnosticLine && (
+                  <button
+                    onClick={() => onRemoveDiagnosticLine(line.id)}
+                    className="text-muted-foreground hover:text-destructive transition-colors text-xs"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
             ))}
           </div>

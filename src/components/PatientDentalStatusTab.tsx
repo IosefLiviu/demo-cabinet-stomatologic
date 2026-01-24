@@ -15,12 +15,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { Tooth3DDialog } from './dental/Tooth3DDialog';
-
-interface DiagnosticPoint {
-  id: string;
-  position: [number, number, number];
-  label: string;
-}
+import { DiagnosticPoint, DiagnosticLine } from './dental/Tooth3DViewer';
 
 export interface ToothData {
   tooth_number: number;
@@ -175,7 +170,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
     });
   };
 
-  const handleSaveToothStatus = async (status: string, notes: string, diagnosticPoints: DiagnosticPoint[]) => {
+  const handleSaveToothStatus = async (status: string, notes: string, diagnosticPoints: DiagnosticPoint[], diagnosticLines: DiagnosticLine[] = []) => {
     if (!toothDialog) return;
 
     const oldStatus = getToothStatus(toothDialog.toothNumber);
@@ -185,11 +180,15 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
     // Get current user
     const { data: { user } } = await supabase.auth.getUser();
     
-    // Prepare notes with diagnostic points if any
+    // Prepare notes with diagnostic points and lines
     let finalNotes = notes;
     if (diagnosticPoints.length > 0) {
       const diagnosticsJson = JSON.stringify(diagnosticPoints);
-      finalNotes = `${notes}\n[DIAGNOSTICS:${diagnosticsJson}]`;
+      finalNotes = `${finalNotes}\n[DIAGNOSTICS:${diagnosticsJson}]`;
+    }
+    if (diagnosticLines.length > 0) {
+      const linesJson = JSON.stringify(diagnosticLines);
+      finalNotes = `${finalNotes}\n[DIAGLINES:${linesJson}]`;
     }
     
     // Save history entry if status changed
