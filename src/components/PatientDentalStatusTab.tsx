@@ -38,6 +38,45 @@ function extractBalancedJson(str: string, startIndex: number): string | null {
   return str.slice(startIndex, endIndex + 1);
 }
 
+function stripTaggedBalanced(input: string, tag: '[DIAGNOSTICS:' | '[DIAGLINES:'): string {
+  let result = input;
+
+  // handle multiple occurrences defensively
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const tagIndex = result.indexOf(tag);
+    if (tagIndex === -1) break;
+
+    const jsonStart = tagIndex + tag.length;
+    const json = extractBalancedJson(result, jsonStart);
+    if (!json) {
+      // If we can't parse balanced JSON, avoid infinite loop.
+      break;
+    }
+
+    result = result.replace(`${tag}${json}]`, '');
+  }
+
+  return result;
+}
+
+function stripOrphanLeadingJsonArray(input: string): string {
+  const trimmed = input.trimStart();
+
+  // Heuristic for older broken saves where the start of notes contains only numeric coordinate arrays.
+  // Example: [[-0.01,0.02,0.03], ...]
+  if (!trimmed.startsWith('[[')) return input;
+
+  // If there are letters, we assume it's user text.
+  if (/[a-zA-ZăâîșțĂÂÎȘȚ]/.test(trimmed)) return input;
+
+  const json = extractBalancedJson(trimmed, 0);
+  if (!json) return input;
+
+  const without = trimmed.slice(json.length);
+  return without.replace(/^\s*\n+/, '').trimStart();
+}
+
 // Helper function to parse diagnostic data from notes
 function parseDiagnosticData(notes: string | null): { points: number; lines: number } {
   if (!notes) return { points: 0, lines: 0 };
@@ -83,27 +122,14 @@ function getCleanNotes(notes: string | null): string {
   if (!notes) return '';
   
   let result = notes;
-  
-  // Remove DIAGNOSTICS tag with balanced JSON
-  const pointsStartIndex = result.indexOf('[DIAGNOSTICS:');
-  if (pointsStartIndex !== -1) {
-    const jsonStart = pointsStartIndex + '[DIAGNOSTICS:'.length;
-    const jsonContent = extractBalancedJson(result, jsonStart);
-    if (jsonContent) {
-      result = result.replace(`[DIAGNOSTICS:${jsonContent}]`, '');
-    }
-  }
-  
-  // Remove DIAGLINES tag with balanced JSON
-  const linesStartIndex = result.indexOf('[DIAGLINES:');
-  if (linesStartIndex !== -1) {
-    const jsonStart = linesStartIndex + '[DIAGLINES:'.length;
-    const jsonContent = extractBalancedJson(result, jsonStart);
-    if (jsonContent) {
-      result = result.replace(`[DIAGLINES:${jsonContent}]`, '');
-    }
-  }
-  
+
+  // Remove tagged technical data
+  result = stripTaggedBalanced(result, '[DIAGNOSTICS:');
+  result = stripTaggedBalanced(result, '[DIAGLINES:');
+
+  // Remove any orphaned leading JSON arrays from older broken regex-strips
+  result = stripOrphanLeadingJsonArray(result);
+
   return result.replace(/^\n+|\n+$/g, '').trim();
 }
 
@@ -273,10 +299,11 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
     
     // Prepare notes with diagnostic points and lines
     let finalNotes = notes.trim();
-    
-    // Remove any existing diagnostic data from notes before adding new
-    finalNotes = finalNotes.replace(/\n?\[DIAGNOSTICS:[\s\S]*?\]/g, '');
-    finalNotes = finalNotes.replace(/\n?\[DIAGLINES:[\s\S]*?\]/g, '');
+
+    // Remove any existing diagnostic data from notes before adding new (balanced-safe)
+    finalNotes = stripTaggedBalanced(finalNotes, '[DIAGNOSTICS:');
+    finalNotes = stripTaggedBalanced(finalNotes, '[DIAGLINES:');
+    finalNotes = stripOrphanLeadingJsonArray(finalNotes);
     finalNotes = finalNotes.trim();
     
     if (diagnosticPoints.length > 0) {
