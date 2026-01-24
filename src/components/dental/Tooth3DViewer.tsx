@@ -141,6 +141,9 @@ function worldToLocal(
   if (!groupRef.current) {
     return [worldPoint.x, worldPoint.y, worldPoint.z];
   }
+
+  // Ensure matrices are up-to-date (important on mobile/touch where frame timing differs)
+  groupRef.current.updateWorldMatrix(true, false);
   
   // Create inverse matrix of the group's world transform
   const inverseMatrix = new THREE.Matrix4();
