@@ -647,7 +647,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
+      <SheetContent className="w-full sm:max-w-5xl overflow-y-auto">
         <SheetHeader className="mb-6">
           <div className="flex items-center justify-between">
             <SheetTitle className="flex items-center gap-3">
