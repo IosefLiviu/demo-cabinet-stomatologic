@@ -416,9 +416,33 @@ export function Tooth3DDialog({
                   <Button variant="ghost" className="w-full justify-between">
                     <span className="flex items-center gap-2">
                       <History className="h-4 w-4" />
-                      Istoric modificări {toothHistory.length > 0 && toothHistory[0]?.changed_at 
-                        ? format(new Date(toothHistory[0].changed_at), 'd MMMM yyyy', { locale: ro }) 
-                        : ''} ({toothHistory.length})
+                      Istoric modificări {(() => {
+                        if (toothHistory.length === 0) return '';
+                        
+                        // Get unique dates (sorted newest to oldest already)
+                        const dates = toothHistory.map(h => format(new Date(h.changed_at), 'yyyy-MM-dd'));
+                        const uniqueDates = [...new Set(dates)];
+                        
+                        if (uniqueDates.length === 1) {
+                          // Single date
+                          return format(new Date(toothHistory[0].changed_at), 'd MMMM yyyy', { locale: ro });
+                        } else {
+                          // Date range - oldest to newest
+                          const newestDate = new Date(uniqueDates[0]);
+                          const oldestDate = new Date(uniqueDates[uniqueDates.length - 1]);
+                          
+                          const sameMonth = newestDate.getMonth() === oldestDate.getMonth() && 
+                                           newestDate.getFullYear() === oldestDate.getFullYear();
+                          
+                          if (sameMonth) {
+                            // Same month: "15 - 24 ianuarie 2026"
+                            return `${format(oldestDate, 'd', { locale: ro })} - ${format(newestDate, 'd MMMM yyyy', { locale: ro })}`;
+                          } else {
+                            // Different months: "15 dec 2025 - 24 ian 2026"
+                            return `${format(oldestDate, 'd MMM yyyy', { locale: ro })} - ${format(newestDate, 'd MMM yyyy', { locale: ro })}`;
+                          }
+                        }
+                      })()} ({toothHistory.length})
                     </span>
                     {historyExpanded ? (
                       <ChevronUp className="h-4 w-4" />
