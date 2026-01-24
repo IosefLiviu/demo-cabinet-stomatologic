@@ -15,6 +15,9 @@ import {
   Upload,
   ChevronLeft,
   ChevronRight,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,6 +57,9 @@ interface PatientsListProps {
 
 const PATIENTS_PER_PAGE = 10;
 
+type SortField = 'name' | 'phone' | 'age' | 'created_at' | null;
+type SortDirection = 'asc' | 'desc';
+
 export function PatientsList({
   patients,
   loading,
@@ -66,6 +72,20 @@ export function PatientsList({
   const [searchQuery, setSearchQuery] = useState('');
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortField, setSortField] = useState<SortField>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+
+  const calculateAge = (dateOfBirth?: string) => {
+    if (!dateOfBirth) return null;
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
 
   const filteredPatients = useMemo(() => {
     return searchQuery
@@ -79,12 +99,39 @@ export function PatientsList({
       : patients;
   }, [patients, searchQuery]);
 
-  const totalPages = Math.ceil(filteredPatients.length / PATIENTS_PER_PAGE);
+  const sortedPatients = useMemo(() => {
+    if (!sortField) return filteredPatients;
+    
+    return [...filteredPatients].sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortField) {
+        case 'name':
+          comparison = `${a.last_name} ${a.first_name}`.localeCompare(`${b.last_name} ${b.first_name}`);
+          break;
+        case 'phone':
+          comparison = a.phone.localeCompare(b.phone);
+          break;
+        case 'age':
+          const ageA = calculateAge(a.date_of_birth) ?? -1;
+          const ageB = calculateAge(b.date_of_birth) ?? -1;
+          comparison = ageA - ageB;
+          break;
+        case 'created_at':
+          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          break;
+      }
+      
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [filteredPatients, sortField, sortDirection]);
+
+  const totalPages = Math.ceil(sortedPatients.length / PATIENTS_PER_PAGE);
   
   const paginatedPatients = useMemo(() => {
     const startIndex = (currentPage - 1) * PATIENTS_PER_PAGE;
-    return filteredPatients.slice(startIndex, startIndex + PATIENTS_PER_PAGE);
-  }, [filteredPatients, currentPage]);
+    return sortedPatients.slice(startIndex, startIndex + PATIENTS_PER_PAGE);
+  }, [sortedPatients, currentPage]);
 
   // Reset to page 1 when search changes
   const handleSearchChange = (value: string) => {
@@ -92,16 +139,28 @@ export function PatientsList({
     setCurrentPage(1);
   };
 
-  const calculateAge = (dateOfBirth?: string) => {
-    if (!dateOfBirth) return null;
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else {
+        setSortField(null);
+        setSortDirection('asc');
+      }
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
     }
-    return age;
+    setCurrentPage(1);
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/50" />;
+    }
+    return sortDirection === 'asc' 
+      ? <ArrowUp className="h-3.5 w-3.5 text-primary" />
+      : <ArrowDown className="h-3.5 w-3.5 text-primary" />;
   };
 
   if (loading) {
@@ -151,11 +210,43 @@ export function PatientsList({
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="w-[250px]">Pacient</TableHead>
-              <TableHead>Contact</TableHead>
-              <TableHead>Vârstă</TableHead>
+              <TableHead 
+                className="w-[250px] cursor-pointer hover:bg-muted/80 transition-colors"
+                onClick={() => handleSort('name')}
+              >
+                <div className="flex items-center gap-2">
+                  Pacient
+                  <SortIcon field="name" />
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/80 transition-colors"
+                onClick={() => handleSort('phone')}
+              >
+                <div className="flex items-center gap-2">
+                  Contact
+                  <SortIcon field="phone" />
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/80 transition-colors"
+                onClick={() => handleSort('age')}
+              >
+                <div className="flex items-center gap-2">
+                  Vârstă
+                  <SortIcon field="age" />
+                </div>
+              </TableHead>
               <TableHead>Alerte medicale</TableHead>
-              <TableHead>Înregistrat</TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/80 transition-colors"
+                onClick={() => handleSort('created_at')}
+              >
+                <div className="flex items-center gap-2">
+                  Înregistrat
+                  <SortIcon field="created_at" />
+                </div>
+              </TableHead>
               <TableHead className="w-[120px] text-right">Acțiuni</TableHead>
             </TableRow>
           </TableHeader>
