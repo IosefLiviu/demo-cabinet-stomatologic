@@ -211,7 +211,7 @@ export function Tooth3DDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-[850px] max-h-[95vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <Box className="h-5 w-5 text-primary" />
@@ -239,7 +239,7 @@ export function Tooth3DDialog({
           </TabsList>
           
           <TabsContent value="3d" className="flex-1 min-h-0 mt-4">
-            <div className="h-[450px] rounded-lg overflow-hidden border">
+            <div className="h-[550px] rounded-lg overflow-hidden border">
               <Tooth3DViewer
                 toothNumber={toothNumber}
                 status={status}
