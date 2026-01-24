@@ -289,85 +289,98 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
   const handleSaveToothStatus = async (status: string, notes: string, diagnosticPoints: DiagnosticPoint[], diagnosticLines: DiagnosticLine[] = []) => {
     if (!toothDialog) return;
 
-    const oldStatus = getToothStatus(toothDialog.toothNumber);
-    const oldNotes = getToothNotes(toothDialog.toothNumber) || '';
-    const dbStatus = statusNameToEnum[status] || 'healthy';
-    const oldDbStatus = statusNameToEnum[oldStatus] || 'healthy';
-    
-    // Get current user
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    // Prepare notes with diagnostic points and lines
-    let finalNotes = notes.trim();
+    try {
+      const oldStatus = getToothStatus(toothDialog.toothNumber);
+      const oldNotes = getToothNotes(toothDialog.toothNumber) || '';
+      const dbStatus = statusNameToEnum[status] || 'healthy';
+      const oldDbStatus = statusNameToEnum[oldStatus] || 'healthy';
 
-    // Remove any existing diagnostic data from notes before adding new (balanced-safe)
-    finalNotes = stripTaggedBalanced(finalNotes, '[DIAGNOSTICS:');
-    finalNotes = stripTaggedBalanced(finalNotes, '[DIAGLINES:');
-    finalNotes = stripOrphanLeadingJsonArray(finalNotes);
-    finalNotes = finalNotes.trim();
-    
-    if (diagnosticPoints.length > 0) {
-      const diagnosticsJson = JSON.stringify(diagnosticPoints);
-      finalNotes = finalNotes ? `${finalNotes}\n[DIAGNOSTICS:${diagnosticsJson}]` : `[DIAGNOSTICS:${diagnosticsJson}]`;
-    }
-    if (diagnosticLines.length > 0) {
-      const linesJson = JSON.stringify(diagnosticLines);
-      finalNotes = finalNotes ? `${finalNotes}\n[DIAGLINES:${linesJson}]` : `[DIAGLINES:${linesJson}]`;
-    }
-    
-    // Check if there are any changes (status, notes, diagnostics)
-    const hasStatusChange = oldDbStatus !== dbStatus;
-    const hasNotesChange = oldNotes !== finalNotes;
-    const hasAnyChange = hasStatusChange || hasNotesChange;
-    
-    // Save history entry if anything changed
-    if (hasAnyChange) {
-      await supabase
-        .from('dental_status_history')
-        .insert({
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+
+      // Prepare notes with diagnostic points and lines
+      let finalNotes = notes.trim();
+
+      // Remove any existing diagnostic data from notes before adding new (balanced-safe)
+      finalNotes = stripTaggedBalanced(finalNotes, '[DIAGNOSTICS:');
+      finalNotes = stripTaggedBalanced(finalNotes, '[DIAGLINES:');
+      finalNotes = stripOrphanLeadingJsonArray(finalNotes);
+      finalNotes = finalNotes.trim();
+
+      if (diagnosticPoints.length > 0) {
+        const diagnosticsJson = JSON.stringify(diagnosticPoints);
+        finalNotes = finalNotes ? `${finalNotes}\n[DIAGNOSTICS:${diagnosticsJson}]` : `[DIAGNOSTICS:${diagnosticsJson}]`;
+      }
+      if (diagnosticLines.length > 0) {
+        const linesJson = JSON.stringify(diagnosticLines);
+        finalNotes = finalNotes ? `${finalNotes}\n[DIAGLINES:${linesJson}]` : `[DIAGLINES:${linesJson}]`;
+      }
+
+      // Check if there are any changes (status, notes, diagnostics)
+      const hasStatusChange = oldDbStatus !== dbStatus;
+      const hasNotesChange = oldNotes !== finalNotes;
+      const hasAnyChange = hasStatusChange || hasNotesChange;
+
+      // Save history entry if anything changed
+      if (hasAnyChange) {
+        const { error: historyError } = await supabase
+          .from('dental_status_history')
+          .insert({
+            patient_id: patientId,
+            tooth_number: toothDialog.toothNumber,
+            old_status: oldDbStatus,
+            new_status: dbStatus,
+            notes: finalNotes || null,
+            changed_by: user?.id || null,
+          });
+
+        if (historyError) throw historyError;
+      }
+
+      // Upsert the dental status (and return row for state sync)
+      const { data: savedRow, error: upsertError } = await supabase
+        .from('dental_status')
+        .upsert({
           patient_id: patientId,
           tooth_number: toothDialog.toothNumber,
-          old_status: oldDbStatus,
-          new_status: dbStatus,
+          status: dbStatus as any,
           notes: finalNotes || null,
-          changed_by: user?.id || null,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'patient_id,tooth_number',
+        })
+        .select('tooth_number,status,notes')
+        .maybeSingle();
+
+      if (upsertError) throw upsertError;
+
+      const syncedStatus = savedRow?.status ?? dbStatus;
+      const syncedNotes = (savedRow?.notes ?? finalNotes) || '';
+
+      // Update local state
+      const newStatus = dentalStatus.filter(t => t.tooth_number !== toothDialog.toothNumber);
+      if (status !== 'Sănătos' || syncedNotes) {
+        newStatus.push({
+          tooth_number: toothDialog.toothNumber,
+          status: syncedStatus,
+          notes: syncedNotes || undefined,
         });
-    }
-    
-    // Upsert the dental status
-    const { error } = await supabase
-      .from('dental_status')
-      .upsert({
-        patient_id: patientId,
-        tooth_number: toothDialog.toothNumber,
-        status: dbStatus as any,
-        notes: finalNotes || null,
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'patient_id,tooth_number',
-      });
+      }
 
-    if (error) throw error;
+      onStatusChange?.(newStatus);
 
-    // Update local state
-    const newStatus = dentalStatus.filter(t => t.tooth_number !== toothDialog.toothNumber);
-    if (status !== 'Sănătos' || finalNotes) {
-      newStatus.push({
-        tooth_number: toothDialog.toothNumber,
-        status: dbStatus,
-        notes: finalNotes || undefined,
-      });
+      // Reload history after save if there were changes
+      if (hasAnyChange) {
+        await loadAllTeethHistoryFn();
+      }
+
+      toast.success('Status dentar salvat');
+      setToothDialog(null);
+    } catch (e: any) {
+      console.error('Save dental status failed:', e);
+      toast.error('Nu s-a putut salva. Verifică și încearcă din nou.');
+      throw e;
     }
-    
-    onStatusChange?.(newStatus);
-    
-    // Reload history after save if there were changes
-    if (hasAnyChange) {
-      await loadAllTeethHistoryFn();
-    }
-    
-    toast.success('Status dentar salvat');
-    setToothDialog(null);
   };
 
   const renderTooth = (toothNumber: number, isDeciduous: boolean = false, isLower: boolean = false) => {

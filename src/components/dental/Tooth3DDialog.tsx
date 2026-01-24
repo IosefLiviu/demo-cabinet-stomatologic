@@ -200,7 +200,7 @@ export function Tooth3DDialog({
         .select('notes')
         .eq('patient_id', patientId)
         .eq('tooth_number', toothNumber)
-        .single();
+        .maybeSingle();
       
       if (data?.notes) {
         // Parse diagnostic points - find balanced JSON array
