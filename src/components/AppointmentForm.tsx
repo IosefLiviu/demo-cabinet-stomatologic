@@ -826,6 +826,7 @@ export function AppointmentForm({
               interventions={interventions}
               onInterventionsChange={setInterventions}
               isCasDisabled={isCasDisabled}
+              patientId={formData.patientId}
             />
 
             <div className="space-y-1.5">
