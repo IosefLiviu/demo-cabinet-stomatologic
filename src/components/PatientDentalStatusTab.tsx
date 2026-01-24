@@ -174,6 +174,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
     if (!toothDialog) return;
 
     const oldStatus = getToothStatus(toothDialog.toothNumber);
+    const oldNotes = getToothNotes(toothDialog.toothNumber) || '';
     const dbStatus = statusNameToEnum[status] || 'healthy';
     const oldDbStatus = statusNameToEnum[oldStatus] || 'healthy';
     
@@ -181,18 +182,29 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
     const { data: { user } } = await supabase.auth.getUser();
     
     // Prepare notes with diagnostic points and lines
-    let finalNotes = notes;
+    let finalNotes = notes.trim();
+    
+    // Remove any existing diagnostic data from notes before adding new
+    finalNotes = finalNotes.replace(/\n?\[DIAGNOSTICS:[\s\S]*?\]/g, '');
+    finalNotes = finalNotes.replace(/\n?\[DIAGLINES:[\s\S]*?\]/g, '');
+    finalNotes = finalNotes.trim();
+    
     if (diagnosticPoints.length > 0) {
       const diagnosticsJson = JSON.stringify(diagnosticPoints);
-      finalNotes = `${finalNotes}\n[DIAGNOSTICS:${diagnosticsJson}]`;
+      finalNotes = finalNotes ? `${finalNotes}\n[DIAGNOSTICS:${diagnosticsJson}]` : `[DIAGNOSTICS:${diagnosticsJson}]`;
     }
     if (diagnosticLines.length > 0) {
       const linesJson = JSON.stringify(diagnosticLines);
-      finalNotes = `${finalNotes}\n[DIAGLINES:${linesJson}]`;
+      finalNotes = finalNotes ? `${finalNotes}\n[DIAGLINES:${linesJson}]` : `[DIAGLINES:${linesJson}]`;
     }
     
-    // Save history entry if status changed
-    if (oldDbStatus !== dbStatus) {
+    // Check if there are any changes (status, notes, diagnostics)
+    const hasStatusChange = oldDbStatus !== dbStatus;
+    const hasNotesChange = oldNotes !== finalNotes;
+    const hasAnyChange = hasStatusChange || hasNotesChange;
+    
+    // Save history entry if anything changed
+    if (hasAnyChange) {
       await supabase
         .from('dental_status_history')
         .insert({
@@ -232,8 +244,8 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
     
     onStatusChange?.(newStatus);
     
-    // Reload history after save
-    if (oldDbStatus !== dbStatus) {
+    // Reload history after save if there were changes
+    if (hasAnyChange) {
       await loadAllTeethHistoryFn();
     }
     
