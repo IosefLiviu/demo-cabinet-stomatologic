@@ -88,13 +88,13 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
   } | null>(null);
   const [saving, setSaving] = useState(false);
   const [toothHistory, setToothHistory] = useState<ToothHistoryEntry[]>([]);
-  const [allTeethHistory, setAllTeethHistory] = useState<Record<number, ToothHistoryEntry>>({});
+  const [allHistoryEntries, setAllHistoryEntries] = useState<ToothHistoryEntry[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyExpanded, setHistoryExpanded] = useState(false);
   
   const { activeStatuses } = useToothStatuses();
 
-  // Load latest history entry for all teeth with non-healthy status
+  // Load all history entries
   useEffect(() => {
     const loadAllTeethHistory = async () => {
       try {
@@ -105,16 +105,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
           .order('changed_at', { ascending: false });
 
         if (error) throw error;
-        
-        // Group by tooth_number, keeping only the latest entry for each
-        const historyByTooth: Record<number, ToothHistoryEntry> = {};
-        (data || []).forEach(entry => {
-          if (!historyByTooth[entry.tooth_number]) {
-            historyByTooth[entry.tooth_number] = entry;
-          }
-        });
-        
-        setAllTeethHistory(historyByTooth);
+        setAllHistoryEntries(data || []);
       } catch (error) {
         console.error('Error loading all teeth history:', error);
       }
@@ -122,6 +113,16 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
     
     loadAllTeethHistory();
   }, [patientId, dentalStatus]);
+
+  // Group history entries by date
+  const historyByDate = allHistoryEntries.reduce((acc, entry) => {
+    const dateKey = format(new Date(entry.changed_at), 'yyyy-MM-dd');
+    if (!acc[dateKey]) {
+      acc[dateKey] = [];
+    }
+    acc[dateKey].push(entry);
+    return acc;
+  }, {} as Record<string, ToothHistoryEntry[]>);
 
   const getToothStatus = (toothNumber: number): string => {
     const tooth = dentalStatus.find((t) => t.tooth_number === toothNumber);
@@ -392,67 +393,81 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
       </div>
 
       {/* History Section - visible below the chart */}
-      {Object.keys(allTeethHistory).length > 0 && (
+      {allHistoryEntries.length > 0 && (
         <div className="mt-6 border rounded-lg bg-muted/20 p-4">
           <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
             <History className="h-4 w-4" />
             Istoric modificări status dentar
           </h4>
-          <div className="space-y-2 max-h-[300px] overflow-y-auto">
-            {Object.entries(allTeethHistory)
-              .sort(([, a], [, b]) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime())
-              .map(([toothNum, entry]) => {
-                const oldColor = getStatusHexColor(getStatusDisplayName(entry.old_status || 'healthy'));
-                const newColor = getStatusHexColor(getStatusDisplayName(entry.new_status));
-                
-                return (
-                  <div 
-                    key={entry.id} 
-                    className="flex items-start gap-3 p-3 bg-background rounded-md border"
-                  >
-                    <div className="flex-shrink-0 w-10 h-10 rounded-md bg-muted flex items-center justify-center">
-                      <span className="text-sm font-bold">{toothNum}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {entry.old_status && (
-                          <>
-                            <Badge 
-                              variant="outline" 
-                              className="text-xs"
-                              style={{
-                                backgroundColor: oldColor ? `${oldColor}20` : undefined,
-                                borderColor: oldColor || undefined,
-                                color: oldColor || undefined,
-                              }}
-                            >
-                              {getStatusDisplayName(entry.old_status)}
-                            </Badge>
-                            <span className="text-muted-foreground">→</span>
-                          </>
-                        )}
-                        <Badge 
-                          variant="outline"
-                          className="text-xs"
-                          style={{
-                            backgroundColor: newColor ? `${newColor}20` : undefined,
-                            borderColor: newColor || undefined,
-                            color: newColor || undefined,
-                          }}
-                        >
-                          {getStatusDisplayName(entry.new_status)}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground ml-auto">
-                          {format(new Date(entry.changed_at), 'dd MMM yyyy, HH:mm', { locale: ro })}
-                        </span>
-                      </div>
-                      {entry.notes && (
-                        <p className="text-sm text-muted-foreground mt-1">{entry.notes}</p>
-                      )}
-                    </div>
+          <div className="space-y-4 max-h-[400px] overflow-y-auto">
+            {Object.entries(historyByDate)
+              .sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime())
+              .map(([dateKey, entries]) => (
+                <div key={dateKey} className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <span className="bg-muted px-2 py-1 rounded">
+                      {format(new Date(dateKey), 'dd MMMM yyyy', { locale: ro })}
+                    </span>
+                    <span className="text-xs">
+                      {entries.length} {entries.length === 1 ? 'modificare' : 'modificări'}
+                    </span>
                   </div>
-                );
-              })}
+                  <div className="space-y-2 pl-2 border-l-2 border-muted">
+                    {entries.map((entry) => {
+                      const oldColor = getStatusHexColor(getStatusDisplayName(entry.old_status || 'healthy'));
+                      const newColor = getStatusHexColor(getStatusDisplayName(entry.new_status));
+                      
+                      return (
+                        <div 
+                          key={entry.id} 
+                          className="flex items-start gap-3 p-3 bg-background rounded-md border"
+                        >
+                          <div className="flex-shrink-0 w-10 h-10 rounded-md bg-muted flex items-center justify-center">
+                            <span className="text-sm font-bold">{entry.tooth_number}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {entry.old_status && (
+                                <>
+                                  <Badge 
+                                    variant="outline" 
+                                    className="text-xs"
+                                    style={{
+                                      backgroundColor: oldColor ? `${oldColor}20` : undefined,
+                                      borderColor: oldColor || undefined,
+                                      color: oldColor || undefined,
+                                    }}
+                                  >
+                                    {getStatusDisplayName(entry.old_status)}
+                                  </Badge>
+                                  <span className="text-muted-foreground">→</span>
+                                </>
+                              )}
+                              <Badge 
+                                variant="outline"
+                                className="text-xs"
+                                style={{
+                                  backgroundColor: newColor ? `${newColor}20` : undefined,
+                                  borderColor: newColor || undefined,
+                                  color: newColor || undefined,
+                                }}
+                              >
+                                {getStatusDisplayName(entry.new_status)}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground ml-auto">
+                                {format(new Date(entry.changed_at), 'HH:mm', { locale: ro })}
+                              </span>
+                            </div>
+                            {entry.notes && (
+                              <p className="text-sm text-muted-foreground mt-1">{entry.notes}</p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
           </div>
         </div>
       )}
