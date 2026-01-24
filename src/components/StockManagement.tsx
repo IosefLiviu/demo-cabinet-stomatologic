@@ -73,6 +73,8 @@ export function StockManagement() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
   const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
   const [isMovementDialogOpen, setIsMovementDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -113,6 +115,24 @@ export function StockManagement() {
       categoryFilter === "all" || item.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+  const paginatedItems = filteredItems.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Reset page when search/filter changes
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
+  const handleCategoryChange = (value: string) => {
+    setCategoryFilter(value);
+    setCurrentPage(1);
+  };
 
   // Low stock items (quantity < 5)
   const lowStockItems = items.filter((i) => i.quantity < 5);
@@ -347,11 +367,11 @@ export function StockManagement() {
                 <Input
                   placeholder="Caută articole..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   className="pl-8 w-[200px]"
                 />
               </div>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <Select value={categoryFilter} onValueChange={handleCategoryChange}>
                 <SelectTrigger className="w-[150px]">
                   <SelectValue placeholder="Categorie" />
                 </SelectTrigger>
@@ -399,7 +419,7 @@ export function StockManagement() {
             </div>
           ) : (
             <div className="space-y-2">
-              {filteredItems.map((item) => {
+              {paginatedItems.map((item) => {
                 const isEditing = editingItemId === item.id;
                 
                 return (
@@ -530,6 +550,56 @@ export function StockManagement() {
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4 border-t">
+              <p className="text-sm text-muted-foreground">
+                Afișare {((currentPage - 1) * ITEMS_PER_PAGE) + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, filteredItems.length)} din {filteredItems.length} articole
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Anterior
+                </Button>
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNum)}
+                      className="min-w-[36px]"
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Următor
+                </Button>
+              </div>
             </div>
           )}
         </TabsContent>
