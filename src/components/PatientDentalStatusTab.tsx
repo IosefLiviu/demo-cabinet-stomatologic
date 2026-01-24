@@ -88,10 +88,40 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
   } | null>(null);
   const [saving, setSaving] = useState(false);
   const [toothHistory, setToothHistory] = useState<ToothHistoryEntry[]>([]);
+  const [allTeethHistory, setAllTeethHistory] = useState<Record<number, ToothHistoryEntry>>({});
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyExpanded, setHistoryExpanded] = useState(false);
   
   const { activeStatuses } = useToothStatuses();
+
+  // Load latest history entry for all teeth with non-healthy status
+  useEffect(() => {
+    const loadAllTeethHistory = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('dental_status_history')
+          .select('*')
+          .eq('patient_id', patientId)
+          .order('changed_at', { ascending: false });
+
+        if (error) throw error;
+        
+        // Group by tooth_number, keeping only the latest entry for each
+        const historyByTooth: Record<number, ToothHistoryEntry> = {};
+        (data || []).forEach(entry => {
+          if (!historyByTooth[entry.tooth_number]) {
+            historyByTooth[entry.tooth_number] = entry;
+          }
+        });
+        
+        setAllTeethHistory(historyByTooth);
+      } catch (error) {
+        console.error('Error loading all teeth history:', error);
+      }
+    };
+    
+    loadAllTeethHistory();
+  }, [patientId, dentalStatus]);
 
   const getToothStatus = (toothNumber: number): string => {
     const tooth = dentalStatus.find((t) => t.tooth_number === toothNumber);
@@ -285,9 +315,22 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
         )}
         
         {isHovered && (
-          <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded bg-popover border shadow-lg text-xs whitespace-nowrap">
-            <div className="font-medium">{status}</div>
-            {notes && <div className="text-muted-foreground max-w-[150px] truncate">{notes}</div>}
+          <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg bg-popover border shadow-lg text-xs max-w-[250px]">
+            <div className="font-medium text-foreground">{status}</div>
+            {notes && <div className="text-muted-foreground mt-1">{notes}</div>}
+            {allTeethHistory[toothNumber] && (
+              <div className="mt-2 pt-2 border-t border-border space-y-1">
+                <div className="text-[10px] text-muted-foreground font-medium">Ultima modificare:</div>
+                <div className="text-[10px] text-muted-foreground">
+                  {format(new Date(allTeethHistory[toothNumber].changed_at), 'dd MMM yyyy, HH:mm', { locale: ro })}
+                </div>
+                {allTeethHistory[toothNumber].notes && (
+                  <div className="text-[10px] text-foreground/80 italic">
+                    {allTeethHistory[toothNumber].notes}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
