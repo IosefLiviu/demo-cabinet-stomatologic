@@ -21,13 +21,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Tooth3DViewer } from './Tooth3DViewer';
-
-interface DiagnosticPoint {
-  id: string;
-  position: [number, number, number];
-  label: string;
-}
+import { Tooth3DViewer, DiagnosticPoint, DiagnosticLine } from './Tooth3DViewer';
 
 interface ToothHistoryEntry {
   id: string;
@@ -54,7 +48,7 @@ interface Tooth3DDialogProps {
   currentNotes: string;
   patientId: string;
   activeStatuses: ToothStatus[];
-  onSave: (status: string, notes: string, diagnosticPoints: DiagnosticPoint[]) => Promise<void>;
+  onSave: (status: string, notes: string, diagnosticPoints: DiagnosticPoint[], diagnosticLines: DiagnosticLine[]) => Promise<void>;
   getStatusHexColor: (status: string) => string | null;
   getStatusDisplayName: (status: string) => string;
 }
@@ -74,6 +68,7 @@ export function Tooth3DDialog({
   const [status, setStatus] = useState(currentStatus);
   const [notes, setNotes] = useState(currentNotes);
   const [diagnosticPoints, setDiagnosticPoints] = useState<DiagnosticPoint[]>([]);
+  const [diagnosticLines, setDiagnosticLines] = useState<DiagnosticLine[]>([]);
   const [saving, setSaving] = useState(false);
   const [toothHistory, setToothHistory] = useState<ToothHistoryEntry[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
@@ -86,9 +81,10 @@ export function Tooth3DDialog({
       setStatus(currentStatus);
       setNotes(currentNotes);
       setDiagnosticPoints([]);
+      setDiagnosticLines([]);
       setHistoryExpanded(false);
       loadToothHistory();
-      loadDiagnosticPoints();
+      loadDiagnosticData();
     }
   }, [open, toothNumber, currentStatus, currentNotes]);
 
@@ -135,8 +131,8 @@ export function Tooth3DDialog({
     }
   };
 
-  const loadDiagnosticPoints = async () => {
-    // Load diagnostic points from notes (stored as JSON in notes field with special prefix)
+  const loadDiagnosticData = async () => {
+    // Load diagnostic points and lines from notes
     try {
       const { data } = await supabase
         .from('dental_status')
@@ -146,14 +142,25 @@ export function Tooth3DDialog({
         .single();
       
       if (data?.notes) {
-        // Try to parse diagnostic points from notes - use greedy match to capture full JSON array
-        const diagnosticMatch = data.notes.match(/\[DIAGNOSTICS:(\[[\s\S]*?\])\]/);
-        if (diagnosticMatch) {
+        // Parse diagnostic points
+        const pointsMatch = data.notes.match(/\[DIAGNOSTICS:(\[[\s\S]*?\])\]/);
+        if (pointsMatch) {
           try {
-            const points = JSON.parse(diagnosticMatch[1]);
+            const points = JSON.parse(pointsMatch[1]);
             setDiagnosticPoints(points);
           } catch (e) {
-            console.error('Error parsing diagnostics:', e);
+            console.error('Error parsing diagnostic points:', e);
+          }
+        }
+        
+        // Parse diagnostic lines
+        const linesMatch = data.notes.match(/\[DIAGLINES:(\[[\s\S]*?\])\]/);
+        if (linesMatch) {
+          try {
+            const lines = JSON.parse(linesMatch[1]);
+            setDiagnosticLines(lines);
+          } catch (e) {
+            console.error('Error parsing diagnostic lines:', e);
           }
         }
       }
@@ -171,14 +178,27 @@ export function Tooth3DDialog({
     setDiagnosticPoints(prev => [...prev, newPoint]);
   };
 
+  const handleAddDiagnosticLine = (points: [number, number, number][], label: string) => {
+    const newLine: DiagnosticLine = {
+      id: crypto.randomUUID(),
+      points,
+      label,
+    };
+    setDiagnosticLines(prev => [...prev, newLine]);
+  };
+
   const handleRemoveDiagnostic = (id: string) => {
     setDiagnosticPoints(prev => prev.filter(p => p.id !== id));
+  };
+
+  const handleRemoveDiagnosticLine = (id: string) => {
+    setDiagnosticLines(prev => prev.filter(l => l.id !== id));
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await onSave(status, notes, diagnosticPoints);
+      await onSave(status, notes, diagnosticPoints, diagnosticLines);
       onOpenChange(false);
     } catch (error) {
       console.error('Error saving:', error);
@@ -219,14 +239,17 @@ export function Tooth3DDialog({
           </TabsList>
           
           <TabsContent value="3d" className="flex-1 min-h-0 mt-4">
-            <div className="h-[350px] rounded-lg overflow-hidden border">
+            <div className="h-[450px] rounded-lg overflow-hidden border">
               <Tooth3DViewer
                 toothNumber={toothNumber}
                 status={status}
                 statusColor={hexColor || undefined}
                 diagnosticPoints={diagnosticPoints}
+                diagnosticLines={diagnosticLines}
                 onAddDiagnostic={handleAddDiagnostic}
+                onAddDiagnosticLine={handleAddDiagnosticLine}
                 onRemoveDiagnostic={handleRemoveDiagnostic}
+                onRemoveDiagnosticLine={handleRemoveDiagnosticLine}
               />
             </div>
           </TabsContent>
