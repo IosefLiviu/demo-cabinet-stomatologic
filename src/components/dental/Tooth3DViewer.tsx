@@ -413,117 +413,115 @@ export function Tooth3DViewer({
   const totalDiagnostics = diagnosticPoints.length + diagnosticLines.length;
 
   return (
-    <div className="relative w-full h-full min-h-[450px]">
-      {/* 3D Canvas */}
-      <Canvas
-        camera={{ position: [0, 0, 4], fov: 45 }}
-        className="rounded-lg bg-gradient-to-b from-slate-900 to-slate-800"
-      >
-        <Suspense fallback={<LoadingFallback />}>
-          {/* Lighting */}
-          <ambientLight intensity={0.6} />
-          <directionalLight position={[5, 5, 5]} intensity={1.2} castShadow />
-          <directionalLight position={[-5, 3, -5]} intensity={0.6} />
-          <pointLight position={[0, 3, 3]} intensity={0.5} color="#fff5e6" />
-          
-          {/* Environment for realistic reflections */}
-          <Environment preset="studio" />
-          
-          {/* Contact shadow for grounding */}
-          <ContactShadows 
-            position={[0, -1.5, 0]} 
-            opacity={0.4} 
-            scale={4} 
-            blur={2} 
-            far={2} 
-          />
-          
-          {/* The 3D Tooth */}
-          <ToothMesh 
-            toothNumber={toothNumber}
-            statusColor={statusColor}
-            diagnosticPoints={diagnosticPoints}
-            diagnosticLines={diagnosticLines}
-            onPointClick={handlePointClick}
-            selectedPoint={selectedPoint}
-            drawMode={drawMode}
-            isDrawing={isDrawing}
-            drawingPoints={drawingPoints}
-            onDrawStart={handleDrawStart}
-            onDrawMove={handleDrawMove}
-            onDrawEnd={handleDrawEnd}
-            orbitControlsRef={orbitControlsRef}
-          />
-          
-          {/* Controls */}
-          <OrbitControls 
-            ref={orbitControlsRef}
-            enablePan={false}
-            minDistance={1}
-            maxDistance={10}
-            minPolarAngle={Math.PI * 0.1}
-            maxPolarAngle={Math.PI * 0.9}
-          />
-        </Suspense>
-      </Canvas>
-
-      {/* Drawing mode toggle */}
-      <div className="absolute top-3 left-3 flex gap-1 bg-background/90 backdrop-blur-sm rounded-lg p-1 shadow-lg border">
-        <Button
-          size="sm"
-          variant={drawMode === 'point' ? 'default' : 'ghost'}
-          className="h-8 px-2"
-          onClick={() => setDrawMode('point')}
-          title="Mod punct"
+    <div className="flex flex-col w-full h-full">
+      {/* 3D Canvas Container */}
+      <div className="relative flex-1 min-h-[350px]">
+        <Canvas
+          camera={{ position: [0, 0, 4], fov: 45 }}
+          className="rounded-lg bg-gradient-to-b from-slate-900 to-slate-800"
         >
-          <MousePointer className="h-4 w-4" />
-        </Button>
-        <Button
-          size="sm"
-          variant={drawMode === 'line' ? 'default' : 'ghost'}
-          className="h-8 px-2"
-          onClick={() => setDrawMode('line')}
-          title="Mod linie (drag)"
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
+          <Suspense fallback={<LoadingFallback />}>
+            {/* Lighting */}
+            <ambientLight intensity={0.6} />
+            <directionalLight position={[5, 5, 5]} intensity={1.2} castShadow />
+            <directionalLight position={[-5, 3, -5]} intensity={0.6} />
+            <pointLight position={[0, 3, 3]} intensity={0.5} color="#fff5e6" />
+            
+            {/* Environment for realistic reflections */}
+            <Environment preset="studio" />
+            
+            {/* Contact shadow for grounding */}
+            <ContactShadows 
+              position={[0, -1.5, 0]} 
+              opacity={0.4} 
+              scale={4} 
+              blur={2} 
+              far={2} 
+            />
+            
+            {/* The 3D Tooth */}
+            <ToothMesh 
+              toothNumber={toothNumber}
+              statusColor={statusColor}
+              diagnosticPoints={diagnosticPoints}
+              diagnosticLines={diagnosticLines}
+              onPointClick={handlePointClick}
+              selectedPoint={selectedPoint}
+              drawMode={drawMode}
+              isDrawing={isDrawing}
+              drawingPoints={drawingPoints}
+              onDrawStart={handleDrawStart}
+              onDrawMove={handleDrawMove}
+              onDrawEnd={handleDrawEnd}
+              orbitControlsRef={orbitControlsRef}
+            />
+            
+            {/* Controls */}
+            <OrbitControls 
+              ref={orbitControlsRef}
+              enablePan={false}
+              minDistance={1}
+              maxDistance={10}
+              minPolarAngle={Math.PI * 0.1}
+              maxPolarAngle={Math.PI * 0.9}
+            />
+          </Suspense>
+        </Canvas>
+
+        {/* Drawing mode toggle */}
+        <div className="absolute top-3 left-3 flex gap-1 bg-background/90 backdrop-blur-sm rounded-lg p-1 shadow-lg border">
+          <Button
+            size="sm"
+            variant={drawMode === 'point' ? 'default' : 'ghost'}
+            className="h-8 px-2"
+            onClick={() => setDrawMode('point')}
+            title="Mod punct"
+          >
+            <MousePointer className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant={drawMode === 'line' ? 'default' : 'ghost'}
+            className="h-8 px-2"
+            onClick={() => setDrawMode('line')}
+            title="Mod linie (drag)"
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Instructions overlay */}
+        <div className="absolute top-3 left-24 right-3 flex justify-between items-start pointer-events-none">
+          <div className="bg-background/80 backdrop-blur-sm rounded-lg px-3 py-2 text-xs text-muted-foreground">
+            {drawMode === 'point' ? (
+              <>
+                <p>🖱️ Trage pentru a roti | 🔍 Scroll zoom | 📍 Click = punct</p>
+              </>
+            ) : (
+              <>
+                <p>✏️ Ține apăsat și trage | 🔍 Scroll zoom | 💡 Eliberează = linie</p>
+              </>
+            )}
+          </div>
+          <div className={cn(
+            "px-3 py-1.5 rounded-lg text-xs font-medium",
+            statusColor ? 'text-white' : 'text-foreground bg-muted'
+          )} style={statusColor ? { backgroundColor: statusColor } : undefined}>
+            {status}
+          </div>
+        </div>
+
+        {/* Attribution - CC-BY required */}
+        <div className="absolute bottom-2 right-3 pointer-events-none">
+          <div className="bg-background/60 backdrop-blur-sm rounded px-2 py-1 text-[9px] text-muted-foreground/60 max-w-[150px] leading-tight">
+            Model: University of Dundee (CC-BY-4.0)
+          </div>
+        </div>
       </div>
 
-      {/* Instructions overlay */}
-      <div className="absolute top-14 left-3 right-3 flex justify-between items-start pointer-events-none">
-        <div className="bg-background/80 backdrop-blur-sm rounded-lg px-3 py-2 text-xs text-muted-foreground">
-          {drawMode === 'point' ? (
-            <>
-              <p>🖱️ Trage pentru a roti</p>
-              <p>🔍 Scroll pentru zoom</p>
-              <p>📍 Click pe dinte pentru punct</p>
-            </>
-          ) : (
-            <>
-              <p>✏️ Ține apăsat și trage pentru a desena</p>
-              <p>🔍 Scroll pentru zoom</p>
-              <p>💡 Eliberează pentru a termina linia</p>
-            </>
-          )}
-        </div>
-        <div className={cn(
-          "px-3 py-1.5 rounded-lg text-xs font-medium",
-          statusColor ? 'text-white' : 'text-foreground bg-muted'
-        )} style={statusColor ? { backgroundColor: statusColor } : undefined}>
-          {status}
-        </div>
-      </div>
-
-      {/* Attribution - CC-BY required */}
-      <div className="absolute top-24 right-3 pointer-events-none">
-        <div className="bg-background/60 backdrop-blur-sm rounded px-2 py-1 text-[9px] text-muted-foreground/60 max-w-[120px] leading-tight">
-          Model: University of Dundee, School of Dentistry (CC-BY-4.0)
-        </div>
-      </div>
-
-      {/* Diagnostic input panel */}
+      {/* Diagnostic input panel - BELOW the canvas */}
       {isAdding && (selectedPoint || pendingLine) && (
-        <div className="absolute bottom-3 left-3 right-3 bg-background/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border animate-in slide-in-from-bottom-2">
+        <div className="mt-3 bg-muted/50 rounded-lg p-3 border animate-in slide-in-from-bottom-2">
           <div className="flex items-center gap-2 mb-2">
             <Plus className="h-4 w-4 text-green-500" />
             <span className="text-sm font-medium">
@@ -552,9 +550,9 @@ export function Tooth3DViewer({
         </div>
       )}
 
-      {/* Diagnostic items list */}
+      {/* Diagnostic items list - BELOW the canvas */}
       {totalDiagnostics > 0 && !isAdding && (
-        <div className="absolute bottom-3 left-3 right-3 bg-background/95 backdrop-blur-sm rounded-lg p-2 shadow-lg border max-h-[120px] overflow-y-auto">
+        <div className="mt-3 bg-muted/50 rounded-lg p-2 border max-h-[120px] overflow-y-auto">
           <div className="text-xs font-medium text-muted-foreground mb-1.5 px-1">
             Diagnostice ({totalDiagnostics})
           </div>
@@ -563,7 +561,7 @@ export function Tooth3DViewer({
             {diagnosticPoints.map((point) => (
               <div 
                 key={point.id}
-                className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-md bg-muted/50 hover:bg-muted transition-colors"
+                className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-md bg-background/50 hover:bg-background transition-colors"
               >
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-destructive" />
@@ -581,7 +579,7 @@ export function Tooth3DViewer({
             {diagnosticLines.map((line) => (
               <div 
                 key={line.id}
-                className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-md bg-muted/50 hover:bg-muted transition-colors"
+                className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-md bg-background/50 hover:bg-background transition-colors"
               >
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-0.5 bg-destructive rounded" />
