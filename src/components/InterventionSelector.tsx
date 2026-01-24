@@ -596,16 +596,12 @@ export function InterventionSelector({
       {interventions.length > 0 && (
         <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
           {interventions.map((intervention) => {
-            const hasNoTeeth = !intervention.selectedTeeth || intervention.selectedTeeth.length === 0;
             return (
             <Collapsible 
               key={intervention.id} 
               open={expandedInterventions.has(intervention.id)}
               onOpenChange={() => toggleExpanded(intervention.id)}
-              className={cn(
-                "border rounded-lg overflow-hidden",
-                hasNoTeeth && "border-destructive border-2"
-              )}
+              className="border rounded-lg overflow-hidden"
             >
               {/* Intervention Header */}
               <CollapsibleTrigger asChild>
