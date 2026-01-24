@@ -1,0 +1,11 @@
+Model Information:
+* title:	Mandibular Left Canine
+* source:	https://sketchfab.com/3d-models/mandibular-left-canine-1082011ab5aa46bb96b2af6a02a4ec0c
+* author:	University of Dundee, School of Dentistry (https://sketchfab.com/DundeeDental)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Mandibular Left Canine" (https://sketchfab.com/3d-models/mandibular-left-canine-1082011ab5aa46bb96b2af6a02a4ec0c) by University of Dundee, School of Dentistry (https://sketchfab.com/DundeeDental) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

@@ -1,0 +1,11 @@
+Model Information:
+* title:	Mandibular First Premolar
+* source:	https://sketchfab.com/3d-models/mandibular-first-premolar-935637a703dc49eb9eeec9b15a8a5c4c
+* author:	University of Dundee, School of Dentistry (https://sketchfab.com/DundeeDental)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Mandibular First Premolar" (https://sketchfab.com/3d-models/mandibular-first-premolar-935637a703dc49eb9eeec9b15a8a5c4c) by University of Dundee, School of Dentistry (https://sketchfab.com/DundeeDental) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
