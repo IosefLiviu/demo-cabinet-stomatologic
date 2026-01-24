@@ -15,19 +15,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
-export type ToothStatus = 
-  | 'healthy'
-  | 'cavity'
-  | 'filled'
-  | 'crown'
-  | 'missing'
-  | 'implant'
-  | 'root_canal'
-  | 'extraction_needed';
-
 export interface ToothData {
   tooth_number: number;
-  status: ToothStatus;
+  status: string;
   notes?: string;
 }
 
@@ -58,9 +48,24 @@ export function PatientDentalChart({ patientId, dentalStatus, onStatusChange, re
   
   const { activeStatuses } = useToothStatuses();
 
+  // Map DB enum values to display names
+  const statusEnumToName: Record<string, string> = {
+    'healthy': 'Sănătos',
+    'cavity': 'Carie',
+    'filled': 'Obt Foto',
+    'crown': 'Coroană',
+    'missing': 'Absent',
+    'implant': 'Implant',
+    'root_canal': 'OBT Canal',
+    'extraction_needed': 'Rest Radicular',
+  };
+
   const getToothStatus = (toothNumber: number): string => {
     const tooth = dentalStatus.find((t) => t.tooth_number === toothNumber);
-    return tooth?.status || 'Sănătos';
+    if (!tooth) return 'Sănătos';
+    // Convert DB enum to display name if needed
+    const displayName = statusEnumToName[tooth.status] || tooth.status;
+    return displayName;
   };
 
   const getToothNotes = (toothNumber: number): string | undefined => {
@@ -86,25 +91,25 @@ export function PatientDentalChart({ patientId, dentalStatus, onStatusChange, re
     });
   };
 
+  // Map display name to DB enum value
+  const statusNameToEnum: Record<string, string> = {
+    'Sănătos': 'healthy',
+    'Carie': 'cavity',
+    'Obt Foto': 'filled',
+    'Coroană': 'crown',
+    'Absent': 'missing',
+    'Implant': 'implant',
+    'OBT Canal': 'root_canal',
+    'Rest Radicular': 'extraction_needed',
+    'RCR': 'extraction_needed',
+  };
+
   const handleSaveToothDialog = async () => {
     if (!toothDialog) return;
     setSaving(true);
 
     try {
-      // Map status name to enum value for database
-      const statusMapping: Record<string, string> = {
-        'Sănătos': 'healthy',
-        'Carie': 'cavity',
-        'Obt Foto': 'filled',
-        'Coroană': 'crown',
-        'Absent': 'missing',
-        'Implant': 'implant',
-        'OBT Canal': 'root_canal',
-        'Rest Radicular': 'extraction_needed',
-        'RCR': 'extraction_needed',
-      };
-      
-      const dbStatus = statusMapping[toothDialog.status] || 'healthy';
+      const dbStatus = statusNameToEnum[toothDialog.status] || 'healthy';
       
       // Upsert the dental status
       const { error } = await supabase
@@ -112,7 +117,7 @@ export function PatientDentalChart({ patientId, dentalStatus, onStatusChange, re
         .upsert({
           patient_id: patientId,
           tooth_number: toothDialog.toothNumber,
-          status: dbStatus as ToothStatus,
+          status: dbStatus as any,
           notes: toothDialog.notes || null,
           updated_at: new Date().toISOString(),
         }, {
@@ -121,12 +126,12 @@ export function PatientDentalChart({ patientId, dentalStatus, onStatusChange, re
 
       if (error) throw error;
 
-      // Update local state
+      // Update local state - store display name for consistency
       const newStatus = dentalStatus.filter(t => t.tooth_number !== toothDialog.toothNumber);
-      if (dbStatus !== 'healthy' || toothDialog.notes) {
+      if (toothDialog.status !== 'Sănătos' || toothDialog.notes) {
         newStatus.push({
           tooth_number: toothDialog.toothNumber,
-          status: dbStatus as ToothStatus,
+          status: dbStatus,
           notes: toothDialog.notes || undefined,
         });
       }
