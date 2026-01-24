@@ -58,6 +58,7 @@ const Index = () => {
   const [showPatientForm, setShowPatientForm] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | undefined>();
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [patientDetailsInitialTab, setPatientDetailsInitialTab] = useState<string>('info');
   const [treatmentPlanPatientId, setTreatmentPlanPatientId] = useState<string | undefined>();
   const [editingTreatmentPlan, setEditingTreatmentPlan] = useState<any>(undefined);
   const [treatmentPlanSourcePatient, setTreatmentPlanSourcePatient] = useState<Patient | null>(null);
@@ -744,7 +745,9 @@ const Index = () => {
           // Push current tab state (without patient) when closing patient details
           pushNavState({ tab: activeTab });
           setSelectedPatient(null);
+          setPatientDetailsInitialTab('info'); // Reset to default tab
         }}
+        initialTab={patientDetailsInitialTab}
         onEdit={handleEditPatient}
         onOpenTreatmentPlan={(patient) => {
           // Push patient state to nav history before leaving
@@ -841,6 +844,17 @@ const Index = () => {
             patientId: patient.id, 
             patientName: `${patient.first_name} ${patient.last_name}` 
           });
+          setPatientDetailsInitialTab('info');
+          setSelectedPatient(patient);
+        }}
+        onViewDentalStatus={(patient) => {
+          setShowAppointmentForm(false);
+          pushNavState({ 
+            tab: 'patients', 
+            patientId: patient.id, 
+            patientName: `${patient.first_name} ${patient.last_name}` 
+          });
+          setPatientDetailsInitialTab('dental');
           setSelectedPatient(patient);
         }}
         selectedDate={selectedDate}
