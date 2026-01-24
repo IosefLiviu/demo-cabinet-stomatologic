@@ -146,14 +146,14 @@ export function Tooth3DDialog({
         .single();
       
       if (data?.notes) {
-        // Try to parse diagnostic points from notes
-        const diagnosticMatch = data.notes.match(/\[DIAGNOSTICS:(.+?)\]/);
+        // Try to parse diagnostic points from notes - use greedy match to capture full JSON array
+        const diagnosticMatch = data.notes.match(/\[DIAGNOSTICS:(\[[\s\S]*?\])\]/);
         if (diagnosticMatch) {
           try {
             const points = JSON.parse(diagnosticMatch[1]);
             setDiagnosticPoints(points);
-          } catch {
-            // Not valid JSON, ignore
+          } catch (e) {
+            console.error('Error parsing diagnostics:', e);
           }
         }
       }
