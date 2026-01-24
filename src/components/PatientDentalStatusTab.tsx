@@ -274,59 +274,42 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
           onMouseEnter={() => setHoveredTooth(toothNumber)}
           onMouseLeave={() => setHoveredTooth(null)}
           className={cn(
-            'relative flex items-center justify-center rounded-xl overflow-hidden',
+            'relative flex items-center justify-center rounded-lg overflow-hidden',
             'transition-all duration-300 ease-out',
-            'bg-gradient-to-b from-white/10 to-transparent',
-            'shadow-[0_4px_15px_-3px_rgba(0,0,0,0.2)]',
-            'cursor-pointer',
-            isHovered && 'ring-2 ring-offset-2 ring-primary',
+            'bg-muted/30',
+            'cursor-pointer p-1',
+            isHovered && 'ring-2 ring-offset-1 ring-primary z-10',
             hasStatus && !isMissing && 'ring-2',
-            // Larger sizes for better 3D effect
+            // Adjusted sizes for proper image framing
             isDeciduous 
-              ? 'w-10 h-12 sm:w-11 sm:h-14' 
-              : 'w-11 h-14 sm:w-13 sm:h-16'
+              ? 'w-9 h-11 sm:w-10 sm:h-12' 
+              : 'w-10 h-14 sm:w-11 sm:h-16'
           )}
           style={{
             transform: isHovered 
-              ? `rotateX(${isLower ? '8deg' : '-8deg'}) rotateY(${toothNumber % 2 === 0 ? '5deg' : '-5deg'}) scale(1.15) translateZ(10px)`
-              : 'rotateX(0) rotateY(0) scale(1) translateZ(0)',
-            transformStyle: 'preserve-3d',
-            backfaceVisibility: 'hidden',
+              ? 'scale(1.1)'
+              : 'scale(1)',
             boxShadow: hasStatus && hexColor 
-              ? `0 0 0 2px ${hexColor}, ${isHovered ? `0 8px 25px -5px ${hexColor}80` : '0 4px 15px -3px rgba(0,0,0,0.2)'}`
+              ? `0 0 0 2px ${hexColor}`
               : isHovered 
-                ? '0 8px 25px -5px rgba(34,197,94,0.4)' 
-                : '0 4px 15px -3px rgba(0,0,0,0.2)',
+                ? '0 4px 12px rgba(0,0,0,0.15)' 
+                : 'none',
           }}
         >
-          {/* 3D Depth layer */}
-          <div 
-            className={cn(
-              "absolute inset-0 rounded-xl transition-opacity duration-300",
-              isHovered ? 'opacity-100' : 'opacity-0'
-            )}
-            style={{
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.1) 100%)',
-              transform: 'translateZ(-5px)',
-            }}
-          />
-
-          {/* Tooth image with 3D effect */}
+          {/* Tooth image - properly framed */}
           {toothImage ? (
             <img 
               src={toothImage} 
               alt={`Dinte ${toothNumber}`}
               className={cn(
-                "w-full h-full object-contain transition-all duration-300",
-                "drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]",
-                isMissing && 'opacity-20 grayscale blur-[0.5px]',
+                "w-full h-full object-contain",
+                "transition-all duration-200",
+                isMissing && 'opacity-20 grayscale',
                 isLower && 'rotate-180',
-                isHovered && 'drop-shadow-[0_4px_8px_rgba(0,0,0,0.25)]'
               )}
               style={{
-                filter: isHovered && !isMissing 
-                  ? 'brightness(1.1) contrast(1.05)' 
-                  : undefined,
+                maxWidth: '100%',
+                maxHeight: '100%',
               }}
             />
           ) : (
@@ -341,31 +324,11 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             </div>
           )}
           
-          {/* Status overlay with gradient */}
+          {/* Status overlay */}
           {hasStatus && hexColor && !isMissing && (
             <div 
-              className={cn(
-                "absolute inset-0 pointer-events-none rounded-xl",
-                "transition-opacity duration-300",
-                isHovered && 'opacity-70'
-              )}
-              style={{ backgroundColor: `${hexColor}40` }}
-            >
-              {/* Shine effect */}
-              <div 
-                className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-transparent"
-                style={{ mixBlendMode: 'overlay' }}
-              />
-            </div>
-          )}
-
-          {/* Highlight shine on hover */}
-          {isHovered && (
-            <div 
-              className="absolute inset-0 pointer-events-none rounded-xl animate-pulse"
-              style={{
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 50%, transparent 100%)',
-              }}
+              className="absolute inset-0 pointer-events-none rounded-lg"
+              style={{ backgroundColor: `${hexColor}30` }}
             />
           )}
         </button>
