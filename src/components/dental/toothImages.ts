@@ -39,8 +39,36 @@ import tooth46 from '@/assets/teeth/tooth-46.png';
 import tooth47 from '@/assets/teeth/tooth-47.png';
 import tooth48 from '@/assets/teeth/tooth-48.png';
 
+// Deciduous (baby) teeth - Upper right: 55-51
+import tooth55 from '@/assets/teeth/tooth-55.png';
+import tooth54 from '@/assets/teeth/tooth-54.png';
+import tooth53 from '@/assets/teeth/tooth-53.png';
+import tooth52 from '@/assets/teeth/tooth-52.png';
+import tooth51 from '@/assets/teeth/tooth-51.png';
+
+// Deciduous (baby) teeth - Upper left: 61-65
+import tooth61 from '@/assets/teeth/tooth-61.png';
+import tooth62 from '@/assets/teeth/tooth-62.png';
+import tooth63 from '@/assets/teeth/tooth-63.png';
+import tooth64 from '@/assets/teeth/tooth-64.png';
+import tooth65 from '@/assets/teeth/tooth-65.png';
+
+// Deciduous (baby) teeth - Lower left: 71-75
+import tooth71 from '@/assets/teeth/tooth-71.png';
+import tooth72 from '@/assets/teeth/tooth-72.png';
+import tooth73 from '@/assets/teeth/tooth-73.png';
+import tooth74 from '@/assets/teeth/tooth-74.png';
+import tooth75 from '@/assets/teeth/tooth-75.png';
+
+// Deciduous (baby) teeth - Lower right: 81-85
+import tooth81 from '@/assets/teeth/tooth-81.png';
+import tooth82 from '@/assets/teeth/tooth-82.png';
+import tooth83 from '@/assets/teeth/tooth-83.png';
+import tooth84 from '@/assets/teeth/tooth-84.png';
+import tooth85 from '@/assets/teeth/tooth-85.png';
+
 export const toothImages: Record<number, string> = {
-  // Upper right (Q1)
+  // Upper right (Q1) - Permanent
   18: tooth18,
   17: tooth17,
   16: tooth16,
@@ -49,7 +77,7 @@ export const toothImages: Record<number, string> = {
   13: tooth13,
   12: tooth12,
   11: tooth11,
-  // Upper left (Q2)
+  // Upper left (Q2) - Permanent
   21: tooth21,
   22: tooth22,
   23: tooth23,
@@ -58,7 +86,7 @@ export const toothImages: Record<number, string> = {
   26: tooth26,
   27: tooth27,
   28: tooth28,
-  // Lower left (Q3)
+  // Lower left (Q3) - Permanent
   31: tooth31,
   32: tooth32,
   33: tooth33,
@@ -67,7 +95,7 @@ export const toothImages: Record<number, string> = {
   36: tooth36,
   37: tooth37,
   38: tooth38,
-  // Lower right (Q4)
+  // Lower right (Q4) - Permanent
   41: tooth41,
   42: tooth42,
   43: tooth43,
@@ -76,47 +104,32 @@ export const toothImages: Record<number, string> = {
   46: tooth46,
   47: tooth47,
   48: tooth48,
-};
-
-// For deciduous teeth, we'll map them to similar permanent teeth
-// Upper deciduous: 55-51, 61-65 → map to similar teeth
-// Lower deciduous: 85-81, 71-75 → map to similar teeth
-export const deciduousToothMapping: Record<number, number> = {
-  // Upper right deciduous (55-51) → map to premolars/incisors
-  55: 16, // Second molar → First molar
-  54: 15, // First molar → Second premolar
-  53: 13, // Canine → Canine
-  52: 12, // Lateral incisor → Lateral incisor
-  51: 11, // Central incisor → Central incisor
-  // Upper left deciduous (61-65)
-  61: 21, // Central incisor → Central incisor
-  62: 22, // Lateral incisor → Lateral incisor
-  63: 23, // Canine → Canine
-  64: 25, // First molar → Second premolar
-  65: 26, // Second molar → First molar
-  // Lower left deciduous (71-75)
-  71: 31, // Central incisor → Central incisor
-  72: 32, // Lateral incisor → Lateral incisor
-  73: 33, // Canine → Canine
-  74: 35, // First molar → Second premolar
-  75: 36, // Second molar → First molar
-  // Lower right deciduous (81-85)
-  81: 41, // Central incisor → Central incisor
-  82: 42, // Lateral incisor → Lateral incisor
-  83: 43, // Canine → Canine
-  84: 45, // First molar → Second premolar
-  85: 46, // Second molar → First molar
+  // Deciduous - Upper right (55-51)
+  55: tooth55,
+  54: tooth54,
+  53: tooth53,
+  52: tooth52,
+  51: tooth51,
+  // Deciduous - Upper left (61-65)
+  61: tooth61,
+  62: tooth62,
+  63: tooth63,
+  64: tooth64,
+  65: tooth65,
+  // Deciduous - Lower left (71-75)
+  71: tooth71,
+  72: tooth72,
+  73: tooth73,
+  74: tooth74,
+  75: tooth75,
+  // Deciduous - Lower right (81-85)
+  81: tooth81,
+  82: tooth82,
+  83: tooth83,
+  84: tooth84,
+  85: tooth85,
 };
 
 export function getToothImage(toothNumber: number): string | undefined {
-  // Check if it's a permanent tooth
-  if (toothImages[toothNumber]) {
-    return toothImages[toothNumber];
-  }
-  // Check if it's a deciduous tooth and map it
-  const mappedTooth = deciduousToothMapping[toothNumber];
-  if (mappedTooth && toothImages[mappedTooth]) {
-    return toothImages[mappedTooth];
-  }
-  return undefined;
+  return toothImages[toothNumber];
 }
