@@ -721,32 +721,6 @@ export function InterventionSelector({
                       />
                     </div>
                   </div>
-
-                  {/* Tooth Selection - Text Input Only */}
-                  <div className="space-y-2">
-                    <Label className="text-xs">Dinți tratați (ex: 11, 21, 36)</Label>
-                    <Input
-                      type="text"
-                      placeholder="ex: 11, 21, 36"
-                      value={intervention.selectedTeeth.sort((a, b) => a - b).join(', ')}
-                      onChange={(e) => {
-                        const input = e.target.value;
-                        const numbers = input
-                          .split(/[,\s]+/)
-                          .map(s => parseInt(s.trim(), 10))
-                          .filter(n => !isNaN(n) && n >= 11 && n <= 85);
-                        const unique = Array.from(new Set(numbers));
-                        onInterventionsChange(
-                          interventions.map(i => 
-                            i.id === intervention.id 
-                              ? { ...i, selectedTeeth: unique }
-                              : i
-                          )
-                        );
-                      }}
-                      className="h-8"
-                    />
-                  </div>
                 </div>
               </CollapsibleContent>
             </Collapsible>
