@@ -54,6 +54,7 @@ import {
 import { Patient } from '@/hooks/usePatients';
 import { supabase } from '@/integrations/supabase/client';
 import { MiniDentalChart, ToothData } from './MiniDentalChart';
+import { PatientDentalChart } from './PatientDentalChart';
 import { useTreatmentPlans, TreatmentPlan } from '@/hooks/useTreatmentPlans';
 import { PatientRadiographs } from './PatientRadiographs';
 import { escapeHtml, escapeHtmlArray, escapeNumberArray } from '@/lib/print-utils';
@@ -750,6 +751,19 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                 )}
               </div>
             )}
+
+            {/* Dental Chart */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-muted-foreground uppercase flex items-center gap-2">
+                <Stethoscope className="h-4 w-4" />
+                Status dentar
+              </h4>
+              <PatientDentalChart
+                patientId={patient.id}
+                dentalStatus={dentalStatus}
+                onStatusChange={setDentalStatus}
+              />
+            </div>
 
             {/* Medications */}
             {patient.medications && patient.medications.length > 0 && (
