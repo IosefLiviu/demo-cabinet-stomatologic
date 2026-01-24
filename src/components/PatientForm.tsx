@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Patient, PatientInsert } from '@/hooks/usePatients';
 
 interface PatientFormProps {
@@ -25,6 +26,7 @@ interface PatientFormProps {
   onClose: () => void;
   onSubmit: (patient: PatientInsert) => Promise<any>;
   editingPatient?: Patient;
+  allPatients?: Patient[];
 }
 
 export function PatientForm({
@@ -32,6 +34,7 @@ export function PatientForm({
   onClose,
   onSubmit,
   editingPatient,
+  allPatients = [],
 }: PatientFormProps) {
   const [formData, setFormData] = useState<PatientInsert>({
     first_name: '',
@@ -56,6 +59,26 @@ export function PatientForm({
   const [newCondition, setNewCondition] = useState('');
   const [newMedication, setNewMedication] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Normalize phone for comparison (remove spaces, dashes, etc.)
+  const normalizePhone = (phone: string) => phone.replace(/[\s\-\(\)\.]/g, '');
+
+  // Find patients with the same phone number
+  const duplicatePatients = useMemo(() => {
+    if (!formData.phone || formData.phone.length < 5) return [];
+    
+    const normalizedPhone = normalizePhone(formData.phone);
+    
+    return allPatients.filter((p) => {
+      // Exclude the patient being edited
+      if (editingPatient && p.id === editingPatient.id) return false;
+      
+      const patientPhone = normalizePhone(p.phone);
+      return patientPhone === normalizedPhone || 
+             patientPhone.includes(normalizedPhone) || 
+             normalizedPhone.includes(patientPhone);
+    });
+  }, [formData.phone, allPatients, editingPatient]);
 
   useEffect(() => {
     if (editingPatient) {
@@ -188,7 +211,23 @@ export function PatientForm({
                   }
                   placeholder="07xx xxx xxx"
                   required
+                  className={duplicatePatients.length > 0 ? 'border-warning focus-visible:ring-warning' : ''}
                 />
+                {duplicatePatients.length > 0 && (
+                  <Alert variant="destructive" className="mt-2 py-2 bg-warning/10 border-warning text-warning-foreground">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription className="text-sm">
+                      <span className="font-medium">Atenție!</span> Numărul de telefon există deja la:
+                      <ul className="mt-1 list-disc list-inside">
+                        {duplicatePatients.map((p) => (
+                          <li key={p.id}>
+                            {p.last_name} {p.first_name} ({p.phone})
+                          </li>
+                        ))}
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
