@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toothImages } from './toothImages';
 import { cn } from '@/lib/utils';
 
@@ -18,6 +19,30 @@ const quadrant4 = [48, 47, 46, 45, 44, 43, 42, 41]; // Lower right
 const upperArch = [...quadrant1, ...quadrant2];
 const lowerArch = [...quadrant4, ...quadrant3];
 
+// Status display names in Romanian
+const statusDisplayNames: Record<string, string> = {
+  healthy: 'Sănătos',
+  cavity: 'Carie',
+  filled: 'Obturat',
+  crown: 'Coroană',
+  missing: 'Absent',
+  implant: 'Implant',
+  root_canal: 'Canal radicular',
+  extraction_needed: 'Extracție necesară',
+};
+
+// Status colors for visual indicator
+const statusColors: Record<string, string> = {
+  healthy: 'bg-green-500',
+  cavity: 'bg-red-500',
+  filled: 'bg-blue-500',
+  crown: 'bg-yellow-500',
+  missing: 'bg-gray-400',
+  implant: 'bg-purple-500',
+  root_canal: 'bg-orange-500',
+  extraction_needed: 'bg-red-700',
+};
+
 interface ToothSelectorProps {
   selectedTeeth: number[];
   onToggleTooth: (tooth: number) => void;
@@ -26,6 +51,7 @@ interface ToothSelectorProps {
   selectionMode: 'teeth' | 'arch';
   onModeChange: (mode: 'teeth' | 'arch') => void;
   isArchMode?: boolean;
+  dentalStatus?: Record<number, { status: string; notes?: string }>;
 }
 
 // Helper to count arch groups
@@ -38,6 +64,16 @@ const countArchGroups = (toothNumbers: number[]): number => {
   return Math.max(1, count);
 };
 
+// Helper to strip diagnostic tags from notes
+const getCleanNotes = (notes: string | null | undefined): string => {
+  if (!notes) return '';
+  let cleaned = notes;
+  // Remove [DIAGNOSTICS:...] and [DIAGLINES:...] tags
+  cleaned = cleaned.replace(/\[DIAGNOSTICS:[^\]]*\]/g, '');
+  cleaned = cleaned.replace(/\[DIAGLINES:[^\]]*\]/g, '');
+  return cleaned.trim();
+};
+
 export function ToothSelector({
   selectedTeeth,
   onToggleTooth,
@@ -46,12 +82,19 @@ export function ToothSelector({
   selectionMode,
   onModeChange,
   isArchMode,
+  dentalStatus = {},
 }: ToothSelectorProps) {
   const renderToothButton = (tooth: number, isDeciduous: boolean = false) => {
     const isSelected = selectedTeeth.includes(tooth);
     const toothImage = toothImages[tooth];
+    const status = dentalStatus[tooth];
+    const statusName = status?.status || 'healthy';
+    const statusDisplay = statusDisplayNames[statusName] || statusName;
+    const statusColor = statusColors[statusName] || 'bg-muted';
+    const cleanNotes = getCleanNotes(status?.notes);
+    const isMissing = statusName === 'missing';
     
-    return (
+    const toothContent = (
       <button
         key={tooth}
         type="button"
@@ -62,10 +105,17 @@ export function ToothSelector({
           isSelected 
             ? "bg-primary/20 ring-2 ring-primary shadow-lg" 
             : "hover:bg-muted/50",
-          isDeciduous && "opacity-90"
+          isDeciduous && "opacity-90",
+          isMissing && "opacity-40 grayscale"
         )}
-        title={`Dinte ${tooth}`}
       >
+        {/* Status indicator dot */}
+        {status && statusName !== 'healthy' && (
+          <div className={cn(
+            "absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-background",
+            statusColor
+          )} />
+        )}
         {toothImage ? (
           <img 
             src={toothImage} 
@@ -91,9 +141,34 @@ export function ToothSelector({
         </span>
       </button>
     );
+    
+    // Wrap with tooltip if there's status info
+    if (status) {
+      return (
+        <Tooltip key={tooth}>
+          <TooltipTrigger asChild>
+            {toothContent}
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-[200px]">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <div className={cn("w-2 h-2 rounded-full", statusColor)} />
+                <span className="font-medium text-xs">{statusDisplay}</span>
+              </div>
+              {cleanNotes && (
+                <p className="text-[10px] text-muted-foreground">{cleanNotes}</p>
+              )}
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+    
+    return toothContent;
   };
 
   return (
+    <TooltipProvider delayDuration={200}>
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-4">
         <p className="text-sm font-medium">Selectează dinții</p>
@@ -251,5 +326,6 @@ export function ToothSelector({
         )}
       </div>
     </div>
+    </TooltipProvider>
   );
 }

@@ -142,7 +142,39 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
   const [editingPlanId, setEditingPlanId] = useState<string | undefined>();
   // Selection mode per item: 'teeth' for individual, 'arch' for quadrant/arch selection
   const [selectionMode, setSelectionMode] = useState<Record<string, 'teeth' | 'arch'>>({});
+  // Patient dental status for tooltips
+  const [patientDentalStatus, setPatientDentalStatus] = useState<Record<number, { status: string; notes?: string }>>({});
 
+  // Load patient dental status when patient changes
+  useEffect(() => {
+    const loadDentalStatus = async () => {
+      if (!selectedPatientId) {
+        setPatientDentalStatus({});
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('dental_status')
+        .select('tooth_number, status, notes')
+        .eq('patient_id', selectedPatientId);
+
+      if (error) {
+        console.error('Error loading dental status:', error);
+        return;
+      }
+
+      const statusMap: Record<number, { status: string; notes?: string }> = {};
+      (data || []).forEach((item: any) => {
+        statusMap[item.tooth_number] = {
+          status: item.status,
+          notes: item.notes,
+        };
+      });
+      setPatientDentalStatus(statusMap);
+    };
+
+    loadDentalStatus();
+  }, [selectedPatientId]);
 
   // Update selectedPatientId when initialPatientId changes
   useEffect(() => {
@@ -707,6 +739,7 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
                               selectionMode={getSelectionMode(item.id)}
                               onModeChange={(mode) => setSelectionMode(prev => ({ ...prev, [item.id]: mode }))}
                               isArchMode={item.isArchMode}
+                              dentalStatus={patientDentalStatus}
                             />
                           </PopoverContent>
                         </Popover>
