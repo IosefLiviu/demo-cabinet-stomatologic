@@ -453,10 +453,11 @@ export function Tooth3DDialog({
                               .sort(([a], [b]) => b.localeCompare(a)) // Sort dates descending
                               .map(([dateKey, entries]) => (
                                 <div key={dateKey} className="border-b last:border-b-0">
-                                  {/* Date Header */}
-                                  <div className="bg-muted/50 px-3 py-2 sticky top-0">
+                                  {/* Date Header - matching the main trigger style */}
+                                  <div className="bg-muted/50 px-3 py-2 sticky top-0 flex items-center gap-2">
+                                    <History className="h-3.5 w-3.5 text-muted-foreground" />
                                     <span className="text-xs font-semibold text-muted-foreground">
-                                      Istoric Modificări • {format(new Date(dateKey), 'd MMMM yyyy', { locale: ro })}
+                                      Istoric modificări {format(new Date(dateKey), 'd MMMM yyyy', { locale: ro })} ({entries.length})
                                     </span>
                                   </div>
                                   
