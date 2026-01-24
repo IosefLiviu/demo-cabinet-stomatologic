@@ -455,7 +455,7 @@ export function Tooth3DViewer({
       {/* 3D Canvas Container - responsive height */}
       <div className="relative flex-1 min-h-[280px] sm:min-h-[350px]">
         <Canvas
-          camera={{ position: [0, 0, 2.8], fov: 45 }}
+          camera={{ position: [0, 0, 1.8], fov: 45 }}
           className="rounded-lg bg-gradient-to-b from-slate-900 to-slate-800 touch-none"
           style={{ touchAction: 'none' }}
         >
