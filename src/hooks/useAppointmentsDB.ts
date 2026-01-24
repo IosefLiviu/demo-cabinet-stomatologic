@@ -502,6 +502,88 @@ export function useAppointmentsDB() {
           // Don't throw - the appointment was completed, just log the error
         }
 
+        // Update dental_status and record history for each tooth with status data
+        const toothUpdates: { toothNumber: number; status: string; notes?: string; treatmentName: string }[] = [];
+        completedAppointment.appointment_treatments.forEach(t => {
+          if (t.tooth_data && Array.isArray(t.tooth_data)) {
+            t.tooth_data.forEach((td: ToothDataEntry) => {
+              // Only record non-healthy statuses or those with notes
+              if (td.status && td.status !== 'healthy' && td.status !== 'Sănătos') {
+                toothUpdates.push({
+                  toothNumber: td.toothNumber,
+                  status: td.status,
+                  notes: td.notes,
+                  treatmentName: t.treatment_name,
+                });
+              }
+            });
+          }
+        });
+
+        // Process dental status updates
+        if (toothUpdates.length > 0) {
+          // Map status display names to database enum values
+          const statusNameToEnum: Record<string, string> = {
+            'Sănătos': 'healthy',
+            'Carie': 'cavity',
+            'Obt Foto': 'filled',
+            'Coroană': 'crown',
+            'Absent': 'missing',
+            'Implant': 'implant',
+            'OBT Canal': 'root_canal',
+            'Rest Radicular': 'extraction_needed',
+          };
+
+          for (const update of toothUpdates) {
+            // Get current status for this tooth
+            const { data: currentStatus } = await supabase
+              .from('dental_status')
+              .select('status, notes')
+              .eq('patient_id', completedAppointment.patient_id)
+              .eq('tooth_number', update.toothNumber)
+              .maybeSingle();
+
+            const dbStatus = statusNameToEnum[update.status] || update.status;
+            const oldDbStatus = currentStatus?.status || 'healthy';
+            
+            // Build history note
+            const historyNote = `Programare finalizată: ${update.treatmentName}${update.notes ? ` - ${update.notes}` : ''}`;
+
+            // Upsert dental_status
+            const { error: statusError } = await supabase
+              .from('dental_status')
+              .upsert({
+                patient_id: completedAppointment.patient_id,
+                tooth_number: update.toothNumber,
+                status: dbStatus as any,
+                notes: update.notes || currentStatus?.notes || null,
+                updated_at: new Date().toISOString(),
+              }, {
+                onConflict: 'patient_id,tooth_number',
+              });
+
+            if (statusError) {
+              console.error('Error updating dental status:', statusError);
+            }
+
+            // Insert history entry (always record for completed appointments)
+            const { error: historyError } = await supabase
+              .from('dental_status_history')
+              .insert({
+                patient_id: completedAppointment.patient_id,
+                tooth_number: update.toothNumber,
+                old_status: oldDbStatus,
+                new_status: dbStatus,
+                notes: historyNote,
+                changed_by: null, // Could be enhanced to include doctor_id
+              });
+
+            if (historyError) {
+              console.error('Error recording dental status history:', historyError);
+            }
+          }
+        }
+
         // Mark treatment plan items as completed (only if ALL teeth from that item are completed)
         const planItemIds = completedAppointment.appointment_treatments
           .filter(t => t.plan_item_id)
