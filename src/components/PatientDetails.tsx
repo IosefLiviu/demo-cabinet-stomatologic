@@ -96,11 +96,13 @@ interface PatientDetailsProps {
   onOpenTreatmentPlan?: (patient: Patient) => void;
   onEditTreatmentPlan?: (patient: Patient, plan: TreatmentPlan) => void;
   onCreateAppointment?: (patient: Patient, treatmentName?: string, interventions?: SelectedIntervention[], doctorId?: string) => void;
+  initialTab?: string;
 }
 
 type PeriodFilter = 'all' | '30days' | '3months' | '1year';
 
-export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatmentPlan, onEditTreatmentPlan, onCreateAppointment }: PatientDetailsProps) {
+export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatmentPlan, onEditTreatmentPlan, onCreateAppointment, initialTab }: PatientDetailsProps) {
+  const [activeTab, setActiveTab] = useState(initialTab || 'info');
   const [treatmentHistory, setTreatmentHistory] = useState<TreatmentRecord[]>([]);
   const [dentalStatus, setDentalStatus] = useState<ToothData[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
@@ -153,8 +155,10 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
       fetchTreatmentHistory();
       fetchDentalStatus();
       loadTreatmentPlans();
+      // Reset to initialTab when opening
+      setActiveTab(initialTab || 'info');
     }
-  }, [patient, open]);
+  }, [patient, open, initialTab]);
 
   const loadTreatmentPlans = async () => {
     if (!patient) return;
@@ -668,7 +672,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
           </div>
         </SheetHeader>
 
-        <Tabs defaultValue="info" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full grid grid-cols-5">
             <TabsTrigger value="info">Informații</TabsTrigger>
             <TabsTrigger value="dental" className="gap-1">
