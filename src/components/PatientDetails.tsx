@@ -54,7 +54,7 @@ import {
 import { Patient } from '@/hooks/usePatients';
 import { supabase } from '@/integrations/supabase/client';
 import { MiniDentalChart, ToothData } from './MiniDentalChart';
-import { PatientDentalChart } from './PatientDentalChart';
+import { PatientDentalStatusTab } from './PatientDentalStatusTab';
 import { useTreatmentPlans, TreatmentPlan } from '@/hooks/useTreatmentPlans';
 import { PatientRadiographs } from './PatientRadiographs';
 import { escapeHtml, escapeHtmlArray, escapeNumberArray } from '@/lib/print-utils';
@@ -669,8 +669,12 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
         </SheetHeader>
 
         <Tabs defaultValue="info" className="w-full">
-          <TabsList className="w-full grid grid-cols-4">
+          <TabsList className="w-full grid grid-cols-5">
             <TabsTrigger value="info">Informații</TabsTrigger>
+            <TabsTrigger value="dental" className="gap-1">
+              <Stethoscope className="h-3 w-3" />
+              Status Dentar
+            </TabsTrigger>
             <TabsTrigger value="history">Istoric</TabsTrigger>
             <TabsTrigger value="radiographs" className="gap-1">
               <FileImage className="h-3 w-3" />
@@ -751,20 +755,6 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                 )}
               </div>
             )}
-
-            {/* Dental Chart */}
-            <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-muted-foreground uppercase flex items-center gap-2">
-                <Stethoscope className="h-4 w-4" />
-                Status dentar
-              </h4>
-              <PatientDentalChart
-                patientId={patient.id}
-                dentalStatus={dentalStatus}
-                onStatusChange={setDentalStatus}
-              />
-            </div>
-
             {/* Medications */}
             {patient.medications && patient.medications.length > 0 && (
               <div className="space-y-3">
@@ -813,6 +803,15 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
               <Calendar className="h-3.5 w-3.5" />
               Înregistrat la {format(new Date(patient.created_at), 'd MMMM yyyy', { locale: ro })}
             </div>
+          </TabsContent>
+
+          {/* Dental Status Tab */}
+          <TabsContent value="dental" className="mt-6">
+            <PatientDentalStatusTab
+              patientId={patient.id}
+              dentalStatus={dentalStatus}
+              onStatusChange={setDentalStatus}
+            />
           </TabsContent>
 
           <TabsContent value="history" className="mt-6">
