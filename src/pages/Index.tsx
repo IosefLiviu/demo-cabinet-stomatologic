@@ -733,6 +733,7 @@ const Index = () => {
         onClose={handleClosePatientForm}
         onSubmit={handlePatientFormSubmit}
         editingPatient={editingPatient}
+        allPatients={patients}
       />
 
       {/* Patient Details */}
