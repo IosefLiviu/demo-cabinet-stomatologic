@@ -416,7 +416,9 @@ export function Tooth3DDialog({
                   <Button variant="ghost" className="w-full justify-between">
                     <span className="flex items-center gap-2">
                       <History className="h-4 w-4" />
-                      Istoric modificări ({toothHistory.length})
+                      Istoric modificări {toothHistory.length > 0 && toothHistory[0]?.changed_at 
+                        ? format(new Date(toothHistory[0].changed_at), 'd MMMM yyyy', { locale: ro }) 
+                        : ''} ({toothHistory.length})
                     </span>
                     {historyExpanded ? (
                       <ChevronUp className="h-4 w-4" />
