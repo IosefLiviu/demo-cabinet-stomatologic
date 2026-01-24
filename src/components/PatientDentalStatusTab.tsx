@@ -96,23 +96,23 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
 
   // Load all history entries
   useEffect(() => {
-    const loadAllTeethHistory = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('dental_status_history')
-          .select('*')
-          .eq('patient_id', patientId)
-          .order('changed_at', { ascending: false });
-
-        if (error) throw error;
-        setAllHistoryEntries(data || []);
-      } catch (error) {
-        console.error('Error loading all teeth history:', error);
-      }
-    };
-    
-    loadAllTeethHistory();
+    loadAllTeethHistoryFn();
   }, [patientId, dentalStatus]);
+
+  const loadAllTeethHistoryFn = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('dental_status_history')
+        .select('*')
+        .eq('patient_id', patientId)
+        .order('changed_at', { ascending: false });
+
+      if (error) throw error;
+      setAllHistoryEntries(data || []);
+    } catch (error) {
+      console.error('Error loading all teeth history:', error);
+    }
+  };
 
   // Group history entries by date
   const historyByDate = allHistoryEntries.reduce((acc, entry) => {
@@ -232,6 +232,13 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
       }
       
       onStatusChange?.(newStatus);
+      
+      // Reload history after save to show the new entry
+      if (oldDbStatus !== dbStatus) {
+        await loadAllTeethHistoryFn();
+        await loadToothHistory(toothDialog.toothNumber);
+      }
+      
       toast.success('Status dentar salvat');
       setToothDialog(null);
     } catch (error) {
