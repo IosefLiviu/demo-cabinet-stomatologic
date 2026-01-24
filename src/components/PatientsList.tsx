@@ -12,9 +12,11 @@ import {
   User,
   Calendar,
   FileText,
+  Upload,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ImportPatientsDialog } from './ImportPatientsDialog';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -45,6 +47,7 @@ interface PatientsListProps {
   onDelete: (id: string) => void;
   onAddNew: () => void;
   onViewDetails: (patient: Patient) => void;
+  onRefetch?: () => void;
 }
 
 export function PatientsList({
@@ -54,8 +57,10 @@ export function PatientsList({
   onDelete,
   onAddNew,
   onViewDetails,
+  onRefetch,
 }: PatientsListProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [showImportDialog, setShowImportDialog] = useState(false);
 
   const filteredPatients = searchQuery
     ? patients.filter(
@@ -100,11 +105,26 @@ export function PatientsList({
             className="pl-10"
           />
         </div>
-        <Button onClick={onAddNew} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Pacient nou
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowImportDialog(true)} className="gap-2">
+            <Upload className="h-4 w-4" />
+            Import CSV
+          </Button>
+          <Button onClick={onAddNew} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Pacient nou
+          </Button>
+        </div>
       </div>
+
+      <ImportPatientsDialog
+        open={showImportDialog}
+        onClose={() => setShowImportDialog(false)}
+        onSuccess={() => {
+          setShowImportDialog(false);
+          onRefetch?.();
+        }}
+      />
 
       {/* Table */}
       <div className="rounded-xl border bg-card shadow-sm overflow-hidden">

@@ -96,7 +96,7 @@ const Index = () => {
   const [cancellingAppointmentId, setCancellingAppointmentId] = useState<string | null>(null);
   const [cancellingAppointmentName, setCancellingAppointmentName] = useState<string>('');
 
-  const { patients, loading: patientsLoading, addPatient, updatePatient, deletePatient } = usePatients();
+  const { patients, loading: patientsLoading, addPatient, updatePatient, deletePatient, refetch: refetchPatients } = usePatients();
   const { 
     appointments, 
     loading: appointmentsLoading, 
@@ -623,6 +623,7 @@ const Index = () => {
                 });
                 setSelectedPatient(patient);
               }}
+              onRefetch={refetchPatients}
             />
           </TabsContent>
 
