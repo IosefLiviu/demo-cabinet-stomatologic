@@ -37,6 +37,8 @@ interface ToothHistoryEntry {
   new_status: string;
   notes: string | null;
   changed_at: string;
+  changed_by: string | null;
+  doctor_name?: string | null;
 }
 
 interface PatientDentalStatusTabProps {
@@ -108,7 +110,29 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
         .order('changed_at', { ascending: false });
 
       if (error) throw error;
-      setAllHistoryEntries(data || []);
+      
+      // Fetch doctor names for changed_by user IDs
+      const userIds = [...new Set((data || []).map(d => d.changed_by).filter(Boolean))];
+      let doctorMap: Record<string, string> = {};
+      
+      if (userIds.length > 0) {
+        const { data: doctorsData } = await supabase
+          .from('doctors')
+          .select('user_id, name')
+          .in('user_id', userIds);
+        
+        doctorMap = (doctorsData || []).reduce((acc, doc) => {
+          if (doc.user_id) acc[doc.user_id] = doc.name;
+          return acc;
+        }, {} as Record<string, string>);
+      }
+      
+      const entriesWithDoctorNames = (data || []).map(entry => ({
+        ...entry,
+        doctor_name: entry.changed_by ? doctorMap[entry.changed_by] || null : null
+      }));
+      
+      setAllHistoryEntries(entriesWithDoctorNames);
     } catch (error) {
       console.error('Error loading all teeth history:', error);
     }
@@ -157,7 +181,29 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
         .limit(20);
 
       if (error) throw error;
-      setToothHistory(data || []);
+      
+      // Fetch doctor names for changed_by user IDs
+      const userIds = [...new Set((data || []).map(d => d.changed_by).filter(Boolean))];
+      let doctorMap: Record<string, string> = {};
+      
+      if (userIds.length > 0) {
+        const { data: doctorsData } = await supabase
+          .from('doctors')
+          .select('user_id, name')
+          .in('user_id', userIds);
+        
+        doctorMap = (doctorsData || []).reduce((acc, doc) => {
+          if (doc.user_id) acc[doc.user_id] = doc.name;
+          return acc;
+        }, {} as Record<string, string>);
+      }
+      
+      const entriesWithDoctorNames = (data || []).map(entry => ({
+        ...entry,
+        doctor_name: entry.changed_by ? doctorMap[entry.changed_by] || null : null
+      }));
+      
+      setToothHistory(entriesWithDoctorNames);
     } catch (error) {
       console.error('Error loading tooth history:', error);
       setToothHistory([]);
@@ -468,6 +514,9 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
                                   {getStatusDisplayName(entry.new_status)}
                                 </Badge>
                                 <span className="text-xs text-muted-foreground ml-auto">
+                                  {entry.doctor_name && (
+                                    <span className="font-medium mr-1">{entry.doctor_name} •</span>
+                                  )}
                                   {format(new Date(entry.changed_at), 'HH:mm', { locale: ro })}
                                 </span>
                               </div>
@@ -610,6 +659,9 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
                                   </Badge>
                                 </div>
                                 <span className="text-xs text-muted-foreground">
+                                  {entry.doctor_name && (
+                                    <span className="font-medium mr-1">{entry.doctor_name} •</span>
+                                  )}
                                   {format(new Date(entry.changed_at), 'dd MMM yyyy, HH:mm', { locale: ro })}
                                 </span>
                               </div>
