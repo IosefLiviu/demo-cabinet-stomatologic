@@ -722,71 +722,30 @@ export function InterventionSelector({
                     </div>
                   </div>
 
-                  {/* Tooth Selection - Simplified */}
-                  <div className="space-y-3">
-                    <Label className="text-xs">Selectează dinții tratați</Label>
-                    
-                    {/* Arcade (Maxilar sus / Mandibular jos) */}
-                    <div className="space-y-2">
-                      <div className="text-xs text-muted-foreground font-medium">Arcade</div>
-                      <div className="grid grid-cols-2 gap-3">
-                        {renderArchButton(intervention.id, intervention, upperArch, 'Maxilar Sus', 'Arcada superioară (16 dinți)')}
-                        {renderArchButton(intervention.id, intervention, lowerArch, 'Mandibular Jos', 'Arcada inferioară (16 dinți)')}
-                      </div>
-                    </div>
-                    
-                    {/* Divider */}
-                    <div className="flex justify-center">
-                      <div className="w-full border-b border-muted-foreground/20 my-2" />
-                    </div>
-                    
-                    {/* Cadrane (1-4) */}
-                    <div className="space-y-2">
-                      <div className="text-xs text-muted-foreground font-medium">Cadrane</div>
-                      <div className="grid grid-cols-2 gap-3">
-                        {renderArchButton(intervention.id, intervention, quadrant1, 'Cadran 1', 'Superior dreapta (18-11)')}
-                        {renderArchButton(intervention.id, intervention, quadrant2, 'Cadran 2', 'Superior stânga (21-28)')}
-                        {renderArchButton(intervention.id, intervention, quadrant4, 'Cadran 4', 'Inferior dreapta (48-41)')}
-                        {renderArchButton(intervention.id, intervention, quadrant3, 'Cadran 3', 'Inferior stânga (31-38)')}
-                      </div>
-                    </div>
-
-                    {/* Individual teeth input */}
-                    <div className="space-y-2">
-                      <div className="text-xs text-muted-foreground font-medium">Sau introdu numerele dinților (ex: 11, 21, 36)</div>
-                      <Input
-                        type="text"
-                        placeholder="ex: 11, 21, 36"
-                        value={intervention.selectedTeeth.sort((a, b) => a - b).join(', ')}
-                        onChange={(e) => {
-                          const input = e.target.value;
-                          const numbers = input
-                            .split(/[,\s]+/)
-                            .map(s => parseInt(s.trim(), 10))
-                            .filter(n => !isNaN(n) && n >= 11 && n <= 85);
-                          const unique = Array.from(new Set(numbers));
-                          // Update selectedTeeth directly
-                          onInterventionsChange(
-                            interventions.map(i => 
-                              i.id === intervention.id 
-                                ? { ...i, selectedTeeth: unique }
-                                : i
-                            )
-                          );
-                        }}
-                        className="h-8"
-                      />
-                    </div>
-                    
-                    {/* Selected teeth summary */}
-                    {intervention.selectedTeeth.length > 0 && (
-                      <div className="p-3 bg-muted/30 rounded-lg">
-                        <div className="text-sm font-medium mb-1">Dinți selectați: {intervention.selectedTeeth.length}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {intervention.selectedTeeth.sort((a, b) => a - b).join(', ')}
-                        </div>
-                      </div>
-                    )}
+                  {/* Tooth Selection - Text Input Only */}
+                  <div className="space-y-2">
+                    <Label className="text-xs">Dinți tratați (ex: 11, 21, 36)</Label>
+                    <Input
+                      type="text"
+                      placeholder="ex: 11, 21, 36"
+                      value={intervention.selectedTeeth.sort((a, b) => a - b).join(', ')}
+                      onChange={(e) => {
+                        const input = e.target.value;
+                        const numbers = input
+                          .split(/[,\s]+/)
+                          .map(s => parseInt(s.trim(), 10))
+                          .filter(n => !isNaN(n) && n >= 11 && n <= 85);
+                        const unique = Array.from(new Set(numbers));
+                        onInterventionsChange(
+                          interventions.map(i => 
+                            i.id === intervention.id 
+                              ? { ...i, selectedTeeth: unique }
+                              : i
+                          )
+                        );
+                      }}
+                      className="h-8"
+                    />
                   </div>
                 </div>
               </CollapsibleContent>
