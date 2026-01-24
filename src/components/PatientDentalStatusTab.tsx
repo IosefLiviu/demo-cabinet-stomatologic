@@ -1,28 +1,26 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Loader2, Save, History, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToothStatuses } from '@/hooks/useToothStatuses';
 import { getToothImage } from './dental/toothImages';
 import { toast } from 'sonner';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { Tooth3DDialog } from './dental/Tooth3DDialog';
+
+interface DiagnosticPoint {
+  id: string;
+  position: [number, number, number];
+  label: string;
+}
 
 export interface ToothData {
   tooth_number: number;
@@ -88,11 +86,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
     status: string;
     notes: string;
   } | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [toothHistory, setToothHistory] = useState<ToothHistoryEntry[]>([]);
   const [allHistoryEntries, setAllHistoryEntries] = useState<ToothHistoryEntry[]>([]);
-  const [loadingHistory, setLoadingHistory] = useState(false);
-  const [historyExpanded, setHistoryExpanded] = useState(false);
   
   const { activeStatuses } = useToothStatuses();
 
@@ -169,50 +163,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
     return statusEnumToName[status] || status;
   };
 
-  const loadToothHistory = async (toothNumber: number) => {
-    setLoadingHistory(true);
-    try {
-      const { data, error } = await supabase
-        .from('dental_status_history')
-        .select('*')
-        .eq('patient_id', patientId)
-        .eq('tooth_number', toothNumber)
-        .order('changed_at', { ascending: false })
-        .limit(20);
-
-      if (error) throw error;
-      
-      // Fetch doctor names for changed_by user IDs
-      const userIds = [...new Set((data || []).map(d => d.changed_by).filter(Boolean))];
-      let doctorMap: Record<string, string> = {};
-      
-      if (userIds.length > 0) {
-        const { data: doctorsData } = await supabase
-          .from('doctors')
-          .select('user_id, name')
-          .in('user_id', userIds);
-        
-        doctorMap = (doctorsData || []).reduce((acc, doc) => {
-          if (doc.user_id) acc[doc.user_id] = doc.name;
-          return acc;
-        }, {} as Record<string, string>);
-      }
-      
-      const entriesWithDoctorNames = (data || []).map(entry => ({
-        ...entry,
-        doctor_name: entry.changed_by ? doctorMap[entry.changed_by] || null : null
-      }));
-      
-      setToothHistory(entriesWithDoctorNames);
-    } catch (error) {
-      console.error('Error loading tooth history:', error);
-      setToothHistory([]);
-    } finally {
-      setLoadingHistory(false);
-    }
-  };
-
-  const openToothDialog = async (toothNumber: number) => {
+  const openToothDialog = (toothNumber: number) => {
     const currentStatus = getToothStatus(toothNumber);
     const currentNotes = getToothNotes(toothNumber) || '';
     
@@ -222,77 +173,73 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
       status: currentStatus,
       notes: currentNotes,
     });
-    setHistoryExpanded(false);
-    await loadToothHistory(toothNumber);
   };
 
-  const handleSaveToothDialog = async () => {
+  const handleSaveToothStatus = async (status: string, notes: string, diagnosticPoints: DiagnosticPoint[]) => {
     if (!toothDialog) return;
-    setSaving(true);
 
-    try {
-      const oldStatus = getToothStatus(toothDialog.toothNumber);
-      const dbStatus = statusNameToEnum[toothDialog.status] || 'healthy';
-      const oldDbStatus = statusNameToEnum[oldStatus] || 'healthy';
-      
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      // Save history entry if status changed
-      if (oldDbStatus !== dbStatus) {
-        await supabase
-          .from('dental_status_history')
-          .insert({
-            patient_id: patientId,
-            tooth_number: toothDialog.toothNumber,
-            old_status: oldDbStatus,
-            new_status: dbStatus,
-            notes: toothDialog.notes || null,
-            changed_by: user?.id || null,
-          });
-      }
-      
-      // Upsert the dental status
-      const { error } = await supabase
-        .from('dental_status')
-        .upsert({
+    const oldStatus = getToothStatus(toothDialog.toothNumber);
+    const dbStatus = statusNameToEnum[status] || 'healthy';
+    const oldDbStatus = statusNameToEnum[oldStatus] || 'healthy';
+    
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    // Prepare notes with diagnostic points if any
+    let finalNotes = notes;
+    if (diagnosticPoints.length > 0) {
+      const diagnosticsJson = JSON.stringify(diagnosticPoints);
+      finalNotes = `${notes}\n[DIAGNOSTICS:${diagnosticsJson}]`;
+    }
+    
+    // Save history entry if status changed
+    if (oldDbStatus !== dbStatus) {
+      await supabase
+        .from('dental_status_history')
+        .insert({
           patient_id: patientId,
           tooth_number: toothDialog.toothNumber,
-          status: dbStatus as any,
-          notes: toothDialog.notes || null,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'patient_id,tooth_number',
+          old_status: oldDbStatus,
+          new_status: dbStatus,
+          notes: finalNotes || null,
+          changed_by: user?.id || null,
         });
-
-      if (error) throw error;
-
-      // Update local state
-      const newStatus = dentalStatus.filter(t => t.tooth_number !== toothDialog.toothNumber);
-      if (toothDialog.status !== 'Sănătos' || toothDialog.notes) {
-        newStatus.push({
-          tooth_number: toothDialog.toothNumber,
-          status: dbStatus,
-          notes: toothDialog.notes || undefined,
-        });
-      }
-      
-      onStatusChange?.(newStatus);
-      
-      // Reload history after save to show the new entry
-      if (oldDbStatus !== dbStatus) {
-        await loadAllTeethHistoryFn();
-        await loadToothHistory(toothDialog.toothNumber);
-      }
-      
-      toast.success('Status dentar salvat');
-      setToothDialog(null);
-    } catch (error) {
-      console.error('Error saving tooth status:', error);
-      toast.error('Eroare la salvare');
-    } finally {
-      setSaving(false);
     }
+    
+    // Upsert the dental status
+    const { error } = await supabase
+      .from('dental_status')
+      .upsert({
+        patient_id: patientId,
+        tooth_number: toothDialog.toothNumber,
+        status: dbStatus as any,
+        notes: finalNotes || null,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'patient_id,tooth_number',
+      });
+
+    if (error) throw error;
+
+    // Update local state
+    const newStatus = dentalStatus.filter(t => t.tooth_number !== toothDialog.toothNumber);
+    if (status !== 'Sănătos' || finalNotes) {
+      newStatus.push({
+        tooth_number: toothDialog.toothNumber,
+        status: dbStatus,
+        notes: finalNotes || undefined,
+      });
+    }
+    
+    onStatusChange?.(newStatus);
+    
+    // Reload history after save
+    if (oldDbStatus !== dbStatus) {
+      await loadAllTeethHistoryFn();
+    }
+    
+    toast.success('Status dentar salvat');
+    setToothDialog(null);
   };
 
   const renderTooth = (toothNumber: number, isDeciduous: boolean = false, isLower: boolean = false) => {
@@ -663,165 +610,23 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
         </div>
       )}
 
-      {/* Tooth Edit Dialog with History */}
-      <Dialog open={!!toothDialog?.open} onOpenChange={() => setToothDialog(null)}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              Dinte {toothDialog?.toothNumber}
-              {toothDialog && (
-                <Badge 
-                  variant="outline"
-                  style={{
-                    backgroundColor: `${getStatusHexColor(toothDialog.status)}20`,
-                    borderColor: getStatusHexColor(toothDialog.status) || undefined,
-                    color: getStatusHexColor(toothDialog.status) || undefined,
-                  }}
-                >
-                  {toothDialog.status}
-                </Badge>
-              )}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <div className="grid grid-cols-4 gap-2">
-                {activeStatuses.map((status) => {
-                  const isSelected = toothDialog?.status === status.name;
-                  return (
-                    <button
-                      key={status.id}
-                      type="button"
-                      onClick={() => setToothDialog(prev => prev ? { ...prev, status: status.name } : null)}
-                      className={cn(
-                        'px-2 py-2 rounded-lg border-2 text-xs font-medium transition-all',
-                        isSelected && 'ring-2 ring-primary ring-offset-2'
-                      )}
-                      style={{
-                        backgroundColor: `${status.color}20`,
-                        borderColor: status.color,
-                        color: status.color,
-                      }}
-                    >
-                      {status.name}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Note</Label>
-              <Textarea
-                value={toothDialog?.notes || ''}
-                onChange={(e) => setToothDialog(prev => prev ? { ...prev, notes: e.target.value } : null)}
-                placeholder="Adaugă note despre dinte..."
-                rows={2}
-              />
-            </div>
-
-            {/* History Section */}
-            <Collapsible open={historyExpanded} onOpenChange={setHistoryExpanded}>
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" className="w-full justify-between">
-                  <span className="flex items-center gap-2">
-                    <History className="h-4 w-4" />
-                    Istoric modificări ({toothHistory.length})
-                  </span>
-                  {historyExpanded ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="mt-2 border rounded-lg">
-                  {loadingHistory ? (
-                    <div className="flex items-center justify-center p-4">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    </div>
-                  ) : toothHistory.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-muted-foreground">
-                      Nu există istoric pentru acest dinte
-                    </div>
-                  ) : (
-                    <ScrollArea className="h-[200px]">
-                      <div className="divide-y">
-                        {toothHistory.map((entry) => {
-                          const oldColor = getStatusHexColor(getStatusDisplayName(entry.old_status || 'healthy'));
-                          const newColor = getStatusHexColor(getStatusDisplayName(entry.new_status));
-                          
-                          return (
-                            <div key={entry.id} className="p-3 space-y-1">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2 text-sm">
-                                  {entry.old_status && (
-                                    <>
-                                      <Badge 
-                                        variant="outline" 
-                                        className="text-xs"
-                                        style={{
-                                          backgroundColor: oldColor ? `${oldColor}20` : undefined,
-                                          borderColor: oldColor || undefined,
-                                          color: oldColor || undefined,
-                                        }}
-                                      >
-                                        {getStatusDisplayName(entry.old_status)}
-                                      </Badge>
-                                      <span className="text-muted-foreground">→</span>
-                                    </>
-                                  )}
-                                  <Badge 
-                                    variant="outline"
-                                    className="text-xs"
-                                    style={{
-                                      backgroundColor: newColor ? `${newColor}20` : undefined,
-                                      borderColor: newColor || undefined,
-                                      color: newColor || undefined,
-                                    }}
-                                  >
-                                    {getStatusDisplayName(entry.new_status)}
-                                  </Badge>
-                                </div>
-                                <span className="text-xs text-muted-foreground">
-                                  {entry.doctor_name && (
-                                    <span className="font-medium mr-1">{entry.doctor_name} •</span>
-                                  )}
-                                  {format(new Date(entry.changed_at), 'dd MMM yyyy, HH:mm', { locale: ro })}
-                                </span>
-                              </div>
-                              {entry.notes && (
-                                <p className="text-xs text-muted-foreground">{entry.notes}</p>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </ScrollArea>
-                  )}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
-
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => setToothDialog(null)}>
-              Anulează
-            </Button>
-            <Button type="button" onClick={handleSaveToothDialog} disabled={saving}>
-              {saving ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <Save className="h-4 w-4 mr-2" />
-              )}
-              Salvează
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* 3D Tooth Dialog */}
+      {toothDialog && (
+        <Tooth3DDialog
+          open={toothDialog.open}
+          onOpenChange={(open) => {
+            if (!open) setToothDialog(null);
+          }}
+          toothNumber={toothDialog.toothNumber}
+          currentStatus={toothDialog.status}
+          currentNotes={toothDialog.notes}
+          patientId={patientId}
+          activeStatuses={activeStatuses}
+          onSave={handleSaveToothStatus}
+          getStatusHexColor={getStatusHexColor}
+          getStatusDisplayName={getStatusDisplayName}
+        />
+      )}
     </div>
   );
 }
