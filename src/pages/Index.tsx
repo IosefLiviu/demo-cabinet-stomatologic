@@ -833,6 +833,15 @@ const Index = () => {
         }}
         onSubmit={handleAppointmentSubmit}
         onDelete={editingAppointmentData ? handleAppointmentDelete : undefined}
+        onViewPatient={(patient) => {
+          setShowAppointmentForm(false);
+          pushNavState({ 
+            tab: 'patients', 
+            patientId: patient.id, 
+            patientName: `${patient.first_name} ${patient.last_name}` 
+          });
+          setSelectedPatient(patient);
+        }}
         selectedDate={selectedDate}
         selectedTime={selectedTime}
         selectedCabinet={selectedCabinetForForm}
