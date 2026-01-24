@@ -96,6 +96,51 @@ export function Tooth3DDialog({
     return str.slice(startIndex, endIndex + 1);
   };
 
+  const getDiagnosticLabels = (rawNotes: string | null): string[] => {
+    if (!rawNotes) return [];
+    const labels: string[] = [];
+
+    const pointsStartIndex = rawNotes.indexOf('[DIAGNOSTICS:');
+    if (pointsStartIndex !== -1) {
+      const jsonStart = pointsStartIndex + '[DIAGNOSTICS:'.length;
+      const jsonContent = extractBalancedJson(rawNotes, jsonStart);
+      if (jsonContent) {
+        try {
+          const parsed = JSON.parse(jsonContent);
+          if (Array.isArray(parsed)) {
+            parsed.forEach((p: any) => {
+              const label = typeof p?.label === 'string' ? p.label.trim() : '';
+              if (label) labels.push(label);
+            });
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    const linesStartIndex = rawNotes.indexOf('[DIAGLINES:');
+    if (linesStartIndex !== -1) {
+      const jsonStart = linesStartIndex + '[DIAGLINES:'.length;
+      const jsonContent = extractBalancedJson(rawNotes, jsonStart);
+      if (jsonContent) {
+        try {
+          const parsed = JSON.parse(jsonContent);
+          if (Array.isArray(parsed)) {
+            parsed.forEach((l: any) => {
+              const label = typeof l?.label === 'string' ? l.label.trim() : '';
+              if (label) labels.push(label);
+            });
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    return Array.from(new Set(labels));
+  };
+
   // Helper to get clean notes without diagnostic data
   const getCleanNotes = (rawNotes: string | null): string => {
     if (!rawNotes) return '';
@@ -437,7 +482,20 @@ export function Tooth3DDialog({
                                   </span>
                                 </div>
                                 {entry.notes && (
-                                  <p className="text-xs text-muted-foreground">{getCleanNotes(entry.notes)}</p>
+                                  <div className="space-y-1">
+                                    {getCleanNotes(entry.notes) && (
+                                      <p className="text-xs text-muted-foreground">{getCleanNotes(entry.notes)}</p>
+                                    )}
+                                    {getDiagnosticLabels(entry.notes).length > 0 && (
+                                      <div className="flex flex-wrap gap-1">
+                                        {getDiagnosticLabels(entry.notes).map((label) => (
+                                          <Badge key={`${entry.id}-${label}`} variant="outline" className="text-[10px]">
+                                            {label}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
                                 )}
                               </div>
                             );

@@ -117,6 +117,57 @@ function parseDiagnosticData(notes: string | null): { points: number; lines: num
   return { points, lines };
 }
 
+function parseDiagnosticLabels(notes: string | null): { pointLabels: string[]; lineLabels: string[] } {
+  if (!notes) return { pointLabels: [], lineLabels: [] };
+
+  const pointLabels: string[] = [];
+  const lineLabels: string[] = [];
+
+  const pointsStartIndex = notes.indexOf('[DIAGNOSTICS:');
+  if (pointsStartIndex !== -1) {
+    const jsonStart = pointsStartIndex + '[DIAGNOSTICS:'.length;
+    const jsonContent = extractBalancedJson(notes, jsonStart);
+    if (jsonContent) {
+      try {
+        const parsed = JSON.parse(jsonContent);
+        if (Array.isArray(parsed)) {
+          parsed.forEach((p: any) => {
+            const label = typeof p?.label === 'string' ? p.label.trim() : '';
+            if (label) pointLabels.push(label);
+          });
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  const linesStartIndex = notes.indexOf('[DIAGLINES:');
+  if (linesStartIndex !== -1) {
+    const jsonStart = linesStartIndex + '[DIAGLINES:'.length;
+    const jsonContent = extractBalancedJson(notes, jsonStart);
+    if (jsonContent) {
+      try {
+        const parsed = JSON.parse(jsonContent);
+        if (Array.isArray(parsed)) {
+          parsed.forEach((l: any) => {
+            const label = typeof l?.label === 'string' ? l.label.trim() : '';
+            if (label) lineLabels.push(label);
+          });
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  // unique
+  return {
+    pointLabels: Array.from(new Set(pointLabels)),
+    lineLabels: Array.from(new Set(lineLabels)),
+  };
+}
+
 // Helper to get clean notes without diagnostic data
 function getCleanNotes(notes: string | null): string {
   if (!notes) return '';
@@ -720,6 +771,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
                           const newColor = getStatusHexColor(getStatusDisplayName(entry.new_status));
                           const diagnosticData = parseDiagnosticData(entry.notes);
                           const cleanNotes = getCleanNotes(entry.notes);
+                          const diagnosticLabels = parseDiagnosticLabels(entry.notes);
                           const hasDiagnostics = diagnosticData.points > 0 || diagnosticData.lines > 0;
                           const statusChanged = entry.old_status !== entry.new_status;
                           
@@ -814,6 +866,22 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
                                         {diagnosticData.lines} {diagnosticData.lines === 1 ? 'traseu diagnostic' : 'trasee diagnostic'}
                                       </Badge>
                                     )}
+                                  </div>
+                                )}
+
+                                {/* Diagnostic labels (e.g. the text you wrote on the red line) */}
+                                {(diagnosticLabels.pointLabels.length > 0 || diagnosticLabels.lineLabels.length > 0) && (
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    {diagnosticLabels.pointLabels.map((label) => (
+                                      <Badge key={`p-${entry.id}-${label}`} variant="outline" className="text-[10px]">
+                                        {label}
+                                      </Badge>
+                                    ))}
+                                    {diagnosticLabels.lineLabels.map((label) => (
+                                      <Badge key={`l-${entry.id}-${label}`} variant="outline" className="text-[10px]">
+                                        {label}
+                                      </Badge>
+                                    ))}
                                   </div>
                                 )}
                                 
