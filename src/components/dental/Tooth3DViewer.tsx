@@ -143,6 +143,7 @@ function ToothMesh({
   drawMode,
   isDrawing,
   drawingPoints,
+  pendingLine,
   onDrawStart,
   onDrawMove,
   onDrawEnd,
@@ -157,6 +158,7 @@ function ToothMesh({
   drawMode: 'point' | 'line';
   isDrawing: boolean;
   drawingPoints: [number, number, number][];
+  pendingLine: [number, number, number][] | null;
   onDrawStart: (position: [number, number, number]) => void;
   onDrawMove: (position: [number, number, number]) => void;
   onDrawEnd: () => void;
@@ -281,10 +283,17 @@ function ToothMesh({
         />
       ))}
 
-      {/* Drawing preview */}
+      {/* Drawing preview - while actively drawing */}
       {isDrawing && drawingPoints.length >= 2 && (
         <DrawingPreview 
           points={drawingPoints.map(p => [p[0] / scale, p[1] / scale, p[2] / scale] as [number, number, number])} 
+        />
+      )}
+
+      {/* Pending line preview - after drawing, waiting for label */}
+      {pendingLine && pendingLine.length >= 2 && (
+        <DrawingPreview 
+          points={pendingLine.map(p => [p[0] / scale, p[1] / scale, p[2] / scale] as [number, number, number])} 
         />
       )}
 
@@ -450,6 +459,7 @@ export function Tooth3DViewer({
               drawMode={drawMode}
               isDrawing={isDrawing}
               drawingPoints={drawingPoints}
+              pendingLine={pendingLine}
               onDrawStart={handleDrawStart}
               onDrawMove={handleDrawMove}
               onDrawEnd={handleDrawEnd}
