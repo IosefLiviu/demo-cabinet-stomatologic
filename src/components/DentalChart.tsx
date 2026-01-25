@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { cleanDentalNotes } from '@/lib/cleanDentalNotes';
 
 // Re-export from new ImageDentalChart for modern usage
 export { ImageDentalChart } from './dental/ImageDentalChart';
@@ -74,6 +75,7 @@ export function DentalChart({ dentalStatus, onToothClick, readonly = false }: De
   const renderTooth = (toothNumber: number, isDeciduous: boolean = false) => {
     const status = getToothStatus(toothNumber);
     const notes = getToothNotes(toothNumber);
+    const cleanNotes = cleanDentalNotes(notes);
     const isHovered = hoveredTooth === toothNumber;
 
     return (
@@ -103,7 +105,7 @@ export function DentalChart({ dentalStatus, onToothClick, readonly = false }: De
         {isHovered && (
           <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded bg-popover border shadow-lg text-xs whitespace-nowrap">
             <div className="font-medium">{statusLabels[status]}</div>
-            {notes && <div className="text-muted-foreground max-w-[150px] truncate">{notes}</div>}
+            {cleanNotes && <div className="text-muted-foreground max-w-[150px] truncate">{cleanNotes}</div>}
           </div>
         )}
       </div>

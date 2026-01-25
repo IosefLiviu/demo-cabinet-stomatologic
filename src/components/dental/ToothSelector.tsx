@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toothImages } from './toothImages';
 import { cn } from '@/lib/utils';
+import { cleanDentalNotes } from '@/lib/cleanDentalNotes';
 
 // FDI notation - permanent teeth
 const upperPermanentTeeth = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
@@ -64,54 +65,7 @@ const countArchGroups = (toothNumbers: number[]): number => {
   return Math.max(1, count);
 };
 
-// Extract balanced JSON starting at given index (handles nested brackets)
-function extractBalancedJson(str: string, startIndex: number): string | null {
-  if (str[startIndex] !== '[') return null;
-  let depth = 0;
-  for (let i = startIndex; i < str.length; i++) {
-    if (str[i] === '[') depth++;
-    else if (str[i] === ']') depth--;
-    if (depth === 0) return str.slice(startIndex, i + 1);
-  }
-  return null;
-}
-
-// Helper to strip diagnostic tags from notes (handles nested JSON arrays)
-const getCleanNotes = (notes: string | null | undefined): string => {
-  if (!notes) return '';
-  let result = notes;
-
-  // Remove [DIAGNOSTICS:...] tag with balanced JSON
-  const pointsIdx = result.indexOf('[DIAGNOSTICS:');
-  if (pointsIdx !== -1) {
-    const jsonStart = pointsIdx + '[DIAGNOSTICS:'.length;
-    const jsonContent = extractBalancedJson(result, jsonStart);
-    if (jsonContent) {
-      result = result.replace(`[DIAGNOSTICS:${jsonContent}]`, '');
-    }
-  }
-
-  // Remove [DIAGLINES:...] tag with balanced JSON
-  const linesIdx = result.indexOf('[DIAGLINES:');
-  if (linesIdx !== -1) {
-    const jsonStart = linesIdx + '[DIAGLINES:'.length;
-    const jsonContent = extractBalancedJson(result, jsonStart);
-    if (jsonContent) {
-      result = result.replace(`[DIAGLINES:${jsonContent}]`, '');
-    }
-  }
-
-  // Clean up any orphaned leading coordinate arrays from older saves
-  const trimmed = result.trimStart();
-  if (trimmed.startsWith('[[') && !/[a-zA-ZăâîșțĂÂÎȘȚ]/.test(trimmed)) {
-    const leading = extractBalancedJson(trimmed, 0);
-    if (leading) {
-      result = trimmed.slice(leading.length).trimStart();
-    }
-  }
-
-  return result.replace(/^\n+|\n+$/g, '').trim();
-};
+// Notes are cleaned centrally to prevent technical arrays from leaking into UI.
 
 export function ToothSelector({
   selectedTeeth,
@@ -130,7 +84,7 @@ export function ToothSelector({
     const statusName = status?.status || 'healthy';
     const statusDisplay = statusDisplayNames[statusName] || statusName;
     const statusColor = statusColors[statusName] || 'bg-muted';
-    const cleanNotes = getCleanNotes(status?.notes);
+    const cleanNotes = cleanDentalNotes(status?.notes);
     const isMissing = statusName === 'missing';
     
     const toothContent = (

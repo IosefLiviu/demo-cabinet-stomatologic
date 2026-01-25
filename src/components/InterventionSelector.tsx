@@ -11,6 +11,7 @@ import { ToothStatus } from './DentalChart';
 import { useToothStatuses } from '@/hooks/useToothStatuses';
 import { getToothImage } from './dental/toothImages';
 import { supabase } from '@/integrations/supabase/client';
+import { cleanDentalNotes } from '@/lib/cleanDentalNotes';
 import {
   Dialog,
   DialogContent,
@@ -531,11 +532,12 @@ export function InterventionSelector({
             <div className="font-medium">
               {isSelected ? getStatusLabel(status) : hasPatientStatus ? getStatusLabel(status) : 'Click pentru a selecta'}
             </div>
-            {(toothDetails?.notes || patientStatus?.notes) && (
-              <div className="text-muted-foreground max-w-[150px] truncate">
-                {toothDetails?.notes || patientStatus?.notes}
-              </div>
-            )}
+            {(() => {
+              const cleanNotes = cleanDentalNotes(toothDetails?.notes || patientStatus?.notes);
+              return cleanNotes ? (
+                <div className="text-muted-foreground max-w-[150px] truncate">{cleanNotes}</div>
+              ) : null;
+            })()}
           </div>
         )}
       </div>
