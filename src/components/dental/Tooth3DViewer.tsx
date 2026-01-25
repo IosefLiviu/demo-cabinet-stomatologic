@@ -499,7 +499,9 @@ export function Tooth3DViewer({
             {/* Controls - enable touch for mobile */}
             <OrbitControls 
               ref={orbitControlsRef}
+              makeDefault
               enablePan={false}
+              enableDamping={false}
               minDistance={1}
               maxDistance={10}
               minPolarAngle={Math.PI * 0.1}
