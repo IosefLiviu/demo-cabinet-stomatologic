@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, ArrowLeft, Save, X, Users, Stethoscope, Shield, ShieldCheck, Palette, Mail, Download, FileText, CheckCircle, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Edit, Trash2, ArrowLeft, Save, X, Users, Stethoscope, Shield, ShieldCheck, Palette, Mail, Download, FileText, CheckCircle, XCircle, ChevronLeft, ChevronRight, Wrench, Loader2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -136,6 +136,9 @@ export default function Admin() {
   const [totalLogs, setTotalLogs] = useState(0);
   const [logsFilter, setLogsFilter] = useState<'all' | 'success' | 'failed'>('all');
   const LOGS_PER_PAGE = 20;
+
+  // Maintenance state
+  const [cleaningNotes, setCleaningNotes] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -727,6 +730,10 @@ export default function Admin() {
               <FileText className="h-4 w-4" />
               Loguri
             </TabsTrigger>
+            <TabsTrigger value="maintenance" className="gap-2">
+              <Wrench className="h-4 w-4" />
+              Mentenanță
+            </TabsTrigger>
           </TabsList>
 
           {/* ============ DOCTORS TAB ============ */}
@@ -1158,6 +1165,73 @@ export default function Admin() {
                 )}
               </>
             )}
+          </TabsContent>
+
+          {/* ============ MAINTENANCE TAB ============ */}
+          <TabsContent value="maintenance" className="space-y-6">
+            <Card>
+              <CardContent className="py-6 space-y-4">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 rounded-lg bg-warning/10">
+                    <Wrench className="h-6 w-6 text-warning" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold mb-1">Curăță notițe dentare vechi</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Elimină datele tehnice (coordonate 3D, JSON de diagnostic) rămase în notițele 
+                      dinților din baza de date. Aceasta curăță notițele pentru export/print.
+                    </p>
+                    <Button
+                      onClick={async () => {
+                        setCleaningNotes(true);
+                        try {
+                          const { data: sessionData } = await supabase.auth.getSession();
+                          const response = await supabase.functions.invoke('clean-dental-notes', {
+                            headers: {
+                              Authorization: `Bearer ${sessionData.session?.access_token}`,
+                            },
+                          });
+                          
+                          if (response.error) {
+                            throw new Error(response.error.message || 'Eroare la curățare');
+                          }
+                          
+                          const result = response.data;
+                          toast({
+                            title: 'Curățare finalizată',
+                            description: `S-au curățat ${result.updatedDentalStatus} notițe din status dentar și ${result.updatedHistory} din istoric.`,
+                          });
+                        } catch (err: any) {
+                          console.error('Clean notes error:', err);
+                          toast({
+                            title: 'Eroare',
+                            description: err.message || 'Nu s-au putut curăța notițele',
+                            variant: 'destructive',
+                          });
+                        } finally {
+                          setCleaningNotes(false);
+                        }
+                      }}
+                      disabled={cleaningNotes}
+                      variant="outline"
+                      className="gap-2"
+                    >
+                      {cleaningNotes ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Se curăță...
+                        </>
+                      ) : (
+                        <>
+                          <Wrench className="h-4 w-4" />
+                          Curăță notițe vechi
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
 
