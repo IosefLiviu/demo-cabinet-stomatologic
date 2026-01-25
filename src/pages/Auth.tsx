@@ -137,15 +137,6 @@ export default function Auth() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Demo credentials banner */}
-          <div className="mb-4 p-3 rounded-lg bg-primary/10 border border-primary/20">
-            <p className="text-xs font-medium text-primary mb-1">🎯 Versiune Demo - Portofoliu</p>
-            <div className="flex flex-col gap-1 text-xs text-muted-foreground">
-              <span><strong>Utilizator:</strong> demo</span>
-              <span><strong>Parolă:</strong> demo123</span>
-            </div>
-          </div>
-
           <form onSubmit={handleSignIn} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="login-username">Nume utilizator</Label>
