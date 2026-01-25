@@ -64,14 +64,53 @@ const countArchGroups = (toothNumbers: number[]): number => {
   return Math.max(1, count);
 };
 
-// Helper to strip diagnostic tags from notes
+// Extract balanced JSON starting at given index (handles nested brackets)
+function extractBalancedJson(str: string, startIndex: number): string | null {
+  if (str[startIndex] !== '[') return null;
+  let depth = 0;
+  for (let i = startIndex; i < str.length; i++) {
+    if (str[i] === '[') depth++;
+    else if (str[i] === ']') depth--;
+    if (depth === 0) return str.slice(startIndex, i + 1);
+  }
+  return null;
+}
+
+// Helper to strip diagnostic tags from notes (handles nested JSON arrays)
 const getCleanNotes = (notes: string | null | undefined): string => {
   if (!notes) return '';
-  let cleaned = notes;
-  // Remove [DIAGNOSTICS:...] and [DIAGLINES:...] tags
-  cleaned = cleaned.replace(/\[DIAGNOSTICS:[^\]]*\]/g, '');
-  cleaned = cleaned.replace(/\[DIAGLINES:[^\]]*\]/g, '');
-  return cleaned.trim();
+  let result = notes;
+
+  // Remove [DIAGNOSTICS:...] tag with balanced JSON
+  const pointsIdx = result.indexOf('[DIAGNOSTICS:');
+  if (pointsIdx !== -1) {
+    const jsonStart = pointsIdx + '[DIAGNOSTICS:'.length;
+    const jsonContent = extractBalancedJson(result, jsonStart);
+    if (jsonContent) {
+      result = result.replace(`[DIAGNOSTICS:${jsonContent}]`, '');
+    }
+  }
+
+  // Remove [DIAGLINES:...] tag with balanced JSON
+  const linesIdx = result.indexOf('[DIAGLINES:');
+  if (linesIdx !== -1) {
+    const jsonStart = linesIdx + '[DIAGLINES:'.length;
+    const jsonContent = extractBalancedJson(result, jsonStart);
+    if (jsonContent) {
+      result = result.replace(`[DIAGLINES:${jsonContent}]`, '');
+    }
+  }
+
+  // Clean up any orphaned leading coordinate arrays from older saves
+  const trimmed = result.trimStart();
+  if (trimmed.startsWith('[[') && !/[a-zA-ZăâîșțĂÂÎȘȚ]/.test(trimmed)) {
+    const leading = extractBalancedJson(trimmed, 0);
+    if (leading) {
+      result = trimmed.slice(leading.length).trimStart();
+    }
+  }
+
+  return result.replace(/^\n+|\n+$/g, '').trim();
 };
 
 export function ToothSelector({
