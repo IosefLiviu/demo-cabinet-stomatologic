@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.send-doctor-notification]
 verify_jwt = false
+
+[functions.clean-dental-notes]
+verify_jwt = false
