@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { cleanDentalNotes } from '@/lib/cleanDentalNotes';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 // Re-export from new ImageDentalChart for modern usage
 export { ImageDentalChart } from './dental/ImageDentalChart';
@@ -61,6 +67,7 @@ const lowerDeciduousTeeth = [85, 84, 83, 82, 81, 71, 72, 73, 74, 75];
 
 export function DentalChart({ dentalStatus, onToothClick, readonly = false }: DentalChartProps) {
   const [hoveredTooth, setHoveredTooth] = useState<number | null>(null);
+  const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
 
   const getToothStatus = (toothNumber: number): ToothStatus => {
     const tooth = dentalStatus.find((t) => t.tooth_number === toothNumber);
@@ -72,17 +79,30 @@ export function DentalChart({ dentalStatus, onToothClick, readonly = false }: De
     return tooth?.notes;
   };
 
+  const handleToothClick = (toothNumber: number) => {
+    const notes = getToothNotes(toothNumber);
+    const cleanNotes = cleanDentalNotes(notes);
+    if (cleanNotes) {
+      setSelectedTooth(toothNumber);
+    }
+    onToothClick?.(toothNumber);
+  };
+
+  const selectedToothStatus = selectedTooth ? getToothStatus(selectedTooth) : 'healthy';
+  const selectedToothNotes = selectedTooth ? cleanDentalNotes(getToothNotes(selectedTooth)) : '';
+
   const renderTooth = (toothNumber: number, isDeciduous: boolean = false) => {
     const status = getToothStatus(toothNumber);
     const notes = getToothNotes(toothNumber);
     const cleanNotes = cleanDentalNotes(notes);
     const isHovered = hoveredTooth === toothNumber;
+    const hasNotes = !!cleanNotes;
 
     return (
       <div key={toothNumber} className="relative">
         <button
           type="button"
-          onClick={() => onToothClick?.(toothNumber)}
+          onClick={() => handleToothClick(toothNumber)}
           onMouseEnter={() => setHoveredTooth(toothNumber)}
           onMouseLeave={() => setHoveredTooth(null)}
           disabled={readonly && !notes}
@@ -92,6 +112,7 @@ export function DentalChart({ dentalStatus, onToothClick, readonly = false }: De
             !readonly && 'hover:scale-110 cursor-pointer',
             status === 'missing' && 'opacity-50',
             isHovered && 'ring-2 ring-primary ring-offset-2',
+            hasNotes && 'ring-1 ring-primary/50',
             // Deciduous teeth: circular shape with dashed border
             isDeciduous 
               ? 'w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 text-xs border-dashed' 
@@ -105,6 +126,7 @@ export function DentalChart({ dentalStatus, onToothClick, readonly = false }: De
         {isHovered && (
           <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded bg-popover border shadow-lg text-xs whitespace-nowrap">
             <div className="font-medium">{statusLabels[status]}</div>
+            {hasNotes && <div className="text-muted-foreground text-[10px]">Click pentru notițe</div>}
           </div>
         )}
       </div>
@@ -112,70 +134,95 @@ export function DentalChart({ dentalStatus, onToothClick, readonly = false }: De
   };
 
   return (
-    <div className="space-y-6">
-      {/* Legend */}
-      <div className="flex flex-wrap gap-2 text-xs">
-        {Object.entries(statusLabels).map(([status, label]) => (
-          <div
-            key={status}
-            className={cn(
-              'px-2 py-1 rounded-md border flex items-center gap-1.5',
-              statusColors[status as ToothStatus]
-            )}
-          >
-            <span>{label}</span>
+    <>
+      <div className="space-y-6">
+        {/* Legend */}
+        <div className="flex flex-wrap gap-2 text-xs">
+          {Object.entries(statusLabels).map(([status, label]) => (
+            <div
+              key={status}
+              className={cn(
+                'px-2 py-1 rounded-md border flex items-center gap-1.5',
+                statusColors[status as ToothStatus]
+              )}
+            >
+              <span>{label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Dental Chart */}
+        <div className="space-y-4">
+          {/* Upper jaw - permanent teeth */}
+          <div className="space-y-1">
+            <div className="text-xs text-muted-foreground text-center mb-2">
+              Maxilar superior (dinți permanenți)
+            </div>
+            <div className="flex justify-center gap-1">
+              {upperTeeth.map((tooth) => renderTooth(tooth, false))}
+            </div>
           </div>
-        ))}
+
+          {/* Upper jaw - deciduous teeth */}
+          <div className="space-y-1">
+            <div className="text-xs text-muted-foreground text-center mb-2">
+              Dinți temporari (de lapte) - superior
+            </div>
+            <div className="flex justify-center gap-1">
+              {upperDeciduousTeeth.map((tooth) => renderTooth(tooth, true))}
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="flex justify-center">
+            <div className="w-full max-w-2xl border-b-2 border-muted-foreground/30 my-2" />
+          </div>
+
+          {/* Lower jaw - deciduous teeth */}
+          <div className="space-y-1">
+            <div className="flex justify-center gap-1">
+              {lowerDeciduousTeeth.map((tooth) => renderTooth(tooth, true))}
+            </div>
+            <div className="text-xs text-muted-foreground text-center mt-2">
+              Dinți temporari (de lapte) - inferior
+            </div>
+          </div>
+
+          {/* Lower jaw - permanent teeth */}
+          <div className="space-y-1">
+            <div className="flex justify-center gap-1">
+              {lowerTeeth.map((tooth) => renderTooth(tooth, false))}
+            </div>
+            <div className="text-xs text-muted-foreground text-center mt-2">
+              Maxilar inferior (dinți permanenți)
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Dental Chart */}
-      <div className="space-y-4">
-        {/* Upper jaw - permanent teeth */}
-        <div className="space-y-1">
-          <div className="text-xs text-muted-foreground text-center mb-2">
-            Maxilar superior (dinți permanenți)
+      {/* Notes Dialog */}
+      <Dialog open={selectedTooth !== null} onOpenChange={(open) => !open && setSelectedTooth(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span>Dinte {selectedTooth}</span>
+              <span className={cn(
+                'px-2 py-0.5 rounded text-xs',
+                statusColors[selectedToothStatus]
+              )}>
+                {statusLabels[selectedToothStatus]}
+              </span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <div className="text-sm font-medium text-muted-foreground">Notițe:</div>
+            <div className="p-3 bg-muted/50 rounded-lg text-sm whitespace-pre-wrap">
+              {selectedToothNotes || 'Fără notițe'}
+            </div>
           </div>
-          <div className="flex justify-center gap-1">
-            {upperTeeth.map((tooth) => renderTooth(tooth, false))}
-          </div>
-        </div>
-
-        {/* Upper jaw - deciduous teeth */}
-        <div className="space-y-1">
-          <div className="text-xs text-muted-foreground text-center mb-2">
-            Dinți temporari (de lapte) - superior
-          </div>
-          <div className="flex justify-center gap-1">
-            {upperDeciduousTeeth.map((tooth) => renderTooth(tooth, true))}
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div className="flex justify-center">
-          <div className="w-full max-w-2xl border-b-2 border-muted-foreground/30 my-2" />
-        </div>
-
-        {/* Lower jaw - deciduous teeth */}
-        <div className="space-y-1">
-          <div className="flex justify-center gap-1">
-            {lowerDeciduousTeeth.map((tooth) => renderTooth(tooth, true))}
-          </div>
-          <div className="text-xs text-muted-foreground text-center mt-2">
-            Dinți temporari (de lapte) - inferior
-          </div>
-        </div>
-
-        {/* Lower jaw - permanent teeth */}
-        <div className="space-y-1">
-          <div className="flex justify-center gap-1">
-            {lowerTeeth.map((tooth) => renderTooth(tooth, false))}
-          </div>
-          <div className="text-xs text-muted-foreground text-center mt-2">
-            Maxilar inferior (dinți permanenți)
-          </div>
-        </div>
-      </div>
-    </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
