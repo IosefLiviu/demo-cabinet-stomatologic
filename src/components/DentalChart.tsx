@@ -105,7 +105,6 @@ export function DentalChart({ dentalStatus, onToothClick, readonly = false }: De
         {isHovered && (
           <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded bg-popover border shadow-lg text-xs whitespace-nowrap">
             <div className="font-medium">{statusLabels[status]}</div>
-            {cleanNotes && <div className="text-muted-foreground max-w-[150px] truncate">{cleanNotes}</div>}
           </div>
         )}
       </div>

@@ -164,7 +164,6 @@ export function ImageDentalChart({ dentalStatus, onToothClick, readonly = false 
             "left-1/2 -translate-x-1/2"
           )}>
             <div className="font-medium">{statusLabels[status]}</div>
-            {cleanNotes && <div className="text-muted-foreground max-w-[150px] truncate">{cleanNotes}</div>}
           </div>
         )}
       </div>
