@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { getToothImage } from './toothImages';
+import { cleanDentalNotes } from '@/lib/cleanDentalNotes';
 
 export type ToothStatus = 
   | 'healthy'
@@ -92,6 +93,7 @@ export function Enhanced3DDentalChart({ dentalStatus, onToothClick, readonly = f
   const renderTooth = (toothNumber: number, isDeciduous: boolean = false, isLower: boolean = false) => {
     const status = getToothStatus(toothNumber);
     const notes = getToothNotes(toothNumber);
+    const cleanNotes = cleanDentalNotes(notes);
     const isHovered = hoveredTooth === toothNumber;
     const toothImage = getToothImage(toothNumber);
 
@@ -238,9 +240,9 @@ export function Enhanced3DDentalChart({ dentalStatus, onToothClick, readonly = f
             }}
           >
             <div className="font-semibold text-foreground">{statusLabels[status]}</div>
-            {notes && (
+            {cleanNotes && (
               <div className="text-muted-foreground max-w-[180px] truncate mt-0.5">
-                {notes}
+                {cleanNotes}
               </div>
             )}
             {/* Tooltip arrow */}
