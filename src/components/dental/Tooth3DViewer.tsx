@@ -1,11 +1,19 @@
-import { useRef, useState, Suspense, useCallback, useMemo, useEffect } from 'react';
-import { Canvas, useFrame, useThree, ThreeEvent } from '@react-three/fiber';
+import { useRef, useState, Suspense, useCallback, useMemo } from 'react';
+import { Canvas, useThree, ThreeEvent, invalidate } from '@react-three/fiber';
 import { OrbitControls, Environment, Html, ContactShadows, useGLTF, Tube } from '@react-three/drei';
 import * as THREE from 'three';
 import { cn } from '@/lib/utils';
 import { Loader2, Plus, Pencil, MousePointer } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+
+// Component to invalidate on demand when needed
+function InvalidateOnChange({ deps }: { deps: any[] }) {
+  useMemo(() => {
+    invalidate();
+  }, deps);
+  return null;
+}
 
 export interface DiagnosticPoint {
   id: string;
@@ -456,9 +464,11 @@ export function Tooth3DViewer({
       <div className="relative flex-1 min-h-[280px] sm:min-h-[350px]">
         <Canvas
           camera={{ position: [0, 0, 1.8], fov: 45 }}
+          frameloop="demand"
           className="rounded-lg bg-gradient-to-b from-slate-900 to-slate-800 touch-none"
           style={{ touchAction: 'none' }}
         >
+          <InvalidateOnChange deps={[diagnosticPoints, diagnosticLines, selectedPoint, pendingLine, drawingPoints, isDrawing]} />
           <Suspense fallback={<LoadingFallback />}>
             {/* Lighting */}
             <ambientLight intensity={0.6} />
@@ -510,6 +520,7 @@ export function Tooth3DViewer({
                 ONE: THREE.TOUCH.ROTATE,
                 TWO: THREE.TOUCH.DOLLY_ROTATE
               }}
+              onChange={() => invalidate()}
             />
           </Suspense>
         </Canvas>
