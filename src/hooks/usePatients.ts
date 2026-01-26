@@ -35,15 +35,32 @@ export function usePatients() {
   const fetchPatients = async () => {
     try {
       setLoading(true);
-      // Fetch all patients - override default 1000 limit
-      const { data, error } = await supabase
-        .from('patients')
-        .select('*')
-        .order('last_name', { ascending: true })
-        .limit(10000);
+      
+      // Fetch all patients using pagination to overcome 1000 row limit
+      let allPatients: Patient[] = [];
+      let page = 0;
+      const pageSize = 1000;
+      let hasMore = true;
+      
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('patients')
+          .select('*')
+          .order('last_name', { ascending: true })
+          .range(page * pageSize, (page + 1) * pageSize - 1);
 
-      if (error) throw error;
-      setPatients((data as Patient[]) || []);
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          allPatients = [...allPatients, ...(data as Patient[])];
+          hasMore = data.length === pageSize;
+          page++;
+        } else {
+          hasMore = false;
+        }
+      }
+      
+      setPatients(allPatients);
     } catch (error: any) {
       console.error('Error fetching patients:', error);
       toast({
