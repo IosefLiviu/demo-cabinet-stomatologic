@@ -184,8 +184,8 @@ export function Tooth3DDialog({
   useEffect(() => {
     if (open) {
       setStatus(currentStatus);
-      // Clean notes before displaying (remove diagnostic JSON data)
-      setNotes(getCleanNotes(currentNotes));
+      // Notes field starts empty - previous notes are shown in history
+      setNotes('');
       setDiagnosticPoints([]);
       setDiagnosticLines([]);
       setHistoryExpanded(false);
