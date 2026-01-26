@@ -576,11 +576,6 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             }}
           >
             <div className="font-semibold text-foreground">{status}</div>
-            {notes && (
-              <div className="text-muted-foreground max-w-[180px] truncate mt-0.5">
-                {notes}
-              </div>
-            )}
             {/* Tooltip arrow */}
             <div 
               className={cn(

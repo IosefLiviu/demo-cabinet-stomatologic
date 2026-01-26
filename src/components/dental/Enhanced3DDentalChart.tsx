@@ -240,11 +240,6 @@ export function Enhanced3DDentalChart({ dentalStatus, onToothClick, readonly = f
             }}
           >
             <div className="font-semibold text-foreground">{statusLabels[status]}</div>
-            {cleanNotes && (
-              <div className="text-muted-foreground max-w-[180px] truncate mt-0.5">
-                {cleanNotes}
-              </div>
-            )}
             {/* Tooltip arrow */}
             <div 
               className={cn(
