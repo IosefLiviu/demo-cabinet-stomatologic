@@ -540,7 +540,7 @@ export function Tooth3DDialog({
                                             {entry.notes && (
                                               <div className="space-y-1">
                                                 {getCleanNotes(entry.notes) && (
-                                                  <p className="text-xs text-muted-foreground">{getCleanNotes(entry.notes)}</p>
+                                                  <p className="text-sm text-muted-foreground">{getCleanNotes(entry.notes)}</p>
                                                 )}
                                                 {getDiagnosticLabels(entry.notes).length > 0 && (
                                                   <div className="flex flex-wrap gap-1">
