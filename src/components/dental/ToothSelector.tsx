@@ -143,14 +143,9 @@ export function ToothSelector({
             {toothContent}
           </TooltipTrigger>
           <TooltipContent side="top" className="max-w-[200px]">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <div className={cn("w-2 h-2 rounded-full", statusColor)} />
-                <span className="font-medium text-xs">{statusDisplay}</span>
-              </div>
-              {cleanNotes && (
-                <p className="text-[10px] text-muted-foreground">{cleanNotes}</p>
-              )}
+            <div className="flex items-center gap-2">
+              <div className={cn("w-2 h-2 rounded-full", statusColor)} />
+              <span className="font-medium text-xs">{statusDisplay}</span>
             </div>
           </TooltipContent>
         </Tooltip>

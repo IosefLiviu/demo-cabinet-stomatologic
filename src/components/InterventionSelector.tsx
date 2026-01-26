@@ -532,12 +532,6 @@ export function InterventionSelector({
             <div className="font-medium">
               {isSelected ? getStatusLabel(status) : hasPatientStatus ? getStatusLabel(status) : 'Click pentru a selecta'}
             </div>
-            {(() => {
-              const cleanNotes = cleanDentalNotes(toothDetails?.notes || patientStatus?.notes);
-              return cleanNotes ? (
-                <div className="text-muted-foreground max-w-[150px] truncate">{cleanNotes}</div>
-              ) : null;
-            })()}
           </div>
         )}
       </div>
