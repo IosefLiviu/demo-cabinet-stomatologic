@@ -545,7 +545,7 @@ export function Tooth3DDialog({
                                                 {getDiagnosticLabels(entry.notes).length > 0 && (
                                                   <div className="flex flex-wrap gap-1">
                                                     {getDiagnosticLabels(entry.notes).map((label) => (
-                                                      <Badge key={`${entry.id}-${label}`} variant="outline" className="text-[10px]">
+                                                      <Badge key={`${entry.id}-${label}`} variant="outline" className="text-xs">
                                                         {label}
                                                       </Badge>
                                                     ))}
