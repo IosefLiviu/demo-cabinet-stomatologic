@@ -638,6 +638,18 @@ export function AppointmentForm({
                         const patient = patients.find(p => p.id === formData.patientId);
                         if (patient) {
                           onViewPatient(patient);
+                        } else if (formData.patientId) {
+                          // Fallback: create minimal patient object from form data
+                          const nameParts = (formData.patientName || '').split(' ');
+                          const fallbackPatient = {
+                            id: formData.patientId,
+                            first_name: nameParts[0] || '',
+                            last_name: nameParts.slice(1).join(' ') || '',
+                            phone: formData.patientPhone || '',
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString(),
+                          };
+                          onViewPatient(fallbackPatient as any);
                         }
                       }}
                     >
@@ -655,6 +667,17 @@ export function AppointmentForm({
                         const patient = patients.find(p => p.id === formData.patientId);
                         if (patient) {
                           onViewDentalStatus(patient);
+                        } else if (formData.patientId) {
+                          const nameParts = (formData.patientName || '').split(' ');
+                          const fallbackPatient = {
+                            id: formData.patientId,
+                            first_name: nameParts[0] || '',
+                            last_name: nameParts.slice(1).join(' ') || '',
+                            phone: formData.patientPhone || '',
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString(),
+                          };
+                          onViewDentalStatus(fallbackPatient as any);
                         }
                       }}
                     >
@@ -672,6 +695,17 @@ export function AppointmentForm({
                         const patient = patients.find(p => p.id === formData.patientId);
                         if (patient) {
                           onViewRadiographs(patient);
+                        } else if (formData.patientId) {
+                          const nameParts = (formData.patientName || '').split(' ');
+                          const fallbackPatient = {
+                            id: formData.patientId,
+                            first_name: nameParts[0] || '',
+                            last_name: nameParts.slice(1).join(' ') || '',
+                            phone: formData.patientPhone || '',
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString(),
+                          };
+                          onViewRadiographs(fallbackPatient as any);
                         }
                       }}
                     >
