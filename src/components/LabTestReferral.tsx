@@ -105,20 +105,25 @@ export function LabTestReferral({ patients, doctors }: LabTestReferralProps) {
           <title>Bilet de Trimitere Analize</title>
           <meta charset="UTF-8">
           <style>
+            @page {
+              size: A4;
+              margin: 10mm 15mm;
+            }
             body { 
               font-family: 'Times New Roman', serif; 
-              padding: 30px 40px; 
+              padding: 0; 
+              margin: 0;
               color: #1a1a1a; 
-              font-size: 14px;
-              line-height: 1.6;
+              font-size: 12px;
+              line-height: 1.4;
             }
             .header { 
               display: flex;
               justify-content: space-between;
               align-items: flex-start;
-              margin-bottom: 25px;
-              padding-bottom: 15px;
-              border-bottom: 3px solid #b8860b;
+              margin-bottom: 15px;
+              padding-bottom: 10px;
+              border-bottom: 2px solid #b8860b;
             }
             .logo-section {
               display: flex;
@@ -126,77 +131,82 @@ export function LabTestReferral({ patients, doctors }: LabTestReferralProps) {
               align-items: flex-start;
             }
             .logo {
-              width: 120px;
+              width: 90px;
               height: auto;
               object-fit: contain;
-              margin-bottom: 5px;
+              margin-bottom: 3px;
             }
             .clinic-name {
               font-weight: bold;
-              font-size: 16px;
+              font-size: 13px;
               color: #b8860b;
             }
             .clinic-contact {
               text-align: right;
-              font-size: 11px;
+              font-size: 10px;
               color: #666;
             }
             .clinic-contact p {
-              margin: 2px 0;
+              margin: 1px 0;
             }
             .title {
               text-align: center;
-              font-size: 20px;
+              font-size: 16px;
               font-weight: bold;
-              margin: 30px 0;
+              margin: 15px 0;
               text-decoration: underline;
             }
             .patient-info {
-              margin-bottom: 25px;
-              line-height: 2;
+              margin-bottom: 15px;
+              line-height: 1.8;
+              font-size: 11px;
             }
             .patient-info .line {
               border-bottom: 1px solid #333;
-              min-width: 150px;
+              min-width: 100px;
               display: inline-block;
-              padding: 0 5px;
+              padding: 0 3px;
             }
             .tests-section {
-              margin: 25px 0;
+              margin: 15px 0;
             }
             .tests-section h3 {
-              margin-bottom: 15px;
+              margin-bottom: 10px;
+              font-size: 12px;
             }
             .tests-list {
               list-style-type: disc;
-              padding-left: 30px;
+              padding-left: 25px;
+              margin: 0;
             }
             .tests-list li {
-              margin-bottom: 8px;
-              font-size: 14px;
+              margin-bottom: 4px;
+              font-size: 11px;
             }
             .optional-note {
-              margin-top: 30px;
+              margin-top: 15px;
               list-style-type: disc;
-              padding-left: 30px;
+              padding-left: 25px;
               font-style: italic;
+              font-size: 11px;
             }
             .signature-section {
               display: flex;
               justify-content: space-between;
-              margin-top: 50px;
-              padding-top: 20px;
+              margin-top: 25px;
+              padding-top: 15px;
             }
             .signature-block {
               text-align: left;
             }
             .signature-block .label {
               font-weight: bold;
-              margin-bottom: 30px;
+              margin-bottom: 20px;
+              font-size: 11px;
             }
             .doctor-stamp {
-              margin-top: 40px;
-              padding: 15px;
+              margin-top: 25px;
+              padding: 10px;
               border: 2px solid #1a365d;
               display: inline-block;
               text-align: center;
@@ -204,30 +214,31 @@ export function LabTestReferral({ patients, doctors }: LabTestReferralProps) {
             }
             .doctor-stamp .name {
               font-weight: bold;
-              font-size: 14px;
-              margin-bottom: 5px;
-            }
-            .doctor-stamp .specialization {
-              font-size: 12px;
+              font-size: 11px;
               margin-bottom: 3px;
             }
+            .doctor-stamp .specialization {
+              font-size: 10px;
+              margin-bottom: 2px;
+            }
             .doctor-stamp .code {
-              font-size: 11px;
+              font-size: 9px;
               color: #555;
             }
             .footer {
-              margin-top: 60px;
-              padding-top: 15px;
+              margin-top: 30px;
+              padding-top: 10px;
               border-top: 2px solid #b8860b;
               text-align: center;
-              font-size: 9px;
+              font-size: 8px;
               color: #666;
             }
             .footer p {
-              margin: 2px 0;
+              margin: 1px 0;
             }
             @media print { 
-              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
+              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              html, body { height: auto; }
             }
           </style>
         </head>
