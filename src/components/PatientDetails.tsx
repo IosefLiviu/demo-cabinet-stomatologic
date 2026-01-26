@@ -883,7 +883,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                         const totalDuration = records.reduce((sum, r) => sum + (r.duration || 0), 0);
 
                         return (
-                          <Collapsible key={dateKey} defaultOpen={true}>
+                          <Collapsible key={dateKey} defaultOpen={false}>
                             {/* Date header with summary - clickable */}
                             <CollapsibleTrigger asChild>
                               <button className="w-full flex items-center justify-between bg-muted/50 hover:bg-muted/70 rounded-lg px-4 py-2.5 transition-colors cursor-pointer">
