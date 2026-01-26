@@ -905,6 +905,7 @@ const Index = () => {
         cabinets={cabinets}
         doctors={doctors}
         isAdmin={isAdmin}
+        userDoctorId={doctorId}
         checkOverlap={checkOverlap}
       />
 

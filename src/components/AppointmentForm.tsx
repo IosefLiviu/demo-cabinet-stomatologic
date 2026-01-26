@@ -120,6 +120,7 @@ interface AppointmentFormProps {
   cabinets: Cabinet[];
   doctors: Doctor[];
   isAdmin?: boolean;
+  userDoctorId?: string | null; // Doctor ID associated with the current user
   checkOverlap?: (
     date: string, 
     startTime: string, 
@@ -147,6 +148,7 @@ export function AppointmentForm({
   cabinets,
   doctors,
   isAdmin = false,
+  userDoctorId,
   checkOverlap,
 }: AppointmentFormProps) {
   const [patientSearch, setPatientSearch] = useState('');
@@ -417,7 +419,7 @@ export function AppointmentForm({
           patientName: '',
           patientPhone: '',
           cabinetId: selectedCabinet || 1,
-          doctorId: '',
+          doctorId: userDoctorId || '', // Pre-fill with user's associated doctor
           time: startTime,
           endTime: defaultEndTime,
           notes: '',
@@ -429,7 +431,7 @@ export function AppointmentForm({
       setSelectedPlanId('');
       setPatientPlans([]);
     }
-  }, [open, editingAppointment, existingInterventions, selectedTime, selectedCabinet, treatments]);
+  }, [open, editingAppointment, existingInterventions, selectedTime, selectedCabinet, treatments, userDoctorId]);
 
   const handleSelectPatient = (patient: Patient) => {
     setFormData({
