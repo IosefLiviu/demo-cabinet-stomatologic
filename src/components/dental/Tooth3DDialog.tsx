@@ -484,7 +484,7 @@ export function Tooth3DDialog({
                                       <div className="flex items-center gap-2">
                                         <History className="h-3.5 w-3.5 text-primary" />
                                         <span className="text-xs font-medium">
-                                          Istoric modificări {format(new Date(dateKey), 'd MMMM yyyy', { locale: ro })} ({entries.length})
+                                          {format(new Date(dateKey), 'd MMMM yyyy', { locale: ro })} ({entries.length})
                                         </span>
                                       </div>
                                       <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
