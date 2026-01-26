@@ -887,31 +887,16 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                             {/* Date header with summary - clickable */}
                             <CollapsibleTrigger asChild>
                               <button className="w-full flex items-center justify-between bg-muted/50 hover:bg-muted/70 rounded-lg px-4 py-2.5 transition-colors cursor-pointer">
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-3">
                                   <Calendar className="h-4 w-4 text-primary" />
                                   <span className="font-medium text-sm">
                                     {format(new Date(dateKey), 'd MMMM yyyy', { locale: ro })}
                                   </span>
-                                  <Badge variant="secondary" className="text-xs">
+                                  <span className="text-sm text-muted-foreground">
                                     {records.length} {records.length === 1 ? 'intervenție' : 'intervenții'}
-                                  </Badge>
+                                  </span>
                                 </div>
-                                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                  {totalDuration > 0 && (
-                                    <span>{totalDuration} min</span>
-                                  )}
-                                  {totalPrice > 0 && (
-                                    <div className="flex items-center gap-2">
-                                      {totalCas > 0 && (
-                                        <span className="text-cyan-600 text-xs">CAS: {totalCas} RON</span>
-                                      )}
-                                      <Badge variant="outline" className="font-medium">
-                                        {totalCas > 0 ? `${totalDePlata} RON` : `${totalPrice} RON`}
-                                      </Badge>
-                                    </div>
-                                  )}
-                                  <ChevronDown className="h-4 w-4 transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
-                                </div>
+                                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
                               </button>
                             </CollapsibleTrigger>
 
