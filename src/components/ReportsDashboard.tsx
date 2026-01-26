@@ -4,6 +4,7 @@ import { ro } from 'date-fns/locale';
 import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChart, UserCircle, Filter, Download, FlaskConical, ClipboardList, Percent } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AppointmentsPatientReport } from './AppointmentsPatientReport';
+import { NoDoctorAppointmentsReport } from './NoDoctorAppointmentsReport';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -572,7 +573,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
 
   return (
     <Tabs defaultValue="financial" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-2 max-w-md">
+      <TabsList className="grid w-full grid-cols-3 max-w-xl">
         <TabsTrigger value="financial" className="gap-2">
           <DollarSign className="h-4 w-4" />
           Financiar
@@ -580,6 +581,10 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         <TabsTrigger value="patients" className="gap-2">
           <ClipboardList className="h-4 w-4" />
           Pe Pacienți
+        </TabsTrigger>
+        <TabsTrigger value="no-doctor" className="gap-2">
+          <UserCircle className="h-4 w-4" />
+          Fără Doctor
         </TabsTrigger>
       </TabsList>
 
@@ -1052,6 +1057,13 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
 
       <TabsContent value="patients">
         <AppointmentsPatientReport 
+          appointments={appointments} 
+          dateRange={dateRange}
+        />
+      </TabsContent>
+
+      <TabsContent value="no-doctor">
+        <NoDoctorAppointmentsReport 
           appointments={appointments} 
           dateRange={dateRange}
         />
