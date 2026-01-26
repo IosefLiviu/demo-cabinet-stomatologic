@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, Radio, FileText, Pill, UserCheck, Printer, Stethoscope, ClipboardList, FlaskConical, Package } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/Header';
 import { DateNavigator } from '@/components/DateNavigator';
 import { CabinetTabs } from '@/components/CabinetTabs';
@@ -44,6 +45,7 @@ interface NavigationState {
 }
 
 const Index = () => {
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedCabinet, setSelectedCabinet] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState('calendar');
@@ -339,6 +341,11 @@ const Index = () => {
     }
     
     if (!patientId) {
+      toast({
+        title: 'Eroare',
+        description: 'Nu s-a putut identifica pacientul',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -355,6 +362,7 @@ const Index = () => {
     };
 
     let appointmentId: string | undefined;
+    let saveSuccess = false;
     
     // Get patient name for notification
     let patientFullName = formData.patientName;
@@ -370,15 +378,26 @@ const Index = () => {
     const cabinetName = cabinet?.name || 'Cabinet';
     
     if (editingAppointmentData) {
-      await updateAppointment(editingAppointmentData.id, appointmentPayload);
-      appointmentId = editingAppointmentData.id;
+      const result = await updateAppointment(editingAppointmentData.id, appointmentPayload);
+      if (result) {
+        appointmentId = editingAppointmentData.id;
+        saveSuccess = true;
+      }
     } else {
       const newAppointment = await addAppointment(appointmentPayload, patientFullName, cabinetName);
-      appointmentId = newAppointment?.id;
+      if (newAppointment) {
+        appointmentId = newAppointment.id;
+        saveSuccess = true;
+      }
+    }
+
+    // If appointment save failed, don't close the form
+    if (!saveSuccess || !appointmentId) {
+      return;
     }
 
     // Save appointment treatments
-    if (appointmentId && formData.selectedTreatments.length > 0) {
+    if (formData.selectedTreatments.length > 0) {
       const treatmentsToSave = formData.selectedTreatments.map(t => ({
         appointment_id: appointmentId!,
         treatment_id: t.treatmentId || undefined,
@@ -393,7 +412,16 @@ const Index = () => {
         tooth_data: t.teethDetails || [],
         plan_item_id: t.planItemId || undefined,
       }));
-      await saveAppointmentTreatments(appointmentId, treatmentsToSave);
+      
+      const treatmentsSaved = await saveAppointmentTreatments(appointmentId, treatmentsToSave);
+      if (!treatmentsSaved) {
+        // Treatments failed but appointment was saved - notify user
+        toast({
+          title: 'Atenție',
+          description: 'Programarea a fost salvată, dar intervențiile nu au putut fi adăugate. Editați programarea pentru a le adăuga din nou.',
+          variant: 'destructive',
+        });
+      }
     }
     
     setShowAppointmentForm(false);

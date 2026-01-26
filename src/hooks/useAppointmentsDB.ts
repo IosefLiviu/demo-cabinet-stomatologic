@@ -198,7 +198,9 @@ export function useAppointmentsDB() {
     }
   };
 
-  const addAppointment = async (appointment: AppointmentInsert, patientName?: string, cabinetName?: string) => {
+  const addAppointment = async (appointment: AppointmentInsert, patientName?: string, cabinetName?: string, retryCount = 0): Promise<AppointmentDB | null> => {
+    const maxRetries = 2;
+    
     try {
       const { data, error } = await supabase
         .from('appointments')
@@ -212,6 +214,10 @@ export function useAppointmentsDB() {
         .single();
 
       if (error) throw error;
+      
+      if (!data) {
+        throw new Error('No data returned from insert');
+      }
 
       setAppointments((prev) => [...prev, data as unknown as AppointmentDB]);
       toast({
@@ -231,12 +237,20 @@ export function useAppointmentsDB() {
         );
       }
 
-      return data;
+      return data as unknown as AppointmentDB;
     } catch (error: any) {
       console.error('Error adding appointment:', error);
+      
+      // Retry on transient failures
+      if (retryCount < maxRetries) {
+        console.log(`Retrying addAppointment (attempt ${retryCount + 2}/${maxRetries + 1})...`);
+        await new Promise(resolve => setTimeout(resolve, 500 * (retryCount + 1)));
+        return addAppointment(appointment, patientName, cabinetName, retryCount + 1);
+      }
+      
       toast({
         title: 'Eroare',
-        description: 'Nu s-a putut adăuga programarea',
+        description: 'Nu s-a putut adăuga programarea. Vă rugăm reîncercați.',
         variant: 'destructive',
       });
       return null;
@@ -356,13 +370,20 @@ export function useAppointmentsDB() {
     return { hasOverlap: false };
   };
 
-  const saveAppointmentTreatments = async (appointmentId: string, treatments: AppointmentTreatmentInsert[]) => {
+  const saveAppointmentTreatments = async (appointmentId: string, treatments: AppointmentTreatmentInsert[], retryCount = 0): Promise<boolean> => {
+    const maxRetries = 2;
+    
     try {
       // First delete existing treatments for this appointment
-      await supabase
+      const { error: deleteError } = await supabase
         .from('appointment_treatments')
         .delete()
         .eq('appointment_id', appointmentId);
+
+      if (deleteError) {
+        console.error('Error deleting existing treatments:', deleteError);
+        throw deleteError;
+      }
 
       // Then insert new treatments
       if (treatments.length > 0) {
@@ -390,9 +411,17 @@ export function useAppointmentsDB() {
       return true;
     } catch (error: any) {
       console.error('Error saving appointment treatments:', error);
+      
+      // Retry on transient failures
+      if (retryCount < maxRetries) {
+        console.log(`Retrying saveAppointmentTreatments (attempt ${retryCount + 2}/${maxRetries + 1})...`);
+        await new Promise(resolve => setTimeout(resolve, 500 * (retryCount + 1)));
+        return saveAppointmentTreatments(appointmentId, treatments, retryCount + 1);
+      }
+      
       toast({
         title: 'Eroare',
-        description: 'Nu s-au putut salva intervențiile',
+        description: 'Nu s-au putut salva intervențiile. Vă rugăm reîncercați.',
         variant: 'destructive',
       });
       return false;
