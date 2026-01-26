@@ -35,10 +35,12 @@ export function usePatients() {
   const fetchPatients = async () => {
     try {
       setLoading(true);
+      // Fetch all patients - override default 1000 limit
       const { data, error } = await supabase
         .from('patients')
         .select('*')
-        .order('last_name', { ascending: true });
+        .order('last_name', { ascending: true })
+        .limit(10000);
 
       if (error) throw error;
       setPatients((data as Patient[]) || []);
