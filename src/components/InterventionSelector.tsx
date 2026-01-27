@@ -30,7 +30,8 @@ interface Treatment {
 
 export interface ToothSelection {
   toothNumber: number;
-  status: string; // Changed to string to support custom statuses from database
+  status: string; // Primary status (first selected or legacy single status)
+  statuses?: string[]; // Multiple statuses support
   notes?: string;
 }
 
@@ -130,7 +131,7 @@ export function InterventionSelector({
     open: boolean;
     interventionId: string;
     toothNumber: number;
-    status: string; // Changed from ToothStatus to string to support custom statuses
+    statuses: string[]; // Multiple statuses support
     notes: string;
   } | null>(null);
   const [hoveredTooth, setHoveredTooth] = useState<{ interventionId: string; toothNumber: number } | null>(null);
@@ -261,11 +262,15 @@ export function InterventionSelector({
     const intervention = interventions.find(i => i.id === interventionId);
     const existingDetail = intervention?.teethDetails?.find(t => t.toothNumber === toothNumber);
     
+    // Support both legacy single status and new multiple statuses
+    const existingStatuses = existingDetail?.statuses || 
+      (existingDetail?.status && existingDetail.status !== 'healthy' ? [existingDetail.status] : []);
+    
     setToothDialog({
       open: true,
       interventionId,
       toothNumber,
-      status: existingDetail?.status || 'healthy',
+      statuses: existingStatuses,
       notes: existingDetail?.notes || '',
     });
   };
@@ -273,8 +278,8 @@ export function InterventionSelector({
   const handleSaveToothDialog = () => {
     if (!toothDialog) return;
 
-    // If status is 'healthy', remove the tooth from selection
-    if (toothDialog.status === 'healthy') {
+    // If no statuses selected, remove the tooth from selection
+    if (toothDialog.statuses.length === 0) {
       handleRemoveTooth(toothDialog.interventionId, toothDialog.toothNumber);
       setToothDialog(null);
       return;
@@ -312,7 +317,8 @@ export function InterventionSelector({
             ...otherDetails,
             {
               toothNumber: toothDialog.toothNumber,
-              status: toothDialog.status,
+              status: toothDialog.statuses[0] || 'healthy', // Primary status for backward compatibility
+              statuses: toothDialog.statuses,
               notes: toothDialog.notes || undefined,
             },
           ],
@@ -324,6 +330,22 @@ export function InterventionSelector({
     );
 
     setToothDialog(null);
+  };
+  
+  // Toggle status in multi-select mode
+  const toggleToothStatus = (statusName: string) => {
+    setToothDialog(prev => {
+      if (!prev) return null;
+      const currentStatuses = prev.statuses || [];
+      const isSelected = currentStatuses.includes(statusName);
+      
+      return {
+        ...prev,
+        statuses: isSelected 
+          ? currentStatuses.filter(s => s !== statusName)
+          : [...currentStatuses, statusName],
+      };
+    });
   };
 
   const handleRemoveTooth = (interventionId: string, toothNumber: number) => {
@@ -756,16 +778,16 @@ export function InterventionSelector({
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label>Status (selectează unul sau mai multe)</Label>
               <div className="grid grid-cols-4 gap-2">
                 {activeStatuses.map((status) => {
                   const hexColor = status.color;
-                  const isSelected = toothDialog?.status === status.name;
+                  const isSelected = toothDialog?.statuses?.includes(status.name) || false;
                   return (
                     <button
                       key={status.id}
                       type="button"
-                      onClick={() => setToothDialog(prev => prev ? { ...prev, status: status.name } : null)}
+                      onClick={() => toggleToothStatus(status.name)}
                       className={cn(
                         'px-2 py-2 rounded-lg border-2 text-xs font-medium transition-all',
                         isSelected && 'ring-2 ring-primary ring-offset-2'
@@ -781,6 +803,11 @@ export function InterventionSelector({
                   );
                 })}
               </div>
+              {toothDialog?.statuses && toothDialog.statuses.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Selectate: {toothDialog.statuses.join(', ')}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
