@@ -38,7 +38,7 @@ function extractBalancedJson(str: string, startIndex: number): string | null {
   return str.slice(startIndex, endIndex + 1);
 }
 
-function stripTaggedBalanced(input: string, tag: '[DIAGNOSTICS:' | '[DIAGLINES:'): string {
+function stripTaggedBalanced(input: string, tag: '[DIAGNOSTICS:' | '[DIAGLINES:' | '[STATUSES:'): string {
   let result = input;
 
   // handle multiple occurrences defensively
@@ -184,6 +184,28 @@ function getCleanNotes(notes: string | null): string {
   return result.replace(/^\n+|\n+$/g, '').trim();
 }
 
+// Helper to extract multiple statuses from notes
+function extractStatusesFromNotes(notes: string | null): string[] {
+  if (!notes) return [];
+  
+  const statusesStartIndex = notes.indexOf('[STATUSES:');
+  if (statusesStartIndex === -1) return [];
+  
+  const jsonStart = statusesStartIndex + '[STATUSES:'.length;
+  const jsonContent = extractBalancedJson(notes, jsonStart);
+  if (!jsonContent) return [];
+  
+  try {
+    const parsed = JSON.parse(jsonContent);
+    if (Array.isArray(parsed)) {
+      return parsed.filter((s): s is string => typeof s === 'string');
+    }
+  } catch {
+    // ignore
+  }
+  return [];
+}
+
 export interface ToothData {
   tooth_number: number;
   status: string;
@@ -246,6 +268,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
     open: boolean;
     toothNumber: number;
     status: string;
+    statuses: string[];
     notes: string;
   } | null>(null);
   const [allHistoryEntries, setAllHistoryEntries] = useState<ToothHistoryEntry[]>([]);
@@ -329,21 +352,32 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
     const currentStatus = getToothStatus(toothNumber);
     const currentNotes = getToothNotes(toothNumber) || '';
     
+    // Extract multiple statuses from notes if present
+    const savedStatuses = extractStatusesFromNotes(currentNotes);
+    // If no saved statuses, use current status (unless it's healthy/default)
+    const currentStatuses = savedStatuses.length > 0 
+      ? savedStatuses 
+      : (currentStatus && currentStatus !== 'Sănătos' ? [currentStatus] : []);
+    
     setToothDialog({
       open: true,
       toothNumber,
       status: currentStatus,
+      statuses: currentStatuses,
       notes: currentNotes,
     });
   };
 
-  const handleSaveToothStatus = async (status: string, notes: string, diagnosticPoints: DiagnosticPoint[], diagnosticLines: DiagnosticLine[] = []) => {
+  const handleSaveToothStatus = async (status: string, notes: string, diagnosticPoints: DiagnosticPoint[], diagnosticLines: DiagnosticLine[] = [], statuses?: string[]) => {
     if (!toothDialog) return;
 
     try {
       const oldStatus = getToothStatus(toothDialog.toothNumber);
       const oldNotes = getToothNotes(toothDialog.toothNumber) || '';
-      const dbStatus = statusNameToEnum[status] || 'healthy';
+      
+      // Use primary status (first from statuses array or the single status)
+      const primaryStatus = statuses && statuses.length > 0 ? statuses[0] : status;
+      const dbStatus = statusNameToEnum[primaryStatus] || 'healthy';
       const oldDbStatus = statusNameToEnum[oldStatus] || 'healthy';
 
       // Get current user
@@ -352,11 +386,18 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
       // Prepare notes with diagnostic points and lines
       let finalNotes = notes.trim();
 
-      // Remove any existing diagnostic data from notes before adding new (balanced-safe)
+      // Remove any existing diagnostic data and statuses from notes before adding new (balanced-safe)
       finalNotes = stripTaggedBalanced(finalNotes, '[DIAGNOSTICS:');
       finalNotes = stripTaggedBalanced(finalNotes, '[DIAGLINES:');
+      finalNotes = stripTaggedBalanced(finalNotes, '[STATUSES:');
       finalNotes = stripOrphanLeadingJsonArray(finalNotes);
       finalNotes = finalNotes.trim();
+
+      // Add multiple statuses if present
+      if (statuses && statuses.length > 1) {
+        const statusesJson = JSON.stringify(statuses);
+        finalNotes = finalNotes ? `${finalNotes}\n[STATUSES:${statusesJson}]` : `[STATUSES:${statusesJson}]`;
+      }
 
       if (diagnosticPoints.length > 0) {
         const diagnosticsJson = JSON.stringify(diagnosticPoints);
@@ -704,6 +745,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
           }}
           toothNumber={toothDialog.toothNumber}
           currentStatus={toothDialog.status}
+          currentStatuses={toothDialog.statuses}
           currentNotes={toothDialog.notes}
           patientId={patientId}
           activeStatuses={activeStatuses}
