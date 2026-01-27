@@ -186,11 +186,24 @@ export function AppointmentForm({
 
   // Calculate duration from time interval
   const calculateDurationFromInterval = (startTime: string, endTime: string): number => {
+    // Handle missing or invalid time values
+    if (!startTime || !endTime || !startTime.includes(':') || !endTime.includes(':')) {
+      return 30; // Default to 30 minutes
+    }
     const [startHours, startMinutes] = startTime.split(':').map(Number);
     const [endHours, endMinutes] = endTime.split(':').map(Number);
+    
+    // Check for NaN values
+    if (isNaN(startHours) || isNaN(startMinutes) || isNaN(endHours) || isNaN(endMinutes)) {
+      return 30; // Default to 30 minutes
+    }
+    
     const startTotalMinutes = startHours * 60 + startMinutes;
     const endTotalMinutes = endHours * 60 + endMinutes;
-    return Math.max(30, endTotalMinutes - startTotalMinutes);
+    const duration = endTotalMinutes - startTotalMinutes;
+    
+    // Ensure we always return a valid positive duration
+    return duration > 0 ? duration : 30;
   };
 
   // Get available end times (must be after start time)
