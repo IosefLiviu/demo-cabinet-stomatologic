@@ -337,15 +337,14 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
           acc[doctorName].paidCard += paidAmount;
           acc[doctorName].paid += paidAmount;
           acc[doctorName].unpaid += Math.max(0, payableAmount - paidAmount);
-          // For partial, include what was paid + CAS portion (proportionally)
-          const casPortionPaid = appointmentCas * (paidAmount / (payableAmount || 1));
-          acc[doctorName].totalWithNetLab += (paidAmount + casPortionPaid);
+          // For partial payments, include full CAS (clinic receives it regardless of patient payment)
+          acc[doctorName].totalWithNetLab += (paidAmount + appointmentCas);
         } else if (method === 'partial_cash') {
           acc[doctorName].paidCash += paidAmount;
           acc[doctorName].paid += paidAmount;
           acc[doctorName].unpaid += Math.max(0, payableAmount - paidAmount);
-          const casPortionPaid = appointmentCas * (paidAmount / (payableAmount || 1));
-          acc[doctorName].totalWithNetLab += (paidAmount + casPortionPaid);
+          // For partial payments, include full CAS (clinic receives it regardless of patient payment)
+          acc[doctorName].totalWithNetLab += (paidAmount + appointmentCas);
         } else if (method === 'unpaid' || !a.is_paid) {
           // For unpaid, debt is payable amount (after CAS + discount)
           acc[doctorName].unpaid += payableAmount;
