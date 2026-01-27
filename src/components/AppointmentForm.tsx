@@ -938,7 +938,7 @@ export function AppointmentForm({
                 </Button>
                 <Button 
                   type="submit"
-                  disabled={!formData.patientName || interventions.length === 0}
+                  disabled={!formData.patientName}
                   className="flex-1 sm:flex-none text-sm h-9 sm:h-10"
                 >
                   {editingAppointment ? 'Salvează' : 'Adaugă'}
