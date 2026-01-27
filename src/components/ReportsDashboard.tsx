@@ -5,6 +5,7 @@ import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChar
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AppointmentsPatientReport } from './AppointmentsPatientReport';
 import { NoDoctorAppointmentsReport } from './NoDoctorAppointmentsReport';
+import { LaboratoryReport } from './LaboratoryReport';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -573,10 +574,14 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
 
   return (
     <Tabs defaultValue="financial" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-3 max-w-xl">
+      <TabsList className="grid w-full grid-cols-4 max-w-2xl">
         <TabsTrigger value="financial" className="gap-2">
           <DollarSign className="h-4 w-4" />
           Financiar
+        </TabsTrigger>
+        <TabsTrigger value="laboratory" className="gap-2">
+          <FlaskConical className="h-4 w-4" />
+          Laborator
         </TabsTrigger>
         <TabsTrigger value="patients" className="gap-2">
           <ClipboardList className="h-4 w-4" />
@@ -1053,6 +1058,13 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         </CardContent>
         </Card>
         </div>
+      </TabsContent>
+
+      <TabsContent value="laboratory">
+        <LaboratoryReport 
+          appointments={filteredAppointments} 
+          dateRange={dateRange}
+        />
       </TabsContent>
 
       <TabsContent value="patients">
