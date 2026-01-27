@@ -44,11 +44,12 @@ interface Tooth3DDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   toothNumber: number;
-  currentStatus: string;
+  currentStatus: string; // Primary status (for backward compatibility)
+  currentStatuses?: string[]; // Multiple statuses support
   currentNotes: string;
   patientId: string;
   activeStatuses: ToothStatus[];
-  onSave: (status: string, notes: string, diagnosticPoints: DiagnosticPoint[], diagnosticLines: DiagnosticLine[]) => Promise<void>;
+  onSave: (status: string, notes: string, diagnosticPoints: DiagnosticPoint[], diagnosticLines: DiagnosticLine[], statuses?: string[]) => Promise<void>;
   getStatusHexColor: (status: string) => string | null;
   getStatusDisplayName: (status: string) => string;
 }
@@ -58,6 +59,7 @@ export function Tooth3DDialog({
   onOpenChange,
   toothNumber,
   currentStatus,
+  currentStatuses,
   currentNotes,
   patientId,
   activeStatuses,
@@ -65,7 +67,7 @@ export function Tooth3DDialog({
   getStatusHexColor,
   getStatusDisplayName,
 }: Tooth3DDialogProps) {
-  const [status, setStatus] = useState(currentStatus);
+  const [statuses, setStatuses] = useState<string[]>(currentStatuses || (currentStatus ? [currentStatus] : []));
   const [notes, setNotes] = useState('');
   const [diagnosticPoints, setDiagnosticPoints] = useState<DiagnosticPoint[]>([]);
   const [diagnosticLines, setDiagnosticLines] = useState<DiagnosticLine[]>([]);
@@ -183,7 +185,9 @@ export function Tooth3DDialog({
   // Reset state when dialog opens with new tooth
   useEffect(() => {
     if (open) {
-      setStatus(currentStatus);
+      // Initialize with multiple statuses if available, otherwise use single status
+      const initialStatuses = currentStatuses || (currentStatus && currentStatus !== 'Sănătos' ? [currentStatus] : []);
+      setStatuses(initialStatuses);
       // Notes field starts empty - previous notes are shown in history
       setNotes('');
       setDiagnosticPoints([]);
@@ -192,7 +196,7 @@ export function Tooth3DDialog({
       loadToothHistory();
       loadDiagnosticData();
     }
-  }, [open, toothNumber, currentStatus, currentNotes]);
+  }, [open, toothNumber, currentStatus, currentStatuses, currentNotes]);
 
   const loadToothHistory = async () => {
     setLoadingHistory(true);
@@ -313,7 +317,9 @@ export function Tooth3DDialog({
   const handleSave = async () => {
     setSaving(true);
     try {
-      await onSave(status, notes, diagnosticPoints, diagnosticLines);
+      // Primary status is the first selected, or 'Sănătos' if none selected
+      const primaryStatus = statuses.length > 0 ? statuses[0] : 'Sănătos';
+      await onSave(primaryStatus, notes, diagnosticPoints, diagnosticLines, statuses);
       onOpenChange(false);
     } catch (error) {
       console.error('Error saving:', error);
@@ -322,7 +328,19 @@ export function Tooth3DDialog({
     }
   };
 
-  const hexColor = getStatusHexColor(status);
+  // Toggle status in multi-select mode
+  const toggleStatus = (statusName: string) => {
+    setStatuses(prev => {
+      const isSelected = prev.includes(statusName);
+      return isSelected 
+        ? prev.filter(s => s !== statusName)
+        : [...prev, statusName];
+    });
+  };
+
+  // Primary status is first selected
+  const primaryStatus = statuses.length > 0 ? statuses[0] : 'Sănătos';
+  const hexColor = getStatusHexColor(primaryStatus);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -339,7 +357,7 @@ export function Tooth3DDialog({
                 color: hexColor || undefined,
               }}
             >
-              {status}
+              {statuses.length > 0 ? statuses.join(', ') : 'Sănătos'}
             </Badge>
           </DialogTitle>
         </DialogHeader>
@@ -357,7 +375,7 @@ export function Tooth3DDialog({
             <div className="h-[550px] rounded-lg overflow-hidden border">
               <Tooth3DViewer
                 toothNumber={toothNumber}
-                status={status}
+                status={primaryStatus}
                 statusColor={hexColor || undefined}
                 diagnosticPoints={diagnosticPoints}
                 diagnosticLines={diagnosticLines}
@@ -371,17 +389,17 @@ export function Tooth3DDialog({
           
           <TabsContent value="details" className="flex-1 overflow-auto mt-4">
             <div className="space-y-4">
-              {/* Status Selection */}
+              {/* Status Selection - Multi-select */}
               <div className="space-y-2">
-                <Label>Status</Label>
+                <Label>Status (selectează unul sau mai multe)</Label>
                 <div className="grid grid-cols-4 gap-2">
                   {activeStatuses.map((s) => {
-                    const isSelected = status === s.name;
+                    const isSelected = statuses.includes(s.name);
                     return (
                       <button
                         key={s.id}
                         type="button"
-                        onClick={() => setStatus(s.name)}
+                        onClick={() => toggleStatus(s.name)}
                         className={cn(
                           'px-2 py-2 rounded-lg border-2 text-xs font-medium transition-all',
                           isSelected && 'ring-2 ring-primary ring-offset-2'
@@ -397,6 +415,11 @@ export function Tooth3DDialog({
                     );
                   })}
                 </div>
+                {statuses.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Selectate: {statuses.join(', ')}
+                  </p>
+                )}
               </div>
 
               {/* Notes */}
