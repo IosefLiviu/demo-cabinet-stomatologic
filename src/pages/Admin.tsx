@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, ArrowLeft, Save, X, Users, Stethoscope, Shield, ShieldCheck, Palette, Mail, Download, FileText, CheckCircle, XCircle, ChevronLeft, ChevronRight, Wrench, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, ArrowLeft, Save, X, Users, Stethoscope, Shield, ShieldCheck, Palette, Mail, Download, FileText, CheckCircle, XCircle, ChevronLeft, ChevronRight, Wrench, Loader2, KeyRound } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -119,6 +119,12 @@ export default function Admin() {
   const [editingUser, setEditingUser] = useState<UserWithRole | null>(null);
   const [editUserData, setEditUserData] = useState({ username: '', fullName: '' });
   const [savingUser, setSavingUser] = useState(false);
+  
+  // Password reset state
+  const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
+  const [resetPasswordUser, setResetPasswordUser] = useState<UserWithRole | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [resettingPassword, setResettingPassword] = useState(false);
 
   // Tooth statuses state
   const { statuses: toothStatuses, loading: loadingStatuses, addStatus, updateStatus, deleteStatus, toggleActive: toggleStatusActive } = useToothStatuses();
@@ -538,6 +544,62 @@ export default function Admin() {
     }
   };
 
+  const handleOpenResetPassword = (userItem: UserWithRole) => {
+    setResetPasswordUser(userItem);
+    setNewPassword('');
+    setResetPasswordDialogOpen(true);
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetPasswordUser) return;
+
+    if (newPassword.length < 6) {
+      toast({
+        title: 'Eroare',
+        description: 'Parola trebuie să aibă minim 6 caractere',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setResettingPassword(true);
+
+      const response = await supabase.functions.invoke('reset-user-password', {
+        body: {
+          userId: resetPasswordUser.user_id,
+          newPassword: newPassword,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Eroare la resetarea parolei');
+      }
+
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
+
+      toast({
+        title: 'Succes',
+        description: response.data?.message || 'Parola a fost resetată cu succes',
+      });
+
+      setResetPasswordDialogOpen(false);
+      setResetPasswordUser(null);
+      setNewPassword('');
+    } catch (error: any) {
+      console.error('Error resetting password:', error);
+      toast({
+        title: 'Eroare',
+        description: error.message || 'Nu s-a putut reseta parola',
+        variant: 'destructive',
+      });
+    } finally {
+      setResettingPassword(false);
+    }
+  };
+
   const handleCreateUser = async () => {
     if (!newUserData.email || !newUserData.password || !newUserData.username) {
       toast({
@@ -899,6 +961,14 @@ export default function Admin() {
                           title="Editează utilizator"
                         >
                           <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleOpenResetPassword(userItem)}
+                          title="Resetează parola"
+                        >
+                          <KeyRound className="h-4 w-4" />
                         </Button>
                         <Select
                           value={userItem.role}
@@ -1522,6 +1592,48 @@ export default function Admin() {
               <Button onClick={handleSaveStatus}>
                 <Save className="h-4 w-4 mr-2" />
                 {editingStatus ? 'Salvează' : 'Adaugă'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Reset Password Dialog */}
+        <Dialog open={resetPasswordDialogOpen} onOpenChange={setResetPasswordDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <KeyRound className="h-5 w-5" />
+                Resetare parolă
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <p className="text-sm text-muted-foreground">
+                Resetați parola pentru <strong>{resetPasswordUser?.full_name || resetPasswordUser?.username || 'utilizator'}</strong>. 
+                Utilizatorul va trebui să-și schimbe parola la prima autentificare.
+              </p>
+              <div className="space-y-2">
+                <Label htmlFor="new-password">Parolă temporară *</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Minim 6 caractere"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setResetPasswordDialogOpen(false)}>
+                <X className="h-4 w-4 mr-2" />
+                Anulează
+              </Button>
+              <Button onClick={handleResetPassword} disabled={resettingPassword}>
+                {resettingPassword ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <KeyRound className="h-4 w-4 mr-2" />
+                )}
+                {resettingPassword ? 'Se procesează...' : 'Resetează parola'}
               </Button>
             </DialogFooter>
           </DialogContent>
