@@ -143,6 +143,28 @@ export function Tooth3DDialog({
     return Array.from(new Set(labels));
   };
 
+  // Helper to extract multiple statuses from notes
+  const getStatusesFromNotes = (rawNotes: string | null): string[] => {
+    if (!rawNotes) return [];
+    
+    const statusesStartIndex = rawNotes.indexOf('[STATUSES:');
+    if (statusesStartIndex === -1) return [];
+    
+    const jsonStart = statusesStartIndex + '[STATUSES:'.length;
+    const jsonContent = extractBalancedJson(rawNotes, jsonStart);
+    if (!jsonContent) return [];
+    
+    try {
+      const parsed = JSON.parse(jsonContent);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((s): s is string => typeof s === 'string');
+      }
+    } catch {
+      // ignore
+    }
+    return [];
+  };
+
   // Helper to get clean notes without diagnostic data
   const getCleanNotes = (rawNotes: string | null): string => {
     if (!rawNotes) return '';
@@ -166,6 +188,16 @@ export function Tooth3DDialog({
       const jsonContent = extractBalancedJson(result, jsonStart);
       if (jsonContent) {
         result = result.replace(`[DIAGLINES:${jsonContent}]`, '');
+      }
+    }
+    
+    // Remove STATUSES tag with balanced JSON
+    const statusesStartIndex = result.indexOf('[STATUSES:');
+    if (statusesStartIndex !== -1) {
+      const jsonStart = statusesStartIndex + '[STATUSES:'.length;
+      const jsonContent = extractBalancedJson(result, jsonStart);
+      if (jsonContent) {
+        result = result.replace(`[STATUSES:${jsonContent}]`, '');
       }
     }
 
@@ -562,6 +594,28 @@ export function Tooth3DDialog({
                                             </div>
                                             {entry.notes && (
                                               <div className="space-y-1">
+                                                {/* Display multiple statuses if present */}
+                                                {getStatusesFromNotes(entry.notes).length > 0 && (
+                                                  <div className="flex flex-wrap gap-1">
+                                                    {getStatusesFromNotes(entry.notes).map((statusName) => {
+                                                      const statusColor = getStatusHexColor(statusName);
+                                                      return (
+                                                        <Badge 
+                                                          key={`${entry.id}-status-${statusName}`}
+                                                          variant="outline" 
+                                                          className="text-xs"
+                                                          style={{
+                                                            backgroundColor: statusColor ? `${statusColor}20` : undefined,
+                                                            borderColor: statusColor || undefined,
+                                                            color: statusColor || undefined,
+                                                          }}
+                                                        >
+                                                          {statusName}
+                                                        </Badge>
+                                                      );
+                                                    })}
+                                                  </div>
+                                                )}
                                                 {getCleanNotes(entry.notes) && (
                                                   <p className="text-sm text-muted-foreground">{getCleanNotes(entry.notes)}</p>
                                                 )}
