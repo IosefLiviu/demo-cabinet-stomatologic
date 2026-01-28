@@ -23,6 +23,7 @@ interface LabEntry {
   treatmentName: string;
   laboratorCost: number;
   treatmentPrice: number;
+  discountPercent: number;
 }
 
 interface DoctorLabStats {
@@ -30,6 +31,7 @@ interface DoctorLabStats {
   doctorColor: string;
   totalLaborator: number;
   totalPrice: number;
+  totalDiscount: number;
   netRevenue: number;
   entries: LabEntry[];
 }
@@ -45,6 +47,7 @@ export function LaboratoryReport({ appointments, dateRange }: LaboratoryReportPr
         if (a.appointment_treatments && a.appointment_treatments.length > 0) {
           a.appointment_treatments.forEach(t => {
             const labCost = Number((t as any).laborator) || 0;
+            const discountPercent = Number((t as any).discount_percent) || 0;
             if (labCost > 0) {
               entries.push({
                 id: `${a.id}-${t.id}`,
@@ -56,6 +59,7 @@ export function LaboratoryReport({ appointments, dateRange }: LaboratoryReportPr
                 treatmentName: t.treatment_name,
                 laboratorCost: labCost,
                 treatmentPrice: t.price || 0,
+                discountPercent: discountPercent,
               });
             }
           });
@@ -65,7 +69,6 @@ export function LaboratoryReport({ appointments, dateRange }: LaboratoryReportPr
     return entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [appointments]);
 
-  // Aggregate by doctor
   const doctorLabStats = useMemo(() => {
     const stats: Record<string, DoctorLabStats> = {};
     
@@ -76,31 +79,41 @@ export function LaboratoryReport({ appointments, dateRange }: LaboratoryReportPr
           doctorColor: entry.doctorColor,
           totalLaborator: 0,
           totalPrice: 0,
+          totalDiscount: 0,
           netRevenue: 0,
           entries: [],
         };
       }
       
+      const discountAmount = entry.treatmentPrice * (entry.discountPercent / 100);
       stats[entry.doctorName].totalLaborator += entry.laboratorCost;
       stats[entry.doctorName].totalPrice += entry.treatmentPrice;
+      stats[entry.doctorName].totalDiscount += discountAmount;
       stats[entry.doctorName].entries.push(entry);
     });
     
-    // Calculate net revenue
+    // Calculate net revenue (price - discount - lab cost)
     Object.values(stats).forEach(s => {
-      s.netRevenue = s.totalPrice - s.totalLaborator;
+      s.netRevenue = s.totalPrice - s.totalDiscount - s.totalLaborator;
     });
     
     return Object.values(stats).sort((a, b) => b.totalLaborator - a.totalLaborator);
   }, [labEntries]);
 
   // Totals
-  const totals = useMemo(() => ({
-    totalLaborator: labEntries.reduce((sum, e) => sum + e.laboratorCost, 0),
-    totalPrice: labEntries.reduce((sum, e) => sum + e.treatmentPrice, 0),
-    netRevenue: labEntries.reduce((sum, e) => sum + (e.treatmentPrice - e.laboratorCost), 0),
-    count: labEntries.length,
-  }), [labEntries]);
+  const totals = useMemo(() => {
+    const totalPrice = labEntries.reduce((sum, e) => sum + e.treatmentPrice, 0);
+    const totalDiscount = labEntries.reduce((sum, e) => sum + (e.treatmentPrice * (e.discountPercent / 100)), 0);
+    const totalLaborator = labEntries.reduce((sum, e) => sum + e.laboratorCost, 0);
+    return {
+      totalLaborator,
+      totalPrice,
+      totalDiscount,
+      netRevenue: totalPrice - totalDiscount - totalLaborator,
+      count: labEntries.length,
+      countWithDiscount: labEntries.filter(e => e.discountPercent > 0).length,
+    };
+  }, [labEntries]);
 
   // Export to Excel
   const handleExport = () => {
@@ -111,42 +124,49 @@ export function LaboratoryReport({ appointments, dateRange }: LaboratoryReportPr
       ['Raport Laborator'],
       [`Perioada: ${format(dateRange.from, 'dd.MM.yyyy')} - ${format(dateRange.to, 'dd.MM.yyyy')}`],
       [],
-      ['Doctor', 'Total Laborator', 'Total Preț Tratament', 'Venit Net', 'Nr. Lucrări'],
+      ['Doctor', 'Total Laborator', 'Total Preț', 'Discount', 'Venit Net', 'Nr. Lucrări'],
       ...doctorLabStats.map(d => [
         d.doctorName,
         d.totalLaborator,
         d.totalPrice,
+        d.totalDiscount,
         d.netRevenue,
         d.entries.length,
       ]),
       [],
-      ['TOTAL', totals.totalLaborator, totals.totalPrice, totals.netRevenue, totals.count],
+      ['TOTAL', totals.totalLaborator, totals.totalPrice, totals.totalDiscount, totals.netRevenue, totals.count],
     ];
     
     const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
     summarySheet['!cols'] = [
-      { wch: 30 }, { wch: 15 }, { wch: 20 }, { wch: 15 }, { wch: 12 }
+      { wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 12 }
     ];
     XLSX.utils.book_append_sheet(workbook, summarySheet, 'Sumar');
     
     // Detailed entries sheet
     const detailsData = [
-      ['Data', 'Pacient', 'Telefon', 'Doctor', 'Tratament', 'Laborator', 'Preț Tratament', 'Venit Net'],
-      ...labEntries.map(e => [
-        format(new Date(e.date), 'dd.MM.yyyy'),
-        e.patientName,
-        e.patientPhone,
-        e.doctorName,
-        e.treatmentName,
-        e.laboratorCost,
-        e.treatmentPrice,
-        e.treatmentPrice - e.laboratorCost,
-      ]),
+      ['Data', 'Pacient', 'Telefon', 'Doctor', 'Tratament', 'Laborator', 'Preț', 'Discount %', 'Discount RON', 'Venit Net'],
+      ...labEntries.map(e => {
+        const discountAmount = e.treatmentPrice * (e.discountPercent / 100);
+        const netRevenue = e.treatmentPrice - discountAmount - e.laboratorCost;
+        return [
+          format(new Date(e.date), 'dd.MM.yyyy'),
+          e.patientName,
+          e.patientPhone,
+          e.doctorName,
+          e.treatmentName,
+          e.laboratorCost,
+          e.treatmentPrice,
+          e.discountPercent > 0 ? `${e.discountPercent}%` : '',
+          discountAmount > 0 ? discountAmount : '',
+          netRevenue,
+        ];
+      }),
     ];
     
     const detailsSheet = XLSX.utils.aoa_to_sheet(detailsData);
     detailsSheet['!cols'] = [
-      { wch: 12 }, { wch: 25 }, { wch: 15 }, { wch: 25 }, { wch: 35 }, { wch: 12 }, { wch: 15 }, { wch: 12 }
+      { wch: 12 }, { wch: 25 }, { wch: 15 }, { wch: 25 }, { wch: 35 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 12 }
     ];
     XLSX.utils.book_append_sheet(workbook, detailsSheet, 'Detalii');
     
@@ -320,42 +340,56 @@ export function LaboratoryReport({ appointments, dateRange }: LaboratoryReportPr
                     <TableHead>Tratament</TableHead>
                     <TableHead className="text-right">Laborator</TableHead>
                     <TableHead className="text-right">Preț</TableHead>
+                    <TableHead className="text-right">Discount</TableHead>
                     <TableHead className="text-right">Net</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {labEntries.map((entry) => (
-                    <TableRow key={entry.id}>
-                      <TableCell className="whitespace-nowrap">
-                        {format(new Date(entry.date), 'dd.MM.yyyy', { locale: ro })}
-                      </TableCell>
-                      <TableCell>
-                        <div>{entry.patientName}</div>
-                        <div className="text-xs text-muted-foreground">{entry.patientPhone}</div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div 
-                            className="w-2 h-2 rounded-full" 
-                            style={{ backgroundColor: entry.doctorColor }}
-                          />
-                          {entry.doctorName}
-                        </div>
-                      </TableCell>
-                      <TableCell className="max-w-[200px] truncate" title={entry.treatmentName}>
-                        {entry.treatmentName}
-                      </TableCell>
-                      <TableCell className="text-right font-medium text-purple-600">
-                        {entry.laboratorCost.toLocaleString()} RON
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {entry.treatmentPrice.toLocaleString()} RON
-                      </TableCell>
-                      <TableCell className="text-right font-medium text-green-600">
-                        {(entry.treatmentPrice - entry.laboratorCost).toLocaleString()} RON
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {labEntries.map((entry) => {
+                    const discountAmount = entry.treatmentPrice * (entry.discountPercent / 100);
+                    const netRevenue = entry.treatmentPrice - discountAmount - entry.laboratorCost;
+                    return (
+                      <TableRow key={entry.id}>
+                        <TableCell className="whitespace-nowrap">
+                          {format(new Date(entry.date), 'dd.MM.yyyy', { locale: ro })}
+                        </TableCell>
+                        <TableCell>
+                          <div>{entry.patientName}</div>
+                          <div className="text-xs text-muted-foreground">{entry.patientPhone}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-2 h-2 rounded-full" 
+                              style={{ backgroundColor: entry.doctorColor }}
+                            />
+                            {entry.doctorName}
+                          </div>
+                        </TableCell>
+                        <TableCell className="max-w-[200px] truncate" title={entry.treatmentName}>
+                          {entry.treatmentName}
+                        </TableCell>
+                        <TableCell className="text-right font-medium text-purple-600">
+                          {entry.laboratorCost.toLocaleString()} RON
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {entry.treatmentPrice.toLocaleString()} RON
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {entry.discountPercent > 0 ? (
+                            <span className="text-orange-600 font-medium">
+                              {entry.discountPercent}% ({discountAmount.toLocaleString()} RON)
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right font-medium text-green-600">
+                          {netRevenue.toLocaleString()} RON
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
