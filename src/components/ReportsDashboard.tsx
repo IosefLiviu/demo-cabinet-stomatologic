@@ -4,7 +4,7 @@ import { ro } from 'date-fns/locale';
 import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChart, UserCircle, Filter, Download, FlaskConical, ClipboardList, Percent } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AppointmentsPatientReport } from './AppointmentsPatientReport';
-import { NoDoctorAppointmentsReport } from './NoDoctorAppointmentsReport';
+import { DiscountedAppointmentsReport } from './DiscountedAppointmentsReport';
 import { LaboratoryReport } from './LaboratoryReport';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -592,9 +592,9 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
           <ClipboardList className="h-4 w-4" />
           Pe Pacienți
         </TabsTrigger>
-        <TabsTrigger value="no-doctor" className="gap-2">
-          <UserCircle className="h-4 w-4" />
-          Fără Doctor
+        <TabsTrigger value="discounts" className="gap-2">
+          <Percent className="h-4 w-4" />
+          Discounturi
         </TabsTrigger>
       </TabsList>
 
@@ -1079,8 +1079,8 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         />
       </TabsContent>
 
-      <TabsContent value="no-doctor">
-        <NoDoctorAppointmentsReport 
+      <TabsContent value="discounts">
+        <DiscountedAppointmentsReport 
           appointments={appointments} 
           dateRange={dateRange}
         />
