@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Users, Plus, Trash2, Edit2, UserPlus, Crown, X, Search } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Users, Plus, Trash2, Edit2, UserPlus, Crown, X, Search, Sparkles, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,11 +28,22 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { usePatientFamilies, FamilyWithMembers } from '@/hooks/usePatientFamilies';
 import { Patient } from '@/hooks/usePatients';
 import { differenceInYears } from 'date-fns';
+import { ChevronDown } from 'lucide-react';
 
 interface PatientFamiliesManagerProps {
+  patients: Patient[];
+}
+
+interface PotentialFamily {
+  phone: string;
   patients: Patient[];
 }
 
@@ -62,6 +73,8 @@ export function PatientFamiliesManager({ patients }: PatientFamiliesManagerProps
   const [showAddMemberDialog, setShowAddMemberDialog] = useState(false);
   const [selectedFamily, setSelectedFamily] = useState<FamilyWithMembers | null>(null);
   const [editingFamily, setEditingFamily] = useState<FamilyWithMembers | null>(null);
+  const [potentialFamiliesOpen, setPotentialFamiliesOpen] = useState(true);
+  const [creatingFromPotential, setCreatingFromPotential] = useState<PotentialFamily | null>(null);
   
   // Form states
   const [familyName, setFamilyName] = useState('');
@@ -74,6 +87,41 @@ export function PatientFamiliesManager({ patients }: PatientFamiliesManagerProps
   const [selectedPatientId, setSelectedPatientId] = useState('');
   const [selectedRelationship, setSelectedRelationship] = useState('');
   const [isPrimaryContact, setIsPrimaryContact] = useState(false);
+
+  // Get all patient IDs that are already in families
+  const patientsInFamilies = useMemo(() => {
+    const ids = new Set<string>();
+    families.forEach(f => f.members.forEach(m => ids.add(m.patient_id)));
+    return ids;
+  }, [families]);
+
+  // Detect potential families - patients sharing same phone who aren't in families yet
+  const potentialFamilies = useMemo(() => {
+    const phoneGroups = new Map<string, Patient[]>();
+    
+    patients.forEach(patient => {
+      // Skip patients already in families
+      if (patientsInFamilies.has(patient.id)) return;
+      
+      // Normalize phone number (remove spaces, dashes)
+      const normalizedPhone = patient.phone.replace(/[\s\-\.]/g, '');
+      if (!normalizedPhone) return;
+      
+      const existing = phoneGroups.get(normalizedPhone) || [];
+      existing.push(patient);
+      phoneGroups.set(normalizedPhone, existing);
+    });
+    
+    // Only keep groups with 2+ patients
+    const result: PotentialFamily[] = [];
+    phoneGroups.forEach((pts, phone) => {
+      if (pts.length >= 2) {
+        result.push({ phone, patients: pts });
+      }
+    });
+    
+    return result.sort((a, b) => b.patients.length - a.patients.length);
+  }, [patients, patientsInFamilies]);
 
   const filteredFamilies = families.filter(f => 
     f.family_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -184,6 +232,30 @@ export function PatientFamiliesManager({ patients }: PatientFamiliesManagerProps
     resetMemberForm();
   };
 
+  const handleCreateFromPotential = async (potential: PotentialFamily) => {
+    setCreatingFromPotential(potential);
+    
+    // Auto-generate family name from first patient's last name
+    const firstPatient = potential.patients[0];
+    const suggestedName = `Familia ${firstPatient.last_name}`;
+    
+    // Create the family
+    const family = await createFamily({
+      family_name: suggestedName,
+      primary_phone: potential.phone,
+    });
+    
+    if (family) {
+      // Add all patients as members
+      for (let i = 0; i < potential.patients.length; i++) {
+        const patient = potential.patients[i];
+        await addMember(family.id, patient.id, undefined, i === 0);
+      }
+    }
+    
+    setCreatingFromPotential(null);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -217,6 +289,81 @@ export function PatientFamiliesManager({ patients }: PatientFamiliesManagerProps
           className="pl-9"
         />
       </div>
+
+      {/* Potential Families Detection */}
+      {potentialFamilies.length > 0 && (
+        <Collapsible open={potentialFamiliesOpen} onOpenChange={setPotentialFamiliesOpen}>
+          <Card className="border-dashed border-primary/50 bg-primary/5">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-primary/10 transition-colors rounded-t-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    <CardTitle className="text-base">Familii Potențiale Detectate</CardTitle>
+                    <Badge variant="secondary" className="bg-primary/20">
+                      {potentialFamilies.length} grupuri
+                    </Badge>
+                  </div>
+                  <ChevronDown className={`h-5 w-5 transition-transform ${potentialFamiliesOpen ? 'rotate-180' : ''}`} />
+                </div>
+                <CardDescription>
+                  Pacienți care împărtășesc același număr de telefon
+                </CardDescription>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="pt-0">
+                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                  {potentialFamilies.map((potential) => (
+                    <div
+                      key={potential.phone}
+                      className="p-3 rounded-lg border bg-background"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-muted-foreground">
+                          {potential.phone}
+                        </span>
+                        <Badge variant="outline">{potential.patients.length} pacienți</Badge>
+                      </div>
+                      <div className="space-y-1 mb-3">
+                        {potential.patients.map((patient) => {
+                          const age = calculateAge(patient.date_of_birth);
+                          return (
+                            <p key={patient.id} className="text-sm">
+                              {patient.first_name} {patient.last_name}
+                              {age !== null && (
+                                <span className="text-muted-foreground ml-1">({age} ani)</span>
+                              )}
+                            </p>
+                          );
+                        })}
+                      </div>
+                      <Button
+                        size="sm"
+                        className="w-full"
+                        onClick={() => handleCreateFromPotential(potential)}
+                        disabled={creatingFromPotential?.phone === potential.phone}
+                      >
+                        {creatingFromPotential?.phone === potential.phone ? (
+                          <>
+                            <div className="animate-spin h-4 w-4 border-2 border-background border-t-transparent rounded-full mr-2" />
+                            Se creează...
+                          </>
+                        ) : (
+                          <>
+                            <Check className="h-4 w-4 mr-2" />
+                            Creează Familie
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+      )}
 
       {/* Families Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
