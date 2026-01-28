@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { getToothImage } from './toothImages';
 import { cleanDentalNotes } from '@/lib/cleanDentalNotes';
+import { Tooth3DCard } from './Tooth3DCard';
 import {
   Dialog,
   DialogContent,
@@ -117,87 +118,96 @@ export function ImageDentalChart({ dentalStatus, onToothClick, readonly = false 
     const toothImage = getToothImage(toothNumber);
     const hasNotes = !!cleanNotes;
 
+    // Fallback for teeth without images
+    if (!toothImage) {
+      return (
+        <div key={toothNumber} className="relative flex flex-col items-center">
+          {!isLower && (
+            <span className={cn(
+              "text-[10px] font-medium mb-0.5",
+              status !== 'healthy' ? 'text-foreground' : 'text-muted-foreground'
+            )}>
+              {toothNumber}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => handleToothClick(toothNumber)}
+            onMouseEnter={() => setHoveredTooth(toothNumber)}
+            onMouseLeave={() => setHoveredTooth(null)}
+            disabled={readonly && !notes}
+            className={cn(
+              'flex items-center justify-center bg-muted/20 border rounded transition-all',
+              isDeciduous ? 'w-8 h-10 sm:w-9 sm:h-11 border-dashed' : 'w-9 h-12 sm:w-10 sm:h-14',
+              !readonly && 'hover:scale-105 cursor-pointer',
+              isHovered && 'ring-2 ring-primary ring-offset-1'
+            )}
+          >
+            {toothNumber}
+          </button>
+          {isLower && (
+            <span className={cn(
+              "text-[10px] font-medium mt-0.5",
+              status !== 'healthy' ? 'text-foreground' : 'text-muted-foreground'
+            )}>
+              {toothNumber}
+            </span>
+          )}
+        </div>
+      );
+    }
+
     return (
       <div key={toothNumber} className="relative flex flex-col items-center">
-        {/* Tooth number - show above for upper teeth, below for lower teeth */}
+        {/* Tooth number - show above for upper teeth */}
         {!isLower && (
           <span className={cn(
-            "text-[10px] font-medium mb-0.5",
+            "text-[10px] font-medium mb-0.5 z-10",
             status !== 'healthy' ? 'text-foreground' : 'text-muted-foreground'
           )}>
             {toothNumber}
           </span>
         )}
         
-        <button
-          type="button"
+        <Tooth3DCard
+          toothImage={toothImage}
+          toothNumber={toothNumber}
+          isLower={isLower}
+          isHovered={isHovered}
+          statusOverlay={status !== 'healthy' && status !== 'missing' ? statusOverlayColors[status] : undefined}
+          isMissing={status === 'missing'}
           onClick={() => handleToothClick(toothNumber)}
           onMouseEnter={() => setHoveredTooth(toothNumber)}
           onMouseLeave={() => setHoveredTooth(null)}
           disabled={readonly && !notes}
           className={cn(
-            'relative flex items-center justify-center transition-all rounded-md overflow-hidden',
-            !readonly && 'hover:scale-105 cursor-pointer',
-            isHovered && 'ring-2 ring-offset-1',
-            isHovered && statusBorderColors[status],
+            isDeciduous ? 'w-8 h-10 sm:w-9 sm:h-11' : 'w-9 h-12 sm:w-10 sm:h-14',
             status !== 'healthy' && 'ring-2',
             status !== 'healthy' && statusBorderColors[status],
-            hasNotes && 'ring-1 ring-primary/50',
-            // Size based on tooth type
-            isDeciduous 
-              ? 'w-8 h-10 sm:w-9 sm:h-11' 
-              : 'w-9 h-12 sm:w-10 sm:h-14'
+            hasNotes && 'ring-1 ring-primary/50'
           )}
         >
-          {/* Tooth image */}
-          {toothImage ? (
-            <img 
-              src={toothImage} 
-              alt={`Dinte ${toothNumber}`}
-              className={cn(
-                "w-full h-full object-contain",
-                status === 'missing' && 'opacity-30 grayscale',
-                isLower && 'rotate-180'
-              )}
-            />
-          ) : (
+          {/* Tooltip */}
+          {isHovered && (
             <div className={cn(
-              "w-full h-full flex items-center justify-center bg-muted/20 border rounded",
-              isDeciduous && 'border-dashed'
+              "absolute z-50 px-2 py-1 rounded bg-popover border shadow-lg text-xs whitespace-nowrap pointer-events-none",
+              isLower ? 'top-full mt-1' : 'bottom-full mb-1',
+              "left-1/2 -translate-x-1/2"
             )}>
-              {toothNumber}
+              <div className="font-medium">{statusLabels[status]}</div>
+              {hasNotes && <div className="text-muted-foreground text-[10px]">Click pentru notițe</div>}
             </div>
           )}
-          
-          {/* Status overlay */}
-          {status !== 'healthy' && status !== 'missing' && (
-            <div className={cn(
-              "absolute inset-0 pointer-events-none",
-              statusOverlayColors[status]
-            )} />
-          )}
-        </button>
+        </Tooth3DCard>
         
         {/* Tooth number - show below for lower teeth */}
         {isLower && (
           <span className={cn(
-            "text-[10px] font-medium mt-0.5",
+            "text-[10px] font-medium mt-0.5 z-10",
             status !== 'healthy' ? 'text-foreground' : 'text-muted-foreground'
           )}>
             {toothNumber}
           </span>
-        )}
-        
-        {/* Tooltip */}
-        {isHovered && (
-          <div className={cn(
-            "absolute z-50 px-2 py-1 rounded bg-popover border shadow-lg text-xs whitespace-nowrap",
-            isLower ? 'top-full mt-1' : 'bottom-full mb-1',
-            "left-1/2 -translate-x-1/2"
-          )}>
-            <div className="font-medium">{statusLabels[status]}</div>
-            {hasNotes && <div className="text-muted-foreground text-[10px]">Click pentru notițe</div>}
-          </div>
         )}
       </div>
     );
