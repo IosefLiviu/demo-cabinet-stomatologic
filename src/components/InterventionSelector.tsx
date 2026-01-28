@@ -12,6 +12,7 @@ import { useToothStatuses } from '@/hooks/useToothStatuses';
 import { getToothImage } from './dental/toothImages';
 import { supabase } from '@/integrations/supabase/client';
 import { cleanDentalNotes } from '@/lib/cleanDentalNotes';
+import { MiniToothSelector } from './dental/MiniToothSelector';
 import {
   Dialog,
   DialogContent,
@@ -661,6 +662,19 @@ export function InterventionSelector({
               {/* Collapsible Content */}
               <CollapsibleContent>
                 <div className="p-3 space-y-4 border-t">
+                  {/* Mini Dental Chart for tooth selection */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Selectează dinții</Label>
+                    <div className="bg-muted/30 rounded-lg p-2">
+                      <MiniToothSelector
+                        selectedTeeth={intervention.selectedTeeth}
+                        onToothClick={(toothNumber) => openToothDialog(intervention.id, toothNumber)}
+                        patientDentalStatus={patientDentalStatus}
+                        getStatusHexColor={getStatusHexColor}
+                      />
+                    </div>
+                  </div>
+
                   {/* Prices Row */}
                   <div className="grid grid-cols-6 gap-2">
                     <div className="space-y-1">
