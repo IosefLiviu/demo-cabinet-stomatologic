@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Loader2, Save, History, ChevronDown, ChevronUp, Box } from 'lucide-react';
+import { Loader2, Save, History, ChevronDown, ChevronUp, Box, Calendar, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -21,6 +21,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Slider } from '@/components/ui/slider';
 import { Tooth3DViewer, DiagnosticPoint, DiagnosticLine } from './Tooth3DViewer';
 
 interface ToothHistoryEntry {
@@ -76,6 +77,10 @@ export function Tooth3DDialog({
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyExpanded, setHistoryExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('3d');
+  
+  // Timeline state
+  const [timelineIndex, setTimelineIndex] = useState<number | null>(null); // null = current (today)
+  const [isTimelineMode, setIsTimelineMode] = useState(false);
 
   // Helper to extract balanced JSON array from string
   const extractBalancedJson = (str: string, startIndex: number): string | null => {
@@ -374,6 +379,67 @@ export function Tooth3DDialog({
   const primaryStatus = statuses.length > 0 ? statuses[0] : 'Sănătos';
   const hexColor = getStatusHexColor(primaryStatus);
 
+  // Get unique dates from history for timeline (sorted oldest to newest)
+  const timelineDates = useMemo(() => {
+    if (toothHistory.length === 0) return [];
+    const dates = toothHistory.map(h => format(new Date(h.changed_at), 'yyyy-MM-dd'));
+    const uniqueDates = [...new Set(dates)].sort(); // Sort ascending (oldest first)
+    return uniqueDates;
+  }, [toothHistory]);
+
+  // Reconstruct status at a specific timeline index
+  const getHistoricalStatus = useMemo(() => {
+    if (timelineIndex === null || timelineDates.length === 0) {
+      // Current state
+      return {
+        status: primaryStatus,
+        statuses: statuses,
+        hexColor: hexColor,
+        date: null as string | null,
+      };
+    }
+
+    const selectedDate = timelineDates[timelineIndex];
+    // Find the most recent history entry at or before this date
+    const relevantEntries = toothHistory.filter(h => {
+      const entryDate = format(new Date(h.changed_at), 'yyyy-MM-dd');
+      return entryDate <= selectedDate;
+    });
+
+    if (relevantEntries.length === 0) {
+      return {
+        status: 'Sănătos',
+        statuses: ['Sănătos'],
+        hexColor: getStatusHexColor('Sănătos'),
+        date: selectedDate,
+      };
+    }
+
+    // Get the latest entry for this date
+    const latestEntry = relevantEntries[0]; // Already sorted newest first
+    const entryStatuses = getStatusesFromNotes(latestEntry.notes);
+    const displayStatus = getStatusDisplayName(latestEntry.new_status);
+    const allStatuses = entryStatuses.length > 0 ? entryStatuses : [displayStatus];
+    
+    return {
+      status: displayStatus,
+      statuses: allStatuses,
+      hexColor: getStatusHexColor(displayStatus),
+      date: selectedDate,
+    };
+  }, [timelineIndex, timelineDates, toothHistory, primaryStatus, statuses, hexColor, getStatusHexColor, getStatusDisplayName, getStatusesFromNotes]);
+
+  // Reset timeline when exiting timeline mode
+  const handleResetTimeline = () => {
+    setTimelineIndex(null);
+    setIsTimelineMode(false);
+  };
+
+  // The status to display (historical or current)
+  const displayStatus = isTimelineMode ? getHistoricalStatus.status : primaryStatus;
+  const displayStatuses = isTimelineMode ? getHistoricalStatus.statuses : statuses;
+  const displayHexColor = isTimelineMode ? getHistoricalStatus.hexColor : hexColor;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[850px] max-h-[95vh] overflow-hidden flex flex-col">
@@ -384,13 +450,19 @@ export function Tooth3DDialog({
             <Badge 
               variant="outline"
               style={{
-                backgroundColor: hexColor ? `${hexColor}20` : undefined,
-                borderColor: hexColor || undefined,
-                color: hexColor || undefined,
+                backgroundColor: displayHexColor ? `${displayHexColor}20` : undefined,
+                borderColor: displayHexColor || undefined,
+                color: displayHexColor || undefined,
               }}
             >
-              {statuses.length > 0 ? statuses.join(', ') : 'Sănătos'}
+              {displayStatuses.length > 0 ? displayStatuses.join(', ') : 'Sănătos'}
             </Badge>
+            {isTimelineMode && getHistoricalStatus.date && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                {format(new Date(getHistoricalStatus.date), 'd MMM yyyy', { locale: ro })}
+              </Badge>
+            )}
           </DialogTitle>
         </DialogHeader>
         
@@ -403,20 +475,93 @@ export function Tooth3DDialog({
             <TabsTrigger value="details">Detalii & Istoric</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="3d" className="flex-1 min-h-0 mt-4">
-            <div className="h-[550px] rounded-lg overflow-hidden border">
+          <TabsContent value="3d" className="flex-1 min-h-0 mt-4 space-y-3">
+            {/* Timeline Controls */}
+            {timelineDates.length > 0 && (
+              <div className="bg-muted/30 rounded-lg p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <History className="h-4 w-4 text-primary" />
+                    Timeline ({timelineDates.length} date{timelineDates.length !== 1 ? 's' : ''})
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {isTimelineMode && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleResetTimeline}
+                        className="h-7 text-xs"
+                      >
+                        <RotateCcw className="h-3 w-3 mr-1" />
+                        Azi
+                      </Button>
+                    )}
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={isTimelineMode}
+                        onChange={(e) => {
+                          setIsTimelineMode(e.target.checked);
+                          if (e.target.checked && timelineIndex === null) {
+                            setTimelineIndex(timelineDates.length - 1); // Start at most recent
+                          }
+                        }}
+                        className="rounded border-gray-300"
+                      />
+                      <span className="text-xs text-muted-foreground">Mod istoric</span>
+                    </label>
+                  </div>
+                </div>
+                
+                {isTimelineMode && (
+                  <div className="space-y-2">
+                    <Slider
+                      value={[timelineIndex ?? timelineDates.length - 1]}
+                      onValueChange={([value]) => setTimelineIndex(value)}
+                      min={0}
+                      max={timelineDates.length - 1}
+                      step={1}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>{format(new Date(timelineDates[0]), 'd MMM yyyy', { locale: ro })}</span>
+                      {timelineDates.length > 2 && (
+                        <span className="text-primary font-medium">
+                          {timelineIndex !== null 
+                            ? format(new Date(timelineDates[timelineIndex]), 'd MMMM yyyy', { locale: ro })
+                            : 'Selectează o dată'
+                          }
+                        </span>
+                      )}
+                      <span>{format(new Date(timelineDates[timelineDates.length - 1]), 'd MMM yyyy', { locale: ro })}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <div className={cn(
+              "rounded-lg overflow-hidden border",
+              timelineDates.length > 0 ? "h-[480px]" : "h-[550px]"
+            )}>
               <Tooth3DViewer
                 toothNumber={toothNumber}
-                status={primaryStatus}
-                statusColor={hexColor || undefined}
-                diagnosticPoints={diagnosticPoints}
-                diagnosticLines={diagnosticLines}
-                onAddDiagnostic={handleAddDiagnostic}
-                onAddDiagnosticLine={handleAddDiagnosticLine}
-                onRemoveDiagnostic={handleRemoveDiagnostic}
-                onRemoveDiagnosticLine={handleRemoveDiagnosticLine}
+                status={displayStatus}
+                statusColor={displayHexColor || undefined}
+                diagnosticPoints={isTimelineMode ? [] : diagnosticPoints}
+                diagnosticLines={isTimelineMode ? [] : diagnosticLines}
+                onAddDiagnostic={isTimelineMode ? () => {} : handleAddDiagnostic}
+                onAddDiagnosticLine={isTimelineMode ? () => {} : handleAddDiagnosticLine}
+                onRemoveDiagnostic={isTimelineMode ? () => {} : handleRemoveDiagnostic}
+                onRemoveDiagnosticLine={isTimelineMode ? () => {} : handleRemoveDiagnosticLine}
               />
             </div>
+            
+            {isTimelineMode && (
+              <p className="text-xs text-center text-muted-foreground italic">
+                Mod vizualizare istoric - editarea este dezactivată
+              </p>
+            )}
           </TabsContent>
           
           <TabsContent value="details" className="flex-1 overflow-auto mt-4">
