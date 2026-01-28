@@ -276,17 +276,21 @@ export function InterventionSelector({
       
       // Log to dental_status_history
       if (patientId) {
-        try {
-          await supabase.from('dental_status_history').insert({
-            patient_id: patientId,
-            tooth_number: toothNumber,
-            old_status: null,
-            new_status: defaultStatus,
-            notes: `Intervenție: ${treatmentName}`,
-          });
-        } catch (error) {
+        console.log('Logging tooth selection to history:', { patientId, toothNumber, treatmentName });
+        const { error } = await supabase.from('dental_status_history').insert({
+          patient_id: patientId,
+          tooth_number: toothNumber,
+          old_status: null,
+          new_status: defaultStatus,
+          notes: `Intervenție: ${treatmentName}`,
+        });
+        if (error) {
           console.error('Error logging dental status history:', error);
+        } else {
+          console.log('Successfully logged tooth selection to history');
         }
+      } else {
+        console.warn('No patientId available - cannot log to history');
       }
 
       // Add tooth to intervention
@@ -366,23 +370,27 @@ export function InterventionSelector({
       
       // Only log if status actually changed
       if (oldStatusStr !== newStatusStr) {
-        try {
-          // Format statuses for notes field (multi-status support)
-          const notesWithStatuses = newStatuses.length > 1 
-            ? `[STATUSES: ${JSON.stringify(newStatuses)}]${toothDialog.notes ? ' ' + toothDialog.notes : ''}`
-            : toothDialog.notes || null;
+        // Format statuses for notes field (multi-status support)
+        const notesWithStatuses = newStatuses.length > 1 
+          ? `[STATUSES: ${JSON.stringify(newStatuses)}]${toothDialog.notes ? ' ' + toothDialog.notes : ''}`
+          : toothDialog.notes || null;
 
-          await supabase.from('dental_status_history').insert({
-            patient_id: patientId,
-            tooth_number: toothDialog.toothNumber,
-            old_status: oldStatusStr,
-            new_status: newStatusStr,
-            notes: notesWithStatuses,
-          });
-        } catch (error) {
+        console.log('Logging tooth status change to history:', { patientId, toothNumber: toothDialog.toothNumber, oldStatusStr, newStatusStr });
+        const { error } = await supabase.from('dental_status_history').insert({
+          patient_id: patientId,
+          tooth_number: toothDialog.toothNumber,
+          old_status: oldStatusStr,
+          new_status: newStatusStr,
+          notes: notesWithStatuses,
+        });
+        if (error) {
           console.error('Error logging dental status history:', error);
+        } else {
+          console.log('Successfully logged tooth status change');
         }
       }
+    } else {
+      console.warn('No patientId available for dialog - cannot log to history');
     }
 
     onInterventionsChange(
