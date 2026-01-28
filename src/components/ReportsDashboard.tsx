@@ -364,10 +364,10 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       acc[doctorName].totalWithNetLabAndUnpaid = totalWithNetLabMinusLab + acc[doctorName].unpaid;
       
       // Custom commission rate for specific doctors
-      // Dr. Dumitru Bacalin gets 50%, all others get 40%
-      const isDumitruBacalin = doctorName.toLowerCase().includes('dumitru bacalin');
-      const doctorCommissionRate = isDumitruBacalin ? 0.5 : 0.4;
-      const clinicCommissionRate = isDumitruBacalin ? 0.5 : 0.6;
+      // Dr. Dumitru Bacalim gets 50%, all others get 40%
+      const isDumitruBacalim = doctorName.toLowerCase().includes('dumitru bacalim');
+      const doctorCommissionRate = isDumitruBacalim ? 0.5 : 0.4;
+      const clinicCommissionRate = isDumitruBacalim ? 0.5 : 0.6;
       
       // Calculate clinic and doctor percentages based on custom rates
       acc[doctorName].sixtPercentTotal = Math.round(totalWithNetLabMinusLab * clinicCommissionRate);
