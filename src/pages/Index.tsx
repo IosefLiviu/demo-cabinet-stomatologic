@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
-import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, Radio, FileText, Pill, UserCheck, Printer, Stethoscope, ClipboardList, FlaskConical, Package } from 'lucide-react';
+import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, Radio, FileText, Pill, UserCheck, Printer, Stethoscope, ClipboardList, FlaskConical, Package, List, Home } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/Header';
 import { DateNavigator } from '@/components/DateNavigator';
@@ -28,6 +28,7 @@ import { CancelAppointmentDialog } from '@/components/CancelAppointmentDialog';
 import { NavigationButtons } from '@/components/NavigationButtons';
 import { AvailableSlotsSearch } from '@/components/AvailableSlotsSearch';
 import { StockManagement } from '@/components/StockManagement';
+import { PatientFamiliesManager } from '@/components/PatientFamiliesManager';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePatients, Patient } from '@/hooks/usePatients';
@@ -634,26 +635,45 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="patients">
-            <PatientsList
-              patients={patients}
-              loading={patientsLoading}
-              onEdit={handleEditPatient}
-              onDelete={deletePatient}
-              onAddNew={() => {
-                setEditingPatient(undefined);
-                setShowPatientForm(true);
-              }}
-              onViewDetails={(patient) => {
-                // Push navigation state when opening patient details
-                pushNavState({ 
-                  tab: 'patients', 
-                  patientId: patient.id, 
-                  patientName: `${patient.first_name} ${patient.last_name}` 
-                });
-                setSelectedPatient(patient);
-              }}
-              onRefetch={refetchPatients}
-            />
+            <Tabs defaultValue="patients-list" className="space-y-4">
+              <TabsList className="flex w-full h-auto gap-1">
+                <TabsTrigger value="patients-list" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                  <List className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Listă Pacienți</span>
+                </TabsTrigger>
+                <TabsTrigger value="families" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                  <Home className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Familii</span>
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="patients-list">
+                <PatientsList
+                  patients={patients}
+                  loading={patientsLoading}
+                  onEdit={handleEditPatient}
+                  onDelete={deletePatient}
+                  onAddNew={() => {
+                    setEditingPatient(undefined);
+                    setShowPatientForm(true);
+                  }}
+                  onViewDetails={(patient) => {
+                    // Push navigation state when opening patient details
+                    pushNavState({ 
+                      tab: 'patients', 
+                      patientId: patient.id, 
+                      patientName: `${patient.first_name} ${patient.last_name}` 
+                    });
+                    setSelectedPatient(patient);
+                  }}
+                  onRefetch={refetchPatients}
+                />
+              </TabsContent>
+
+              <TabsContent value="families">
+                <PatientFamiliesManager patients={patients} />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           <TabsContent value="reports">
