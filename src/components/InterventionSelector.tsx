@@ -276,7 +276,7 @@ export function InterventionSelector({
     });
   };
 
-  const handleSaveToothDialog = () => {
+  const handleSaveToothDialog = async () => {
     if (!toothDialog) return;
 
     // If no statuses selected, remove the tooth from selection
@@ -284,6 +284,38 @@ export function InterventionSelector({
       handleRemoveTooth(toothDialog.interventionId, toothDialog.toothNumber);
       setToothDialog(null);
       return;
+    }
+
+    // Find existing tooth details to determine old status
+    const intervention = interventions.find(i => i.id === toothDialog.interventionId);
+    const existingDetail = intervention?.teethDetails?.find(t => t.toothNumber === toothDialog.toothNumber);
+    const oldStatuses = existingDetail?.statuses || (existingDetail?.status ? [existingDetail.status] : []);
+    const newStatuses = toothDialog.statuses;
+
+    // Log to dental_status_history if we have a patientId and status changed
+    if (patientId) {
+      const oldStatusStr = oldStatuses.length > 0 ? oldStatuses.join(', ') : null;
+      const newStatusStr = newStatuses.join(', ');
+      
+      // Only log if status actually changed
+      if (oldStatusStr !== newStatusStr) {
+        try {
+          // Format statuses for notes field (multi-status support)
+          const notesWithStatuses = newStatuses.length > 1 
+            ? `[STATUSES: ${JSON.stringify(newStatuses)}]${toothDialog.notes ? ' ' + toothDialog.notes : ''}`
+            : toothDialog.notes || null;
+
+          await supabase.from('dental_status_history').insert({
+            patient_id: patientId,
+            tooth_number: toothDialog.toothNumber,
+            old_status: oldStatusStr,
+            new_status: newStatusStr,
+            notes: notesWithStatuses,
+          });
+        } catch (error) {
+          console.error('Error logging dental status history:', error);
+        }
+      }
     }
 
     onInterventionsChange(
