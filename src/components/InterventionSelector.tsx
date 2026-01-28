@@ -274,20 +274,35 @@ export function InterventionSelector({
       const treatmentName = intervention.treatmentName;
       const defaultStatus = 'Tratament planificat';
       
-      // Log to dental_status_history
+      // Log to dental_status_history (with duplicate check)
       if (patientId) {
-        console.log('Logging tooth selection to history:', { patientId, toothNumber, treatmentName });
-        const { error } = await supabase.from('dental_status_history').insert({
-          patient_id: patientId,
-          tooth_number: toothNumber,
-          old_status: null,
-          new_status: defaultStatus,
-          notes: `Intervenție: ${treatmentName}`,
-        });
-        if (error) {
-          console.error('Error logging dental status history:', error);
+        // Check if a similar entry was created in the last 10 seconds to prevent duplicates
+        const tenSecondsAgo = new Date(Date.now() - 10000).toISOString();
+        const { data: existingEntries } = await supabase
+          .from('dental_status_history')
+          .select('id')
+          .eq('patient_id', patientId)
+          .eq('tooth_number', toothNumber)
+          .eq('new_status', defaultStatus)
+          .gte('changed_at', tenSecondsAgo)
+          .limit(1);
+
+        if (existingEntries && existingEntries.length > 0) {
+          console.log('Skipping duplicate history entry for tooth', toothNumber);
         } else {
-          console.log('Successfully logged tooth selection to history');
+          console.log('Logging tooth selection to history:', { patientId, toothNumber, treatmentName });
+          const { error } = await supabase.from('dental_status_history').insert({
+            patient_id: patientId,
+            tooth_number: toothNumber,
+            old_status: null,
+            new_status: defaultStatus,
+            notes: `Intervenție: ${treatmentName}`,
+          });
+          if (error) {
+            console.error('Error logging dental status history:', error);
+          } else {
+            console.log('Successfully logged tooth selection to history');
+          }
         }
       } else {
         console.warn('No patientId available - cannot log to history');
