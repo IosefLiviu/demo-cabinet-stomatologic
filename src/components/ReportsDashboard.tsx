@@ -362,10 +362,16 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       const totalWithNetLabMinusLab = acc[doctorName].totalWithNetLab - acc[doctorName].laborator;
       // Calculate totalWithNetLabAndUnpaid: totalWithNetLab + unpaid (total potential income - for reference only)
       acc[doctorName].totalWithNetLabAndUnpaid = totalWithNetLabMinusLab + acc[doctorName].unpaid;
-      // Calculate 60% of totalWithNetLab (includes paid amounts + CAS, not including unpaid)
-      acc[doctorName].sixtPercentTotal = Math.round(totalWithNetLabMinusLab * 0.6);
-      // Calculate 40% of totalWithNetLab (includes paid amounts + CAS, not including unpaid)
-      acc[doctorName].fortyPercentTotal = Math.round(totalWithNetLabMinusLab * 0.4);
+      
+      // Custom commission rate for specific doctors
+      // Dr. Dumitru Bacalin gets 50%, all others get 40%
+      const isDumitruBacalin = doctorName.toLowerCase().includes('dumitru bacalin');
+      const doctorCommissionRate = isDumitruBacalin ? 0.5 : 0.4;
+      const clinicCommissionRate = isDumitruBacalin ? 0.5 : 0.6;
+      
+      // Calculate clinic and doctor percentages based on custom rates
+      acc[doctorName].sixtPercentTotal = Math.round(totalWithNetLabMinusLab * clinicCommissionRate);
+      acc[doctorName].fortyPercentTotal = Math.round(totalWithNetLabMinusLab * doctorCommissionRate);
       
       return acc;
     }, {} as Record<string, { name: string; revenue: number; discount: number; paid: number; paidCard: number; paidCash: number; unpaid: number; scheduled: number; cas: number; laborator: number; netLabRevenue: number; totalWithNetLab: number; totalWithNetLabAndUnpaid: number; sixtPercentTotal: number; fortyPercentTotal: number; appointments: number; color: string }>);
