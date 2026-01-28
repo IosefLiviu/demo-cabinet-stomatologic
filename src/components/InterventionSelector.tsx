@@ -259,6 +259,73 @@ export function InterventionSelector({
     );
   };
 
+  // Quick toggle tooth selection (single click) - logs to history
+  const handleQuickToggleTooth = async (interventionId: string, toothNumber: number) => {
+    const intervention = interventions.find(i => i.id === interventionId);
+    if (!intervention) return;
+
+    const isAlreadySelected = intervention.selectedTeeth.includes(toothNumber);
+
+    if (isAlreadySelected) {
+      // Remove tooth
+      handleRemoveTooth(interventionId, toothNumber);
+    } else {
+      // Add tooth with default status and log to history
+      const treatmentName = intervention.treatmentName;
+      const defaultStatus = 'Tratament planificat';
+      
+      // Log to dental_status_history
+      if (patientId) {
+        try {
+          await supabase.from('dental_status_history').insert({
+            patient_id: patientId,
+            tooth_number: toothNumber,
+            old_status: null,
+            new_status: defaultStatus,
+            notes: `Intervenție: ${treatmentName}`,
+          });
+        } catch (error) {
+          console.error('Error logging dental status history:', error);
+        }
+      }
+
+      // Add tooth to intervention
+      const existingDetails = intervention.teethDetails || [];
+      const newSelectedTeeth = [...intervention.selectedTeeth, toothNumber];
+      const basePrice = intervention.basePrice ?? intervention.price;
+      
+      let newPrice: number;
+      if (intervention.isArchMode) {
+        const archGroupCount = countArchGroups(newSelectedTeeth);
+        newPrice = newSelectedTeeth.length > 0 ? basePrice * archGroupCount : basePrice;
+      } else {
+        const teethCount = newSelectedTeeth.length;
+        newPrice = teethCount > 0 ? basePrice * teethCount : basePrice;
+      }
+
+      onInterventionsChange(
+        interventions.map(i => {
+          if (i.id !== interventionId) return i;
+          return {
+            ...i,
+            selectedTeeth: newSelectedTeeth,
+            teethDetails: [
+              ...existingDetails,
+              {
+                toothNumber: toothNumber,
+                status: defaultStatus,
+                statuses: [defaultStatus],
+              },
+            ],
+            basePrice: basePrice,
+            price: newPrice,
+            archGroupCount: intervention.isArchMode ? countArchGroups(newSelectedTeeth) : undefined,
+          };
+        })
+      );
+    }
+  };
+
   const openToothDialog = (interventionId: string, toothNumber: number) => {
     const intervention = interventions.find(i => i.id === interventionId);
     const existingDetail = intervention?.teethDetails?.find(t => t.toothNumber === toothNumber);
@@ -696,11 +763,12 @@ export function InterventionSelector({
                 <div className="p-3 space-y-4 border-t">
                   {/* Mini Dental Chart for tooth selection */}
                   <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">Selectează dinții</Label>
+                    <Label className="text-xs text-muted-foreground">Selectează dinții (click = toggle, dublu-click = detalii)</Label>
                     <div className="bg-muted/30 rounded-lg p-2">
                       <MiniToothSelector
                         selectedTeeth={intervention.selectedTeeth}
-                        onToothClick={(toothNumber) => openToothDialog(intervention.id, toothNumber)}
+                        onToothClick={(toothNumber) => handleQuickToggleTooth(intervention.id, toothNumber)}
+                        onToothDoubleClick={(toothNumber) => openToothDialog(intervention.id, toothNumber)}
                         patientDentalStatus={patientDentalStatus}
                         getStatusHexColor={getStatusHexColor}
                       />

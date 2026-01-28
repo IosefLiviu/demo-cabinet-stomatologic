@@ -19,6 +19,7 @@ interface PatientToothStatus {
 interface MiniToothSelectorProps {
   selectedTeeth: number[];
   onToothClick: (toothNumber: number) => void;
+  onToothDoubleClick?: (toothNumber: number) => void;
   patientDentalStatus?: PatientToothStatus[];
   getStatusHexColor?: (status: string) => string | null;
   className?: string;
@@ -27,6 +28,7 @@ interface MiniToothSelectorProps {
 export function MiniToothSelector({
   selectedTeeth,
   onToothClick,
+  onToothDoubleClick,
   patientDentalStatus = [],
   getStatusHexColor,
   className,
@@ -48,6 +50,7 @@ export function MiniToothSelector({
       <button
         type="button"
         onClick={() => onToothClick(toothNumber)}
+        onDoubleClick={() => onToothDoubleClick?.(toothNumber)}
         className={cn(
           'relative flex flex-col items-center transition-all rounded overflow-hidden',
           'hover:scale-110 cursor-pointer',
