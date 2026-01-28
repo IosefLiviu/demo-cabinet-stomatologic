@@ -49,9 +49,9 @@ export function MiniToothSelector({
         type="button"
         onClick={() => onToothClick(toothNumber)}
         className={cn(
-          'relative flex items-center justify-center transition-all rounded overflow-hidden',
+          'relative flex flex-col items-center transition-all rounded overflow-hidden',
           'hover:scale-110 cursor-pointer',
-          isDeciduous ? 'w-4 h-5' : 'w-5 h-6',
+          isDeciduous ? 'w-5' : 'w-6',
           isSelected && 'ring-2 ring-primary ring-offset-1',
           hasPatientStatus && !isSelected && 'ring-1'
         )}
@@ -63,40 +63,66 @@ export function MiniToothSelector({
               : undefined
         }
       >
-        {toothImage ? (
-          <img
-            src={toothImage}
-            alt={`${toothNumber}`}
-            className={cn(
-              'w-full h-full object-contain',
-              isLower && 'rotate-180',
-              isMissing && 'opacity-30 grayscale',
-              !isSelected && !hasPatientStatus && 'opacity-50'
-            )}
-          />
-        ) : (
-          <div className={cn(
-            'w-full h-full flex items-center justify-center text-[8px] font-medium',
-            isSelected ? 'bg-primary/20 text-primary' : 'bg-muted/50'
+        {/* Tooth number - show above for upper teeth */}
+        {!isLower && (
+          <span className={cn(
+            "text-[8px] font-medium leading-none",
+            isSelected ? 'text-primary' : hasPatientStatus ? 'text-foreground' : 'text-muted-foreground'
           )}>
             {toothNumber}
-          </div>
+          </span>
         )}
 
-        {/* Selection overlay */}
-        {isSelected && (
-          <div 
-            className="absolute inset-0 rounded"
-            style={{ backgroundColor: hexColor ? `${hexColor}40` : 'hsl(var(--primary) / 0.3)' }}
-          />
-        )}
+        {/* Tooth image */}
+        <div className={cn(
+          'relative flex items-center justify-center',
+          isDeciduous ? 'w-4 h-5' : 'w-5 h-6'
+        )}>
+          {toothImage ? (
+            <img
+              src={toothImage}
+              alt={`${toothNumber}`}
+              className={cn(
+                'w-full h-full object-contain',
+                isLower && 'rotate-180',
+                isMissing && 'opacity-30 grayscale',
+                !isSelected && !hasPatientStatus && 'opacity-50'
+              )}
+            />
+          ) : (
+            <div className={cn(
+              'w-full h-full flex items-center justify-center text-[8px] font-medium',
+              isSelected ? 'bg-primary/20 text-primary' : 'bg-muted/50'
+            )}>
+              {toothNumber}
+            </div>
+          )}
 
-        {/* Patient status overlay */}
-        {!isSelected && hasPatientStatus && hexColor && !isMissing && (
-          <div 
-            className="absolute inset-0 rounded"
-            style={{ backgroundColor: `${hexColor}25` }}
-          />
+          {/* Selection overlay */}
+          {isSelected && (
+            <div 
+              className="absolute inset-0 rounded"
+              style={{ backgroundColor: hexColor ? `${hexColor}40` : 'hsl(var(--primary) / 0.3)' }}
+            />
+          )}
+
+          {/* Patient status overlay */}
+          {!isSelected && hasPatientStatus && hexColor && !isMissing && (
+            <div 
+              className="absolute inset-0 rounded"
+              style={{ backgroundColor: `${hexColor}25` }}
+            />
+          )}
+        </div>
+
+        {/* Tooth number - show below for lower teeth */}
+        {isLower && (
+          <span className={cn(
+            "text-[8px] font-medium leading-none",
+            isSelected ? 'text-primary' : hasPatientStatus ? 'text-foreground' : 'text-muted-foreground'
+          )}>
+            {toothNumber}
+          </span>
         )}
       </button>
     );
