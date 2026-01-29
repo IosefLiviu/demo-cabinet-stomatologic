@@ -92,9 +92,12 @@ export function DoctorScheduleManagement({
   
   // Shifts state
   const [showShiftDialog, setShowShiftDialog] = useState(false);
-  const [shiftForm, setShiftForm] = useState<CreateShiftData>({
+  const [shiftDateRange, setShiftDateRange] = useState<{ from: Date; to?: Date }>({
+    from: new Date(),
+    to: undefined,
+  });
+  const [shiftForm, setShiftForm] = useState<Omit<CreateShiftData, 'shift_date'>>({
     doctor_id: selectedDoctorId || '',
-    shift_date: format(new Date(), 'yyyy-MM-dd'),
     start_time: '08:00',
     end_time: '16:00',
     cabinet_id: null,
@@ -154,16 +157,30 @@ export function DoctorScheduleManagement({
   };
 
   const handleAddShift = async () => {
-    if (!shiftForm.doctor_id || !shiftForm.shift_date) {
+    if (!shiftForm.doctor_id || !shiftDateRange.from) {
       return;
     }
     
-    const result = await createShift(shiftForm);
-    if (result) {
+    // Get all dates in the range
+    const startDate = shiftDateRange.from;
+    const endDate = shiftDateRange.to || shiftDateRange.from;
+    const daysInRange = eachDayOfInterval({ start: startDate, end: endDate });
+    
+    let successCount = 0;
+    for (const day of daysInRange) {
+      const shiftData: CreateShiftData = {
+        ...shiftForm,
+        shift_date: format(day, 'yyyy-MM-dd'),
+      };
+      const result = await createShift(shiftData);
+      if (result) successCount++;
+    }
+    
+    if (successCount > 0) {
       setShowShiftDialog(false);
+      setShiftDateRange({ from: new Date(), to: undefined });
       setShiftForm({
         doctor_id: selectedDoctorId || '',
-        shift_date: format(new Date(), 'yyyy-MM-dd'),
         start_time: '08:00',
         end_time: '16:00',
         cabinet_id: null,
@@ -525,27 +542,38 @@ export function DoctorScheduleManagement({
             </div>
 
             <div className="space-y-2">
-              <Label>Data</Label>
+              <Label>Perioadă</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start">
+                  <Button variant="outline" className="w-full justify-start text-left">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {shiftForm.shift_date ? format(parseISO(shiftForm.shift_date), 'PPP', { locale: ro }) : 'Selectează data'}
+                    {shiftDateRange.from ? (
+                      shiftDateRange.to ? (
+                        <>
+                          {format(shiftDateRange.from, 'd MMM', { locale: ro })} - {format(shiftDateRange.to, 'd MMM yyyy', { locale: ro })}
+                        </>
+                      ) : (
+                        format(shiftDateRange.from, 'PPP', { locale: ro })
+                      )
+                    ) : (
+                      'Selectează perioada'
+                    )}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
-                    mode="single"
-                    selected={shiftForm.shift_date ? parseISO(shiftForm.shift_date) : undefined}
-                    onSelect={(date) => date && setShiftForm(prev => ({ 
-                      ...prev, 
-                      shift_date: format(date, 'yyyy-MM-dd') 
-                    }))}
+                    mode="range"
+                    selected={shiftDateRange}
+                    onSelect={(range) => range && setShiftDateRange(range as { from: Date; to?: Date })}
                     initialFocus
                     className="pointer-events-auto"
+                    numberOfMonths={1}
                   />
                 </PopoverContent>
               </Popover>
+              <p className="text-xs text-muted-foreground">
+                Selectează o zi sau o perioadă pentru a adăuga schimbul
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -619,8 +647,8 @@ export function DoctorScheduleManagement({
             <Button variant="outline" onClick={() => setShowShiftDialog(false)}>
               Anulează
             </Button>
-            <Button onClick={handleAddShift} disabled={!shiftForm.doctor_id}>
-              Salvează
+            <Button onClick={handleAddShift} disabled={!shiftForm.doctor_id || !shiftDateRange.from}>
+              {shiftDateRange.to ? `Salvează (${eachDayOfInterval({ start: shiftDateRange.from, end: shiftDateRange.to }).length} zile)` : 'Salvează'}
             </Button>
           </DialogFooter>
         </DialogContent>
