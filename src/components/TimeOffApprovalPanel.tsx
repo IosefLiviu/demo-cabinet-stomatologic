@@ -51,7 +51,7 @@ const STATUS_BADGES = {
 
 export function TimeOffApprovalPanel() {
   const { doctors } = useDoctors();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   
   const [doctorFilter, setDoctorFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('pending');
@@ -217,14 +217,16 @@ export function TimeOffApprovalPanel() {
                         </div>
                       )}
                       
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => deleteTimeOffRequest(request.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {isAdmin && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => deleteTimeOffRequest(request.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardContent>
