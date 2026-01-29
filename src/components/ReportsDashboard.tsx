@@ -1,11 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChart, UserCircle, Filter, Download, FlaskConical, ClipboardList, Percent, MessageSquare } from 'lucide-react';
+import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChart, UserCircle, Filter, Download, FlaskConical, ClipboardList, Percent } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AppointmentsPatientReport } from './AppointmentsPatientReport';
-import { WhatsAppInbox } from './WhatsAppInbox';
-import { useWhatsAppMessages } from '@/hooks/useWhatsAppMessages';
 import { DiscountedAppointmentsReport } from './DiscountedAppointmentsReport';
 import { LaboratoryReport } from './LaboratoryReport';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,7 +29,6 @@ const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 export function ReportsDashboard({ appointments, loading, onFetchRange }: ReportsDashboardProps) {
   const { doctors } = useDoctors();
   const { isAdmin, doctorId } = useAuth();
-  const { unreadCount } = useWhatsAppMessages();
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
     from: startOfMonth(new Date()),
     to: endOfMonth(new Date()),
@@ -582,7 +579,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
 
   return (
     <Tabs defaultValue="financial" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-5 max-w-3xl">
+      <TabsList className="grid w-full grid-cols-4 max-w-2xl">
         <TabsTrigger value="financial" className="gap-2">
           <DollarSign className="h-4 w-4" />
           Financiar
@@ -598,15 +595,6 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         <TabsTrigger value="discounts" className="gap-2">
           <Percent className="h-4 w-4" />
           Discounturi
-        </TabsTrigger>
-        <TabsTrigger value="whatsapp" className="gap-2 relative">
-          <MessageSquare className="h-4 w-4" />
-          WhatsApp
-          {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-          )}
         </TabsTrigger>
       </TabsList>
 
@@ -1096,10 +1084,6 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
           appointments={appointments} 
           dateRange={dateRange}
         />
-      </TabsContent>
-
-      <TabsContent value="whatsapp">
-        <WhatsAppInbox />
       </TabsContent>
     </Tabs>
   );

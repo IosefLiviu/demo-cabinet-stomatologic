@@ -22,6 +22,9 @@ const tabLabels: Record<string, string> = {
   'expenses': 'Cheltuieli',
   'treatment-plan': 'Plan Tratament',
   'printabile': 'Printabile',
+  'stock': 'Stoc',
+  'schedule': 'Program',
+  'whatsapp': 'WhatsApp',
 };
 
 export function NavigationButtons({
