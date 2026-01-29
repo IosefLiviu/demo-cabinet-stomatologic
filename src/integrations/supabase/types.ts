@@ -1323,6 +1323,53 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_messages: {
+        Row: {
+          created_at: string
+          direction: string
+          id: string
+          message_body: string
+          message_sid: string | null
+          patient_id: string | null
+          patient_name: string | null
+          patient_phone: string
+          read_at: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          direction?: string
+          id?: string
+          message_body: string
+          message_sid?: string | null
+          patient_id?: string | null
+          patient_name?: string | null
+          patient_phone: string
+          read_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          direction?: string
+          id?: string
+          message_body?: string
+          message_sid?: string | null
+          patient_id?: string | null
+          patient_name?: string | null
+          patient_phone?: string
+          read_at?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
