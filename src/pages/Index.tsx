@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
-import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, Radio, FileText, Pill, UserCheck, Printer, Stethoscope, ClipboardList, FlaskConical, Package, List, Home } from 'lucide-react';
+import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, Radio, FileText, Pill, UserCheck, Printer, Stethoscope, ClipboardList, FlaskConical, Package, List, Home, CalendarClock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/Header';
 import { DateNavigator } from '@/components/DateNavigator';
@@ -29,6 +29,7 @@ import { NavigationButtons } from '@/components/NavigationButtons';
 import { AvailableSlotsSearch } from '@/components/AvailableSlotsSearch';
 import { StockManagement } from '@/components/StockManagement';
 import { PatientFamiliesManager } from '@/components/PatientFamiliesManager';
+import { DoctorScheduleManagement } from '@/components/DoctorScheduleManagement';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePatients, Patient } from '@/hooks/usePatients';
@@ -587,6 +588,10 @@ const Index = () => {
               <Package className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Stoc</span>
             </TabsTrigger>
+            <TabsTrigger value="schedule" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+              <CalendarClock className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Program</span>
+            </TabsTrigger>
             </TabsList>
           </div>
 
@@ -772,6 +777,13 @@ const Index = () => {
 
           <TabsContent value="stock">
             <StockManagement />
+          </TabsContent>
+
+          <TabsContent value="schedule">
+            <DoctorScheduleManagement 
+              selectedDoctorId={doctorId || undefined}
+              isAdmin={isAdmin} 
+            />
           </TabsContent>
         </Tabs>
       </main>
