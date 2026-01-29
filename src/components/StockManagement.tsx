@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useStockItems, StockItem, StockItemInsert } from "@/hooks/useStockItems";
 import { useStockMovements, StockMovementInsert } from "@/hooks/useStockMovements";
+import { useCabinets } from "@/hooks/useCabinets";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,6 +54,7 @@ import {
   Package,
   History,
   AlertTriangle,
+  Building2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
@@ -70,6 +72,7 @@ export function StockManagement() {
     bulkCreateItems,
   } = useStockItems();
   const { movements, createMovement, deleteMovement } = useStockMovements();
+  const { cabinets } = useCabinets();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -87,6 +90,7 @@ export function StockManagement() {
   const [editingType, setEditingType] = useState<"in" | "out">("in");
   const [inlineQuantity, setInlineQuantity] = useState(1);
   const [inlineNote, setInlineNote] = useState("");
+  const [inlineCabinetId, setInlineCabinetId] = useState<number | null>(null);
 
   const [itemForm, setItemForm] = useState({
     name: "",
@@ -99,6 +103,7 @@ export function StockManagement() {
     item_id: "",
     quantity: 1,
     notes: "",
+    cabinet_id: null as number | null,
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -183,6 +188,7 @@ export function StockManagement() {
       item_id: item?.id || "",
       quantity: 1,
       notes: "",
+      cabinet_id: null,
     });
     setIsMovementDialogOpen(true);
   };
@@ -191,12 +197,23 @@ export function StockManagement() {
     const item = items.find((i) => i.id === movementForm.item_id);
     if (!item) return;
 
+    // For "out" movements, cabinet is required
+    if (movementType === "out" && !movementForm.cabinet_id) {
+      toast({
+        title: "Selectează cabinetul",
+        description: "Pentru ieșiri din stoc, trebuie să selectezi cabinetul destinatar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const payload: StockMovementInsert = {
       item_id: movementForm.item_id,
       item_name: item.name,
       quantity: movementForm.quantity,
       type: movementType,
       notes: movementForm.notes || null,
+      cabinet_id: movementType === "out" ? movementForm.cabinet_id : null,
     };
 
     await createMovement.mutateAsync(payload);
@@ -209,6 +226,7 @@ export function StockManagement() {
     setEditingType(type);
     setInlineQuantity(1);
     setInlineNote("");
+    setInlineCabinetId(null);
   };
 
   // Cancel inline edit
@@ -216,16 +234,28 @@ export function StockManagement() {
     setEditingItemId(null);
     setInlineQuantity(1);
     setInlineNote("");
+    setInlineCabinetId(null);
   };
 
   // Confirm inline edit with explicit type
   const handleConfirmInlineEdit = async (item: StockItem, type: "in" | "out") => {
+    // For "out" movements, cabinet is required
+    if (type === "out" && !inlineCabinetId) {
+      toast({
+        title: "Selectează cabinetul",
+        description: "Pentru ieșiri din stoc, trebuie să selectezi cabinetul destinatar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const payload: StockMovementInsert = {
       item_id: item.id,
       item_name: item.name,
       quantity: inlineQuantity,
       type: type,
       notes: inlineNote || null,
+      cabinet_id: type === "out" ? inlineCabinetId : null,
     };
     await createMovement.mutateAsync(payload);
     handleCancelInlineEdit();
@@ -515,6 +545,24 @@ export function StockManagement() {
                             onChange={(e) => setInlineNote(e.target.value)}
                             className="w-32 h-8"
                           />
+
+                          {/* Cabinet selector for "out" movements */}
+                          <Select
+                            value={inlineCabinetId?.toString() || ""}
+                            onValueChange={(value) => setInlineCabinetId(value ? Number(value) : null)}
+                          >
+                            <SelectTrigger className="w-[140px] h-8">
+                              <Building2 className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
+                              <SelectValue placeholder="Cabinet" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {cabinets.map((cabinet) => (
+                                <SelectItem key={cabinet.id} value={cabinet.id.toString()}>
+                                  {cabinet.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           
                           <div className="flex items-center gap-2 ml-auto">
                             <Button
@@ -530,7 +578,8 @@ export function StockManagement() {
                               size="sm"
                               className="bg-red-500 hover:bg-red-600 text-white h-8 px-3"
                               onClick={() => handleConfirmInlineEdit(item, "out")}
-                              disabled={createMovement.isPending || inlineQuantity > item.quantity}
+                              disabled={createMovement.isPending || inlineQuantity > item.quantity || !inlineCabinetId}
+                              title={!inlineCabinetId ? "Selectează un cabinet pentru ieșire" : undefined}
                             >
                               <Minus className="h-3.5 w-3.5 mr-1" />
                               -{inlineQuantity}
@@ -631,6 +680,7 @@ export function StockManagement() {
                   <TableHead>Data</TableHead>
                   <TableHead>Articol</TableHead>
                   <TableHead>Tip</TableHead>
+                  <TableHead>Cabinet</TableHead>
                   <TableHead className="text-right">Cantitate</TableHead>
                   <TableHead>Note</TableHead>
                   <TableHead className="text-right">Acțiuni</TableHead>
@@ -639,51 +689,61 @@ export function StockManagement() {
               <TableBody>
                 {movements.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
+                    <TableCell colSpan={7} className="text-center py-8">
                       Nu există mișcări înregistrate
                     </TableCell>
                   </TableRow>
                 ) : (
-                  movements.map((movement) => (
-                    <TableRow key={movement.id}>
-                      <TableCell>
-                        {format(new Date(movement.created_at), "dd MMM yyyy HH:mm", {
-                          locale: ro,
-                        })}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {movement.item_name}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={movement.type === "in" ? "default" : "secondary"}
-                          className={
-                            movement.type === "in"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-orange-100 text-orange-800"
-                          }
-                        >
-                          {movement.type === "in" ? "Intrare" : "Ieșire"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {movement.quantity}
-                      </TableCell>
-                      <TableCell className="max-w-[200px] truncate">
-                        {movement.notes}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => deleteMovement.mutate(movement.id)}
-                          title="Anulează mișcare"
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  movements.map((movement) => {
+                    const cabinet = cabinets.find(c => c.id === movement.cabinet_id);
+                    return (
+                      <TableRow key={movement.id}>
+                        <TableCell>
+                          {format(new Date(movement.created_at), "dd MMM yyyy HH:mm", {
+                            locale: ro,
+                          })}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {movement.item_name}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={movement.type === "in" ? "default" : "secondary"}
+                            className={
+                              movement.type === "in"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-orange-100 text-orange-800"
+                            }
+                          >
+                            {movement.type === "in" ? "Intrare" : "Ieșire"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {cabinet ? (
+                            <span className="text-sm">{cabinet.name}</span>
+                          ) : movement.type === "out" ? (
+                            <span className="text-muted-foreground text-xs">-</span>
+                          ) : null}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {movement.quantity}
+                        </TableCell>
+                        <TableCell className="max-w-[200px] truncate">
+                          {movement.notes}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteMovement.mutate(movement.id)}
+                            title="Anulează mișcare"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
@@ -807,6 +867,28 @@ export function StockManagement() {
                 }
               />
             </div>
+            {movementType === "out" && (
+              <div className="grid gap-2">
+                <Label htmlFor="cabinet">Cabinet destinatar *</Label>
+                <Select
+                  value={movementForm.cabinet_id?.toString() || ""}
+                  onValueChange={(value) =>
+                    setMovementForm({ ...movementForm, cabinet_id: value ? Number(value) : null })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selectează cabinetul" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cabinets.map((cabinet) => (
+                      <SelectItem key={cabinet.id} value={cabinet.id.toString()}>
+                        {cabinet.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="grid gap-2">
               <Label htmlFor="notes">Note</Label>
               <Textarea
@@ -828,7 +910,7 @@ export function StockManagement() {
             </Button>
             <Button
               onClick={handleSaveMovement}
-              disabled={!movementForm.item_id || movementForm.quantity < 1}
+              disabled={!movementForm.item_id || movementForm.quantity < 1 || (movementType === "out" && !movementForm.cabinet_id)}
             >
               Salvează
             </Button>
