@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useStockItems, StockItem, StockItemInsert } from "@/hooks/useStockItems";
-import { useStockMovements, StockMovementInsert } from "@/hooks/useStockMovements";
+import { useStockMovements, StockMovementInsert, MovementType } from "@/hooks/useStockMovements";
 import { useCabinets } from "@/hooks/useCabinets";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,11 +55,22 @@ import {
   History,
   AlertTriangle,
   Building2,
+  ArrowRight,
+  PackageCheck,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
 import * as XLSX from "xlsx";
 import { useToast } from "@/hooks/use-toast";
+
+// Movement type labels for display
+const MOVEMENT_TYPE_LABELS: Record<string, { label: string; color: string; icon: string }> = {
+  "in": { label: "Intrare Firmă", color: "bg-green-100 text-green-800", icon: "company_in" },
+  "company_in": { label: "Intrare Firmă", color: "bg-green-100 text-green-800", icon: "company_in" },
+  "out": { label: "Ieșire Firmă → Cabinet", color: "bg-blue-100 text-blue-800", icon: "company_out" },
+  "company_out": { label: "Ieșire Firmă → Cabinet", color: "bg-blue-100 text-blue-800", icon: "company_out" },
+  "cabinet_out": { label: "Consumat din Cabinet", color: "bg-orange-100 text-orange-800", icon: "cabinet_out" },
+};
 
 export function StockManagement() {
   const { toast } = useToast();
@@ -83,14 +94,15 @@ export function StockManagement() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<StockItem | null>(null);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
-  const [movementType, setMovementType] = useState<"in" | "out">("in");
+  const [movementType, setMovementType] = useState<MovementType>("company_in");
 
   // Inline edit state
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
-  const [editingType, setEditingType] = useState<"in" | "out">("in");
+  const [editingType, setEditingType] = useState<MovementType>("company_in");
   const [inlineQuantity, setInlineQuantity] = useState(1);
   const [inlineNote, setInlineNote] = useState("");
   const [inlineCabinetId, setInlineCabinetId] = useState<number | null>(null);
+  const [inlineSourceCabinetId, setInlineSourceCabinetId] = useState<number | null>(null);
 
   const [itemForm, setItemForm] = useState({
     name: "",
@@ -104,6 +116,7 @@ export function StockManagement() {
     quantity: 1,
     notes: "",
     cabinet_id: null as number | null,
+    source_cabinet_id: null as number | null,
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -182,13 +195,14 @@ export function StockManagement() {
     }
   };
 
-  const handleOpenMovementDialog = (type: "in" | "out", item?: StockItem) => {
+  const handleOpenMovementDialog = (type: MovementType, item?: StockItem) => {
     setMovementType(type);
     setMovementForm({
       item_id: item?.id || "",
       quantity: 1,
       notes: "",
       cabinet_id: null,
+      source_cabinet_id: null,
     });
     setIsMovementDialogOpen(true);
   };
@@ -197,11 +211,20 @@ export function StockManagement() {
     const item = items.find((i) => i.id === movementForm.item_id);
     if (!item) return;
 
-    // For "out" movements, cabinet is required
-    if (movementType === "out" && !movementForm.cabinet_id) {
+    // Validation based on movement type
+    if ((movementType === "out" || movementType === "company_out") && !movementForm.cabinet_id) {
       toast({
         title: "Selectează cabinetul",
-        description: "Pentru ieșiri din stoc, trebuie să selectezi cabinetul destinatar.",
+        description: "Pentru ieșiri din firmă, trebuie să selectezi cabinetul destinatar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (movementType === "cabinet_out" && !movementForm.source_cabinet_id) {
+      toast({
+        title: "Selectează cabinetul sursă",
+        description: "Pentru consum din cabinet, trebuie să selectezi cabinetul din care se consumă.",
         variant: "destructive",
       });
       return;
@@ -213,7 +236,8 @@ export function StockManagement() {
       quantity: movementForm.quantity,
       type: movementType,
       notes: movementForm.notes || null,
-      cabinet_id: movementType === "out" ? movementForm.cabinet_id : null,
+      cabinet_id: (movementType === "out" || movementType === "company_out") ? movementForm.cabinet_id : null,
+      source_cabinet_id: movementType === "cabinet_out" ? movementForm.source_cabinet_id : null,
     };
 
     await createMovement.mutateAsync(payload);
@@ -221,12 +245,13 @@ export function StockManagement() {
   };
 
   // Open inline edit mode
-  const handleStartInlineEdit = (item: StockItem, type: "in" | "out") => {
+  const handleStartInlineEdit = (item: StockItem, type: MovementType) => {
     setEditingItemId(item.id);
     setEditingType(type);
     setInlineQuantity(1);
     setInlineNote("");
     setInlineCabinetId(null);
+    setInlineSourceCabinetId(null);
   };
 
   // Cancel inline edit
@@ -235,15 +260,25 @@ export function StockManagement() {
     setInlineQuantity(1);
     setInlineNote("");
     setInlineCabinetId(null);
+    setInlineSourceCabinetId(null);
   };
 
   // Confirm inline edit with explicit type
-  const handleConfirmInlineEdit = async (item: StockItem, type: "in" | "out") => {
-    // For "out" movements, cabinet is required
-    if (type === "out" && !inlineCabinetId) {
+  const handleConfirmInlineEdit = async (item: StockItem, type: MovementType) => {
+    // Validation based on movement type
+    if ((type === "out" || type === "company_out") && !inlineCabinetId) {
       toast({
         title: "Selectează cabinetul",
-        description: "Pentru ieșiri din stoc, trebuie să selectezi cabinetul destinatar.",
+        description: "Pentru ieșiri din firmă, trebuie să selectezi cabinetul destinatar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (type === "cabinet_out" && !inlineSourceCabinetId) {
+      toast({
+        title: "Selectează cabinetul sursă",
+        description: "Pentru consum din cabinet, trebuie să selectezi cabinetul din care se consumă.",
         variant: "destructive",
       });
       return;
@@ -255,7 +290,8 @@ export function StockManagement() {
       quantity: inlineQuantity,
       type: type,
       notes: inlineNote || null,
-      cabinet_id: type === "out" ? inlineCabinetId : null,
+      cabinet_id: (type === "out" || type === "company_out") ? inlineCabinetId : null,
+      source_cabinet_id: type === "cabinet_out" ? inlineSourceCabinetId : null,
     };
     await createMovement.mutateAsync(payload);
     handleCancelInlineEdit();
@@ -498,19 +534,27 @@ export function StockManagement() {
                         <div className="flex items-center gap-1.5">
                           <button
                             className="h-8 w-8 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center transition-colors disabled:opacity-50"
-                            onClick={() => handleStartInlineEdit(item, "in")}
+                            onClick={() => handleStartInlineEdit(item, "company_in")}
                             disabled={createMovement.isPending}
-                            title="Adaugă"
+                            title="Intrare în firmă"
                           >
                             <Plus className="h-4 w-4" />
                           </button>
                           <button
-                            className="h-8 w-8 rounded-full bg-red-400 hover:bg-red-500 text-white flex items-center justify-center transition-colors disabled:opacity-50"
-                            onClick={() => handleStartInlineEdit(item, "out")}
+                            className="h-8 w-8 rounded-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center transition-colors disabled:opacity-50"
+                            onClick={() => handleStartInlineEdit(item, "company_out")}
                             disabled={createMovement.isPending || item.quantity < 1}
-                            title="Scade"
+                            title="Ieșire firmă → Cabinet"
                           >
-                            <Minus className="h-4 w-4" />
+                            <ArrowRight className="h-4 w-4" />
+                          </button>
+                          <button
+                            className="h-8 w-8 rounded-full bg-orange-500 hover:bg-orange-600 text-white flex items-center justify-center transition-colors disabled:opacity-50"
+                            onClick={() => handleStartInlineEdit(item, "cabinet_out")}
+                            disabled={createMovement.isPending}
+                            title="Consumat din cabinet"
+                          >
+                            <PackageCheck className="h-4 w-4" />
                           </button>
                           <button
                             className="h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center transition-colors text-muted-foreground hover:text-destructive"
@@ -530,10 +574,14 @@ export function StockManagement() {
                         <div className="flex items-center gap-3 flex-wrap">
                           <span className="font-medium text-sm">{item.name}</span>
                           
+                          <Badge variant="outline" className={MOVEMENT_TYPE_LABELS[editingType]?.color || ""}>
+                            {MOVEMENT_TYPE_LABELS[editingType]?.label || editingType}
+                          </Badge>
+                          
                           <Input
                             type="number"
                             min={1}
-                            max={editingType === "out" ? item.quantity : undefined}
+                            max={(editingType === "out" || editingType === "company_out") ? item.quantity : undefined}
                             value={inlineQuantity}
                             onChange={(e) => setInlineQuantity(Math.max(1, Number(e.target.value)))}
                             className="w-16 h-8 text-center"
@@ -546,43 +594,67 @@ export function StockManagement() {
                             className="w-32 h-8"
                           />
 
-                          {/* Cabinet selector for "out" movements */}
-                          <Select
-                            value={inlineCabinetId?.toString() || ""}
-                            onValueChange={(value) => setInlineCabinetId(value ? Number(value) : null)}
-                          >
-                            <SelectTrigger className="w-[140px] h-8">
-                              <Building2 className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
-                              <SelectValue placeholder="Cabinet" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {cabinets.map((cabinet) => (
-                                <SelectItem key={cabinet.id} value={cabinet.id.toString()}>
-                                  {cabinet.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          {/* Cabinet selector for company_out movements (destination) */}
+                          {(editingType === "out" || editingType === "company_out") && (
+                            <Select
+                              value={inlineCabinetId?.toString() || ""}
+                              onValueChange={(value) => setInlineCabinetId(value ? Number(value) : null)}
+                            >
+                              <SelectTrigger className="w-[160px] h-8">
+                                <Building2 className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
+                                <SelectValue placeholder="Cabinet dest." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {cabinets.map((cabinet) => (
+                                  <SelectItem key={cabinet.id} value={cabinet.id.toString()}>
+                                    {cabinet.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+
+                          {/* Cabinet selector for cabinet_out movements (source) */}
+                          {editingType === "cabinet_out" && (
+                            <Select
+                              value={inlineSourceCabinetId?.toString() || ""}
+                              onValueChange={(value) => setInlineSourceCabinetId(value ? Number(value) : null)}
+                            >
+                              <SelectTrigger className="w-[160px] h-8">
+                                <Building2 className="h-3.5 w-3.5 mr-1 text-orange-500" />
+                                <SelectValue placeholder="Cabinet sursă" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {cabinets.map((cabinet) => (
+                                  <SelectItem key={cabinet.id} value={cabinet.id.toString()}>
+                                    {cabinet.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
                           
                           <div className="flex items-center gap-2 ml-auto">
                             <Button
                               size="sm"
-                              className="bg-green-500 hover:bg-green-600 text-white h-8 px-3"
-                              onClick={() => handleConfirmInlineEdit(item, "in")}
-                              disabled={createMovement.isPending}
+                              className={
+                                editingType === "company_in" 
+                                  ? "bg-green-500 hover:bg-green-600 text-white h-8 px-3"
+                                  : editingType === "company_out" || editingType === "out"
+                                  ? "bg-blue-500 hover:bg-blue-600 text-white h-8 px-3"
+                                  : "bg-orange-500 hover:bg-orange-600 text-white h-8 px-3"
+                              }
+                              onClick={() => handleConfirmInlineEdit(item, editingType)}
+                              disabled={
+                                createMovement.isPending || 
+                                ((editingType === "out" || editingType === "company_out") && (!inlineCabinetId || inlineQuantity > item.quantity)) ||
+                                (editingType === "cabinet_out" && !inlineSourceCabinetId)
+                              }
                             >
-                              <Plus className="h-3.5 w-3.5 mr-1" />
-                              +{inlineQuantity}
-                            </Button>
-                            <Button
-                              size="sm"
-                              className="bg-red-500 hover:bg-red-600 text-white h-8 px-3"
-                              onClick={() => handleConfirmInlineEdit(item, "out")}
-                              disabled={createMovement.isPending || inlineQuantity > item.quantity || !inlineCabinetId}
-                              title={!inlineCabinetId ? "Selectează un cabinet pentru ieșire" : undefined}
-                            >
-                              <Minus className="h-3.5 w-3.5 mr-1" />
-                              -{inlineQuantity}
+                              {editingType === "company_in" && <Plus className="h-3.5 w-3.5 mr-1" />}
+                              {(editingType === "out" || editingType === "company_out") && <ArrowRight className="h-3.5 w-3.5 mr-1" />}
+                              {editingType === "cabinet_out" && <PackageCheck className="h-3.5 w-3.5 mr-1" />}
+                              {inlineQuantity} buc
                             </Button>
                             <Button
                               variant="ghost"
@@ -654,22 +726,30 @@ export function StockManagement() {
         </TabsContent>
 
         <TabsContent value="movements" className="space-y-4">
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 flex-wrap">
             <Button
               size="sm"
               variant="outline"
-              onClick={() => handleOpenMovementDialog("in")}
+              onClick={() => handleOpenMovementDialog("company_in")}
             >
               <ArrowDownCircle className="h-4 w-4 mr-1 text-green-600" />
-              Intrare
+              Intrare Firmă
             </Button>
             <Button
               size="sm"
               variant="outline"
-              onClick={() => handleOpenMovementDialog("out")}
+              onClick={() => handleOpenMovementDialog("company_out")}
             >
-              <ArrowUpCircle className="h-4 w-4 mr-1 text-orange-600" />
-              Ieșire
+              <ArrowRight className="h-4 w-4 mr-1 text-blue-600" />
+              Firmă → Cabinet
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleOpenMovementDialog("cabinet_out")}
+            >
+              <PackageCheck className="h-4 w-4 mr-1 text-orange-600" />
+              Consumat Cabinet
             </Button>
           </div>
 
@@ -679,8 +759,9 @@ export function StockManagement() {
                 <TableRow>
                   <TableHead>Data</TableHead>
                   <TableHead>Articol</TableHead>
-                  <TableHead>Tip</TableHead>
-                  <TableHead>Cabinet</TableHead>
+                  <TableHead>Tip Mișcare</TableHead>
+                  <TableHead>Cabinet Dest.</TableHead>
+                  <TableHead>Cabinet Sursă</TableHead>
                   <TableHead className="text-right">Cantitate</TableHead>
                   <TableHead>Note</TableHead>
                   <TableHead className="text-right">Acțiuni</TableHead>
@@ -689,13 +770,19 @@ export function StockManagement() {
               <TableBody>
                 {movements.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
+                    <TableCell colSpan={8} className="text-center py-8">
                       Nu există mișcări înregistrate
                     </TableCell>
                   </TableRow>
                 ) : (
                   movements.map((movement) => {
-                    const cabinet = cabinets.find(c => c.id === movement.cabinet_id);
+                    const destCabinet = cabinets.find(c => c.id === movement.cabinet_id);
+                    const sourceCabinet = cabinets.find(c => c.id === movement.source_cabinet_id);
+                    const typeInfo = MOVEMENT_TYPE_LABELS[movement.type] || { 
+                      label: movement.type, 
+                      color: "bg-gray-100 text-gray-800" 
+                    };
+                    
                     return (
                       <TableRow key={movement.id}>
                         <TableCell>
@@ -707,23 +794,23 @@ export function StockManagement() {
                           {movement.item_name}
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant={movement.type === "in" ? "default" : "secondary"}
-                            className={
-                              movement.type === "in"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-orange-100 text-orange-800"
-                            }
-                          >
-                            {movement.type === "in" ? "Intrare" : "Ieșire"}
+                          <Badge variant="secondary" className={typeInfo.color}>
+                            {typeInfo.label}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {cabinet ? (
-                            <span className="text-sm">{cabinet.name}</span>
-                          ) : movement.type === "out" ? (
+                          {destCabinet ? (
+                            <span className="text-sm">{destCabinet.name}</span>
+                          ) : (
                             <span className="text-muted-foreground text-xs">-</span>
-                          ) : null}
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {sourceCabinet ? (
+                            <span className="text-sm text-orange-600">{sourceCabinet.name}</span>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">-</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           {movement.quantity}
@@ -827,8 +914,23 @@ export function StockManagement() {
       <Dialog open={isMovementDialogOpen} onOpenChange={setIsMovementDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {movementType === "in" ? "Intrare Stoc" : "Ieșire Stoc"}
+            <DialogTitle className="flex items-center gap-2">
+              {movementType === "company_in" || movementType === "in" ? (
+                <>
+                  <ArrowDownCircle className="h-5 w-5 text-green-600" />
+                  Intrare în Firmă
+                </>
+              ) : movementType === "company_out" || movementType === "out" ? (
+                <>
+                  <ArrowRight className="h-5 w-5 text-blue-600" />
+                  Ieșire Firmă → Cabinet
+                </>
+              ) : (
+                <>
+                  <PackageCheck className="h-5 w-5 text-orange-600" />
+                  Consumat din Cabinet
+                </>
+              )}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -867,7 +969,9 @@ export function StockManagement() {
                 }
               />
             </div>
-            {movementType === "out" && (
+            
+            {/* Cabinet destination for company_out */}
+            {(movementType === "out" || movementType === "company_out") && (
               <div className="grid gap-2">
                 <Label htmlFor="cabinet">Cabinet destinatar *</Label>
                 <Select
@@ -889,6 +993,31 @@ export function StockManagement() {
                 </Select>
               </div>
             )}
+
+            {/* Cabinet source for cabinet_out */}
+            {movementType === "cabinet_out" && (
+              <div className="grid gap-2">
+                <Label htmlFor="source_cabinet">Cabinet sursă (de unde se consumă) *</Label>
+                <Select
+                  value={movementForm.source_cabinet_id?.toString() || ""}
+                  onValueChange={(value) =>
+                    setMovementForm({ ...movementForm, source_cabinet_id: value ? Number(value) : null })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selectează cabinetul sursă" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cabinets.map((cabinet) => (
+                      <SelectItem key={cabinet.id} value={cabinet.id.toString()}>
+                        {cabinet.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <div className="grid gap-2">
               <Label htmlFor="notes">Note</Label>
               <Textarea
@@ -910,7 +1039,12 @@ export function StockManagement() {
             </Button>
             <Button
               onClick={handleSaveMovement}
-              disabled={!movementForm.item_id || movementForm.quantity < 1 || (movementType === "out" && !movementForm.cabinet_id)}
+              disabled={
+                !movementForm.item_id || 
+                movementForm.quantity < 1 || 
+                ((movementType === "out" || movementType === "company_out") && !movementForm.cabinet_id) ||
+                (movementType === "cabinet_out" && !movementForm.source_cabinet_id)
+              }
             >
               Salvează
             </Button>
