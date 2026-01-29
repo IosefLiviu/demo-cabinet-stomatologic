@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useStockItems, StockItem, StockItemInsert } from "@/hooks/useStockItems";
 import { useStockMovements, StockMovementInsert, MovementType } from "@/hooks/useStockMovements";
+import { CabinetStockTab } from "./CabinetStockTab";
 import { useCabinets } from "@/hooks/useCabinets";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -421,6 +422,7 @@ export function StockManagement() {
       <Tabs defaultValue="items" className="w-full">
         <TabsList>
           <TabsTrigger value="items">Articole Stoc</TabsTrigger>
+          <TabsTrigger value="cabinet">Stoc Cabinet</TabsTrigger>
           <TabsTrigger value="movements">Istoric Mișcări</TabsTrigger>
         </TabsList>
 
@@ -723,6 +725,18 @@ export function StockManagement() {
               </div>
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="cabinet" className="space-y-4">
+          <CabinetStockTab
+            items={items}
+            movements={movements}
+            cabinets={cabinets}
+            onConsumeFromCabinet={async (movement) => {
+              await createMovement.mutateAsync(movement);
+            }}
+            isCreatingMovement={createMovement.isPending}
+          />
         </TabsContent>
 
         <TabsContent value="movements" className="space-y-4">
