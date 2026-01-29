@@ -495,7 +495,7 @@ export function DoctorScheduleManagement({
                             </div>
                           )}
                           
-                          {(isAdmin || request.status === 'pending') && (
+                          {isAdmin && (
                             <Button
                               variant="ghost"
                               size="icon"
