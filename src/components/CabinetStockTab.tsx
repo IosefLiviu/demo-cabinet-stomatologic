@@ -323,18 +323,21 @@ export function CabinetStockTab({
                   )}
                 </div>
 
-                {/* Entry date or Consumed date */}
-                {isConsumed && item.consumedAt ? (
+                {/* Entry date - show for both available and consumed items */}
+                {item.entryDate && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Calendar className="h-3 w-3" />
+                    <span>Intrat: {format(new Date(item.entryDate), "dd MMM yyyy", { locale: ro })}</span>
+                  </div>
+                )}
+
+                {/* Consumed date - only for consumed items */}
+                {isConsumed && item.consumedAt && (
                   <div className="flex items-center gap-1 text-xs text-orange-600">
                     <PackageCheck className="h-3 w-3" />
                     <span>Consumat: {format(new Date(item.consumedAt), "dd MMM yyyy", { locale: ro })}</span>
                   </div>
-                ) : item.entryDate ? (
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Calendar className="h-3 w-3" />
-                    <span>{format(new Date(item.entryDate), "dd MMM yyyy", { locale: ro })}</span>
-                  </div>
-                ) : null}
+                )}
 
                 {/* Quantity */}
                 <div className="flex items-center gap-2">
