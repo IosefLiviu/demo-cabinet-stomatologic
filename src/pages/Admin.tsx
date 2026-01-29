@@ -776,7 +776,7 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="doctors" className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
+          <TabsList className="grid w-full max-w-4xl grid-cols-6">
             <TabsTrigger value="doctors" className="gap-2">
               <Stethoscope className="h-4 w-4" />
               Doctori
