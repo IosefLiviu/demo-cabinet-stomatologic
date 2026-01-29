@@ -27,7 +27,10 @@ import {
   PackageCheck,
   Search,
   Package,
+  Calendar,
 } from "lucide-react";
+import { format } from "date-fns";
+import { ro } from "date-fns/locale";
 
 interface CabinetStockTabProps {
   items: StockItem[];
@@ -43,6 +46,7 @@ interface CabinetStockItem {
   unit: string;
   category: string | null;
   quantity: number;
+  entryDate: string | null;
 }
 
 export function CabinetStockTab({
@@ -63,7 +67,7 @@ export function CabinetStockTab({
 
   // Calculate stock per cabinet from movements
   const cabinetStock = useMemo(() => {
-    const stockMap: Record<number, Record<string, number>> = {};
+    const stockMap: Record<number, Record<string, { quantity: number; entryDate: string | null }>> = {};
 
     // Initialize cabinets
     cabinets.forEach((cabinet) => {
@@ -77,8 +81,16 @@ export function CabinetStockTab({
         if (!stockMap[movement.cabinet_id]) {
           stockMap[movement.cabinet_id] = {};
         }
-        stockMap[movement.cabinet_id][movement.item_id] =
-          (stockMap[movement.cabinet_id][movement.item_id] || 0) + movement.quantity;
+        if (!stockMap[movement.cabinet_id][movement.item_id]) {
+          stockMap[movement.cabinet_id][movement.item_id] = { quantity: 0, entryDate: null };
+        }
+        stockMap[movement.cabinet_id][movement.item_id].quantity += movement.quantity;
+        // Track the most recent entry date
+        const movementDate = movement.created_at;
+        if (!stockMap[movement.cabinet_id][movement.item_id].entryDate || 
+            movementDate > stockMap[movement.cabinet_id][movement.item_id].entryDate!) {
+          stockMap[movement.cabinet_id][movement.item_id].entryDate = movementDate;
+        }
       }
 
       // cabinet_out: subtracts from source cabinet
@@ -86,8 +98,10 @@ export function CabinetStockTab({
         if (!stockMap[movement.source_cabinet_id]) {
           stockMap[movement.source_cabinet_id] = {};
         }
-        stockMap[movement.source_cabinet_id][movement.item_id] =
-          (stockMap[movement.source_cabinet_id][movement.item_id] || 0) - movement.quantity;
+        if (!stockMap[movement.source_cabinet_id][movement.item_id]) {
+          stockMap[movement.source_cabinet_id][movement.item_id] = { quantity: 0, entryDate: null };
+        }
+        stockMap[movement.source_cabinet_id][movement.item_id].quantity -= movement.quantity;
       }
     });
 
@@ -103,8 +117,8 @@ export function CabinetStockTab({
     const stockForCabinet = cabinetStock[selectedCabinetId];
     const result: CabinetStockItem[] = [];
 
-    Object.entries(stockForCabinet).forEach(([itemId, quantity]) => {
-      if (quantity > 0) {
+    Object.entries(stockForCabinet).forEach(([itemId, data]) => {
+      if (data.quantity > 0) {
         const item = items.find((i) => i.id === itemId);
         if (item) {
           result.push({
@@ -112,7 +126,8 @@ export function CabinetStockTab({
             itemName: item.name,
             unit: item.unit,
             category: item.category,
-            quantity,
+            quantity: data.quantity,
+            entryDate: data.entryDate,
           });
         }
       }
@@ -248,6 +263,14 @@ export function CabinetStockTab({
                   <span className="text-xs text-muted-foreground">{item.category}</span>
                 )}
               </div>
+
+              {/* Entry date */}
+              {item.entryDate && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Calendar className="h-3 w-3" />
+                  <span>{format(new Date(item.entryDate), "dd MMM yyyy", { locale: ro })}</span>
+                </div>
+              )}
 
               {/* Quantity */}
               <div className="flex items-center gap-2">
