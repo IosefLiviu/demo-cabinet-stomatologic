@@ -735,7 +735,11 @@ export function StockManagement() {
             onConsumeFromCabinet={async (movement) => {
               await createMovement.mutateAsync(movement);
             }}
+            onDeleteMovement={async (id) => {
+              await deleteMovement.mutateAsync(id);
+            }}
             isCreatingMovement={createMovement.isPending}
+            isDeletingMovement={deleteMovement.isPending}
           />
         </TabsContent>
 
