@@ -88,15 +88,42 @@ export function PatientsList({
   };
 
   const filteredPatients = useMemo(() => {
-    return searchQuery
-      ? patients.filter(
-          (p) =>
-            p.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            p.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            p.phone.includes(searchQuery) ||
-            (p.email && p.email.toLowerCase().includes(searchQuery.toLowerCase()))
-        )
-      : patients;
+    if (!searchQuery) return patients;
+    
+    const lowerQuery = searchQuery.toLowerCase().trim();
+    const queryWords = lowerQuery.split(/\s+/).filter(word => word.length > 0);
+    
+    return patients.filter((p) => {
+      const firstName = p.first_name.toLowerCase();
+      const lastName = p.last_name.toLowerCase();
+      const fullName = `${firstName} ${lastName}`;
+      const reversedName = `${lastName} ${firstName}`;
+      const phone = p.phone || '';
+      const email = (p.email || '').toLowerCase();
+      
+      // If single word, check if it appears in any field
+      if (queryWords.length <= 1) {
+        return (
+          firstName.includes(lowerQuery) ||
+          lastName.includes(lowerQuery) ||
+          phone.includes(searchQuery) ||
+          email.includes(lowerQuery)
+        );
+      }
+      
+      // For multiple words, check if ALL words appear in name (any order)
+      const allWordsMatch = queryWords.every(word =>
+        firstName.includes(word) ||
+        lastName.includes(word)
+      );
+      
+      // Also check direct full name match in either order
+      const directMatch = 
+        fullName.includes(lowerQuery) ||
+        reversedName.includes(lowerQuery);
+      
+      return allWordsMatch || directMatch || phone.includes(searchQuery) || email.includes(lowerQuery);
+    });
   }, [patients, searchQuery]);
 
   const sortedPatients = useMemo(() => {
