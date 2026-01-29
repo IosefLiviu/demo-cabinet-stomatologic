@@ -77,7 +77,6 @@ export function CabinetStockTab({
     const stockMap: Record<number, Record<string, { 
       quantity: number; 
       entryDate: string | null;
-      consumptionEvents: { date: string; movementId: string }[]; // Track consumption dates AND movement IDs
     }>> = {};
 
     // Initialize cabinets
@@ -98,7 +97,7 @@ export function CabinetStockTab({
           stockMap[movement.cabinet_id] = {};
         }
         if (!stockMap[movement.cabinet_id][movement.item_id]) {
-          stockMap[movement.cabinet_id][movement.item_id] = { quantity: 0, entryDate: null, consumptionEvents: [] };
+          stockMap[movement.cabinet_id][movement.item_id] = { quantity: 0, entryDate: null };
         }
         stockMap[movement.cabinet_id][movement.item_id].quantity += movement.quantity;
         // Track the most recent entry date
@@ -107,7 +106,6 @@ export function CabinetStockTab({
             movementDate > stockMap[movement.cabinet_id][movement.item_id].entryDate!) {
           stockMap[movement.cabinet_id][movement.item_id].entryDate = movementDate;
         }
-        // Don't clear consumption events - they should persist for 30 days
       }
 
       // cabinet_out: subtracts from source cabinet
@@ -116,22 +114,28 @@ export function CabinetStockTab({
           stockMap[movement.source_cabinet_id] = {};
         }
         if (!stockMap[movement.source_cabinet_id][movement.item_id]) {
-          stockMap[movement.source_cabinet_id][movement.item_id] = { quantity: 0, entryDate: null, consumptionEvents: [] };
+          stockMap[movement.source_cabinet_id][movement.item_id] = { quantity: 0, entryDate: null };
         }
         stockMap[movement.source_cabinet_id][movement.item_id].quantity -= movement.quantity;
-        
-        // Record consumption event when quantity reaches 0 or below
-        if (stockMap[movement.source_cabinet_id][movement.item_id].quantity <= 0) {
-          stockMap[movement.source_cabinet_id][movement.item_id].consumptionEvents.push({
-            date: movement.created_at,
-            movementId: movement.id
-          });
-        }
       }
     });
 
     return stockMap;
   }, [movements, cabinets]);
+
+  // Get consumption movements for selected cabinet (cabinet_out movements)
+  const consumptionMovements = useMemo(() => {
+    if (!selectedCabinetId) return [];
+    
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    
+    return movements.filter(m => 
+      m.type === "cabinet_out" && 
+      m.source_cabinet_id === selectedCabinetId &&
+      new Date(m.created_at) >= thirtyDaysAgo
+    );
+  }, [movements, selectedCabinetId]);
 
   // Get items in selected cabinet (including recently consumed ones)
   const cabinetItems = useMemo(() => {
@@ -141,9 +145,8 @@ export function CabinetStockTab({
 
     const stockForCabinet = cabinetStock[selectedCabinetId];
     const result: CabinetStockItem[] = [];
-    const now = new Date();
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
+    // Add available stock items
     Object.entries(stockForCabinet).forEach(([itemId, data]) => {
       const item = items.find((i) => i.id === itemId);
       if (!item) return;
@@ -161,30 +164,29 @@ export function CabinetStockTab({
           movementId: null,
         });
       }
+    });
 
-      // Also show consumed entries from the last 30 days
-      // Each consumption event is shown separately as grayed out
-      data.consumptionEvents.forEach((event, index) => {
-        const eventDate = new Date(event.date);
-        if (eventDate >= thirtyDaysAgo) {
-          result.push({
-            itemId: `${item.id}-consumed-${index}`, // Unique key for each consumption event
-            itemName: item.name,
-            unit: item.unit,
-            category: item.category,
-            quantity: 0,
-            entryDate: data.entryDate,
-            consumedAt: event.date,
-            movementId: event.movementId,
-          });
-        }
+    // Add consumption movements as separate entries (each cabinet_out is a consumed entry)
+    consumptionMovements.forEach((movement) => {
+      const item = items.find((i) => i.id === movement.item_id);
+      if (!item) return;
+
+      result.push({
+        itemId: `consumed-${movement.id}`, // Unique key based on movement ID
+        itemName: item.name,
+        unit: item.unit,
+        category: item.category,
+        quantity: movement.quantity, // Show the consumed quantity
+        entryDate: stockForCabinet[movement.item_id]?.entryDate || null,
+        consumedAt: movement.created_at,
+        movementId: movement.id,
       });
     });
 
     // Sort: available items first (by name), then consumed items (by consumption date, newest first)
     return result.sort((a, b) => {
-      const aConsumed = a.quantity === 0 && a.consumedAt;
-      const bConsumed = b.quantity === 0 && b.consumedAt;
+      const aConsumed = a.consumedAt !== null;
+      const bConsumed = b.consumedAt !== null;
       
       // If one is consumed and the other isn't, non-consumed comes first
       if (aConsumed && !bConsumed) return 1;
@@ -198,7 +200,7 @@ export function CabinetStockTab({
       // Otherwise sort by name
       return a.itemName.localeCompare(b.itemName);
     });
-  }, [selectedCabinetId, cabinetStock, items]);
+  }, [selectedCabinetId, cabinetStock, items, consumptionMovements]);
 
   // Filter by search
   const filteredCabinetItems = cabinetItems.filter((item) =>
@@ -313,7 +315,7 @@ export function CabinetStockTab({
       ) : (
         <div className="space-y-2">
           {filteredCabinetItems.map((item) => {
-            const isConsumed = item.quantity === 0 && item.consumedAt;
+            const isConsumed = item.consumedAt !== null;
             
             return (
               <div
@@ -335,30 +337,32 @@ export function CabinetStockTab({
                 </div>
 
                 {/* Entry date - show for both available and consumed items */}
-                {item.entryDate && (
+                {item.entryDate && !isConsumed && (
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Calendar className="h-3 w-3" />
                     <span>Intrat: {format(new Date(item.entryDate), "dd MMM yyyy", { locale: ro })}</span>
                   </div>
                 )}
 
-                {/* Consumed date - only for consumed items */}
+                {/* Consumed date and quantity - only for consumed items */}
                 {isConsumed && item.consumedAt && (
                   <div className="flex items-center gap-1 text-xs text-orange-600">
                     <PackageCheck className="h-3 w-3" />
-                    <span>Consumat: {format(new Date(item.consumedAt), "dd MMM yyyy", { locale: ro })}</span>
+                    <span>Consumat {item.quantity} {item.unit} la {format(new Date(item.consumedAt), "dd MMM yyyy", { locale: ro })}</span>
                   </div>
                 )}
 
-                {/* Quantity */}
-                <div className="flex items-center gap-2">
-                  <Badge 
-                    variant={isConsumed ? "outline" : "secondary"} 
-                    className={`text-sm font-medium ${isConsumed ? "text-muted-foreground" : ""}`}
-                  >
-                    {item.quantity} {item.unit}
-                  </Badge>
-                </div>
+                {/* Quantity - only for available items */}
+                {!isConsumed && (
+                  <div className="flex items-center gap-2">
+                    <Badge 
+                      variant="secondary" 
+                      className="text-sm font-medium"
+                    >
+                      {item.quantity} {item.unit}
+                    </Badge>
+                  </div>
+                )}
 
                 {/* Consume button - only show if not already consumed */}
                 {!isConsumed && (
