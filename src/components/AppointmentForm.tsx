@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Search, Trash2, UserPlus, FileText, Smile, FileImage } from 'lucide-react';
+import { Search, Trash2, UserPlus, FileText, Smile, FileImage, ClipboardPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -162,7 +162,7 @@ export function AppointmentForm({
   const { remainingBudget } = useCasBudget();
   const isCasDisabled = remainingBudget <= 0;
   
-  const { fetchPatientTreatmentPlans } = useTreatmentPlans();
+  const { fetchPatientTreatmentPlans, saveTreatmentPlan, loading: savingPlan } = useTreatmentPlans();
   
   const [formData, setFormData] = useState({
     patientId: '',
@@ -538,6 +538,59 @@ export function AppointmentForm({
       totalPrice,
       totalCas,
     });
+  };
+
+  const handleSaveAsPlan = async () => {
+    if (!formData.patientId) {
+      toast({
+        title: 'Eroare',
+        description: 'Selectați un pacient pentru a salva planul de tratament',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (interventions.length === 0) {
+      toast({
+        title: 'Eroare',
+        description: 'Adăugați cel puțin o intervenție pentru a crea un plan de tratament',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Convert interventions to treatment plan items
+    const planItems = interventions.map((i, index) => ({
+      treatmentId: i.treatmentId || undefined,
+      treatmentName: i.treatmentName,
+      toothNumber: i.selectedTeeth && i.selectedTeeth.length > 0 ? i.selectedTeeth[0] : null,
+      toothNumbers: i.selectedTeeth || [],
+      doctorId: formData.doctorId || '',
+      quantity: 1,
+      price: i.price,
+      duration: i.duration,
+      laborator: i.laborator || 0,
+      cas: i.cas || 0,
+      discountPercent: i.discountPercent || 0,
+      sortOrder: index,
+    }));
+
+    const planId = await saveTreatmentPlan(
+      formData.patientId,
+      formData.doctorId || undefined,
+      undefined, // next appointment date
+      undefined, // next appointment time
+      planItems,
+      undefined, // no existing plan id - create new
+      0 // no global discount
+    );
+
+    if (planId) {
+      // Refresh patient plans
+      const plans = await fetchPatientTreatmentPlans(formData.patientId);
+      setPatientPlans(plans);
+      setSelectedPlanId(planId);
+    }
   };
 
   const filteredPatients = patients.filter(p => {
@@ -946,6 +999,19 @@ export function AppointmentForm({
                 )}
               </div>
               <div className="flex gap-2 sm:gap-3">
+                {formData.patientId && interventions.length > 0 && (
+                  <Button 
+                    type="button" 
+                    variant="secondary" 
+                    onClick={handleSaveAsPlan}
+                    disabled={savingPlan}
+                    className="gap-1.5 text-sm h-9 sm:h-10"
+                  >
+                    <ClipboardPlus className="h-4 w-4" />
+                    <span className="hidden sm:inline">Adaugă ca Plan</span>
+                    <span className="sm:hidden">Plan</span>
+                  </Button>
+                )}
                 <Button type="button" variant="outline" onClick={onClose} className="flex-1 sm:flex-none text-sm h-9 sm:h-10">
                   Anulează
                 </Button>
