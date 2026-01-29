@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
-import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, Radio, FileText, Pill, UserCheck, Printer, Stethoscope, ClipboardList, FlaskConical, Package, List, Home, CalendarClock } from 'lucide-react';
+import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, Radio, FileText, Pill, UserCheck, Printer, Stethoscope, ClipboardList, FlaskConical, Package, List, Home, CalendarClock, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/Header';
 import { DateNavigator } from '@/components/DateNavigator';
@@ -30,6 +30,8 @@ import { AvailableSlotsSearch } from '@/components/AvailableSlotsSearch';
 import { StockManagement } from '@/components/StockManagement';
 import { PatientFamiliesManager } from '@/components/PatientFamiliesManager';
 import { DoctorScheduleManagement } from '@/components/DoctorScheduleManagement';
+import { WhatsAppInbox } from '@/components/WhatsAppInbox';
+import { useWhatsAppMessages } from '@/hooks/useWhatsAppMessages';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePatients, Patient } from '@/hooks/usePatients';
@@ -120,6 +122,7 @@ const Index = () => {
   const { cabinets, updateCabinetDoctor } = useCabinets();
   const { doctors } = useDoctors();
   const { isAdmin, doctorId } = useAuth();
+  const { unreadCount } = useWhatsAppMessages();
   
   // Reception user = not admin AND not a doctor
   const isReception = !isAdmin && !doctorId;
@@ -592,6 +595,15 @@ const Index = () => {
               <CalendarClock className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Program</span>
             </TabsTrigger>
+            <TabsTrigger value="whatsapp" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 relative">
+              <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">WhatsApp</span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </TabsTrigger>
             </TabsList>
           </div>
 
@@ -784,6 +796,10 @@ const Index = () => {
               selectedDoctorId={doctorId || undefined}
               isAdmin={isAdmin} 
             />
+          </TabsContent>
+
+          <TabsContent value="whatsapp">
+            <WhatsAppInbox />
           </TabsContent>
         </Tabs>
       </main>
