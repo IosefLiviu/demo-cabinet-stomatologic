@@ -48,7 +48,7 @@ export function Header() {
               {isAdmin && (
                 <Button variant="ghost" size="sm" onClick={() => navigate('/admin')}>
                   <Users className="h-4 w-4 mr-2" />
-                  Administrare Doctori
+                  Administrare
                 </Button>
               )}
               <CasBudgetDisplay />
@@ -81,7 +81,7 @@ export function Header() {
                   {isAdmin && (
                     <DropdownMenuItem onClick={() => navigate('/admin')}>
                       <Users className="h-4 w-4 mr-2" />
-                      Administrare Doctori
+                      Administrare
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem onClick={handleSignOut}>
