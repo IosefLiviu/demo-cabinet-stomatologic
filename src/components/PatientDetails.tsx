@@ -363,6 +363,211 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
     printWindow.print();
   };
 
+  const handlePrintHistory = () => {
+    if (!patient) return;
+    
+    const printWindow = window.open('', '', 'width=800,height=600');
+    if (!printWindow) return;
+
+    // Group treatments by date for printing
+    const groupedByDate = filteredHistory.reduce((acc, record) => {
+      const dateKey = record.appointment_date;
+      if (!acc[dateKey]) {
+        acc[dateKey] = [];
+      }
+      acc[dateKey].push(record);
+      return acc;
+    }, {} as Record<string, typeof filteredHistory>);
+
+    const sortedDates = Object.keys(groupedByDate).sort((a, b) => 
+      new Date(b).getTime() - new Date(a).getTime()
+    );
+
+    const totalAmount = filteredHistory.reduce((sum, r) => sum + (r.price || 0), 0);
+    const totalCas = filteredHistory.reduce((sum, r) => sum + (r.cas || 0), 0);
+    const totalUnpaid = filteredHistory
+      .filter(r => r.payment_method === 'unpaid')
+      .reduce((sum, r) => sum + (r.price || 0), 0);
+
+    const periodLabel = periodFilter === 'all' ? 'Toate' 
+      : periodFilter === '30days' ? 'Ultimele 30 zile'
+      : periodFilter === '3months' ? 'Ultimele 3 luni'
+      : 'Ultimul an';
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Istoric Tratamente - ${escapeHtml(patient.first_name)} ${escapeHtml(patient.last_name)}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; color: #1a365d; font-size: 12px; }
+            .header { 
+              display: flex; justify-content: space-between; align-items: flex-start; 
+              margin-bottom: 20px; border-bottom: 3px solid #b8860b; padding-bottom: 15px;
+              background: linear-gradient(to right, #fef9e7, #fff8e1, #fef9e7);
+              padding: 15px; border-radius: 8px;
+            }
+            .logo-section { display: flex; align-items: center; gap: 10px; }
+            .logo { width: 100px; height: 70px; object-fit: contain; }
+            .clinic-contact { text-align: right; font-size: 11px; color: #b8860b; }
+            .clinic-contact p { margin: 2px 0; }
+            .patient-info { margin: 15px 0; padding: 10px; background: #f5f5f5; border-radius: 8px; }
+            .patient-info h2 { margin: 0 0 5px 0; color: #b8860b; font-size: 16px; }
+            .patient-info p { margin: 3px 0; font-size: 11px; }
+            .period-badge { 
+              display: inline-block; padding: 3px 10px; background: #b8860b; color: white; 
+              border-radius: 15px; font-size: 10px; margin-left: 10px;
+            }
+            .date-section { margin: 15px 0; }
+            .date-header { 
+              background: linear-gradient(to right, #b8860b, #9a7209); color: white; 
+              padding: 8px 12px; border-radius: 6px 6px 0 0; font-weight: bold;
+              display: flex; justify-content: space-between; align-items: center;
+            }
+            .date-header .count { font-size: 10px; font-weight: normal; }
+            .treatments-table { width: 100%; border-collapse: collapse; }
+            .treatments-table th, .treatments-table td { 
+              border: 1px solid #ddd; padding: 6px 8px; text-align: left; 
+            }
+            .treatments-table th { background: #f9f9f9; font-size: 10px; color: #666; }
+            .treatments-table td { font-size: 11px; }
+            .text-right { text-align: right !important; }
+            .text-center { text-align: center !important; }
+            .payment-badge { 
+              display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 9px; 
+            }
+            .payment-paid { background: #dcfce7; color: #166534; }
+            .payment-unpaid { background: #fee2e2; color: #991b1b; }
+            .payment-partial { background: #fef3c7; color: #92400e; }
+            .summary { margin-top: 20px; padding: 15px; background: #fef9e7; border-radius: 8px; border: 2px solid #b8860b; }
+            .summary-row { display: flex; justify-content: space-between; padding: 5px 0; }
+            .summary-row.total { font-weight: bold; font-size: 14px; border-top: 2px solid #b8860b; padding-top: 10px; margin-top: 10px; }
+            .summary-row.unpaid { color: #dc2626; }
+            .footer { 
+              margin-top: 30px; padding-top: 10px; border-top: 2px solid #b8860b; 
+              text-align: center; font-size: 9px; color: #666; 
+            }
+            @media print { 
+              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .date-section { page-break-inside: avoid; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="logo-section">
+              <img src="/images/perfect-smile-logo-print.jpg" alt="Perfect Smile Logo" class="logo" />
+              <div style="font-weight: bold; font-size: 14px; color: #b8860b;">
+                PERFECT SMILE GLIM
+              </div>
+            </div>
+            <div class="clinic-contact">
+              <p>0721.702.820</p>
+              <p>perfectsmilevarteju@gmail.com</p>
+              <p>www.perfectsmileglim.ro</p>
+            </div>
+          </div>
+
+          <div class="patient-info">
+            <h2>
+              ${escapeHtml(patient.first_name)} ${escapeHtml(patient.last_name)}
+              <span class="period-badge">${periodLabel}</span>
+            </h2>
+            <p><strong>Telefon:</strong> ${escapeHtml(patient.phone)}</p>
+            ${patient.email ? `<p><strong>Email:</strong> ${escapeHtml(patient.email)}</p>` : ''}
+            <p><strong>Data raport:</strong> ${format(new Date(), 'dd.MM.yyyy HH:mm', { locale: ro })}</p>
+          </div>
+
+          <h3 style="color: #b8860b; margin: 20px 0 10px;">Istoric Tratamente</h3>
+
+          ${sortedDates.map(dateKey => {
+            const records = groupedByDate[dateKey];
+            const dateTotal = records.reduce((sum, r) => sum + (r.price || 0), 0);
+            
+            return `
+              <div class="date-section">
+                <div class="date-header">
+                  <span>${format(new Date(dateKey), 'd MMMM yyyy', { locale: ro })}</span>
+                  <span class="count">${records.length} tratament${records.length > 1 ? 'e' : ''} • ${dateTotal} RON</span>
+                </div>
+                <table class="treatments-table">
+                  <thead>
+                    <tr>
+                      <th>Ora</th>
+                      <th>Tratament</th>
+                      <th>Medic</th>
+                      <th class="text-center">Durată</th>
+                      <th class="text-right">CAS</th>
+                      <th class="text-right">Preț</th>
+                      <th class="text-center">Plată</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${records.map(record => {
+                      const paymentClass = record.payment_method === 'unpaid' ? 'payment-unpaid' 
+                        : (record.payment_method === 'partial_card' || record.payment_method === 'partial_cash') ? 'payment-partial' 
+                        : 'payment-paid';
+                      const paymentLabel = record.payment_method === 'unpaid' ? 'Neachitat'
+                        : record.payment_method === 'card' ? 'Card'
+                        : record.payment_method === 'cash' ? 'Cash'
+                        : record.payment_method === 'partial_card' ? 'Parțial Card'
+                        : record.payment_method === 'partial_cash' ? 'Parțial Cash'
+                        : '-';
+                      
+                      return `
+                        <tr>
+                          <td>${escapeHtml(record.start_time.slice(0, 5))}</td>
+                          <td>${escapeHtml(record.treatment_name)}</td>
+                          <td>${record.doctor_name ? escapeHtml('Dr. ' + record.doctor_name) : '-'}</td>
+                          <td class="text-center">${record.duration ? record.duration + ' min' : '-'}</td>
+                          <td class="text-right">${record.cas ? record.cas + ' RON' : '-'}</td>
+                          <td class="text-right">${record.price ? record.price + ' RON' : '-'}</td>
+                          <td class="text-center">
+                            <span class="payment-badge ${paymentClass}">${paymentLabel}</span>
+                          </td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `;
+          }).join('')}
+
+          <div class="summary">
+            <div class="summary-row">
+              <span>Total intervenții:</span>
+              <span>${filteredHistory.length}</span>
+            </div>
+            ${totalCas > 0 ? `
+              <div class="summary-row">
+                <span>Total CAS:</span>
+                <span>${totalCas} RON</span>
+              </div>
+            ` : ''}
+            ${totalUnpaid > 0 ? `
+              <div class="summary-row unpaid">
+                <span>Total neachitat:</span>
+                <span>${totalUnpaid} RON</span>
+              </div>
+            ` : ''}
+            <div class="summary-row total">
+              <span>TOTAL GENERAL:</span>
+              <span>${totalAmount} RON</span>
+            </div>
+          </div>
+
+          <div class="footer">
+            <p><strong>PERFECT SMILE GLIM SRL</strong> | Str. București 68-70, Vârteju, Măgurele, Ilfov</p>
+            <p>Tel: 0721.702.820 | Email: perfectsmilevarteju@gmail.com | www.perfectsmileglim.ro</p>
+            <p style="margin-top: 5px; font-size: 8px; color: #999;">© ${new Date().getFullYear()} Perfect Smile Glim. Toate drepturile rezervate.</p>
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
   const fetchDentalStatus = async () => {
     if (!patient) return;
 
@@ -830,27 +1035,38 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Period filter */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Filter className="h-4 w-4 text-muted-foreground" />
-                  <div className="flex gap-1 flex-wrap">
-                    {[
-                      { value: 'all', label: 'Toate' },
-                      { value: '30days', label: '30 zile' },
-                      { value: '3months', label: '3 luni' },
-                      { value: '1year', label: '1 an' },
-                    ].map((option) => (
-                      <Button
-                        key={option.value}
-                        variant={periodFilter === option.value ? 'default' : 'outline'}
-                        size="sm"
-                        className="h-7 text-xs"
-                        onClick={() => setPeriodFilter(option.value as PeriodFilter)}
-                      >
-                        {option.label}
-                      </Button>
-                    ))}
+                {/* Period filter and print button */}
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Filter className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex gap-1 flex-wrap">
+                      {[
+                        { value: 'all', label: 'Toate' },
+                        { value: '30days', label: '30 zile' },
+                        { value: '3months', label: '3 luni' },
+                        { value: '1year', label: '1 an' },
+                      ].map((option) => (
+                        <Button
+                          key={option.value}
+                          variant={periodFilter === option.value ? 'default' : 'outline'}
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => setPeriodFilter(option.value as PeriodFilter)}
+                        >
+                          {option.label}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs gap-1"
+                    onClick={handlePrintHistory}
+                  >
+                    <Printer className="h-3.5 w-3.5" />
+                    Printează
+                  </Button>
                 </div>
 
                 {filteredHistory.length === 0 ? (
