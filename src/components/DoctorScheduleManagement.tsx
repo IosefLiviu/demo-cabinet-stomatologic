@@ -86,6 +86,9 @@ export function DoctorScheduleManagement({
   const { doctors } = useDoctors();
   const { cabinets } = useCabinets();
   const { user } = useAuth();
+
+  // Debug log
+  console.log('DoctorScheduleManagement isAdmin:', isAdmin);
   
   const [doctorFilter, setDoctorFilter] = useState<string>(selectedDoctorId || 'all');
   const [currentWeekStart, setCurrentWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
