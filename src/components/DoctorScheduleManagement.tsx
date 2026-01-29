@@ -567,7 +567,7 @@ export function DoctorScheduleManagement({
                     onSelect={(range) => range && setShiftDateRange(range as { from: Date; to?: Date })}
                     initialFocus
                     className="pointer-events-auto"
-                    numberOfMonths={1}
+                    numberOfMonths={2}
                   />
                 </PopoverContent>
               </Popover>
