@@ -28,6 +28,7 @@ import {
   Search,
   Package,
   Calendar,
+  Trash2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
@@ -37,7 +38,9 @@ interface CabinetStockTabProps {
   movements: StockMovement[];
   cabinets: Cabinet[];
   onConsumeFromCabinet: (movement: StockMovementInsert) => Promise<void>;
+  onDeleteMovement: (id: string) => Promise<void>;
   isCreatingMovement: boolean;
+  isDeletingMovement: boolean;
 }
 
 interface CabinetStockItem {
@@ -48,6 +51,7 @@ interface CabinetStockItem {
   quantity: number;
   entryDate: string | null;
   consumedAt: string | null; // Date when item was fully consumed
+  movementId: string | null; // ID of the movement that caused consumption (for deletion)
 }
 
 export function CabinetStockTab({
@@ -55,7 +59,9 @@ export function CabinetStockTab({
   movements,
   cabinets,
   onConsumeFromCabinet,
+  onDeleteMovement,
   isCreatingMovement,
+  isDeletingMovement,
 }: CabinetStockTabProps) {
   const [selectedCabinetId, setSelectedCabinetId] = useState<number | null>(
     cabinets[0]?.id || null
@@ -71,7 +77,7 @@ export function CabinetStockTab({
     const stockMap: Record<number, Record<string, { 
       quantity: number; 
       entryDate: string | null;
-      consumptionEvents: string[]; // Track ALL consumption dates when quantity reached 0
+      consumptionEvents: { date: string; movementId: string }[]; // Track consumption dates AND movement IDs
     }>> = {};
 
     // Initialize cabinets
@@ -116,7 +122,10 @@ export function CabinetStockTab({
         
         // Record consumption event when quantity reaches 0 or below
         if (stockMap[movement.source_cabinet_id][movement.item_id].quantity <= 0) {
-          stockMap[movement.source_cabinet_id][movement.item_id].consumptionEvents.push(movement.created_at);
+          stockMap[movement.source_cabinet_id][movement.item_id].consumptionEvents.push({
+            date: movement.created_at,
+            movementId: movement.id
+          });
         }
       }
     });
@@ -149,13 +158,14 @@ export function CabinetStockTab({
           quantity: data.quantity,
           entryDate: data.entryDate,
           consumedAt: null,
+          movementId: null,
         });
       }
 
       // Also show consumed entries from the last 30 days
       // Each consumption event is shown separately as grayed out
-      data.consumptionEvents.forEach((consumedDate, index) => {
-        const eventDate = new Date(consumedDate);
+      data.consumptionEvents.forEach((event, index) => {
+        const eventDate = new Date(event.date);
         if (eventDate >= thirtyDaysAgo) {
           result.push({
             itemId: `${item.id}-consumed-${index}`, // Unique key for each consumption event
@@ -164,7 +174,8 @@ export function CabinetStockTab({
             category: item.category,
             quantity: 0,
             entryDate: data.entryDate,
-            consumedAt: consumedDate,
+            consumedAt: event.date,
+            movementId: event.movementId,
           });
         }
       });
@@ -360,6 +371,20 @@ export function CabinetStockTab({
                   >
                     <PackageCheck className="h-4 w-4 mr-1" />
                     Consumat
+                  </Button>
+                )}
+
+                {/* Delete button - only show for consumed items */}
+                {isConsumed && item.movementId && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => onDeleteMovement(item.movementId!)}
+                    disabled={isDeletingMovement}
+                    title="Șterge înregistrarea de consum"
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 )}
               </div>
