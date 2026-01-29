@@ -71,7 +71,7 @@ export function CabinetStockTab({
     const stockMap: Record<number, Record<string, { 
       quantity: number; 
       entryDate: string | null;
-      lastConsumedAt: string | null; // Track the most recent consumption date
+      consumptionEvents: string[]; // Track ALL consumption dates when quantity reached 0
     }>> = {};
 
     // Initialize cabinets
@@ -92,7 +92,7 @@ export function CabinetStockTab({
           stockMap[movement.cabinet_id] = {};
         }
         if (!stockMap[movement.cabinet_id][movement.item_id]) {
-          stockMap[movement.cabinet_id][movement.item_id] = { quantity: 0, entryDate: null, lastConsumedAt: null };
+          stockMap[movement.cabinet_id][movement.item_id] = { quantity: 0, entryDate: null, consumptionEvents: [] };
         }
         stockMap[movement.cabinet_id][movement.item_id].quantity += movement.quantity;
         // Track the most recent entry date
@@ -101,8 +101,7 @@ export function CabinetStockTab({
             movementDate > stockMap[movement.cabinet_id][movement.item_id].entryDate!) {
           stockMap[movement.cabinet_id][movement.item_id].entryDate = movementDate;
         }
-        // Reset consumedAt when new stock arrives
-        stockMap[movement.cabinet_id][movement.item_id].lastConsumedAt = null;
+        // Don't clear consumption events - they should persist for 30 days
       }
 
       // cabinet_out: subtracts from source cabinet
@@ -111,13 +110,13 @@ export function CabinetStockTab({
           stockMap[movement.source_cabinet_id] = {};
         }
         if (!stockMap[movement.source_cabinet_id][movement.item_id]) {
-          stockMap[movement.source_cabinet_id][movement.item_id] = { quantity: 0, entryDate: null, lastConsumedAt: null };
+          stockMap[movement.source_cabinet_id][movement.item_id] = { quantity: 0, entryDate: null, consumptionEvents: [] };
         }
         stockMap[movement.source_cabinet_id][movement.item_id].quantity -= movement.quantity;
         
-        // Track consumption date when quantity reaches 0 or below
+        // Record consumption event when quantity reaches 0 or below
         if (stockMap[movement.source_cabinet_id][movement.item_id].quantity <= 0) {
-          stockMap[movement.source_cabinet_id][movement.item_id].lastConsumedAt = movement.created_at;
+          stockMap[movement.source_cabinet_id][movement.item_id].consumptionEvents.push(movement.created_at);
         }
       }
     });
@@ -140,27 +139,38 @@ export function CabinetStockTab({
       const item = items.find((i) => i.id === itemId);
       if (!item) return;
 
-      // Show item if:
-      // 1. Has positive quantity (active)
-      // 2. OR was consumed within the last 30 days
-      const isConsumed = data.quantity <= 0 && data.lastConsumedAt;
-      const consumedDate = data.lastConsumedAt ? new Date(data.lastConsumedAt) : null;
-      const isWithin30Days = consumedDate && consumedDate >= thirtyDaysAgo;
-
-      if (data.quantity > 0 || (isConsumed && isWithin30Days)) {
+      // Show available stock (quantity > 0)
+      if (data.quantity > 0) {
         result.push({
           itemId: item.id,
           itemName: item.name,
           unit: item.unit,
           category: item.category,
-          quantity: Math.max(0, data.quantity),
+          quantity: data.quantity,
           entryDate: data.entryDate,
-          consumedAt: data.lastConsumedAt,
+          consumedAt: null,
         });
       }
+
+      // Also show consumed entries from the last 30 days
+      // Each consumption event is shown separately as grayed out
+      data.consumptionEvents.forEach((consumedDate, index) => {
+        const eventDate = new Date(consumedDate);
+        if (eventDate >= thirtyDaysAgo) {
+          result.push({
+            itemId: `${item.id}-consumed-${index}`, // Unique key for each consumption event
+            itemName: item.name,
+            unit: item.unit,
+            category: item.category,
+            quantity: 0,
+            entryDate: data.entryDate,
+            consumedAt: consumedDate,
+          });
+        }
+      });
     });
 
-    // Sort: available items first (by name), then consumed items (by name)
+    // Sort: available items first (by name), then consumed items (by consumption date, newest first)
     return result.sort((a, b) => {
       const aConsumed = a.quantity === 0 && a.consumedAt;
       const bConsumed = b.quantity === 0 && b.consumedAt;
@@ -168,6 +178,11 @@ export function CabinetStockTab({
       // If one is consumed and the other isn't, non-consumed comes first
       if (aConsumed && !bConsumed) return 1;
       if (!aConsumed && bConsumed) return -1;
+      
+      // If both are consumed, sort by consumption date (newest first)
+      if (aConsumed && bConsumed) {
+        return new Date(b.consumedAt!).getTime() - new Date(a.consumedAt!).getTime();
+      }
       
       // Otherwise sort by name
       return a.itemName.localeCompare(b.itemName);
