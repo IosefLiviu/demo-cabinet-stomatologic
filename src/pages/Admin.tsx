@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, ArrowLeft, Save, X, Users, Stethoscope, Shield, ShieldCheck, Palette, Mail, Download, FileText, CheckCircle, XCircle, ChevronLeft, ChevronRight, Wrench, Loader2, KeyRound } from 'lucide-react';
+import { Plus, Edit, Trash2, ArrowLeft, Save, X, Users, Stethoscope, Shield, ShieldCheck, Palette, Mail, Download, FileText, CheckCircle, XCircle, ChevronLeft, ChevronRight, Wrench, Loader2, KeyRound, CalendarClock } from 'lucide-react';
+import { DoctorScheduleManagement } from '@/components/DoctorScheduleManagement';
 import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -792,6 +793,10 @@ export default function Admin() {
               <FileText className="h-4 w-4" />
               Loguri
             </TabsTrigger>
+            <TabsTrigger value="schedule" className="gap-2">
+              <CalendarClock className="h-4 w-4" />
+              Schimburi
+            </TabsTrigger>
             <TabsTrigger value="maintenance" className="gap-2">
               <Wrench className="h-4 w-4" />
               Mentenanță
@@ -1302,6 +1307,11 @@ export default function Admin() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* ============ SCHEDULE TAB ============ */}
+          <TabsContent value="schedule" className="space-y-4">
+            <DoctorScheduleManagement isAdmin={true} />
           </TabsContent>
         </Tabs>
 

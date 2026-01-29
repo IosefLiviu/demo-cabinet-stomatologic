@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { format } from 'date-fns';
-import { Search, Trash2, UserPlus, FileText, Smile, FileImage, ClipboardPlus } from 'lucide-react';
+import { Search, Trash2, UserPlus, FileText, Smile, FileImage, ClipboardPlus, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Select,
   SelectContent,
@@ -40,6 +41,7 @@ import { Doctor } from '@/hooks/useDoctors';
 import { InterventionSelector, SelectedIntervention } from '@/components/InterventionSelector';
 import { useCasBudget } from '@/hooks/useCasBudget';
 import { useTreatmentPlans, TreatmentPlan } from '@/hooks/useTreatmentPlans';
+import { useDoctorTimeOff } from '@/hooks/useDoctorTimeOff';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Treatment {
@@ -163,6 +165,19 @@ export function AppointmentForm({
   const isCasDisabled = remainingBudget <= 0;
   
   const { fetchPatientTreatmentPlans, saveTreatmentPlan, loading: savingPlan } = useTreatmentPlans();
+  const { timeOffRequests } = useDoctorTimeOff();
+  
+  // Check if selected doctor is on time off for the selected date
+  const doctorTimeOffWarning = useMemo(() => {
+    if (!formData.doctorId) return null;
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+    return timeOffRequests.find(request => 
+      request.doctor_id === formData.doctorId &&
+      request.status === 'approved' &&
+      dateStr >= request.start_date &&
+      dateStr <= request.end_date
+    );
+  }, [formData.doctorId, selectedDate, timeOffRequests]);
   
   const [formData, setFormData] = useState({
     patientId: '',

@@ -302,6 +302,110 @@ export type Database = {
           },
         ]
       }
+      doctor_shifts: {
+        Row: {
+          cabinet_id: number | null
+          created_at: string
+          doctor_id: string
+          end_time: string
+          id: string
+          notes: string | null
+          shift_date: string
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          cabinet_id?: number | null
+          created_at?: string
+          doctor_id: string
+          end_time: string
+          id?: string
+          notes?: string | null
+          shift_date: string
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          cabinet_id?: number | null
+          created_at?: string
+          doctor_id?: string
+          end_time?: string
+          id?: string
+          notes?: string | null
+          shift_date?: string
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_shifts_cabinet_id_fkey"
+            columns: ["cabinet_id"]
+            isOneToOne: false
+            referencedRelation: "cabinets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doctor_shifts_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctor_time_off: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          doctor_id: string
+          end_date: string
+          id: string
+          reason: string | null
+          rejection_reason: string | null
+          start_date: string
+          status: string
+          time_off_type: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          doctor_id: string
+          end_date: string
+          id?: string
+          reason?: string | null
+          rejection_reason?: string | null
+          start_date: string
+          status?: string
+          time_off_type?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          doctor_id?: string
+          end_date?: string
+          id?: string
+          reason?: string | null
+          rejection_reason?: string | null
+          start_date?: string
+          status?: string
+          time_off_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_time_off_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       doctors: {
         Row: {
           color: string
