@@ -958,6 +958,7 @@ export type Database = {
       }
       stock_movements: {
         Row: {
+          cabinet_id: number | null
           created_at: string
           id: string
           item_id: string
@@ -967,6 +968,7 @@ export type Database = {
           type: string
         }
         Insert: {
+          cabinet_id?: number | null
           created_at?: string
           id?: string
           item_id: string
@@ -976,6 +978,7 @@ export type Database = {
           type: string
         }
         Update: {
+          cabinet_id?: number | null
           created_at?: string
           id?: string
           item_id?: string
@@ -985,6 +988,13 @@ export type Database = {
           type?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "stock_movements_cabinet_id_fkey"
+            columns: ["cabinet_id"]
+            isOneToOne: false
+            referencedRelation: "cabinets"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "stock_movements_item_id_fkey"
             columns: ["item_id"]

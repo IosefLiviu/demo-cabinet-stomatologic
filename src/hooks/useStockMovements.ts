@@ -9,6 +9,7 @@ export interface StockMovement {
   quantity: number;
   type: string;
   notes: string | null;
+  cabinet_id: number | null;
   created_at: string;
 }
 
@@ -18,6 +19,7 @@ export interface StockMovementInsert {
   quantity: number;
   type: "in" | "out";
   notes?: string | null;
+  cabinet_id?: number | null;
 }
 
 export function useStockMovements(itemId?: string) {
