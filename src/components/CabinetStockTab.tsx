@@ -160,8 +160,18 @@ export function CabinetStockTab({
       }
     });
 
-    // Sort by name
-    return result.sort((a, b) => a.itemName.localeCompare(b.itemName));
+    // Sort: available items first (by name), then consumed items (by name)
+    return result.sort((a, b) => {
+      const aConsumed = a.quantity === 0 && a.consumedAt;
+      const bConsumed = b.quantity === 0 && b.consumedAt;
+      
+      // If one is consumed and the other isn't, non-consumed comes first
+      if (aConsumed && !bConsumed) return 1;
+      if (!aConsumed && bConsumed) return -1;
+      
+      // Otherwise sort by name
+      return a.itemName.localeCompare(b.itemName);
+    });
   }, [selectedCabinetId, cabinetStock, items]);
 
   // Filter by search
