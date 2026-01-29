@@ -47,6 +47,7 @@ interface CabinetStockItem {
   category: string | null;
   quantity: number;
   entryDate: string | null;
+  consumedAt: string | null; // Date when item was fully consumed
 }
 
 export function CabinetStockTab({
@@ -67,22 +68,31 @@ export function CabinetStockTab({
 
   // Calculate stock per cabinet from movements
   const cabinetStock = useMemo(() => {
-    const stockMap: Record<number, Record<string, { quantity: number; entryDate: string | null }>> = {};
+    const stockMap: Record<number, Record<string, { 
+      quantity: number; 
+      entryDate: string | null;
+      lastConsumedAt: string | null; // Track the most recent consumption date
+    }>> = {};
 
     // Initialize cabinets
     cabinets.forEach((cabinet) => {
       stockMap[cabinet.id] = {};
     });
 
+    // Sort movements by date to process in chronological order
+    const sortedMovements = [...movements].sort((a, b) => 
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+
     // Process movements
-    movements.forEach((movement) => {
+    sortedMovements.forEach((movement) => {
       // company_out: adds to destination cabinet
       if ((movement.type === "company_out" || movement.type === "out") && movement.cabinet_id) {
         if (!stockMap[movement.cabinet_id]) {
           stockMap[movement.cabinet_id] = {};
         }
         if (!stockMap[movement.cabinet_id][movement.item_id]) {
-          stockMap[movement.cabinet_id][movement.item_id] = { quantity: 0, entryDate: null };
+          stockMap[movement.cabinet_id][movement.item_id] = { quantity: 0, entryDate: null, lastConsumedAt: null };
         }
         stockMap[movement.cabinet_id][movement.item_id].quantity += movement.quantity;
         // Track the most recent entry date
@@ -91,6 +101,8 @@ export function CabinetStockTab({
             movementDate > stockMap[movement.cabinet_id][movement.item_id].entryDate!) {
           stockMap[movement.cabinet_id][movement.item_id].entryDate = movementDate;
         }
+        // Reset consumedAt when new stock arrives
+        stockMap[movement.cabinet_id][movement.item_id].lastConsumedAt = null;
       }
 
       // cabinet_out: subtracts from source cabinet
@@ -99,16 +111,21 @@ export function CabinetStockTab({
           stockMap[movement.source_cabinet_id] = {};
         }
         if (!stockMap[movement.source_cabinet_id][movement.item_id]) {
-          stockMap[movement.source_cabinet_id][movement.item_id] = { quantity: 0, entryDate: null };
+          stockMap[movement.source_cabinet_id][movement.item_id] = { quantity: 0, entryDate: null, lastConsumedAt: null };
         }
         stockMap[movement.source_cabinet_id][movement.item_id].quantity -= movement.quantity;
+        
+        // Track consumption date when quantity reaches 0 or below
+        if (stockMap[movement.source_cabinet_id][movement.item_id].quantity <= 0) {
+          stockMap[movement.source_cabinet_id][movement.item_id].lastConsumedAt = movement.created_at;
+        }
       }
     });
 
     return stockMap;
   }, [movements, cabinets]);
 
-  // Get items in selected cabinet with positive quantity
+  // Get items in selected cabinet (including recently consumed ones)
   const cabinetItems = useMemo(() => {
     if (!selectedCabinetId || !cabinetStock[selectedCabinetId]) {
       return [];
@@ -116,20 +133,30 @@ export function CabinetStockTab({
 
     const stockForCabinet = cabinetStock[selectedCabinetId];
     const result: CabinetStockItem[] = [];
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     Object.entries(stockForCabinet).forEach(([itemId, data]) => {
-      if (data.quantity > 0) {
-        const item = items.find((i) => i.id === itemId);
-        if (item) {
-          result.push({
-            itemId: item.id,
-            itemName: item.name,
-            unit: item.unit,
-            category: item.category,
-            quantity: data.quantity,
-            entryDate: data.entryDate,
-          });
-        }
+      const item = items.find((i) => i.id === itemId);
+      if (!item) return;
+
+      // Show item if:
+      // 1. Has positive quantity (active)
+      // 2. OR was consumed within the last 30 days
+      const isConsumed = data.quantity <= 0 && data.lastConsumedAt;
+      const consumedDate = data.lastConsumedAt ? new Date(data.lastConsumedAt) : null;
+      const isWithin30Days = consumedDate && consumedDate >= thirtyDaysAgo;
+
+      if (data.quantity > 0 || (isConsumed && isWithin30Days)) {
+        result.push({
+          itemId: item.id,
+          itemName: item.name,
+          unit: item.unit,
+          category: item.category,
+          quantity: Math.max(0, data.quantity),
+          entryDate: data.entryDate,
+          consumedAt: data.lastConsumedAt,
+        });
       }
     });
 
@@ -249,49 +276,67 @@ export function CabinetStockTab({
         </div>
       ) : (
         <div className="space-y-2">
-          {filteredCabinetItems.map((item) => (
-            <div
-              key={item.itemId}
-              className="flex items-center gap-4 p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors"
-            >
-              {/* Item info */}
-              <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-sm truncate" title={item.itemName}>
-                  {item.itemName}
-                </h4>
-                {item.category && (
-                  <span className="text-xs text-muted-foreground">{item.category}</span>
+          {filteredCabinetItems.map((item) => {
+            const isConsumed = item.quantity === 0 && item.consumedAt;
+            
+            return (
+              <div
+                key={item.itemId}
+                className={`flex items-center gap-4 p-3 rounded-lg border transition-colors ${
+                  isConsumed 
+                    ? "bg-muted/50 opacity-60 border-dashed" 
+                    : "bg-card hover:bg-muted/30"
+                }`}
+              >
+                {/* Item info */}
+                <div className="flex-1 min-w-0">
+                  <h4 className={`font-medium text-sm truncate ${isConsumed ? "text-muted-foreground line-through" : ""}`} title={item.itemName}>
+                    {item.itemName}
+                  </h4>
+                  {item.category && (
+                    <span className="text-xs text-muted-foreground">{item.category}</span>
+                  )}
+                </div>
+
+                {/* Entry date or Consumed date */}
+                {isConsumed && item.consumedAt ? (
+                  <div className="flex items-center gap-1 text-xs text-orange-600">
+                    <PackageCheck className="h-3 w-3" />
+                    <span>Consumat: {format(new Date(item.consumedAt), "dd MMM yyyy", { locale: ro })}</span>
+                  </div>
+                ) : item.entryDate ? (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Calendar className="h-3 w-3" />
+                    <span>{format(new Date(item.entryDate), "dd MMM yyyy", { locale: ro })}</span>
+                  </div>
+                ) : null}
+
+                {/* Quantity */}
+                <div className="flex items-center gap-2">
+                  <Badge 
+                    variant={isConsumed ? "outline" : "secondary"} 
+                    className={`text-sm font-medium ${isConsumed ? "text-muted-foreground" : ""}`}
+                  >
+                    {item.quantity} {item.unit}
+                  </Badge>
+                </div>
+
+                {/* Consume button - only show if not already consumed */}
+                {!isConsumed && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700 hover:border-orange-300"
+                    onClick={() => handleOpenConsumeDialog(item)}
+                    disabled={isCreatingMovement}
+                  >
+                    <PackageCheck className="h-4 w-4 mr-1" />
+                    Consumat
+                  </Button>
                 )}
               </div>
-
-              {/* Entry date */}
-              {item.entryDate && (
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Calendar className="h-3 w-3" />
-                  <span>{format(new Date(item.entryDate), "dd MMM yyyy", { locale: ro })}</span>
-                </div>
-              )}
-
-              {/* Quantity */}
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-sm font-medium">
-                  {item.quantity} {item.unit}
-                </Badge>
-              </div>
-
-              {/* Consume button */}
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700 hover:border-orange-300"
-                onClick={() => handleOpenConsumeDialog(item)}
-                disabled={isCreatingMovement}
-              >
-                <PackageCheck className="h-4 w-4 mr-1" />
-                Consumat
-              </Button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
