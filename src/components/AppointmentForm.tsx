@@ -167,18 +167,6 @@ export function AppointmentForm({
   const { fetchPatientTreatmentPlans, saveTreatmentPlan, loading: savingPlan } = useTreatmentPlans();
   const { timeOffRequests } = useDoctorTimeOff();
   
-  // Check if selected doctor is on time off for the selected date
-  const doctorTimeOffWarning = useMemo(() => {
-    if (!formData.doctorId) return null;
-    const dateStr = format(selectedDate, 'yyyy-MM-dd');
-    return timeOffRequests.find(request => 
-      request.doctor_id === formData.doctorId &&
-      request.status === 'approved' &&
-      dateStr >= request.start_date &&
-      dateStr <= request.end_date
-    );
-  }, [formData.doctorId, selectedDate, timeOffRequests]);
-  
   const [formData, setFormData] = useState({
     patientId: '',
     patientName: '',
@@ -226,6 +214,18 @@ export function AppointmentForm({
     const startIndex = TIME_SLOTS.indexOf(startTime);
     return TIME_SLOTS.slice(startIndex + 1);
   };
+
+  // Check if selected doctor is on time off for the selected date
+  const doctorTimeOffWarning = useMemo(() => {
+    if (!formData.doctorId) return null;
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+    return timeOffRequests.find(request => 
+      request.doctor_id === formData.doctorId &&
+      request.status === 'approved' &&
+      dateStr >= request.start_date &&
+      dateStr <= request.end_date
+    );
+  }, [formData.doctorId, selectedDate, timeOffRequests]);
 
   // Calculate totals from interventions
   const totalPrice = interventions.reduce((sum, i) => sum + i.price, 0);
@@ -886,6 +886,14 @@ export function AppointmentForm({
                       ))}
                     </SelectContent>
                   </Select>
+                  {doctorTimeOffWarning && (
+                    <Alert className="mt-2 border-orange-500 bg-orange-50 dark:bg-orange-950/30">
+                      <AlertTriangle className="h-4 w-4 text-orange-600" />
+                      <AlertDescription className="text-orange-700 dark:text-orange-400 text-xs">
+                        Atenție: Doctorul are concediu aprobat pentru această dată ({doctorTimeOffWarning.start_date} - {doctorTimeOffWarning.end_date})
+                      </AlertDescription>
+                    </Alert>
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="time" className="text-xs sm:text-sm">Interval orar *</Label>
