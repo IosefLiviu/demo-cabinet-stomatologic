@@ -457,6 +457,82 @@ export function useAppointmentsDB() {
     }
   };
 
+  const updatePaymentAmount = async (id: string, paidAmount: number) => {
+    try {
+      const appointment = appointments.find(a => a.id === id);
+      if (!appointment) throw new Error('Appointment not found');
+
+      const treatments = appointment.appointment_treatments ?? [];
+      const totalPrice = (appointment.price ?? 0) || 
+        treatments.reduce((sum, t) => sum + (t.price || 0), 0);
+      
+      // Calculate payable amount (price - CAS - discounts)
+      const payableAmount = treatments.length
+        ? treatments.reduce((sum, t) => {
+            const price = t.price || 0;
+            const cas = t.decont || 0;
+            const discountPercent = t.discount_percent || 0;
+            const priceAfterCas = price - cas;
+            const discountAmount = priceAfterCas * (discountPercent / 100);
+            return sum + (priceAfterCas - discountAmount);
+          }, 0)
+        : totalPrice;
+
+      const isPaid = paidAmount >= payableAmount;
+      const isPartial = paidAmount > 0 && paidAmount < payableAmount;
+      
+      // Determine payment method based on new amount
+      let paymentMethod = appointment.payment_method || 'cash';
+      if (paidAmount === 0) {
+        paymentMethod = 'unpaid';
+      } else if (isPartial && !paymentMethod.startsWith('partial_')) {
+        // Convert to partial if it wasn't already
+        paymentMethod = paymentMethod.includes('card') ? 'partial_card' : 'partial_cash';
+      } else if (isPaid && paymentMethod.startsWith('partial_')) {
+        // Convert from partial to full
+        paymentMethod = paymentMethod.replace('partial_', '');
+      }
+
+      const { data, error } = await supabase
+        .from('appointments')
+        .update({
+          paid_amount: paidAmount,
+          is_paid: isPaid,
+          payment_method: paymentMethod,
+        })
+        .eq('id', id)
+        .select(`
+          *,
+          patients (id, first_name, last_name, phone, allergies),
+          treatments (id, name, default_duration),
+          doctors (id, name, color),
+          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, laborator, duration, discount_percent, tooth_numbers, tooth_data, plan_item_id)
+        `)
+        .single();
+
+      if (error) throw error;
+
+      setAppointments((prev) =>
+        prev.map((a) => (a.id === id ? (data as unknown as AppointmentDB) : a))
+      );
+
+      toast({
+        title: 'Succes',
+        description: `Suma achitată a fost actualizată la ${paidAmount.toLocaleString()} RON`,
+      });
+
+      return data;
+    } catch (error: any) {
+      console.error('Error updating payment amount:', error);
+      toast({
+        title: 'Eroare',
+        description: 'Nu s-a putut actualiza suma achitată',
+        variant: 'destructive',
+      });
+      return null;
+    }
+  };
+
   const completeAppointment = async (
     id: string, 
     paymentMethod: 'card' | 'cash' | 'unpaid' | 'partial_card' | 'partial_cash',
@@ -813,6 +889,7 @@ export function useAppointmentsDB() {
     deleteAppointment,
     completeAppointment,
     cancelAppointment,
+    updatePaymentAmount,
     getAppointmentsForDate,
     isSlotOccupied,
     checkOverlap,

@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { Plus, User, CheckCircle2, XCircle } from 'lucide-react';
+import { Plus, User, CheckCircle2, XCircle, Edit3 } from 'lucide-react';
 import { TIME_SLOTS, Appointment } from '@/types/appointment';
 import { Cabinet } from '@/hooks/useCabinets';
 import { cn } from '@/lib/utils';
@@ -19,6 +19,7 @@ interface TimeSlotGridProps {
   onAppointmentClick: (appointment: Appointment) => void;
   onAppointmentComplete?: (id: string) => void;
   onAppointmentCancel?: (id: string) => void;
+  onEditPayment?: (id: string) => void;
 }
 
 const cabinetBgColors: Record<number, string> = {
@@ -46,6 +47,7 @@ export function TimeSlotGrid({
   onAppointmentClick,
   onAppointmentComplete,
   onAppointmentCancel,
+  onEditPayment,
 }: TimeSlotGridProps) {
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
   const cabinetsToShow = selectedCabinet
@@ -298,7 +300,29 @@ export function TimeSlotGrid({
                           </div>
                         )}
                         {appointmentStarting.status === 'completed' && (
-                          <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
+                          <div className="flex flex-col gap-0.5 flex-shrink-0">
+                            <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
+                            {onEditPayment && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onEditPayment(appointmentStarting.id);
+                                      }}
+                                      className="p-0.5 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                                    >
+                                      <Edit3 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-600" />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Editează plata</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </div>
                         )}
                         {appointmentStarting.status === 'cancelled' && (
                           <XCircle className="h-3 w-3 sm:h-4 sm:w-4 text-red-500 flex-shrink-0" />
