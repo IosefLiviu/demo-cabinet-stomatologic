@@ -18,6 +18,7 @@ export interface StockMovement {
   cabinet_id: number | null;
   source_cabinet_id: number | null;
   created_at: string;
+  deleted_at: string | null;
 }
 
 export interface StockMovementInsert {
@@ -144,7 +145,19 @@ export function useStockMovements(itemId?: string) {
 
       if (getError) throw getError;
 
-      // Get current item quantity
+      // For cabinet_out movements, use soft-delete (set deleted_at)
+      // This removes from display but keeps the quantity consumed
+      if (movement.type === "cabinet_out") {
+        const { error } = await supabase
+          .from("stock_movements")
+          .update({ deleted_at: new Date().toISOString() })
+          .eq("id", id);
+
+        if (error) throw error;
+        return;
+      }
+
+      // For other movement types, reverse the quantity and hard-delete
       const { data: item, error: itemError } = await supabase
         .from("stock_items")
         .select("quantity")
@@ -153,7 +166,6 @@ export function useStockMovements(itemId?: string) {
 
       if (itemError) throw itemError;
 
-      // Reverse the movement
       const currentQty = Number(item.quantity);
       const movementQty = Number(movement.quantity);
       
@@ -167,9 +179,6 @@ export function useStockMovements(itemId?: string) {
         case "company_out":
           newQty = currentQty + movementQty;
           break;
-        case "cabinet_out":
-          newQty = currentQty; // Doesn't affect company stock
-          break;
         default:
           newQty = currentQty;
       }
@@ -182,20 +191,18 @@ export function useStockMovements(itemId?: string) {
 
       if (error) throw error;
 
-      // Update item quantity (only for movements that affect company stock)
-      if (movement.type !== "cabinet_out") {
-        const { error: updateError } = await supabase
-          .from("stock_items")
-          .update({ quantity: newQty })
-          .eq("id", movement.item_id);
+      // Update item quantity
+      const { error: updateError } = await supabase
+        .from("stock_items")
+        .update({ quantity: newQty })
+        .eq("id", movement.item_id);
 
-        if (updateError) throw updateError;
-      }
+      if (updateError) throw updateError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["stock-movements"] });
       queryClient.invalidateQueries({ queryKey: ["stock-items"] });
-      toast({ title: "Mișcare anulată cu succes" });
+      toast({ title: "Înregistrare ștearsă cu succes" });
     },
     onError: (error) => {
       toast({
