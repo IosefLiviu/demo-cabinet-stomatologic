@@ -24,6 +24,7 @@ import PrescriptionForm from '@/components/PrescriptionForm';
 import PatientInformation from '@/components/PatientInformation';
 import { CabinetSettings } from '@/components/CabinetSettings';
 import { CompleteAppointmentDialog, PaymentData } from '@/components/CompleteAppointmentDialog';
+import { EditPaymentDialog } from '@/components/EditPaymentDialog';
 import { CancelAppointmentDialog } from '@/components/CancelAppointmentDialog';
 import { NavigationButtons } from '@/components/NavigationButtons';
 import { AvailableSlotsSearch } from '@/components/AvailableSlotsSearch';
@@ -103,6 +104,14 @@ const Index = () => {
   const [cancellingAppointmentId, setCancellingAppointmentId] = useState<string | null>(null);
   const [cancellingAppointmentName, setCancellingAppointmentName] = useState<string>('');
 
+  // Edit payment dialog state
+  const [editPaymentDialogOpen, setEditPaymentDialogOpen] = useState(false);
+  const [editingPaymentAppointmentId, setEditingPaymentAppointmentId] = useState<string | null>(null);
+  const [editingPaymentPatientName, setEditingPaymentPatientName] = useState<string>('');
+  const [editingPaymentTotalPrice, setEditingPaymentTotalPrice] = useState<number>(0);
+  const [editingPaymentCurrentAmount, setEditingPaymentCurrentAmount] = useState<number>(0);
+  const [isEditingPayment, setIsEditingPayment] = useState(false);
+
   const { patients, loading: patientsLoading, addPatient, updatePatient, deletePatient, refetch: refetchPatients } = usePatients();
   const { 
     appointments, 
@@ -114,6 +123,7 @@ const Index = () => {
     deleteAppointment,
     completeAppointment,
     cancelAppointment,
+    updatePaymentAmount,
     checkOverlap,
     saveAppointmentTreatments,
     fetchAppointmentTreatments 
@@ -514,6 +524,36 @@ const Index = () => {
     }
   };
 
+  // Handler for editing payment on completed appointments
+  const handleEditPayment = (id: string) => {
+    const dbAppointment = appointments.find(a => a.id === id);
+    if (!dbAppointment) return;
+
+    const patientName = dbAppointment.patients
+      ? `${dbAppointment.patients.first_name} ${dbAppointment.patients.last_name}`
+      : '';
+
+    const treatments = dbAppointment.appointment_treatments ?? [];
+    const totalPrice = (dbAppointment.price ?? 0) ||
+      treatments.reduce((sum, t) => sum + (t.price || 0), 0);
+
+    setEditingPaymentAppointmentId(id);
+    setEditingPaymentPatientName(patientName);
+    setEditingPaymentTotalPrice(totalPrice);
+    setEditingPaymentCurrentAmount(dbAppointment.paid_amount || 0);
+    setEditPaymentDialogOpen(true);
+  };
+
+  const handleConfirmEditPayment = async (paidAmount: number) => {
+    if (!editingPaymentAppointmentId) return;
+    
+    setIsEditingPayment(true);
+    await updatePaymentAmount(editingPaymentAppointmentId, paidAmount);
+    setIsEditingPayment(false);
+    setEditPaymentDialogOpen(false);
+    setEditingPaymentAppointmentId(null);
+  };
+
   // Convert appointments to legacy format for existing components
   const legacyAppointments: Appointment[] = appointments.map((apt) => {
     const doctorFromJoin = apt.doctors;
@@ -648,6 +688,7 @@ const Index = () => {
               onAppointmentClick={handleAppointmentClick}
               onAppointmentComplete={handleAppointmentComplete}
               onAppointmentCancel={handleAppointmentCancelClick}
+              onEditPayment={handleEditPayment}
             />
           </TabsContent>
 
@@ -982,6 +1023,17 @@ const Index = () => {
         onOpenChange={setCancelDialogOpen}
         onConfirm={handleAppointmentCancelConfirm}
         patientName={cancellingAppointmentName}
+      />
+
+      {/* Edit Payment Dialog */}
+      <EditPaymentDialog
+        open={editPaymentDialogOpen}
+        onOpenChange={setEditPaymentDialogOpen}
+        onConfirm={handleConfirmEditPayment}
+        patientName={editingPaymentPatientName}
+        totalPrice={editingPaymentTotalPrice}
+        currentPaidAmount={editingPaymentCurrentAmount}
+        isLoading={isEditingPayment}
       />
 
     </div>
