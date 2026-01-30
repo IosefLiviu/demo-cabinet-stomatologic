@@ -960,6 +960,7 @@ export type Database = {
         Row: {
           cabinet_id: number | null
           created_at: string
+          deleted_at: string | null
           id: string
           item_id: string
           item_name: string
@@ -971,6 +972,7 @@ export type Database = {
         Insert: {
           cabinet_id?: number | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
           item_id: string
           item_name: string
@@ -982,6 +984,7 @@ export type Database = {
         Update: {
           cabinet_id?: number | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
           item_id?: string
           item_name?: string

@@ -124,6 +124,7 @@ export function CabinetStockTab({
   }, [movements, cabinets]);
 
   // Get consumption movements for selected cabinet (cabinet_out movements)
+  // Filter out soft-deleted movements (deleted_at is set)
   const consumptionMovements = useMemo(() => {
     if (!selectedCabinetId) return [];
     
@@ -133,7 +134,8 @@ export function CabinetStockTab({
     return movements.filter(m => 
       m.type === "cabinet_out" && 
       m.source_cabinet_id === selectedCabinetId &&
-      new Date(m.created_at) >= thirtyDaysAgo
+      new Date(m.created_at) >= thirtyDaysAgo &&
+      !m.deleted_at // Exclude soft-deleted movements from display
     );
   }, [movements, selectedCabinetId]);
 
