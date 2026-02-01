@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
-import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, Radio, FileText, Pill, UserCheck, Printer, Stethoscope, ClipboardList, FlaskConical, Package, List, Home, CalendarClock, MessageSquare } from 'lucide-react';
+import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, Radio, FileText, Pill, UserCheck, Printer, Stethoscope, ClipboardList, FlaskConical, Package, List, Home, CalendarClock, MessageSquare, FlaskRound } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/Header';
 import { DateNavigator } from '@/components/DateNavigator';
@@ -32,6 +32,7 @@ import { StockManagement } from '@/components/StockManagement';
 import { PatientFamiliesManager } from '@/components/PatientFamiliesManager';
 import { DoctorScheduleManagement } from '@/components/DoctorScheduleManagement';
 import { WhatsAppInbox } from '@/components/WhatsAppInbox';
+import { LaboratoryTab } from '@/components/LaboratoryTab';
 import { useWhatsAppMessages } from '@/hooks/useWhatsAppMessages';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -644,6 +645,10 @@ const Index = () => {
                 </span>
               )}
             </TabsTrigger>
+            <TabsTrigger value="laborator" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+              <FlaskRound className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Laborator</span>
+            </TabsTrigger>
             </TabsList>
           </div>
 
@@ -841,6 +846,10 @@ const Index = () => {
 
           <TabsContent value="whatsapp">
             <WhatsAppInbox />
+          </TabsContent>
+
+          <TabsContent value="laborator">
+            <LaboratoryTab patients={patients} doctors={doctors} />
           </TabsContent>
         </Tabs>
       </main>

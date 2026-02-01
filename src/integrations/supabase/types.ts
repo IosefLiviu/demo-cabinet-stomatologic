@@ -513,6 +513,72 @@ export type Database = {
           },
         ]
       }
+      lab_samples: {
+        Row: {
+          actual_return_date: string | null
+          created_at: string
+          doctor_id: string | null
+          expected_return_date: string | null
+          id: string
+          laboratory_name: string | null
+          notes: string | null
+          patient_id: string | null
+          patient_name: string
+          sample_date: string
+          status: string
+          updated_at: string
+          work_type: string
+          zone_quadrant: string | null
+        }
+        Insert: {
+          actual_return_date?: string | null
+          created_at?: string
+          doctor_id?: string | null
+          expected_return_date?: string | null
+          id?: string
+          laboratory_name?: string | null
+          notes?: string | null
+          patient_id?: string | null
+          patient_name: string
+          sample_date?: string
+          status?: string
+          updated_at?: string
+          work_type: string
+          zone_quadrant?: string | null
+        }
+        Update: {
+          actual_return_date?: string | null
+          created_at?: string
+          doctor_id?: string | null
+          expected_return_date?: string | null
+          id?: string
+          laboratory_name?: string | null
+          notes?: string | null
+          patient_id?: string | null
+          patient_name?: string
+          sample_date?: string
+          status?: string
+          updated_at?: string
+          work_type?: string
+          zone_quadrant?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lab_samples_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lab_samples_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       login_logs: {
         Row: {
           created_at: string
