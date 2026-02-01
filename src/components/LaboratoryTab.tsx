@@ -72,9 +72,8 @@ const COMMON_WORK_TYPES = [
 ];
 
 const COMMON_LABORATORIES = [
-  'Andreea',
   'Chișinău',
-  'Altele',
+  'Necula',
 ];
 
 const VITA_COLORS = [
