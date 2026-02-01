@@ -22,6 +22,7 @@ export interface LabSample {
   resend_date: string | null;
   trial_date: string | null;
   finalized_date: string | null;
+  cabinet_id: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -46,6 +47,7 @@ export interface LabSampleUpdate {
   notes?: string | null;
   status?: LabSampleStatus;
   resend_reason?: string | null;
+  cabinet_id?: number | null;
   resend_date?: string | null;
   trial_date?: string | null;
   finalized_date?: string | null;
@@ -179,10 +181,11 @@ export function useLabSamples() {
     });
   };
 
-  const markAsTrial = async (id: string): Promise<boolean> => {
+  const markAsTrial = async (id: string, cabinetId: number): Promise<boolean> => {
     return updateSample(id, {
       status: 'trial',
       trial_date: new Date().toISOString().split('T')[0],
+      cabinet_id: cabinetId,
     });
   };
 

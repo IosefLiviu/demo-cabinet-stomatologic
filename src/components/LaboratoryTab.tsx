@@ -44,6 +44,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useLabSamples, LabSampleInsert, LabSampleStatus } from '@/hooks/useLabSamples';
 import { Patient } from '@/hooks/usePatients';
+import { useCabinets } from '@/hooks/useCabinets';
 
 interface Doctor {
   id: string;
@@ -87,9 +88,13 @@ type TabStatus = 'sent' | 'returned' | 'trial' | 'finalized';
 
 export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
   const { samples, loading, addSample, markAsReturned, markAsTrial, markAsFinalized, resendToLab, deleteSample } = useLabSamples();
+  const { cabinets } = useCabinets();
   const [activeSubTab, setActiveSubTab] = useState<TabStatus>('sent');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showResendDialog, setShowResendDialog] = useState(false);
+  const [showTrialDialog, setShowTrialDialog] = useState(false);
+  const [trialSampleId, setTrialSampleId] = useState<string | null>(null);
+  const [selectedCabinetId, setSelectedCabinetId] = useState<string>('');
   const [resendSampleId, setResendSampleId] = useState<string | null>(null);
   const [resendReason, setResendReason] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -110,6 +115,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
   });
 
   const activeDoctors = doctors.filter(d => d.is_active);
+  const activeCabinets = cabinets.filter(c => c.is_active);
 
   // Filter samples by status - resent samples show in "sent" tab as they are back in lab
   const sentSamples = samples.filter(s => s.status === 'sent' || s.status === 'resent');
@@ -164,8 +170,20 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
     await markAsReturned(id);
   };
 
-  const handleMarkAsTrial = async (id: string) => {
-    await markAsTrial(id);
+  const handleOpenTrialDialog = (id: string) => {
+    setTrialSampleId(id);
+    setSelectedCabinetId('');
+    setShowTrialDialog(true);
+  };
+
+  const handleMarkAsTrial = async () => {
+    if (!trialSampleId || !selectedCabinetId) {
+      return;
+    }
+    await markAsTrial(trialSampleId, parseInt(selectedCabinetId));
+    setShowTrialDialog(false);
+    setTrialSampleId(null);
+    setSelectedCabinetId('');
   };
 
   const handleMarkAsFinalized = async (id: string) => {
@@ -206,6 +224,12 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
     if (!doctorId) return '-';
     const doctor = doctors.find(d => d.id === doctorId);
     return doctor?.name || '-';
+  };
+
+  const getCabinetName = (cabinetId: number | null) => {
+    if (!cabinetId) return '-';
+    const cabinet = cabinets.find(c => c.id === cabinetId);
+    return cabinet?.name || '-';
   };
 
   const getStatusBadge = (status: LabSampleStatus) => {
@@ -387,7 +411,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => handleMarkAsTrial(sample.id)}
+                                onClick={() => handleOpenTrialDialog(sample.id)}
                                 title="Trimite la cabinet pentru probă"
                               >
                                 <FlaskConical className="h-4 w-4 text-blue-600" />
@@ -428,6 +452,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                         <TableHead>Tip Lucrare</TableHead>
                         <TableHead>Zona/Cadran</TableHead>
                         <TableHead>Culoare Vita</TableHead>
+                        <TableHead>Cabinet</TableHead>
                         <TableHead>Laborator</TableHead>
                         <TableHead>Medic</TableHead>
                         <TableHead className="text-right">Acțiuni</TableHead>
@@ -445,6 +470,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                           <TableCell>{sample.work_type}</TableCell>
                           <TableCell>{sample.zone_quadrant || '-'}</TableCell>
                           <TableCell>{sample.vita_color || '-'}</TableCell>
+                          <TableCell>{getCabinetName(sample.cabinet_id)}</TableCell>
                           <TableCell>{sample.laboratory_name || '-'}</TableCell>
                           <TableCell>{getDoctorName(sample.doctor_id)}</TableCell>
                           <TableCell className="text-right">
@@ -703,6 +729,51 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
               disabled={!formData.patient_name || !formData.work_type}
             >
               Trimite
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Trial Dialog - requires cabinet selection */}
+      <Dialog open={showTrialDialog} onOpenChange={setShowTrialDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Trimite la Cabinet pentru Probă</DialogTitle>
+            <DialogDescription>
+              Selectează cabinetul unde va avea loc proba
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Cabinet *</Label>
+              <Select
+                value={selectedCabinetId}
+                onValueChange={setSelectedCabinetId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selectează cabinetul" />
+                </SelectTrigger>
+                <SelectContent>
+                  {activeCabinets.map((cabinet) => (
+                    <SelectItem key={cabinet.id} value={cabinet.id.toString()}>
+                      {cabinet.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowTrialDialog(false); setSelectedCabinetId(''); setTrialSampleId(null); }}>
+              Anulează
+            </Button>
+            <Button
+              onClick={handleMarkAsTrial}
+              disabled={!selectedCabinetId}
+            >
+              Trimite la Probă
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -516,6 +516,7 @@ export type Database = {
       lab_samples: {
         Row: {
           actual_return_date: string | null
+          cabinet_id: number | null
           created_at: string
           doctor_id: string | null
           expected_return_date: string | null
@@ -537,6 +538,7 @@ export type Database = {
         }
         Insert: {
           actual_return_date?: string | null
+          cabinet_id?: number | null
           created_at?: string
           doctor_id?: string | null
           expected_return_date?: string | null
@@ -558,6 +560,7 @@ export type Database = {
         }
         Update: {
           actual_return_date?: string | null
+          cabinet_id?: number | null
           created_at?: string
           doctor_id?: string | null
           expected_return_date?: string | null
@@ -578,6 +581,13 @@ export type Database = {
           zone_quadrant?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "lab_samples_cabinet_id_fkey"
+            columns: ["cabinet_id"]
+            isOneToOne: false
+            referencedRelation: "cabinets"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "lab_samples_doctor_id_fkey"
             columns: ["doctor_id"]
