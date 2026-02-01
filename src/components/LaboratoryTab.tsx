@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Plus, Check, Trash2, Search, Send, ArrowDownToLine } from 'lucide-react';
+import { Plus, Check, Trash2, Search, Send, ArrowDownToLine, FlaskConical, RotateCcw, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Table,
   TableBody,
@@ -41,7 +42,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useLabSamples, LabSampleInsert } from '@/hooks/useLabSamples';
+import { useLabSamples, LabSampleInsert, LabSampleStatus } from '@/hooks/useLabSamples';
 import { Patient } from '@/hooks/usePatients';
 
 interface Doctor {
@@ -82,10 +83,15 @@ const VITA_COLORS = [
   'D2', 'D3', 'D4',
 ];
 
+type TabStatus = 'sent' | 'returned' | 'trial' | 'finalized';
+
 export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
-  const { samples, loading, addSample, markAsReturned, deleteSample } = useLabSamples();
-  const [activeSubTab, setActiveSubTab] = useState<'sent' | 'returned'>('sent');
+  const { samples, loading, addSample, markAsReturned, markAsTrial, markAsFinalized, resendToLab, deleteSample } = useLabSamples();
+  const [activeSubTab, setActiveSubTab] = useState<TabStatus>('sent');
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showResendDialog, setShowResendDialog] = useState(false);
+  const [resendSampleId, setResendSampleId] = useState<string | null>(null);
+  const [resendReason, setResendReason] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [patientSearch, setPatientSearch] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -105,20 +111,24 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
 
   const activeDoctors = doctors.filter(d => d.is_active);
 
-  const sentSamples = samples.filter(s => s.status === 'sent');
+  // Filter samples by status - resent samples show in "sent" tab as they are back in lab
+  const sentSamples = samples.filter(s => s.status === 'sent' || s.status === 'resent');
   const returnedSamples = samples.filter(s => s.status === 'returned');
+  const trialSamples = samples.filter(s => s.status === 'trial');
+  const finalizedSamples = samples.filter(s => s.status === 'finalized');
 
-  const filteredSentSamples = sentSamples.filter(s =>
-    s.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.work_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (s.laboratory_name && s.laboratory_name.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filterSamples = (sampleList: typeof samples) => {
+    return sampleList.filter(s =>
+      s.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.work_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (s.laboratory_name && s.laboratory_name.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  };
 
-  const filteredReturnedSamples = returnedSamples.filter(s =>
-    s.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.work_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (s.laboratory_name && s.laboratory_name.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredSentSamples = filterSamples(sentSamples);
+  const filteredReturnedSamples = filterSamples(returnedSamples);
+  const filteredTrialSamples = filterSamples(trialSamples);
+  const filteredFinalizedSamples = filterSamples(finalizedSamples);
 
   const filteredPatients = patients.filter(p => {
     const fullName = `${p.first_name} ${p.last_name}`.toLowerCase();
@@ -154,6 +164,30 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
     await markAsReturned(id);
   };
 
+  const handleMarkAsTrial = async (id: string) => {
+    await markAsTrial(id);
+  };
+
+  const handleMarkAsFinalized = async (id: string) => {
+    await markAsFinalized(id);
+  };
+
+  const handleOpenResendDialog = (id: string) => {
+    setResendSampleId(id);
+    setResendReason('');
+    setShowResendDialog(true);
+  };
+
+  const handleResend = async () => {
+    if (!resendSampleId || !resendReason.trim()) {
+      return;
+    }
+    await resendToLab(resendSampleId, resendReason.trim());
+    setShowResendDialog(false);
+    setResendSampleId(null);
+    setResendReason('');
+  };
+
   const handleDelete = async (id: string) => {
     await deleteSample(id);
     setDeleteConfirmId(null);
@@ -174,6 +208,18 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
     return doctor?.name || '-';
   };
 
+  const getStatusBadge = (status: LabSampleStatus) => {
+    const statusConfig: Record<LabSampleStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+      sent: { label: 'Trimis', variant: 'default' },
+      resent: { label: 'Retrimis', variant: 'destructive' },
+      returned: { label: 'Primit', variant: 'secondary' },
+      trial: { label: 'La Probă', variant: 'outline' },
+      finalized: { label: 'Finalizat', variant: 'secondary' },
+    };
+    const config = statusConfig[status];
+    return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
+
   return (
     <div className="space-y-4">
       <Card>
@@ -182,7 +228,10 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
             <CardTitle className="flex items-center gap-2">
               <span>Laborator</span>
               <Badge variant="secondary" className="ml-2">
-                {sentSamples.length} în așteptare
+                {sentSamples.length} în laborator
+              </Badge>
+              <Badge variant="outline" className="ml-1">
+                {trialSamples.length} la probă
               </Badge>
             </CardTitle>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
@@ -203,30 +252,40 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeSubTab} onValueChange={(v) => setActiveSubTab(v as 'sent' | 'returned')}>
+          <Tabs value={activeSubTab} onValueChange={(v) => setActiveSubTab(v as TabStatus)}>
             <TabsList className="mb-4">
               <TabsTrigger value="sent" className="gap-2">
                 <Send className="h-4 w-4" />
-                Trimise ({sentSamples.length})
+                La Laborator ({sentSamples.length})
               </TabsTrigger>
               <TabsTrigger value="returned" className="gap-2">
                 <ArrowDownToLine className="h-4 w-4" />
                 Primite ({returnedSamples.length})
               </TabsTrigger>
+              <TabsTrigger value="trial" className="gap-2">
+                <FlaskConical className="h-4 w-4" />
+                La Probă ({trialSamples.length})
+              </TabsTrigger>
+              <TabsTrigger value="finalized" className="gap-2">
+                <CheckCircle className="h-4 w-4" />
+                Finalizate ({finalizedSamples.length})
+              </TabsTrigger>
             </TabsList>
 
+            {/* Tab: La Laborator (sent + resent) */}
             <TabsContent value="sent">
               {loading ? (
                 <div className="text-center py-8 text-muted-foreground">Se încarcă...</div>
               ) : filteredSentSamples.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  {searchTerm ? 'Nicio probă găsită' : 'Nu există probe trimise'}
+                  {searchTerm ? 'Nicio probă găsită' : 'Nu există probe la laborator'}
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>Status</TableHead>
                         <TableHead>Data</TableHead>
                         <TableHead>Pacient</TableHead>
                         <TableHead>Tip Lucrare</TableHead>
@@ -241,8 +300,9 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                     <TableBody>
                       {filteredSentSamples.map((sample) => (
                         <TableRow key={sample.id}>
+                          <TableCell>{getStatusBadge(sample.status)}</TableCell>
                           <TableCell>
-                            {format(new Date(sample.sample_date), 'dd.MM.yyyy', { locale: ro })}
+                            {format(new Date(sample.resend_date || sample.sample_date), 'dd.MM.yyyy', { locale: ro })}
                           </TableCell>
                           <TableCell className="font-medium">{sample.patient_name}</TableCell>
                           <TableCell>{sample.work_type}</TableCell>
@@ -283,6 +343,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
               )}
             </TabsContent>
 
+            {/* Tab: Primite */}
             <TabsContent value="returned">
               {loading ? (
                 <div className="text-center py-8 text-muted-foreground">Se încarcă...</div>
@@ -298,6 +359,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                         <TableHead>Data Trimitere</TableHead>
                         <TableHead>Pacient</TableHead>
                         <TableHead>Tip Lucrare</TableHead>
+                        <TableHead>Culoare Vita</TableHead>
                         <TableHead>Laborator</TableHead>
                         <TableHead>Medic</TableHead>
                         <TableHead>Data Primire</TableHead>
@@ -312,6 +374,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                           </TableCell>
                           <TableCell className="font-medium">{sample.patient_name}</TableCell>
                           <TableCell>{sample.work_type}</TableCell>
+                          <TableCell>{sample.vita_color || '-'}</TableCell>
                           <TableCell>{sample.laboratory_name || '-'}</TableCell>
                           <TableCell>{getDoctorName(sample.doctor_id)}</TableCell>
                           <TableCell>
@@ -319,6 +382,144 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                               ? format(new Date(sample.actual_return_date), 'dd.MM.yyyy', { locale: ro })
                               : '-'}
                           </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleMarkAsTrial(sample.id)}
+                                title="Trimite la cabinet pentru probă"
+                              >
+                                <FlaskConical className="h-4 w-4 text-blue-600" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setDeleteConfirmId(sample.id)}
+                                title="Șterge"
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Tab: La Probă */}
+            <TabsContent value="trial">
+              {loading ? (
+                <div className="text-center py-8 text-muted-foreground">Se încarcă...</div>
+              ) : filteredTrialSamples.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  {searchTerm ? 'Nicio probă găsită' : 'Nu există probe la probă client'}
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Data Probă</TableHead>
+                        <TableHead>Pacient</TableHead>
+                        <TableHead>Tip Lucrare</TableHead>
+                        <TableHead>Zona/Cadran</TableHead>
+                        <TableHead>Culoare Vita</TableHead>
+                        <TableHead>Laborator</TableHead>
+                        <TableHead>Medic</TableHead>
+                        <TableHead className="text-right">Acțiuni</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredTrialSamples.map((sample) => (
+                        <TableRow key={sample.id}>
+                          <TableCell>
+                            {sample.trial_date
+                              ? format(new Date(sample.trial_date), 'dd.MM.yyyy', { locale: ro })
+                              : '-'}
+                          </TableCell>
+                          <TableCell className="font-medium">{sample.patient_name}</TableCell>
+                          <TableCell>{sample.work_type}</TableCell>
+                          <TableCell>{sample.zone_quadrant || '-'}</TableCell>
+                          <TableCell>{sample.vita_color || '-'}</TableCell>
+                          <TableCell>{sample.laboratory_name || '-'}</TableCell>
+                          <TableCell>{getDoctorName(sample.doctor_id)}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleMarkAsFinalized(sample.id)}
+                                title="Marchează ca finalizat"
+                              >
+                                <CheckCircle className="h-4 w-4 text-green-600" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleOpenResendDialog(sample.id)}
+                                title="Retrimite la laborator"
+                              >
+                                <RotateCcw className="h-4 w-4 text-orange-600" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setDeleteConfirmId(sample.id)}
+                                title="Șterge"
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Tab: Finalizate */}
+            <TabsContent value="finalized">
+              {loading ? (
+                <div className="text-center py-8 text-muted-foreground">Se încarcă...</div>
+              ) : filteredFinalizedSamples.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  {searchTerm ? 'Nicio probă găsită' : 'Nu există lucrări finalizate'}
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Data Finalizare</TableHead>
+                        <TableHead>Pacient</TableHead>
+                        <TableHead>Tip Lucrare</TableHead>
+                        <TableHead>Zona/Cadran</TableHead>
+                        <TableHead>Culoare Vita</TableHead>
+                        <TableHead>Laborator</TableHead>
+                        <TableHead>Medic</TableHead>
+                        <TableHead className="text-right">Acțiuni</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredFinalizedSamples.map((sample) => (
+                        <TableRow key={sample.id}>
+                          <TableCell>
+                            {sample.finalized_date
+                              ? format(new Date(sample.finalized_date), 'dd.MM.yyyy', { locale: ro })
+                              : '-'}
+                          </TableCell>
+                          <TableCell className="font-medium">{sample.patient_name}</TableCell>
+                          <TableCell>{sample.work_type}</TableCell>
+                          <TableCell>{sample.zone_quadrant || '-'}</TableCell>
+                          <TableCell>{sample.vita_color || '-'}</TableCell>
+                          <TableCell>{sample.laboratory_name || '-'}</TableCell>
+                          <TableCell>{getDoctorName(sample.doctor_id)}</TableCell>
                           <TableCell className="text-right">
                             <Button
                               variant="ghost"
@@ -502,6 +703,42 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
               disabled={!formData.patient_name || !formData.work_type}
             >
               Trimite
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Resend Dialog - requires reason */}
+      <Dialog open={showResendDialog} onOpenChange={setShowResendDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Retrimite la Laborator</DialogTitle>
+            <DialogDescription>
+              Specifică motivul retrimirii la laborator
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Motiv Retrimitere *</Label>
+              <Textarea
+                placeholder="Descrie motivul retrimirii (ex: ajustare contact, modificare formă, etc.)"
+                value={resendReason}
+                onChange={(e) => setResendReason(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowResendDialog(false); setResendReason(''); setResendSampleId(null); }}>
+              Anulează
+            </Button>
+            <Button
+              onClick={handleResend}
+              disabled={!resendReason.trim()}
+            >
+              Retrimite
             </Button>
           </DialogFooter>
         </DialogContent>
