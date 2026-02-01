@@ -567,7 +567,14 @@ export function DoctorScheduleManagement({
                   <Calendar
                     mode="range"
                     selected={shiftDateRange}
-                    onSelect={(range) => range && setShiftDateRange(range as { from: Date; to?: Date })}
+                    onSelect={(range) => {
+                      if (range) {
+                        setShiftDateRange(range as { from: Date; to?: Date });
+                      } else {
+                        // Reset when user clicks to start new selection
+                        setShiftDateRange({ from: new Date(), to: undefined });
+                      }
+                    }}
                     initialFocus
                     className="pointer-events-auto"
                     numberOfMonths={2}
