@@ -15,6 +15,7 @@ export interface LabSample {
   doctor_id: string | null;
   status: 'sent' | 'returned';
   notes: string | null;
+  vita_color: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -29,6 +30,7 @@ export interface LabSampleInsert {
   laboratory_name?: string | null;
   doctor_id?: string | null;
   notes?: string | null;
+  vita_color?: string | null;
 }
 
 export interface LabSampleUpdate {

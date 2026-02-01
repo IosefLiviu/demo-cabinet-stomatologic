@@ -75,6 +75,13 @@ const COMMON_LABORATORIES = [
   'Altele',
 ];
 
+const VITA_COLORS = [
+  'A1', 'A2', 'A3', 'A3.5', 'A4',
+  'B1', 'B2', 'B3', 'B4',
+  'C1', 'C2', 'C3', 'C4',
+  'D2', 'D3', 'D4',
+];
+
 export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
   const { samples, loading, addSample, markAsReturned, deleteSample } = useLabSamples();
   const [activeSubTab, setActiveSubTab] = useState<'sent' | 'returned'>('sent');
@@ -93,6 +100,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
     laboratory_name: '',
     doctor_id: '',
     notes: '',
+    vita_color: '',
   });
 
   const activeDoctors = doctors.filter(d => d.is_active);
@@ -127,6 +135,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
       laboratory_name: '',
       doctor_id: '',
       notes: '',
+      vita_color: '',
     });
     setPatientSearch('');
   };
@@ -419,6 +428,26 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                   onChange={(e) => setFormData(prev => ({ ...prev, expected_return_date: e.target.value }))}
                 />
               </div>
+            </div>
+
+            {/* Vita Color */}
+            <div className="space-y-2">
+              <Label>Culoare Vita</Label>
+              <Select
+                value={formData.vita_color || ''}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, vita_color: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selectează culoarea" />
+                </SelectTrigger>
+                <SelectContent>
+                  {VITA_COLORS.map((color) => (
+                    <SelectItem key={color} value={color}>
+                      {color}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Laboratory */}

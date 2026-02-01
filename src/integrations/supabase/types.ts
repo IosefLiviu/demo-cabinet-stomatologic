@@ -527,6 +527,7 @@ export type Database = {
           sample_date: string
           status: string
           updated_at: string
+          vita_color: string | null
           work_type: string
           zone_quadrant: string | null
         }
@@ -543,6 +544,7 @@ export type Database = {
           sample_date?: string
           status?: string
           updated_at?: string
+          vita_color?: string | null
           work_type: string
           zone_quadrant?: string | null
         }
@@ -559,6 +561,7 @@ export type Database = {
           sample_date?: string
           status?: string
           updated_at?: string
+          vita_color?: string | null
           work_type?: string
           zone_quadrant?: string | null
         }
