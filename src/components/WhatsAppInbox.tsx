@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
-import { MessageSquare, Check, Trash2, User, Phone, ExternalLink } from "lucide-react";
-import { useWhatsAppMessages } from "@/hooks/useWhatsAppMessages";
+import { MessageSquare, Check, Trash2, User, Phone, ExternalLink, Reply } from "lucide-react";
+import { useWhatsAppMessages, WhatsAppMessage } from "@/hooks/useWhatsAppMessages";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,12 +19,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
+import { WhatsAppReplyDialog } from "./WhatsAppReplyDialog";
 
 export function WhatsAppInbox() {
   const navigate = useNavigate();
   const { messages, isLoading, unreadCount, markAsRead, deleteMessage, isDeleting } = useWhatsAppMessages();
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "unread">("all");
+  const [replyTo, setReplyTo] = useState<WhatsAppMessage | null>(null);
 
   const filteredMessages = filter === "unread" 
     ? messages.filter(m => m.status === "unread")
@@ -139,6 +141,15 @@ export function WhatsAppInbox() {
                       </p>
                     </div>
                     <div className="flex flex-col gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setReplyTo(message)}
+                        title="Răspunde"
+                        className="text-green-600 hover:text-green-700"
+                      >
+                        <Reply className="h-4 w-4" />
+                      </Button>
                       {message.status === "unread" && (
                         <Button
                           size="sm"
@@ -196,6 +207,14 @@ export function WhatsAppInbox() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <WhatsAppReplyDialog
+        open={!!replyTo}
+        onOpenChange={(open) => !open && setReplyTo(null)}
+        patientPhone={replyTo?.patient_phone || ""}
+        patientName={replyTo?.patient_name || null}
+        patientId={replyTo?.patient_id || null}
+      />
     </Card>
   );
 }
