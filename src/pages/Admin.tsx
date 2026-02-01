@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, ArrowLeft, Save, X, Users, Stethoscope, Shield, ShieldCheck, Palette, Mail, Download, FileText, CheckCircle, XCircle, ChevronLeft, ChevronRight, Loader2, KeyRound, CalendarClock } from 'lucide-react';
+import { Plus, Edit, Trash2, ArrowLeft, Save, X, Users, Stethoscope, Shield, ShieldCheck, Palette, Mail, Download, FileText, CheckCircle, XCircle, ChevronLeft, ChevronRight, Loader2, KeyRound, CalendarClock, Settings } from 'lucide-react';
 import { TimeOffApprovalPanel } from '@/components/TimeOffApprovalPanel';
+import { WhatsAppSettingsCard } from '@/components/WhatsAppSettingsCard';
 import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -774,7 +775,7 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="doctors" className="space-y-6">
-          <TabsList className="grid w-full max-w-4xl grid-cols-5">
+          <TabsList className="grid w-full max-w-4xl grid-cols-6">
             <TabsTrigger value="doctors" className="gap-2">
               <Stethoscope className="h-4 w-4" />
               Doctori
@@ -794,6 +795,10 @@ export default function Admin() {
             <TabsTrigger value="timeoff" className="gap-2">
               <CalendarClock className="h-4 w-4" />
               Concedii
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-2">
+              <Settings className="h-4 w-4" />
+              Setări
             </TabsTrigger>
           </TabsList>
 
@@ -1239,6 +1244,11 @@ export default function Admin() {
           {/* ============ TIME OFF TAB ============ */}
           <TabsContent value="timeoff" className="space-y-4">
             <TimeOffApprovalPanel />
+          </TabsContent>
+
+          {/* ============ SETTINGS TAB ============ */}
+          <TabsContent value="settings" className="space-y-4">
+            <WhatsAppSettingsCard />
           </TabsContent>
         </Tabs>
 
