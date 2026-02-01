@@ -519,13 +519,17 @@ export type Database = {
           created_at: string
           doctor_id: string | null
           expected_return_date: string | null
+          finalized_date: string | null
           id: string
           laboratory_name: string | null
           notes: string | null
           patient_id: string | null
           patient_name: string
+          resend_date: string | null
+          resend_reason: string | null
           sample_date: string
           status: string
+          trial_date: string | null
           updated_at: string
           vita_color: string | null
           work_type: string
@@ -536,13 +540,17 @@ export type Database = {
           created_at?: string
           doctor_id?: string | null
           expected_return_date?: string | null
+          finalized_date?: string | null
           id?: string
           laboratory_name?: string | null
           notes?: string | null
           patient_id?: string | null
           patient_name: string
+          resend_date?: string | null
+          resend_reason?: string | null
           sample_date?: string
           status?: string
+          trial_date?: string | null
           updated_at?: string
           vita_color?: string | null
           work_type: string
@@ -553,13 +561,17 @@ export type Database = {
           created_at?: string
           doctor_id?: string | null
           expected_return_date?: string | null
+          finalized_date?: string | null
           id?: string
           laboratory_name?: string | null
           notes?: string | null
           patient_id?: string | null
           patient_name?: string
+          resend_date?: string | null
+          resend_reason?: string | null
           sample_date?: string
           status?: string
+          trial_date?: string | null
           updated_at?: string
           vita_color?: string | null
           work_type?: string

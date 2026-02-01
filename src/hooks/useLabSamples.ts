@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+export type LabSampleStatus = 'sent' | 'returned' | 'trial' | 'finalized' | 'resent';
+
 export interface LabSample {
   id: string;
   patient_id: string | null;
@@ -13,9 +15,13 @@ export interface LabSample {
   actual_return_date: string | null;
   laboratory_name: string | null;
   doctor_id: string | null;
-  status: 'sent' | 'returned';
+  status: LabSampleStatus;
   notes: string | null;
   vita_color: string | null;
+  resend_reason: string | null;
+  resend_date: string | null;
+  trial_date: string | null;
+  finalized_date: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -38,7 +44,11 @@ export interface LabSampleUpdate {
   laboratory_name?: string | null;
   doctor_id?: string | null;
   notes?: string | null;
-  status?: 'sent' | 'returned';
+  status?: LabSampleStatus;
+  resend_reason?: string | null;
+  resend_date?: string | null;
+  trial_date?: string | null;
+  finalized_date?: string | null;
 }
 
 export function useLabSamples() {
@@ -109,11 +119,17 @@ export function useLabSamples() {
 
       if (error) throw error;
 
+      const statusMessages: Record<LabSampleStatus, string> = {
+        sent: 'Proba a fost trimisă la laborator',
+        returned: 'Proba a fost marcată ca primită',
+        trial: 'Proba a fost trimisă la cabinet pentru probă',
+        finalized: 'Lucrarea a fost finalizată',
+        resent: 'Proba a fost retrimisă la laborator',
+      };
+
       toast({
         title: 'Succes',
-        description: updates.status === 'returned' 
-          ? 'Proba a fost marcată ca primită' 
-          : 'Proba a fost actualizată',
+        description: updates.status ? statusMessages[updates.status] : 'Proba a fost actualizată',
       });
 
       await fetchSamples();
@@ -163,6 +179,28 @@ export function useLabSamples() {
     });
   };
 
+  const markAsTrial = async (id: string): Promise<boolean> => {
+    return updateSample(id, {
+      status: 'trial',
+      trial_date: new Date().toISOString().split('T')[0],
+    });
+  };
+
+  const markAsFinalized = async (id: string): Promise<boolean> => {
+    return updateSample(id, {
+      status: 'finalized',
+      finalized_date: new Date().toISOString().split('T')[0],
+    });
+  };
+
+  const resendToLab = async (id: string, reason: string): Promise<boolean> => {
+    return updateSample(id, {
+      status: 'resent',
+      resend_reason: reason,
+      resend_date: new Date().toISOString().split('T')[0],
+    });
+  };
+
   return {
     samples,
     loading,
@@ -171,5 +209,8 @@ export function useLabSamples() {
     updateSample,
     deleteSample,
     markAsReturned,
+    markAsTrial,
+    markAsFinalized,
+    resendToLab,
   };
 }
