@@ -101,9 +101,20 @@ const handler = async (req: Request): Promise<Response> => {
       // Format time (remove seconds if present)
       const startTime = appointment.start_time.substring(0, 5);
 
-      // Build the message
-      const message = `Bună ziua, vă așteptăm mâine, ${formattedDate}, la ora ${startTime}, la Perfect Smile Glim. Adresa: Strada București 68–70. Dacă nu puteți ajunge, vă rugăm să ne contactați pentru reprogramare.`;
+      // Get custom message template or use default
+      const { data: messageSetting } = await supabase
+        .from("app_settings")
+        .select("setting_value")
+        .eq("setting_key", "whatsapp_reminder_message")
+        .single();
 
+      const defaultMessage = "Bună ziua, vă așteptăm mâine, {data}, la ora {ora}, la Perfect Smile Glim. Adresa: Strada București 68–70. Dacă nu puteți ajunge, vă rugăm să ne contactați pentru reprogramare.";
+      const messageTemplate = messageSetting?.setting_value || defaultMessage;
+
+      // Build the message by replacing placeholders
+      const message = messageTemplate
+        .replace("{data}", formattedDate)
+        .replace("{ora}", startTime);
       // Format phone number for WhatsApp
       let formattedPhone = patient.phone.replace(/\D/g, "");
       if (!formattedPhone.startsWith("40")) {
