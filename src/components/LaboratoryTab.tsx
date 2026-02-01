@@ -231,6 +231,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                         <TableHead>Pacient</TableHead>
                         <TableHead>Tip Lucrare</TableHead>
                         <TableHead>Zona/Cadran</TableHead>
+                        <TableHead>Culoare Vita</TableHead>
                         <TableHead>Data Gata</TableHead>
                         <TableHead>Laborator</TableHead>
                         <TableHead>Medic</TableHead>
@@ -246,6 +247,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                           <TableCell className="font-medium">{sample.patient_name}</TableCell>
                           <TableCell>{sample.work_type}</TableCell>
                           <TableCell>{sample.zone_quadrant || '-'}</TableCell>
+                          <TableCell>{sample.vita_color || '-'}</TableCell>
                           <TableCell>
                             {sample.expected_return_date
                               ? format(new Date(sample.expected_return_date), 'dd.MM.yyyy', { locale: ro })
