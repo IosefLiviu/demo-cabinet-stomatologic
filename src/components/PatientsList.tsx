@@ -20,6 +20,7 @@ import {
   ArrowDown,
   MessageCircle,
   Send,
+  Bell,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,6 +58,7 @@ import { Patient } from '@/hooks/usePatients';
 import { cn } from '@/lib/utils';
 import { useSendWhatsApp } from '@/hooks/useSendWhatsApp';
 import { useAppSettings } from '@/hooks/useAppSettings';
+import { PatientReminderDialog } from './PatientReminderDialog';
 
 interface PatientsListProps {
   patients: Patient[];
@@ -94,6 +96,10 @@ export function PatientsList({
   const [whatsAppMessage, setWhatsAppMessage] = useState('');
   const { sendMessage, isSending } = useSendWhatsApp();
   const { getSetting } = useAppSettings();
+  
+  // Reminder dialog state
+  const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
+  const [selectedPatientForReminder, setSelectedPatientForReminder] = useState<Patient | null>(null);
   
   const DEFAULT_DIRECT_MESSAGE = "Bună ziua, {nume}! Vă contactăm de la Perfect Smile Glim. Cum vă putem ajuta?";
 
@@ -410,6 +416,18 @@ export function PatientsList({
                       <Button
                         variant="ghost"
                         size="icon"
+                        className="h-8 w-8 text-orange-500 hover:text-orange-600 hover:bg-orange-50"
+                        onClick={() => {
+                          setSelectedPatientForReminder(patient);
+                          setReminderDialogOpen(true);
+                        }}
+                        title="Setează reminder rechemare"
+                      >
+                        <Bell className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
                         onClick={() => handleOpenWhatsAppDialog(patient)}
                         title="Trimite mesaj WhatsApp"
@@ -571,6 +589,19 @@ export function PatientsList({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Reminder Dialog */}
+      {selectedPatientForReminder && (
+        <PatientReminderDialog
+          open={reminderDialogOpen}
+          onClose={() => {
+            setReminderDialogOpen(false);
+            setSelectedPatientForReminder(null);
+          }}
+          patientId={selectedPatientForReminder.id}
+          patientName={`${selectedPatientForReminder.last_name} ${selectedPatientForReminder.first_name}`}
+        />
+      )}
     </div>
   );
 }

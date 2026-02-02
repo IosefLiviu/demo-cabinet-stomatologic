@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
-import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, Radio, FileText, Pill, UserCheck, Printer, Stethoscope, ClipboardList, FlaskConical, Package, List, Home, CalendarClock, MessageSquare, FlaskRound } from 'lucide-react';
+import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, Radio, FileText, Pill, UserCheck, Printer, Stethoscope, ClipboardList, FlaskConical, Package, List, Home, CalendarClock, MessageSquare, FlaskRound, Bell } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/Header';
 import { DateNavigator } from '@/components/DateNavigator';
@@ -33,7 +33,9 @@ import { PatientFamiliesManager } from '@/components/PatientFamiliesManager';
 import { DoctorScheduleManagement } from '@/components/DoctorScheduleManagement';
 import { WhatsAppInbox } from '@/components/WhatsAppInbox';
 import { LaboratoryTab } from '@/components/LaboratoryTab';
+import { PatientRemindersPanel } from '@/components/PatientRemindersPanel';
 import { useWhatsAppMessages } from '@/hooks/useWhatsAppMessages';
+import { usePendingReminders } from '@/hooks/usePatientReminders';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePatients, Patient } from '@/hooks/usePatients';
@@ -134,6 +136,7 @@ const Index = () => {
   const { doctors } = useDoctors();
   const { isAdmin, doctorId } = useAuth();
   const { unreadCount } = useWhatsAppMessages();
+  const { reminders: pendingReminders } = usePendingReminders();
   
   // Reception user = not admin AND not a doctor
   const isReception = !isAdmin && !doctorId;
@@ -704,6 +707,15 @@ const Index = () => {
                   <List className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span>Listă Pacienți</span>
                 </TabsTrigger>
+                <TabsTrigger value="reminders" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                  <Bell className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Rechemări</span>
+                  {pendingReminders.length > 0 && (
+                    <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-medium text-white">
+                      {pendingReminders.length}
+                    </span>
+                  )}
+                </TabsTrigger>
                 <TabsTrigger value="families" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
                   <Home className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span>Familii</span>
@@ -731,6 +743,10 @@ const Index = () => {
                   }}
                   onRefetch={refetchPatients}
                 />
+              </TabsContent>
+
+              <TabsContent value="reminders">
+                <PatientRemindersPanel />
               </TabsContent>
 
               <TabsContent value="families">
