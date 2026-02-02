@@ -33,6 +33,14 @@ import {
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
 
+// Special destinations (virtual cabinets) - use negative IDs to differentiate from real cabinets
+const SPECIAL_DESTINATIONS = [
+  { id: -1, name: "Sterilizare" },
+  { id: -2, name: "Curățenie" },
+  { id: -3, name: "Farmacie" },
+  { id: -4, name: "Papetărie" },
+];
+
 interface CabinetStockTabProps {
   items: StockItem[];
   movements: StockMovement[];
@@ -79,9 +87,14 @@ export function CabinetStockTab({
       entryDate: string | null;
     }>> = {};
 
-    // Initialize cabinets
+    // Initialize real cabinets
     cabinets.forEach((cabinet) => {
       stockMap[cabinet.id] = {};
+    });
+
+    // Initialize special destinations
+    SPECIAL_DESTINATIONS.forEach((dest) => {
+      stockMap[dest.id] = {};
     });
 
     // Sort movements by date to process in chronological order
@@ -89,22 +102,42 @@ export function CabinetStockTab({
       new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     );
 
+    // Helper to extract special destination from notes
+    const getSpecialDestinationFromNotes = (notes: string | null): number | null => {
+      if (!notes) return null;
+      for (const dest of SPECIAL_DESTINATIONS) {
+        if (notes.includes(`[${dest.name}]`)) {
+          return dest.id;
+        }
+      }
+      return null;
+    };
+
     // Process movements
     sortedMovements.forEach((movement) => {
-      // company_out: adds to destination cabinet
-      if ((movement.type === "company_out" || movement.type === "out") && movement.cabinet_id) {
-        if (!stockMap[movement.cabinet_id]) {
-          stockMap[movement.cabinet_id] = {};
+      // company_out: adds to destination cabinet or special destination
+      if (movement.type === "company_out" || movement.type === "out") {
+        let targetId: number | null = movement.cabinet_id;
+        
+        // Check if this is a special destination (stored in notes)
+        if (!targetId) {
+          targetId = getSpecialDestinationFromNotes(movement.notes);
         }
-        if (!stockMap[movement.cabinet_id][movement.item_id]) {
-          stockMap[movement.cabinet_id][movement.item_id] = { quantity: 0, entryDate: null };
-        }
-        stockMap[movement.cabinet_id][movement.item_id].quantity += movement.quantity;
-        // Track the most recent entry date
-        const movementDate = movement.created_at;
-        if (!stockMap[movement.cabinet_id][movement.item_id].entryDate || 
-            movementDate > stockMap[movement.cabinet_id][movement.item_id].entryDate!) {
-          stockMap[movement.cabinet_id][movement.item_id].entryDate = movementDate;
+        
+        if (targetId !== null) {
+          if (!stockMap[targetId]) {
+            stockMap[targetId] = {};
+          }
+          if (!stockMap[targetId][movement.item_id]) {
+            stockMap[targetId][movement.item_id] = { quantity: 0, entryDate: null };
+          }
+          stockMap[targetId][movement.item_id].quantity += movement.quantity;
+          // Track the most recent entry date
+          const movementDate = movement.created_at;
+          if (!stockMap[targetId][movement.item_id].entryDate || 
+              movementDate > stockMap[targetId][movement.item_id].entryDate!) {
+            stockMap[targetId][movement.item_id].entryDate = movementDate;
+          }
         }
       }
 
@@ -257,6 +290,15 @@ export function CabinetStockTab({
               {cabinets.map((cabinet) => (
                 <SelectItem key={cabinet.id} value={cabinet.id.toString()}>
                   {cabinet.name}
+                </SelectItem>
+              ))}
+              {/* Special destinations separator */}
+              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground border-t mt-1 pt-2">
+                Destinații speciale
+              </div>
+              {SPECIAL_DESTINATIONS.map((dest) => (
+                <SelectItem key={dest.id} value={dest.id.toString()}>
+                  {dest.name}
                 </SelectItem>
               ))}
             </SelectContent>
