@@ -251,14 +251,45 @@ export function StockManagement() {
       return;
     }
 
+    // Handle special destinations (negative IDs) - store in notes instead of cabinet_id
+    let finalCabinetId: number | null = null;
+    let finalSourceCabinetId: number | null = null;
+    let finalNotes = movementForm.notes || "";
+
+    if (movementType === "out" || movementType === "company_out") {
+      if (movementForm.cabinet_id !== null && movementForm.cabinet_id < 0) {
+        // Special destination - find name and add to notes
+        const specialDest = SPECIAL_DESTINATIONS.find(d => d.id === movementForm.cabinet_id);
+        if (specialDest) {
+          finalNotes = `[${specialDest.name}]${finalNotes ? " " + finalNotes : ""}`;
+        }
+        finalCabinetId = null;
+      } else {
+        finalCabinetId = movementForm.cabinet_id;
+      }
+    }
+
+    if (movementType === "cabinet_out") {
+      if (movementForm.source_cabinet_id !== null && movementForm.source_cabinet_id < 0) {
+        // Special source - find name and add to notes
+        const specialDest = SPECIAL_DESTINATIONS.find(d => d.id === movementForm.source_cabinet_id);
+        if (specialDest) {
+          finalNotes = `[Din ${specialDest.name}]${finalNotes ? " " + finalNotes : ""}`;
+        }
+        finalSourceCabinetId = null;
+      } else {
+        finalSourceCabinetId = movementForm.source_cabinet_id;
+      }
+    }
+
     const payload: StockMovementInsert = {
       item_id: movementForm.item_id,
       item_name: item.name,
       quantity: movementForm.quantity,
       type: movementType,
-      notes: movementForm.notes || null,
-      cabinet_id: (movementType === "out" || movementType === "company_out") ? movementForm.cabinet_id : null,
-      source_cabinet_id: movementType === "cabinet_out" ? movementForm.source_cabinet_id : null,
+      notes: finalNotes || null,
+      cabinet_id: finalCabinetId,
+      source_cabinet_id: finalSourceCabinetId,
     };
 
     await createMovement.mutateAsync(payload);
@@ -305,14 +336,45 @@ export function StockManagement() {
       return;
     }
 
+    // Handle special destinations (negative IDs) - store in notes instead of cabinet_id
+    let finalCabinetId: number | null = null;
+    let finalSourceCabinetId: number | null = null;
+    let finalNotes = inlineNote || "";
+
+    if (type === "out" || type === "company_out") {
+      if (inlineCabinetId !== null && inlineCabinetId < 0) {
+        // Special destination - find name and add to notes
+        const specialDest = SPECIAL_DESTINATIONS.find(d => d.id === inlineCabinetId);
+        if (specialDest) {
+          finalNotes = `[${specialDest.name}]${finalNotes ? " " + finalNotes : ""}`;
+        }
+        finalCabinetId = null;
+      } else {
+        finalCabinetId = inlineCabinetId;
+      }
+    }
+
+    if (type === "cabinet_out") {
+      if (inlineSourceCabinetId !== null && inlineSourceCabinetId < 0) {
+        // Special source - find name and add to notes
+        const specialDest = SPECIAL_DESTINATIONS.find(d => d.id === inlineSourceCabinetId);
+        if (specialDest) {
+          finalNotes = `[Din ${specialDest.name}]${finalNotes ? " " + finalNotes : ""}`;
+        }
+        finalSourceCabinetId = null;
+      } else {
+        finalSourceCabinetId = inlineSourceCabinetId;
+      }
+    }
+
     const payload: StockMovementInsert = {
       item_id: item.id,
       item_name: item.name,
       quantity: inlineQuantity,
       type: type,
-      notes: inlineNote || null,
-      cabinet_id: (type === "out" || type === "company_out") ? inlineCabinetId : null,
-      source_cabinet_id: type === "cabinet_out" ? inlineSourceCabinetId : null,
+      notes: finalNotes || null,
+      cabinet_id: finalCabinetId,
+      source_cabinet_id: finalSourceCabinetId,
     };
     await createMovement.mutateAsync(payload);
     handleCancelInlineEdit();
