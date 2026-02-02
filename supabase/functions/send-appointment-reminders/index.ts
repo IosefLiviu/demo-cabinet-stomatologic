@@ -55,6 +55,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Checking appointments for date: ${tomorrowDate}`);
 
     // Get appointments scheduled for tomorrow that haven't been reminded yet
+    // Added filter: reminder_sent_at IS NULL to prevent duplicate messages
     const { data: appointments, error: appointmentsError } = await supabase
       .from("appointments")
       .select(`
@@ -70,14 +71,15 @@ const handler = async (req: Request): Promise<Response> => {
         )
       `)
       .eq("appointment_date", tomorrowDate)
-      .eq("status", "scheduled");
+      .eq("status", "scheduled")
+      .is("reminder_sent_at", null);
 
     if (appointmentsError) {
       console.error("Error fetching appointments:", appointmentsError);
       throw appointmentsError;
     }
 
-    console.log(`Found ${appointments?.length || 0} appointments for tomorrow`);
+    console.log(`Found ${appointments?.length || 0} appointments for tomorrow (without reminder yet)`);
 
     let sentCount = 0;
     const errors: string[] = [];
@@ -115,6 +117,7 @@ const handler = async (req: Request): Promise<Response> => {
       const message = messageTemplate
         .replace("{data}", formattedDate)
         .replace("{ora}", startTime);
+
       // Format phone number for WhatsApp
       let formattedPhone = patient.phone.replace(/\D/g, "");
       if (!formattedPhone.startsWith("40")) {
@@ -166,6 +169,16 @@ const handler = async (req: Request): Promise<Response> => {
           status: "sent",
           patient_id: patient.id,
         });
+
+        // Mark appointment as reminded to prevent duplicates
+        const { error: updateError } = await supabase
+          .from("appointments")
+          .update({ reminder_sent_at: new Date().toISOString() })
+          .eq("id", appointment.id);
+
+        if (updateError) {
+          console.error(`Error marking appointment ${appointment.id} as reminded:`, updateError);
+        }
 
         sentCount++;
       } catch (sendError: any) {
