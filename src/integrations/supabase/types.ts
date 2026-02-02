@@ -850,6 +850,53 @@ export type Database = {
           },
         ]
       }
+      patient_reminders: {
+        Row: {
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_completed: boolean
+          note: string | null
+          patient_id: string
+          reminder_date: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_completed?: boolean
+          note?: string | null
+          patient_id: string
+          reminder_date: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_completed?: boolean
+          note?: string | null
+          patient_id?: string
+          reminder_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_reminders_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patients: {
         Row: {
           address: string | null
