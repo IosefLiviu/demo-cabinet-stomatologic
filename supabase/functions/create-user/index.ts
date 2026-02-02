@@ -62,12 +62,18 @@ Deno.serve(async (req) => {
     // Parse request body
     const { email, password, fullName, role, username } = await req.json();
 
-    if (!email || !password || !username) {
+    if (!password || !username) {
       return new Response(
-        JSON.stringify({ error: 'Email, username și parola sunt obligatorii' }),
+        JSON.stringify({ error: 'Username și parola sunt obligatorii' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Store the notification email (can be shared across users)
+    const notificationEmail = email || null;
+    
+    // Generate a unique internal email for auth (username-based to ensure uniqueness)
+    const internalAuthEmail = `${username.toLowerCase().replace(/[^a-z0-9]/g, '')}@internal.perfectsmile.local`;
 
     if (password.length < 6) {
       return new Response(
@@ -101,9 +107,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create user using admin API (doesn't affect current session)
+    // Create user using admin API with internal email (doesn't affect current session)
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email,
+      email: internalAuthEmail,
       password,
       email_confirm: true, // Auto-confirm email
       user_metadata: {
@@ -115,9 +121,10 @@ Deno.serve(async (req) => {
       // Translate common Supabase auth errors to Romanian
       let errorMessage = createError.message;
       if (createError.message.includes('already been registered')) {
-        errorMessage = 'Un utilizator cu acest email există deja';
+        // This shouldn't happen since username is unique, but handle it
+        errorMessage = 'Acest nume de utilizator generează un email intern duplicat. Încercați alt username.';
       } else if (createError.message.includes('invalid format')) {
-        errorMessage = 'Formatul email-ului nu este valid';
+        errorMessage = 'Formatul username-ului nu este valid';
       }
       return new Response(
         JSON.stringify({ error: errorMessage }),
@@ -125,17 +132,18 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Wait for trigger to create profile, then update with username and must_change_password
+    // Wait for trigger to create profile, then update with username, notification_email and must_change_password
     if (newUser.user) {
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Update or insert profile with username and must_change_password = true
+      // Update or insert profile with username, notification_email and must_change_password = true
       const { error: profileError } = await supabaseAdmin
         .from('profiles')
         .upsert({
           user_id: newUser.user.id,
           full_name: fullName || null,
           username: username,
+          notification_email: notificationEmail,
           must_change_password: true,
         }, { onConflict: 'user_id' });
 
@@ -165,7 +173,8 @@ Deno.serve(async (req) => {
         success: true, 
         user: { 
           id: newUser.user?.id, 
-          email: newUser.user?.email,
+          email: notificationEmail,
+          internalEmail: internalAuthEmail,
           username: username
         } 
       }),

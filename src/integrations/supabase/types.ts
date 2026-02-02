@@ -1018,6 +1018,7 @@ export type Database = {
           full_name: string | null
           id: string
           must_change_password: boolean | null
+          notification_email: string | null
           updated_at: string
           user_id: string
           username: string | null
@@ -1028,6 +1029,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           must_change_password?: boolean | null
+          notification_email?: string | null
           updated_at?: string
           user_id: string
           username?: string | null
@@ -1038,6 +1040,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           must_change_password?: boolean | null
+          notification_email?: string | null
           updated_at?: string
           user_id?: string
           username?: string | null
