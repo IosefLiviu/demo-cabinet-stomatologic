@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { sendAppointmentReminderIfTomorrow } from '@/hooks/useAppointmentReminder';
 
 export interface ToothDataEntry {
   toothNumber: number;
@@ -235,6 +236,19 @@ export function useAppointmentsDB() {
           cabinetName,
           appointment.notes || undefined
         );
+      }
+
+      // Send WhatsApp reminder if appointment is for tomorrow (async, don't block)
+      const patientData = data.patients as { id: string; phone: string } | null;
+      if (patientData?.phone && patientName) {
+        sendAppointmentReminderIfTomorrow({
+          appointmentId: data.id,
+          appointmentDate: appointment.appointment_date,
+          startTime: appointment.start_time,
+          patientId: appointment.patient_id,
+          patientPhone: patientData.phone,
+          patientName,
+        });
       }
 
       return data as unknown as AppointmentDB;
