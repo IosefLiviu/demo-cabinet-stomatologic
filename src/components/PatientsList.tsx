@@ -56,6 +56,7 @@ import {
 import { Patient } from '@/hooks/usePatients';
 import { cn } from '@/lib/utils';
 import { useSendWhatsApp } from '@/hooks/useSendWhatsApp';
+import { useAppSettings } from '@/hooks/useAppSettings';
 
 interface PatientsListProps {
   patients: Patient[];
@@ -92,6 +93,9 @@ export function PatientsList({
   const [selectedPatientForWhatsApp, setSelectedPatientForWhatsApp] = useState<Patient | null>(null);
   const [whatsAppMessage, setWhatsAppMessage] = useState('');
   const { sendMessage, isSending } = useSendWhatsApp();
+  const { getSetting } = useAppSettings();
+  
+  const DEFAULT_DIRECT_MESSAGE = "Bună ziua, {nume}! Vă contactăm de la Perfect Smile Glim. Cum vă putem ajuta?";
 
   const calculateAge = (dateOfBirth?: string) => {
     if (!dateOfBirth) return null;
@@ -210,7 +214,13 @@ export function PatientsList({
 
   const handleOpenWhatsAppDialog = (patient: Patient) => {
     setSelectedPatientForWhatsApp(patient);
-    setWhatsAppMessage('');
+    
+    // Get template and replace {nume} with patient name
+    const template = getSetting("whatsapp_direct_message_template") || DEFAULT_DIRECT_MESSAGE;
+    const patientName = `${patient.last_name} ${patient.first_name}`;
+    const prefilledMessage = template.replace(/{nume}/g, patientName);
+    
+    setWhatsAppMessage(prefilledMessage);
     setWhatsAppDialogOpen(true);
   };
 
