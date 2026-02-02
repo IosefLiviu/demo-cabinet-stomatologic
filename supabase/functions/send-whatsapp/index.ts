@@ -70,6 +70,13 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Format phone number for WhatsApp
     let formattedTo = to.replace(/\D/g, "");
+    
+    // Remove leading 0 if present (common in Romanian local format like 0731825274)
+    if (formattedTo.startsWith("0")) {
+      formattedTo = formattedTo.substring(1);
+    }
+    
+    // Add country code if not present
     if (!formattedTo.startsWith("40")) {
       formattedTo = "40" + formattedTo;
     }
