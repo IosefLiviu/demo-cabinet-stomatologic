@@ -69,7 +69,21 @@ const handler = async (req: Request): Promise<Response> => {
       return new Response("ok", { status: 200, headers: corsHeaders });
     }
 
-    console.log("Received inbound WhatsApp message:", { from, body, messageSid, profileName });
+    // Extract media URLs if present
+    const numMedia = parseInt(formData.get("NumMedia")?.toString() || "0", 10);
+    const mediaUrls: string[] = [];
+    const mediaTypes: string[] = [];
+    
+    for (let i = 0; i < numMedia; i++) {
+      const mediaUrl = formData.get(`MediaUrl${i}`)?.toString();
+      const mediaType = formData.get(`MediaContentType${i}`)?.toString();
+      if (mediaUrl) {
+        mediaUrls.push(mediaUrl);
+        mediaTypes.push(mediaType || "application/octet-stream");
+      }
+    }
+
+    console.log("Received inbound WhatsApp message:", { from, body, messageSid, profileName, numMedia, mediaUrls });
 
     // Clean phone number (remove whatsapp: prefix if present)
     const cleanPhone = from.replace("whatsapp:", "").replace(/\D/g, "");
@@ -91,11 +105,13 @@ const handler = async (req: Request): Promise<Response> => {
         patient_name: patient 
           ? `${patient.first_name} ${patient.last_name}` 
           : profileName || "Necunoscut",
-        message_body: body,
+        message_body: body || (numMedia > 0 ? `[${numMedia} media]` : ""),
         message_sid: messageSid,
         direction: "inbound",
         status: "unread",
         patient_id: patient?.id || null,
+        media_urls: mediaUrls.length > 0 ? mediaUrls : null,
+        media_types: mediaTypes.length > 0 ? mediaTypes : null,
       })
       .select()
       .single();

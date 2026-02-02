@@ -13,6 +13,8 @@ export interface WhatsAppMessage {
   created_at: string;
   read_at: string | null;
   patient_id: string | null;
+  media_urls: string[] | null;
+  media_types: string[] | null;
 }
 
 export function useWhatsAppMessages() {

@@ -1416,6 +1416,8 @@ export type Database = {
           created_at: string
           direction: string
           id: string
+          media_types: string[] | null
+          media_urls: string[] | null
           message_body: string
           message_sid: string | null
           patient_id: string | null
@@ -1428,6 +1430,8 @@ export type Database = {
           created_at?: string
           direction?: string
           id?: string
+          media_types?: string[] | null
+          media_urls?: string[] | null
           message_body: string
           message_sid?: string | null
           patient_id?: string | null
@@ -1440,6 +1444,8 @@ export type Database = {
           created_at?: string
           direction?: string
           id?: string
+          media_types?: string[] | null
+          media_urls?: string[] | null
           message_body?: string
           message_sid?: string | null
           patient_id?: string | null
