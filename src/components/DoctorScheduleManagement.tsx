@@ -546,43 +546,40 @@ export function DoctorScheduleManagement({
 
             <div className="space-y-2">
               <Label>Perioadă</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {shiftDateRange.from ? (
-                      shiftDateRange.to ? (
-                        <>
+              <div className="border rounded-lg p-3 bg-background">
+                <div className="text-sm text-muted-foreground mb-2 text-center">
+                  {shiftDateRange.from ? (
+                    shiftDateRange.to ? (
+                      <>
+                        <span className="font-medium text-foreground">
                           {format(shiftDateRange.from, 'd MMM', { locale: ro })} - {format(shiftDateRange.to, 'd MMM yyyy', { locale: ro })}
-                        </>
-                      ) : (
-                        format(shiftDateRange.from, 'PPP', { locale: ro })
-                      )
+                        </span>
+                      </>
                     ) : (
-                      'Selectează perioada'
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="range"
-                    selected={shiftDateRange}
-                    onSelect={(range) => {
-                      if (range) {
-                        setShiftDateRange(range as { from: Date; to?: Date });
-                      } else {
-                        // Reset when user clicks to start new selection
-                        setShiftDateRange({ from: new Date(), to: undefined });
-                      }
-                    }}
-                    initialFocus
-                    className="pointer-events-auto"
-                    numberOfMonths={2}
-                  />
-                </PopoverContent>
-              </Popover>
+                      <span className="font-medium text-foreground">
+                        {format(shiftDateRange.from, 'PPP', { locale: ro })}
+                      </span>
+                    )
+                  ) : (
+                    'Selectează o zi sau o perioadă'
+                  )}
+                </div>
+                <Calendar
+                  mode="range"
+                  selected={shiftDateRange}
+                  onSelect={(range) => {
+                    if (range) {
+                      setShiftDateRange(range as { from: Date; to?: Date });
+                    } else {
+                      setShiftDateRange({ from: new Date(), to: undefined });
+                    }
+                  }}
+                  className="pointer-events-auto mx-auto"
+                  numberOfMonths={1}
+                />
+              </div>
               <p className="text-xs text-muted-foreground">
-                Selectează o zi sau o perioadă pentru a adăuga schimbul
+                Click pe o dată sau selectează o perioadă (click + drag)
               </p>
             </div>
 
