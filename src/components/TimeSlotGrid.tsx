@@ -210,7 +210,7 @@ export function TimeSlotGrid({
                     {appointmentStarting ? (
                       <div
                         className={cn(
-                          "w-full h-full p-1 sm:p-2 text-left transition-all overflow-hidden min-w-0 flex items-center gap-1 border border-b-0",
+                          "w-full h-full p-0.5 sm:p-1 text-left transition-all overflow-hidden min-w-0 flex items-center gap-0.5 border border-b-0",
                           isMultiSlot ? "rounded-t-md" : "rounded-md border-b",
                           appointmentStarting.status === 'completed' 
                             ? "bg-green-100 dark:bg-green-950/30 border-green-300 dark:border-green-800"
@@ -233,22 +233,22 @@ export function TimeSlotGrid({
                           onClick={() => onAppointmentClick(appointmentStarting)}
                           className="flex-1 min-w-0 h-full flex flex-col justify-center cursor-pointer"
                         >
-                          <div className="flex items-center gap-1 min-w-0">
-                            <User className="h-3 w-3 flex-shrink-0 text-foreground/70" />
+                          <div className="flex items-center gap-0.5 min-w-0">
+                            <User className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0 text-foreground/70" />
                             <span className={cn(
-                              "text-[10px] sm:text-xs font-medium text-foreground truncate leading-tight",
+                              "text-[9px] sm:text-[10px] font-medium text-foreground truncate leading-none",
                               appointmentStarting.status === 'cancelled' && "line-through"
                             )}>
                               {appointmentStarting.patientName}
                             </span>
                           </div>
                           <p className={cn(
-                            "text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 truncate leading-tight",
+                            "text-[8px] sm:text-[9px] text-muted-foreground truncate leading-none mt-0.5",
                             appointmentStarting.status === 'cancelled' && "line-through"
                           )}>
                             {appointmentStarting.time} - {(() => {
                               const [hours, minutes] = appointmentStarting.time.split(':').map(Number);
-                              const endMinutes = hours * 60 + minutes + (appointmentStarting.duration || 30);
+                              const endMinutes = hours * 60 + minutes + (appointmentStarting.duration || SLOT_DURATION_MINUTES);
                               const endHours = Math.floor(endMinutes / 60);
                               const endMins = endMinutes % 60;
                               return `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
@@ -256,7 +256,7 @@ export function TimeSlotGrid({
                           </p>
                         </button>
                         {appointmentStarting.status !== 'completed' && appointmentStarting.status !== 'cancelled' && (
-                          <div className="flex flex-col gap-0.5 flex-shrink-0">
+                          <div className="flex gap-0.5 flex-shrink-0">
                             {onAppointmentComplete && (
                               <TooltipProvider>
                                 <Tooltip>
@@ -268,7 +268,7 @@ export function TimeSlotGrid({
                                       }}
                                       className="p-0.5 rounded hover:bg-green-200 dark:hover:bg-green-800 transition-colors"
                                     >
-                                      <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-green-600" />
+                                      <CheckCircle2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-green-600" />
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -288,7 +288,7 @@ export function TimeSlotGrid({
                                       }}
                                       className="p-0.5 rounded hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
                                     >
-                                      <XCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-red-500" />
+                                      <XCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-red-500" />
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -300,8 +300,8 @@ export function TimeSlotGrid({
                           </div>
                         )}
                         {appointmentStarting.status === 'completed' && (
-                          <div className="flex flex-col gap-0.5 flex-shrink-0">
-                            <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
+                          <div className="flex gap-0.5 flex-shrink-0">
+                            <CheckCircle2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-green-600" />
                             {onEditPayment && (
                               <TooltipProvider>
                                 <Tooltip>
@@ -313,7 +313,7 @@ export function TimeSlotGrid({
                                       }}
                                       className="p-0.5 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
                                     >
-                                      <Edit3 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-600" />
+                                      <Edit3 className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-blue-600" />
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -325,15 +325,15 @@ export function TimeSlotGrid({
                           </div>
                         )}
                         {appointmentStarting.status === 'cancelled' && (
-                          <XCircle className="h-3 w-3 sm:h-4 sm:w-4 text-red-500 flex-shrink-0" />
+                          <XCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-red-500 flex-shrink-0" />
                         )}
                       </div>
                     ) : (
                       <button
                         onClick={() => onSlotClick(time, cabinet.id)}
-                        className="w-full h-full rounded-md border-2 border-dashed border-transparent hover:border-primary/30 hover:bg-accent/50 flex items-center justify-center transition-all group"
+                        className="w-full h-full rounded-sm border border-dashed border-transparent hover:border-primary/30 hover:bg-accent/50 flex items-center justify-center transition-all group"
                       >
-                        <Plus className="h-4 w-4 text-muted-foreground/0 group-hover:text-primary/50 transition-all" />
+                        <Plus className="h-3 w-3 text-muted-foreground/0 group-hover:text-primary/50 transition-all" />
                       </button>
                     )}
                   </div>
