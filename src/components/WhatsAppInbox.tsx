@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
-import { MessageSquare, Check, Trash2, User, Phone, ExternalLink, Reply, ChevronDown, ChevronUp } from "lucide-react";
+import { MessageSquare, Check, Trash2, User, Phone, ExternalLink, Reply, ChevronDown, ChevronUp, Image } from "lucide-react";
 import { useWhatsAppMessages, WhatsAppMessage } from "@/hooks/useWhatsAppMessages";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -219,9 +219,17 @@ export function WhatsAppInbox() {
                               {latestMessage.direction === "outbound" && (
                                 <span className="text-xs text-muted-foreground">Tu:</span>
                               )}
-                              <p className="text-sm text-muted-foreground truncate max-w-[300px]">
-                                {latestMessage.message_body}
-                              </p>
+                              {latestMessage.media_urls && latestMessage.media_urls.length > 0 ? (
+                                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                  <Image className="h-3 w-3" />
+                                  {latestMessage.media_urls.length} {latestMessage.media_urls.length === 1 ? "imagine" : "imagini"}
+                                  {latestMessage.message_body && ` - ${latestMessage.message_body.substring(0, 30)}...`}
+                                </p>
+                              ) : (
+                                <p className="text-sm text-muted-foreground truncate max-w-[300px]">
+                                  {latestMessage.message_body || "(mesaj gol)"}
+                                </p>
+                              )}
                             </div>
                             <p className="text-xs text-muted-foreground mt-1">
                               {format(new Date(conv.lastMessageAt), "d MMMM yyyy, HH:mm", { locale: ro })}
@@ -297,9 +305,56 @@ export function WhatsAppInbox() {
                                     : "bg-muted"
                                 }`}
                               >
-                                <p className="text-sm whitespace-pre-wrap break-words">
-                                  {message.message_body}
-                                </p>
+                                {/* Display media if present */}
+                                {message.media_urls && message.media_urls.length > 0 && (
+                                  <div className="mb-2 space-y-2">
+                                    {message.media_urls.map((url, idx) => {
+                                      const mediaType = message.media_types?.[idx] || "";
+                                      const isImage = mediaType.startsWith("image/");
+                                      
+                                      return isImage ? (
+                                        <a
+                                          key={idx}
+                                          href={url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="block"
+                                        >
+                                          <img
+                                            src={url}
+                                            alt={`Media ${idx + 1}`}
+                                            className="max-w-full max-h-48 rounded-lg object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                                            onError={(e) => {
+                                              // If image fails to load, show a placeholder
+                                              e.currentTarget.style.display = "none";
+                                              e.currentTarget.nextElementSibling?.classList.remove("hidden");
+                                            }}
+                                          />
+                                          <div className="hidden flex items-center gap-2 text-xs text-muted-foreground py-2">
+                                            <Image className="h-4 w-4" />
+                                            <span>Imagine (click pentru a deschide)</span>
+                                          </div>
+                                        </a>
+                                      ) : (
+                                        <a
+                                          key={idx}
+                                          href={url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="flex items-center gap-2 text-xs underline hover:no-underline"
+                                        >
+                                          <ExternalLink className="h-3 w-3" />
+                                          Fișier atașat ({mediaType.split("/")[1] || "unknown"})
+                                        </a>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                                {message.message_body && (
+                                  <p className="text-sm whitespace-pre-wrap break-words">
+                                    {message.message_body}
+                                  </p>
+                                )}
                                 <div className="flex items-center justify-between gap-2 mt-1">
                                   <p className={`text-xs ${
                                     message.direction === "outbound" 
