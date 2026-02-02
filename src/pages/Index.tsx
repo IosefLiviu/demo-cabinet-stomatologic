@@ -28,6 +28,7 @@ import { EditPaymentDialog } from '@/components/EditPaymentDialog';
 import { CancelAppointmentDialog } from '@/components/CancelAppointmentDialog';
 import { NavigationButtons } from '@/components/NavigationButtons';
 import { AvailableSlotsSearch } from '@/components/AvailableSlotsSearch';
+import { AppointmentSearch } from '@/components/AppointmentSearch';
 import { StockManagement } from '@/components/StockManagement';
 
 import { DoctorScheduleManagement } from '@/components/DoctorScheduleManagement';
@@ -663,6 +664,17 @@ const Index = () => {
             <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
               <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
               <div className="flex gap-2 w-full sm:w-auto">
+                <AppointmentSearch
+                  appointments={legacyAppointments}
+                  onAppointmentSelect={(date, appointmentId) => {
+                    setSelectedDate(date);
+                    // Find and select the appointment's cabinet
+                    const apt = legacyAppointments.find(a => a.id === appointmentId);
+                    if (apt) {
+                      setSelectedCabinet(apt.cabinetId);
+                    }
+                  }}
+                />
                 <AvailableSlotsSearch
                   appointments={legacyAppointments}
                   cabinets={cabinets}
