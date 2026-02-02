@@ -57,8 +57,15 @@ const Index = () => {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedCabinet, setSelectedCabinet] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState('calendar');
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('activeTab') || 'calendar';
+  });
   const [showCabinetSettings, setShowCabinetSettings] = useState(false);
+
+  // Persist active tab to localStorage
+  useEffect(() => {
+    localStorage.setItem('activeTab', activeTab);
+  }, [activeTab]);
 
   // Navigation history state
   const [navHistory, setNavHistory] = useState<NavigationState[]>([{ tab: 'calendar' }]);
