@@ -73,6 +73,18 @@ const MOVEMENT_TYPE_LABELS: Record<string, { label: string; color: string; icon:
   "cabinet_out": { label: "Consumat din Cabinet", color: "bg-orange-100 text-orange-800", icon: "cabinet_out" },
 };
 
+// Predefined stock categories
+const STOCK_CATEGORIES = [
+  "Consumabile",
+  "Instrumente",
+  "Sterilizare",
+  "Curățenie",
+  "Farmacie",
+  "Papetărie",
+  "Materiale Dentare",
+  "Echipamente",
+];
+
 export function StockManagement() {
   const { toast } = useToast();
   const {
@@ -904,14 +916,32 @@ export function StockManagement() {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="category">Categorie</Label>
-              <Input
-                id="category"
+              <Select
                 value={itemForm.category}
-                onChange={(e) =>
-                  setItemForm({ ...itemForm, category: e.target.value })
+                onValueChange={(value) =>
+                  setItemForm({ ...itemForm, category: value === "none" ? "" : value })
                 }
-                placeholder="ex: Consumabile, Instrumente..."
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selectează categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Fără categorie</SelectItem>
+                  {STOCK_CATEGORIES.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                  {/* Show existing custom categories not in predefined list */}
+                  {categories
+                    .filter((cat) => cat && !STOCK_CATEGORIES.includes(cat))
+                    .map((cat) => (
+                      <SelectItem key={cat} value={cat!}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
