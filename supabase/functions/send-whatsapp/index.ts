@@ -115,7 +115,14 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log("Twilio message sent:", twilioResult.sid);
+    console.log("Twilio message created:", {
+      sid: twilioResult.sid,
+      status: twilioResult.status,
+      to: twilioResult.to,
+      from: twilioResult.from,
+      errorCode: twilioResult.error_code,
+      errorMessage: twilioResult.error_message,
+    });
 
     // Store outbound message in database using service role
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -129,7 +136,7 @@ const handler = async (req: Request): Promise<Response> => {
         message_body: message,
         message_sid: twilioResult.sid,
         direction: "outbound",
-        status: "sent",
+        status: twilioResult.status || "sent",
         patient_id: patientId || null,
       });
 
@@ -139,7 +146,13 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, messageSid: twilioResult.sid }),
+      JSON.stringify({
+        success: true,
+        messageSid: twilioResult.sid,
+        status: twilioResult.status || null,
+        errorCode: twilioResult.error_code || null,
+        errorMessage: twilioResult.error_message || null,
+      }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
