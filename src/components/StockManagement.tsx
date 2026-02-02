@@ -85,6 +85,14 @@ const STOCK_CATEGORIES = [
   "Echipamente",
 ];
 
+// Special destinations (virtual cabinets) - use negative IDs to differentiate from real cabinets
+const SPECIAL_DESTINATIONS = [
+  { id: -1, name: "Sterilizare" },
+  { id: -2, name: "Curățenie" },
+  { id: -3, name: "Farmacie" },
+  { id: -4, name: "Papetărie" },
+];
+
 export function StockManagement() {
   const { toast } = useToast();
   const {
@@ -224,11 +232,11 @@ export function StockManagement() {
     const item = items.find((i) => i.id === movementForm.item_id);
     if (!item) return;
 
-    // Validation based on movement type
-    if ((movementType === "out" || movementType === "company_out") && !movementForm.cabinet_id) {
+    // Validation based on movement type - allow negative IDs for special destinations
+    if ((movementType === "out" || movementType === "company_out") && movementForm.cabinet_id === null) {
       toast({
-        title: "Selectează cabinetul",
-        description: "Pentru ieșiri din firmă, trebuie să selectezi cabinetul destinatar.",
+        title: "Selectează destinația",
+        description: "Pentru ieșiri din firmă, trebuie să selectezi cabinetul sau destinația.",
         variant: "destructive",
       });
       return;
@@ -278,11 +286,11 @@ export function StockManagement() {
 
   // Confirm inline edit with explicit type
   const handleConfirmInlineEdit = async (item: StockItem, type: MovementType) => {
-    // Validation based on movement type
-    if ((type === "out" || type === "company_out") && !inlineCabinetId) {
+    // Validation based on movement type - allow negative IDs for special destinations
+    if ((type === "out" || type === "company_out") && inlineCabinetId === null) {
       toast({
-        title: "Selectează cabinetul",
-        description: "Pentru ieșiri din firmă, trebuie să selectezi cabinetul destinatar.",
+        title: "Selectează destinația",
+        description: "Pentru ieșiri din firmă, trebuie să selectezi cabinetul sau destinația.",
         variant: "destructive",
       });
       return;
@@ -624,6 +632,15 @@ export function StockManagement() {
                                     {cabinet.name}
                                   </SelectItem>
                                 ))}
+                                {/* Special destinations separator */}
+                                <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground border-t mt-1 pt-2">
+                                  Destinații speciale
+                                </div>
+                                {SPECIAL_DESTINATIONS.map((dest) => (
+                                  <SelectItem key={dest.id} value={dest.id.toString()}>
+                                    {dest.name}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                           )}
@@ -642,6 +659,15 @@ export function StockManagement() {
                                 {cabinets.map((cabinet) => (
                                   <SelectItem key={cabinet.id} value={cabinet.id.toString()}>
                                     {cabinet.name}
+                                  </SelectItem>
+                                ))}
+                                {/* Special destinations separator */}
+                                <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground border-t mt-1 pt-2">
+                                  Destinații speciale
+                                </div>
+                                {SPECIAL_DESTINATIONS.map((dest) => (
+                                  <SelectItem key={dest.id} value={dest.id.toString()}>
+                                    {dest.name}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
@@ -1035,6 +1061,15 @@ export function StockManagement() {
                     {cabinets.map((cabinet) => (
                       <SelectItem key={cabinet.id} value={cabinet.id.toString()}>
                         {cabinet.name}
+                      </SelectItem>
+                    ))}
+                    {/* Special destinations separator */}
+                    <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground border-t mt-1 pt-2">
+                      Destinații speciale
+                    </div>
+                    {SPECIAL_DESTINATIONS.map((dest) => (
+                      <SelectItem key={dest.id} value={dest.id.toString()}>
+                        {dest.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
