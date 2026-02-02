@@ -538,7 +538,7 @@ export function DoctorScheduleManagement({
 
             <div className="space-y-2">
               <Label>Date selectate</Label>
-              <div className="border rounded-lg p-3 bg-background">
+              <div className="border rounded-lg p-3 bg-background flex flex-col items-center">
                 <div className="text-sm text-muted-foreground mb-2 text-center min-h-[24px]">
                   {selectedShiftDates.length > 0 ? (
                     <span className="font-medium text-foreground">
@@ -557,7 +557,7 @@ export function DoctorScheduleManagement({
                   onSelect={(dates) => {
                     setSelectedShiftDates(dates || []);
                   }}
-                  className="pointer-events-auto mx-auto"
+                  className="pointer-events-auto"
                   numberOfMonths={1}
                 />
               </div>
