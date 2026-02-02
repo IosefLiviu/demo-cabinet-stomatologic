@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
-import { MessageSquare, Check, Trash2, User, Phone, ExternalLink, Reply } from "lucide-react";
+import { MessageSquare, Check, Trash2, User, Phone, ExternalLink, Reply, ChevronDown, ChevronUp } from "lucide-react";
 import { useWhatsAppMessages, WhatsAppMessage } from "@/hooks/useWhatsAppMessages";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,20 +20,87 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
 import { WhatsAppReplyDialog } from "./WhatsAppReplyDialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
+interface Conversation {
+  patientPhone: string;
+  patientName: string | null;
+  patientId: string | null;
+  messages: WhatsAppMessage[];
+  unreadCount: number;
+  lastMessageAt: string;
+}
 
 export function WhatsAppInbox() {
   const navigate = useNavigate();
   const { messages, isLoading, unreadCount, markAsRead, deleteMessage, isDeleting } = useWhatsAppMessages();
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "unread">("all");
-  const [replyTo, setReplyTo] = useState<WhatsAppMessage | null>(null);
+  const [replyTo, setReplyTo] = useState<Conversation | null>(null);
+  const [expandedConversations, setExpandedConversations] = useState<Set<string>>(new Set());
 
-  const filteredMessages = filter === "unread" 
-    ? messages.filter(m => m.status === "unread")
-    : messages;
+  // Group messages into conversations by patient phone
+  const conversations = useMemo(() => {
+    const grouped = new Map<string, Conversation>();
+    
+    messages.forEach((message) => {
+      const phone = message.patient_phone;
+      
+      if (!grouped.has(phone)) {
+        grouped.set(phone, {
+          patientPhone: phone,
+          patientName: message.patient_name,
+          patientId: message.patient_id,
+          messages: [],
+          unreadCount: 0,
+          lastMessageAt: message.created_at,
+        });
+      }
+      
+      const conv = grouped.get(phone)!;
+      conv.messages.push(message);
+      
+      if (message.status === "unread") {
+        conv.unreadCount++;
+      }
+      
+      // Update patient info from most recent message with data
+      if (message.patient_name && !conv.patientName) {
+        conv.patientName = message.patient_name;
+      }
+      if (message.patient_id && !conv.patientId) {
+        conv.patientId = message.patient_id;
+      }
+    });
+    
+    // Sort conversations by last message time
+    return Array.from(grouped.values()).sort(
+      (a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
+    );
+  }, [messages]);
 
-  const handleMarkAsRead = (id: string) => {
-    markAsRead(id);
+  const filteredConversations = filter === "unread" 
+    ? conversations.filter(c => c.unreadCount > 0)
+    : conversations;
+
+  const toggleConversation = (phone: string) => {
+    setExpandedConversations(prev => {
+      const next = new Set(prev);
+      if (next.has(phone)) {
+        next.delete(phone);
+      } else {
+        next.add(phone);
+      }
+      return next;
+    });
+  };
+
+  const handleMarkAllAsRead = (conv: Conversation) => {
+    conv.messages.forEach(m => {
+      if (m.status === "unread") {
+        markAsRead(m.id);
+      }
+    });
   };
 
   const handleDelete = () => {
@@ -86,103 +153,196 @@ export function WhatsAppInbox() {
               size="sm"
               onClick={() => setFilter("all")}
             >
-              Toate ({messages.length})
+              Toate ({conversations.length})
             </Button>
             <Button
               variant={filter === "unread" ? "default" : "outline"}
               size="sm"
               onClick={() => setFilter("unread")}
             >
-              Necitite ({unreadCount})
+              Necitite ({conversations.filter(c => c.unreadCount > 0).length})
             </Button>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        {filteredMessages.length === 0 ? (
+        {filteredConversations.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Nu există mesaje {filter === "unread" ? "necitite" : ""}</p>
+            <p>Nu există conversații {filter === "unread" ? "necitite" : ""}</p>
           </div>
         ) : (
           <ScrollArea className="h-[500px] pr-4">
             <div className="space-y-3">
-              {filteredMessages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`p-4 rounded-lg border transition-colors ${
-                    message.status === "unread"
-                      ? "bg-primary/5 border-primary/20"
-                      : "bg-muted/30"
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">
-                          {message.patient_name || "Necunoscut"}
-                        </span>
-                        {message.status === "unread" && (
-                          <Badge variant="default" className="text-xs">
-                            Nou
-                          </Badge>
-                        )}
+              {filteredConversations.map((conv) => {
+                const isExpanded = expandedConversations.has(conv.patientPhone);
+                const latestMessage = conv.messages[0];
+                
+                return (
+                  <Collapsible
+                    key={conv.patientPhone}
+                    open={isExpanded}
+                    onOpenChange={() => toggleConversation(conv.patientPhone)}
+                  >
+                    <div
+                      className={`rounded-lg border transition-colors ${
+                        conv.unreadCount > 0
+                          ? "bg-primary/5 border-primary/20"
+                          : "bg-muted/30"
+                      }`}
+                    >
+                      {/* Conversation Header */}
+                      <div className="p-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium">
+                                {conv.patientName || "Necunoscut"}
+                              </span>
+                              {conv.unreadCount > 0 && (
+                                <Badge variant="default" className="text-xs">
+                                  {conv.unreadCount} {conv.unreadCount === 1 ? "nou" : "noi"}
+                                </Badge>
+                              )}
+                              <Badge variant="outline" className="text-xs">
+                                {conv.messages.length} {conv.messages.length === 1 ? "mesaj" : "mesaje"}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                              <Phone className="h-3 w-3" />
+                              <span>{conv.patientPhone.replace("whatsapp:", "")}</span>
+                            </div>
+                            
+                            {/* Preview of latest message */}
+                            <div className="flex items-center gap-2">
+                              {latestMessage.direction === "outbound" && (
+                                <span className="text-xs text-muted-foreground">Tu:</span>
+                              )}
+                              <p className="text-sm text-muted-foreground truncate max-w-[300px]">
+                                {latestMessage.message_body}
+                              </p>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {format(new Date(conv.lastMessageAt), "d MMMM yyyy, HH:mm", { locale: ro })}
+                            </p>
+                          </div>
+                          
+                          <div className="flex items-center gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setReplyTo(conv);
+                              }}
+                              title="Răspunde"
+                              className="text-green-600 hover:text-green-700"
+                            >
+                              <Reply className="h-4 w-4" />
+                            </Button>
+                            {conv.unreadCount > 0 && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMarkAllAsRead(conv);
+                                }}
+                                title="Marchează toate ca citite"
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {conv.patientId && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  goToPatient(conv.patientId!);
+                                }}
+                                title="Vezi pacientul"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </Button>
+                            )}
+                            <CollapsibleTrigger asChild>
+                              <Button size="sm" variant="ghost" title="Extinde conversația">
+                                {isExpanded ? (
+                                  <ChevronUp className="h-4 w-4" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </CollapsibleTrigger>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                        <Phone className="h-3 w-3" />
-                        <span>{message.patient_phone.replace("whatsapp:", "")}</span>
-                      </div>
-                      <p className="text-sm whitespace-pre-wrap break-words">
-                        {message.message_body}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {format(new Date(message.created_at), "d MMMM yyyy, HH:mm", { locale: ro })}
-                      </p>
+                      
+                      {/* Expanded Messages */}
+                      <CollapsibleContent>
+                        <div className="border-t px-4 py-3 space-y-3 bg-background/50">
+                          {conv.messages.map((message) => (
+                            <div
+                              key={message.id}
+                              className={`flex ${message.direction === "outbound" ? "justify-end" : "justify-start"}`}
+                            >
+                              <div
+                                className={`max-w-[80%] rounded-lg p-3 ${
+                                  message.direction === "outbound"
+                                    ? "bg-primary text-primary-foreground"
+                                    : message.status === "unread"
+                                    ? "bg-primary/10 border border-primary/20"
+                                    : "bg-muted"
+                                }`}
+                              >
+                                <p className="text-sm whitespace-pre-wrap break-words">
+                                  {message.message_body}
+                                </p>
+                                <div className="flex items-center justify-between gap-2 mt-1">
+                                  <p className={`text-xs ${
+                                    message.direction === "outbound" 
+                                      ? "text-primary-foreground/70" 
+                                      : "text-muted-foreground"
+                                  }`}>
+                                    {format(new Date(message.created_at), "HH:mm", { locale: ro })}
+                                  </p>
+                                  {message.direction === "inbound" && (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                      onClick={() => setDeleteConfirmId(message.id)}
+                                      title="Șterge mesajul"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                                {message.direction === "outbound" && message.status && (
+                                  <p className={`text-xs mt-1 ${
+                                    message.status.includes("delivered") 
+                                      ? "text-primary-foreground/70" 
+                                      : message.status.includes("failed") || message.status.includes("undelivered")
+                                      ? "text-red-300"
+                                      : "text-primary-foreground/50"
+                                  }`}>
+                                    {message.status.includes("delivered") ? "✓✓ Livrat" 
+                                      : message.status.includes("sent") ? "✓ Trimis"
+                                      : message.status.includes("failed") || message.status.includes("undelivered") ? "❌ Eșuat"
+                                      : message.status}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CollapsibleContent>
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setReplyTo(message)}
-                        title="Răspunde"
-                        className="text-green-600 hover:text-green-700"
-                      >
-                        <Reply className="h-4 w-4" />
-                      </Button>
-                      {message.status === "unread" && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleMarkAsRead(message.id)}
-                          title="Marchează ca citit"
-                        >
-                          <Check className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {message.patient_id && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => goToPatient(message.patient_id!)}
-                          title="Vezi pacientul"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => setDeleteConfirmId(message.id)}
-                        title="Șterge mesajul"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                  </Collapsible>
+                );
+              })}
             </div>
           </ScrollArea>
         )}
@@ -211,9 +371,9 @@ export function WhatsAppInbox() {
       <WhatsAppReplyDialog
         open={!!replyTo}
         onOpenChange={(open) => !open && setReplyTo(null)}
-        patientPhone={replyTo?.patient_phone || ""}
-        patientName={replyTo?.patient_name || null}
-        patientId={replyTo?.patient_id || null}
+        patientPhone={replyTo?.patientPhone || ""}
+        patientName={replyTo?.patientName || null}
+        patientId={replyTo?.patientId || null}
       />
     </Card>
   );
