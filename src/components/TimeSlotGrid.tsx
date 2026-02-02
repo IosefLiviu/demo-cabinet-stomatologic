@@ -155,17 +155,20 @@ export function TimeSlotGrid({
                 const isMultiSlot = appointmentSpan > 1;
                 
                 // If this slot is covered by an ongoing appointment, render continuation
-                  if (appointmentCovering) {
+                if (appointmentCovering) {
                   return (
                     <div
                       key={`${time}-${cabinet.id}`}
-                      className="border-r border-b border-border last:border-r-0 h-[40px] sm:h-[45px] min-w-0 overflow-hidden px-1 sm:px-1.5"
+                      className={cn(
+                        "border-r last:border-r-0 h-[40px] sm:h-[45px] min-w-0 overflow-hidden px-0.5 sm:px-1",
+                        isLastContinuationSlot && "border-b border-border"
+                      )}
                     >
                       {/* Continuation of appointment - seamless colored background with side borders */}
                       <div
                         className={cn(
-                          "w-full h-full cursor-pointer border-l border-r",
-                          isLastContinuationSlot && "rounded-b-md border-b",
+                          "w-full cursor-pointer border-l border-r",
+                          isLastContinuationSlot ? "h-[calc(100%-2px)] sm:h-[calc(100%-4px)] rounded-b-sm border-b" : "h-full",
                           appointmentCovering.status === 'completed' 
                             ? "bg-green-100 dark:bg-green-950/30 border-green-300 dark:border-green-800"
                             : appointmentCovering.status === 'cancelled'
@@ -201,17 +204,20 @@ export function TimeSlotGrid({
                   <div
                     key={`${time}-${cabinet.id}`}
                     className={cn(
-                      "border-r border-b border-border last:border-r-0 h-[40px] sm:h-[45px] min-w-0 overflow-hidden",
-                      !appointmentStarting && "p-0.5 sm:p-1",
-                      appointmentStarting && "px-0.5 sm:px-1 pt-0.5 sm:pt-1",
-                      appointmentStarting && !isMultiSlot && "pb-0.5 sm:pb-1"
+                      "border-r last:border-r-0 h-[40px] sm:h-[45px] min-w-0 overflow-hidden",
+                      "px-0.5 sm:px-1",
+                      // Add bottom border unless this is the start of a multi-slot appointment
+                      !(appointmentStarting && isMultiSlot) && "border-b border-border",
+                      appointmentStarting && "pt-0.5 sm:pt-1",
+                      appointmentStarting && !isMultiSlot && "pb-0.5 sm:pb-1",
+                      !appointmentStarting && "p-0.5 sm:p-1"
                     )}
                   >
                     {appointmentStarting ? (
                       <div
                         className={cn(
-                          "w-full h-full p-0.5 sm:p-1 text-left transition-all overflow-hidden min-w-0 flex items-center gap-0.5 border border-b-0",
-                          isMultiSlot ? "rounded-t-md" : "rounded-md border-b",
+                          "w-full h-full p-0.5 sm:p-1 text-left transition-all overflow-hidden min-w-0 flex items-center gap-0.5 border",
+                          isMultiSlot ? "rounded-t-sm border-b-0" : "rounded-sm",
                           appointmentStarting.status === 'completed' 
                             ? "bg-green-100 dark:bg-green-950/30 border-green-300 dark:border-green-800"
                             : appointmentStarting.status === 'cancelled'
