@@ -7,6 +7,82 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Download media from Twilio and upload to Supabase Storage
+async function downloadAndStoreMedia(
+  supabase: any,
+  twilioMediaUrl: string,
+  mediaType: string,
+  messageSid: string,
+  index: number
+): Promise<string | null> {
+  try {
+    const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID")!;
+    const authToken = Deno.env.get("TWILIO_AUTH_TOKEN")!;
+    
+    // Create Basic Auth header for Twilio API
+    const credentials = btoa(`${accountSid}:${authToken}`);
+    
+    console.log("Downloading media from Twilio:", twilioMediaUrl);
+    
+    // Download the media from Twilio with authentication
+    const response = await fetch(twilioMediaUrl, {
+      headers: {
+        "Authorization": `Basic ${credentials}`,
+      },
+    });
+    
+    if (!response.ok) {
+      console.error("Failed to download media from Twilio:", response.status, response.statusText);
+      return null;
+    }
+    
+    const mediaData = await response.arrayBuffer();
+    
+    // Determine file extension from media type
+    const extensionMap: Record<string, string> = {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/gif": "gif",
+      "image/webp": "webp",
+      "application/pdf": "pdf",
+      "video/mp4": "mp4",
+      "audio/ogg": "ogg",
+      "audio/mpeg": "mp3",
+    };
+    
+    const extension = extensionMap[mediaType] || "bin";
+    const fileName = `${messageSid}_${index}.${extension}`;
+    const filePath = `${new Date().toISOString().slice(0, 7)}/${fileName}`;
+    
+    console.log("Uploading to Supabase Storage:", filePath);
+    
+    // Upload to Supabase Storage
+    const { error: uploadError } = await supabase.storage
+      .from("whatsapp-media")
+      .upload(filePath, mediaData, {
+        contentType: mediaType,
+        upsert: true,
+      });
+    
+    if (uploadError) {
+      console.error("Failed to upload media to Supabase:", uploadError);
+      return null;
+    }
+    
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from("whatsapp-media")
+      .getPublicUrl(filePath);
+    
+    console.log("Media stored successfully:", urlData.publicUrl);
+    
+    return urlData.publicUrl;
+  } catch (error) {
+    console.error("Error downloading/storing media:", error);
+    return null;
+  }
+}
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -74,12 +150,30 @@ const handler = async (req: Request): Promise<Response> => {
     const mediaUrls: string[] = [];
     const mediaTypes: string[] = [];
     
+    // Download and store each media file
     for (let i = 0; i < numMedia; i++) {
-      const mediaUrl = formData.get(`MediaUrl${i}`)?.toString();
-      const mediaType = formData.get(`MediaContentType${i}`)?.toString();
-      if (mediaUrl) {
-        mediaUrls.push(mediaUrl);
-        mediaTypes.push(mediaType || "application/octet-stream");
+      const twilioMediaUrl = formData.get(`MediaUrl${i}`)?.toString();
+      const mediaType = formData.get(`MediaContentType${i}`)?.toString() || "application/octet-stream";
+      
+      if (twilioMediaUrl) {
+        // Download from Twilio and upload to our storage
+        const publicUrl = await downloadAndStoreMedia(
+          supabase,
+          twilioMediaUrl,
+          mediaType,
+          messageSid,
+          i
+        );
+        
+        if (publicUrl) {
+          mediaUrls.push(publicUrl);
+          mediaTypes.push(mediaType);
+        } else {
+          // Fallback to Twilio URL if download fails (will require auth)
+          console.warn("Falling back to Twilio URL for media:", twilioMediaUrl);
+          mediaUrls.push(twilioMediaUrl);
+          mediaTypes.push(mediaType);
+        }
       }
     }
 
