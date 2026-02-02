@@ -44,6 +44,7 @@ import { useAppointmentsDB, AppointmentDB } from '@/hooks/useAppointmentsDB';
 import { useTreatments } from '@/hooks/useTreatments';
 import { useCabinets } from '@/hooks/useCabinets';
 import { useDoctors } from '@/hooks/useDoctors';
+import { useDoctorShifts, DoctorShift } from '@/hooks/useDoctorShifts';
 import { useAuth } from '@/hooks/useAuth';
 import { TIME_SLOTS, Appointment } from '@/types/appointment';
 
@@ -142,6 +143,8 @@ const Index = () => {
   const { treatments } = useTreatments();
   const { cabinets, updateCabinetDoctor } = useCabinets();
   const { doctors } = useDoctors();
+  const dateStr = format(selectedDate, 'yyyy-MM-dd');
+  const { shifts: doctorShifts } = useDoctorShifts(undefined, { start: dateStr, end: dateStr });
   const { isAdmin, doctorId } = useAuth();
   const { unreadCount } = useWhatsAppMessages();
   const { reminders: pendingReminders } = usePendingReminders();
@@ -711,6 +714,8 @@ const Index = () => {
               selectedCabinet={selectedCabinet}
               appointments={legacyAppointments}
               cabinets={cabinets}
+              doctorShifts={doctorShifts}
+              doctors={doctors}
               onSlotClick={handleSlotClick}
               onAppointmentClick={handleAppointmentClick}
               onAppointmentComplete={handleAppointmentComplete}

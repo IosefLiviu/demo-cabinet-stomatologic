@@ -1,7 +1,9 @@
 import { format } from 'date-fns';
-import { Plus, User, CheckCircle2, XCircle, Edit3 } from 'lucide-react';
+import { Plus, User, CheckCircle2, XCircle, Edit3, Users } from 'lucide-react';
 import { TIME_SLOTS, SLOT_DURATION_MINUTES, Appointment } from '@/types/appointment';
 import { Cabinet } from '@/hooks/useCabinets';
+import { DoctorShift } from '@/hooks/useDoctorShifts';
+import { Doctor } from '@/hooks/useDoctors';
 import { cn } from '@/lib/utils';
 import {
   Tooltip,
@@ -15,6 +17,8 @@ interface TimeSlotGridProps {
   selectedCabinet: number | null;
   appointments: Appointment[];
   cabinets: Cabinet[];
+  doctorShifts?: DoctorShift[];
+  doctors?: Doctor[];
   onSlotClick: (time: string, cabinetId: number) => void;
   onAppointmentClick: (appointment: Appointment) => void;
   onAppointmentComplete?: (id: string) => void;
@@ -43,6 +47,8 @@ export function TimeSlotGrid({
   selectedCabinet,
   appointments,
   cabinets,
+  doctorShifts = [],
+  doctors = [],
   onSlotClick,
   onAppointmentClick,
   onAppointmentComplete,
@@ -89,6 +95,47 @@ export function TimeSlotGrid({
     return Math.ceil(duration / SLOT_DURATION_MINUTES);
   };
 
+  // Get doctors working at a specific time slot
+  const getDoctorsAtTime = (time: string): Doctor[] => {
+    const slotMinutes = timeToMinutes(time);
+    
+    const workingDoctorIds = doctorShifts.filter(shift => {
+      const shiftStart = timeToMinutes(shift.start_time);
+      const shiftEnd = timeToMinutes(shift.end_time);
+      return slotMinutes >= shiftStart && slotMinutes < shiftEnd;
+    }).map(s => s.doctor_id);
+    
+    return doctors.filter(d => workingDoctorIds.includes(d.id));
+  };
+
+  // Check if this is the first slot of a shift block (to show doctor names)
+  const isFirstSlotOfShiftBlock = (time: string): boolean => {
+    const slotMinutes = timeToMinutes(time);
+    const prevSlotMinutes = slotMinutes - SLOT_DURATION_MINUTES;
+    
+    const doctorsNow = getDoctorsAtTime(time);
+    if (doctorsNow.length === 0) return false;
+    
+    // Check if any shift starts exactly at this slot
+    const shiftsStartingNow = doctorShifts.filter(shift => {
+      const shiftStart = timeToMinutes(shift.start_time);
+      return shiftStart === slotMinutes;
+    });
+    
+    if (shiftsStartingNow.length > 0) return true;
+    
+    // Check if doctors changed from previous slot
+    if (prevSlotMinutes >= timeToMinutes(TIME_SLOTS[0])) {
+      const prevTime = `${String(Math.floor(prevSlotMinutes / 60)).padStart(2, '0')}:${String(prevSlotMinutes % 60).padStart(2, '0')}`;
+      const doctorsPrev = getDoctorsAtTime(prevTime);
+      const nowIds = doctorsNow.map(d => d.id).sort().join(',');
+      const prevIds = doctorsPrev.map(d => d.id).sort().join(',');
+      return nowIds !== prevIds;
+    }
+    
+    return true;
+  };
+
   return (
     <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
       {/* Outer scroll container for horizontal scroll on mobile */}
@@ -124,9 +171,36 @@ export function TimeSlotGrid({
           ))}
 
           {/* Time slots - rendered as flat grid items */}
-          {TIME_SLOTS.map((time) => (
+          {TIME_SLOTS.map((time) => {
+            const workingDoctors = getDoctorsAtTime(time);
+            const showDoctorBanner = isFirstSlotOfShiftBlock(time) && workingDoctors.length > 0;
+            
+            return (
             <>
-              {/* Time column */}
+              {/* Doctor shift banner row - spans all columns when shift starts */}
+              {showDoctorBanner && (
+                <>
+                  <div 
+                    key={`doctors-time-${time}`}
+                    className="h-[24px] flex items-center justify-center text-[10px] font-medium text-muted-foreground border-r border-b border-border bg-muted/30"
+                  >
+                    {time}
+                  </div>
+                  {cabinetsToShow.map((cabinet) => (
+                    <div
+                      key={`doctors-${time}-${cabinet.id}`}
+                      className="h-[24px] flex items-center gap-1 px-2 border-r border-b border-border last:border-r-0 bg-primary/5"
+                    >
+                      <Users className="h-3 w-3 text-primary/60 flex-shrink-0" />
+                      <span className="text-[10px] font-medium text-foreground truncate">
+                        {workingDoctors.map(d => d.name.replace('Dr. ', '')).join(' & ')}
+                      </span>
+                    </div>
+                  ))}
+                </>
+              )}
+              
+              {/* Regular time column */}
               <div 
                 key={`time-${time}`}
                 className="h-[40px] sm:h-[45px] flex items-center justify-center text-[10px] sm:text-xs font-medium text-muted-foreground border-r border-b border-border bg-muted/30"
@@ -346,7 +420,7 @@ export function TimeSlotGrid({
                 );
               })}
             </>
-          ))}
+          )})}
         </div>
       </div>
     </div>
