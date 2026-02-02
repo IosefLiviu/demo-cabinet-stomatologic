@@ -18,9 +18,12 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  MessageCircle,
+  Send,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { ImportPatientsDialog } from './ImportPatientsDialog';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -42,8 +45,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Patient } from '@/hooks/usePatients';
 import { cn } from '@/lib/utils';
+import { useSendWhatsApp } from '@/hooks/useSendWhatsApp';
 
 interface PatientsListProps {
   patients: Patient[];
@@ -74,6 +86,12 @@ export function PatientsList({
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  
+  // WhatsApp dialog state
+  const [whatsAppDialogOpen, setWhatsAppDialogOpen] = useState(false);
+  const [selectedPatientForWhatsApp, setSelectedPatientForWhatsApp] = useState<Patient | null>(null);
+  const [whatsAppMessage, setWhatsAppMessage] = useState('');
+  const { sendMessage, isSending } = useSendWhatsApp();
 
   const calculateAge = (dateOfBirth?: string) => {
     if (!dateOfBirth) return null;
@@ -188,6 +206,27 @@ export function PatientsList({
     return sortDirection === 'asc' 
       ? <ArrowUp className="h-3.5 w-3.5 text-primary" />
       : <ArrowDown className="h-3.5 w-3.5 text-primary" />;
+  };
+
+  const handleOpenWhatsAppDialog = (patient: Patient) => {
+    setSelectedPatientForWhatsApp(patient);
+    setWhatsAppMessage('');
+    setWhatsAppDialogOpen(true);
+  };
+
+  const handleSendWhatsApp = () => {
+    if (!selectedPatientForWhatsApp || !whatsAppMessage.trim()) return;
+    
+    sendMessage({
+      to: selectedPatientForWhatsApp.phone,
+      message: whatsAppMessage.trim(),
+      patientId: selectedPatientForWhatsApp.id,
+      patientName: `${selectedPatientForWhatsApp.last_name} ${selectedPatientForWhatsApp.first_name}`,
+    });
+    
+    setWhatsAppDialogOpen(false);
+    setSelectedPatientForWhatsApp(null);
+    setWhatsAppMessage('');
   };
 
   if (loading) {
@@ -361,6 +400,15 @@ export function PatientsList({
                       <Button
                         variant="ghost"
                         size="icon"
+                        className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                        onClick={() => handleOpenWhatsAppDialog(patient)}
+                        title="Trimite mesaj WhatsApp"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         className="h-8 w-8"
                         onClick={() => onEdit(patient)}
                       >
@@ -466,6 +514,53 @@ export function PatientsList({
           </div>
         )}
       </div>
+
+      {/* WhatsApp Dialog */}
+      <Dialog open={whatsAppDialogOpen} onOpenChange={setWhatsAppDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 text-green-600" />
+              Trimite mesaj WhatsApp
+            </DialogTitle>
+            <DialogDescription>
+              {selectedPatientForWhatsApp && (
+                <>
+                  Către: <strong>{selectedPatientForWhatsApp.last_name} {selectedPatientForWhatsApp.first_name}</strong>
+                  <br />
+                  Telefon: {selectedPatientForWhatsApp.phone}
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Textarea
+              placeholder="Scrieți mesajul aici..."
+              value={whatsAppMessage}
+              onChange={(e) => setWhatsAppMessage(e.target.value)}
+              rows={4}
+              className="resize-none"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setWhatsAppDialogOpen(false)}
+              disabled={isSending}
+            >
+              Anulează
+            </Button>
+            <Button
+              onClick={handleSendWhatsApp}
+              disabled={!whatsAppMessage.trim() || isSending}
+              className="gap-2 bg-green-600 hover:bg-green-700"
+            >
+              <Send className="h-4 w-4" />
+              {isSending ? 'Se trimite...' : 'Trimite'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
