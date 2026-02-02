@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import { Plus, User, CheckCircle2, XCircle, Edit3 } from 'lucide-react';
-import { TIME_SLOTS, Appointment } from '@/types/appointment';
+import { TIME_SLOTS, SLOT_DURATION_MINUTES, Appointment } from '@/types/appointment';
 import { Cabinet } from '@/hooks/useCabinets';
 import { cn } from '@/lib/utils';
 import {
@@ -72,11 +72,11 @@ export function TimeSlotGrid({
   // A slot is covered if the appointment hasn't ended by the END of this slot
   const getAppointmentCoveringSlot = (time: string, cabinetId: number) => {
     const slotStartMinutes = timeToMinutes(time);
-    const slotEndMinutes = slotStartMinutes + 30; // Each slot is 30 minutes
+    const slotEndMinutes = slotStartMinutes + SLOT_DURATION_MINUTES;
     return appointments.find((apt) => {
       if (apt.date !== dateStr || apt.cabinetId !== cabinetId) return false;
       const aptStartMinutes = timeToMinutes(apt.time);
-      const aptEndMinutes = aptStartMinutes + (apt.duration || 30);
+      const aptEndMinutes = aptStartMinutes + (apt.duration || SLOT_DURATION_MINUTES);
       // This slot is covered if appointment starts before this slot 
       // AND appointment ends after this slot starts
       return aptStartMinutes < slotStartMinutes && aptEndMinutes > slotStartMinutes;
@@ -85,8 +85,8 @@ export function TimeSlotGrid({
 
   // Calculate how many slots an appointment spans
   const getAppointmentSpan = (appointment: Appointment): number => {
-    const duration = appointment.duration || 30;
-    return Math.ceil(duration / 30);
+    const duration = appointment.duration || SLOT_DURATION_MINUTES;
+    return Math.ceil(duration / SLOT_DURATION_MINUTES);
   };
 
   return (
@@ -129,7 +129,7 @@ export function TimeSlotGrid({
               {/* Time column */}
               <div 
                 key={`time-${time}`}
-                className="h-[50px] sm:h-[60px] flex items-center justify-center text-xs sm:text-sm font-medium text-muted-foreground border-r border-b border-border bg-muted/30"
+                className="h-[40px] sm:h-[45px] flex items-center justify-center text-[10px] sm:text-xs font-medium text-muted-foreground border-r border-b border-border bg-muted/30"
               >
                 {time}
               </div>
@@ -143,9 +143,9 @@ export function TimeSlotGrid({
                 // (i.e., the appointment ends within or at the end of this slot)
                 const isLastContinuationSlot = appointmentCovering && (() => {
                   const aptStartMinutes = timeToMinutes(appointmentCovering.time);
-                  const aptEndMinutes = aptStartMinutes + (appointmentCovering.duration || 30);
+                  const aptEndMinutes = aptStartMinutes + (appointmentCovering.duration || SLOT_DURATION_MINUTES);
                   const slotStartMinutes = timeToMinutes(time);
-                  const slotEndMinutes = slotStartMinutes + 30;
+                  const slotEndMinutes = slotStartMinutes + SLOT_DURATION_MINUTES;
                   // This is the last slot if the appointment ends within this slot's time range
                   return aptEndMinutes <= slotEndMinutes && aptEndMinutes > slotStartMinutes;
                 })();
@@ -155,11 +155,11 @@ export function TimeSlotGrid({
                 const isMultiSlot = appointmentSpan > 1;
                 
                 // If this slot is covered by an ongoing appointment, render continuation
-                if (appointmentCovering) {
+                  if (appointmentCovering) {
                   return (
                     <div
                       key={`${time}-${cabinet.id}`}
-                      className="border-r border-b border-border last:border-r-0 h-[50px] sm:h-[60px] min-w-0 overflow-hidden px-1 sm:px-1.5"
+                      className="border-r border-b border-border last:border-r-0 h-[40px] sm:h-[45px] min-w-0 overflow-hidden px-1 sm:px-1.5"
                     >
                       {/* Continuation of appointment - seamless colored background with side borders */}
                       <div
@@ -201,10 +201,10 @@ export function TimeSlotGrid({
                   <div
                     key={`${time}-${cabinet.id}`}
                     className={cn(
-                      "border-r border-b border-border last:border-r-0 h-[50px] sm:h-[60px] min-w-0 overflow-hidden",
-                      !appointmentStarting && "p-1 sm:p-1.5",
-                      appointmentStarting && "px-1 sm:px-1.5 pt-1 sm:pt-1.5",
-                      appointmentStarting && !isMultiSlot && "pb-1 sm:pb-1.5"
+                      "border-r border-b border-border last:border-r-0 h-[40px] sm:h-[45px] min-w-0 overflow-hidden",
+                      !appointmentStarting && "p-0.5 sm:p-1",
+                      appointmentStarting && "px-0.5 sm:px-1 pt-0.5 sm:pt-1",
+                      appointmentStarting && !isMultiSlot && "pb-0.5 sm:pb-1"
                     )}
                   >
                     {appointmentStarting ? (
