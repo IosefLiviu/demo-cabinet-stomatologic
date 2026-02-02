@@ -95,10 +95,7 @@ export function DoctorScheduleManagement({
   
   // Shifts state
   const [showShiftDialog, setShowShiftDialog] = useState(false);
-  const [shiftDateRange, setShiftDateRange] = useState<{ from: Date; to?: Date }>({
-    from: new Date(),
-    to: undefined,
-  });
+  const [selectedShiftDates, setSelectedShiftDates] = useState<Date[]>([new Date()]);
   const [shiftForm, setShiftForm] = useState<Omit<CreateShiftData, 'shift_date'>>({
     doctor_id: selectedDoctorId || '',
     start_time: '08:00',
@@ -160,17 +157,12 @@ export function DoctorScheduleManagement({
   };
 
   const handleAddShift = async () => {
-    if (!shiftForm.doctor_id || !shiftDateRange.from) {
+    if (!shiftForm.doctor_id || selectedShiftDates.length === 0) {
       return;
     }
     
-    // Get all dates in the range
-    const startDate = shiftDateRange.from;
-    const endDate = shiftDateRange.to || shiftDateRange.from;
-    const daysInRange = eachDayOfInterval({ start: startDate, end: endDate });
-    
     let successCount = 0;
-    for (const day of daysInRange) {
+    for (const day of selectedShiftDates) {
       const shiftData: CreateShiftData = {
         ...shiftForm,
         shift_date: format(day, 'yyyy-MM-dd'),
@@ -181,7 +173,7 @@ export function DoctorScheduleManagement({
     
     if (successCount > 0) {
       setShowShiftDialog(false);
-      setShiftDateRange({ from: new Date(), to: undefined });
+      setSelectedShiftDates([new Date()]);
       setShiftForm({
         doctor_id: selectedDoctorId || '',
         start_time: '08:00',
@@ -545,41 +537,32 @@ export function DoctorScheduleManagement({
             </div>
 
             <div className="space-y-2">
-              <Label>Perioadă</Label>
+              <Label>Date selectate</Label>
               <div className="border rounded-lg p-3 bg-background">
-                <div className="text-sm text-muted-foreground mb-2 text-center">
-                  {shiftDateRange.from ? (
-                    shiftDateRange.to ? (
-                      <>
-                        <span className="font-medium text-foreground">
-                          {format(shiftDateRange.from, 'd MMM', { locale: ro })} - {format(shiftDateRange.to, 'd MMM yyyy', { locale: ro })}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="font-medium text-foreground">
-                        {format(shiftDateRange.from, 'PPP', { locale: ro })}
-                      </span>
-                    )
+                <div className="text-sm text-muted-foreground mb-2 text-center min-h-[24px]">
+                  {selectedShiftDates.length > 0 ? (
+                    <span className="font-medium text-foreground">
+                      {selectedShiftDates
+                        .sort((a, b) => a.getTime() - b.getTime())
+                        .map(d => format(d, 'd MMM', { locale: ro }))
+                        .join(', ')}
+                    </span>
                   ) : (
-                    'Selectează o zi sau o perioadă'
+                    'Click pe datele dorite'
                   )}
                 </div>
                 <Calendar
-                  mode="range"
-                  selected={shiftDateRange}
-                  onSelect={(range) => {
-                    if (range) {
-                      setShiftDateRange(range as { from: Date; to?: Date });
-                    } else {
-                      setShiftDateRange({ from: new Date(), to: undefined });
-                    }
+                  mode="multiple"
+                  selected={selectedShiftDates}
+                  onSelect={(dates) => {
+                    setSelectedShiftDates(dates || []);
                   }}
                   className="pointer-events-auto mx-auto"
                   numberOfMonths={1}
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                Click pe o dată sau selectează o perioadă (click + drag)
+                Click pe fiecare dată dorită (ex: 2, 4, 18)
               </p>
             </div>
 
@@ -654,8 +637,8 @@ export function DoctorScheduleManagement({
             <Button variant="outline" onClick={() => setShowShiftDialog(false)}>
               Anulează
             </Button>
-            <Button onClick={handleAddShift} disabled={!shiftForm.doctor_id || !shiftDateRange.from}>
-              {shiftDateRange.to ? `Salvează (${eachDayOfInterval({ start: shiftDateRange.from, end: shiftDateRange.to }).length} zile)` : 'Salvează'}
+            <Button onClick={handleAddShift} disabled={!shiftForm.doctor_id || selectedShiftDates.length === 0}>
+              {selectedShiftDates.length > 1 ? `Salvează (${selectedShiftDates.length} zile)` : 'Salvează'}
             </Button>
           </DialogFooter>
         </DialogContent>
