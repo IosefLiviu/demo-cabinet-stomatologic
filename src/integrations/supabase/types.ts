@@ -127,6 +127,7 @@ export type Database = {
           patient_id: string
           payment_method: string | null
           price: number | null
+          reminder_sent_at: string | null
           start_time: string
           status: string
           treatment_id: string | null
@@ -147,6 +148,7 @@ export type Database = {
           patient_id: string
           payment_method?: string | null
           price?: number | null
+          reminder_sent_at?: string | null
           start_time: string
           status?: string
           treatment_id?: string | null
@@ -167,6 +169,7 @@ export type Database = {
           patient_id?: string
           payment_method?: string | null
           price?: number | null
+          reminder_sent_at?: string | null
           start_time?: string
           status?: string
           treatment_id?: string | null
