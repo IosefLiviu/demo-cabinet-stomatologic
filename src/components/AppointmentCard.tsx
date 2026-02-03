@@ -179,7 +179,8 @@ export function AppointmentCard({
           >
             <Edit className="h-6 w-6" />
           </Button>
-          {isAdmin && (!isCompleted || canDeleteCompleted) && (
+          {/* Cancelled appointments can be deleted by all users, other appointments only by admin */}
+          {((appointment.status === 'cancelled') || (isAdmin && (!isCompleted || canDeleteCompleted))) && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:text-destructive">
@@ -190,8 +191,8 @@ export function AppointmentCard({
                 <AlertDialogHeader>
                   <AlertDialogTitle>Ștergeți programarea?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Această acțiune nu poate fi anulată. Programarea pentru {appointment.patientName} 
-                    la ora {appointment.time} va fi ștearsă definitiv.
+                    Programarea pentru {appointment.patientName} la ora {appointment.time} va fi ștearsă din vizualizare.
+                    Datele vor rămâne în sistem pentru rapoarte.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
