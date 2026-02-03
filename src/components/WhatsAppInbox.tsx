@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
-import { MessageSquare, Check, Trash2, User, Phone, ExternalLink, Reply, ChevronDown, ChevronUp, Image } from "lucide-react";
+import { MessageSquare, Check, Trash2, User, Phone, ExternalLink, Reply, ChevronDown, ChevronUp, Image, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useWhatsAppMessages, WhatsAppMessage } from "@/hooks/useWhatsAppMessages";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,6 +37,7 @@ export function WhatsAppInbox() {
   const { messages, isLoading, unreadCount, markAsRead, deleteMessage, isDeleting } = useWhatsAppMessages();
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "unread">("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [replyTo, setReplyTo] = useState<Conversation | null>(null);
   const [expandedConversations, setExpandedConversations] = useState<Set<string>>(new Set());
 
@@ -79,9 +81,27 @@ export function WhatsAppInbox() {
     );
   }, [messages]);
 
-  const filteredConversations = filter === "unread" 
-    ? conversations.filter(c => c.unreadCount > 0)
-    : conversations;
+  // Filter conversations by search query and read status
+  const filteredConversations = useMemo(() => {
+    let result = conversations;
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const searchTerms = searchQuery.toLowerCase().trim().split(/\s+/);
+      result = result.filter(c => {
+        const name = (c.patientName || "").toLowerCase();
+        const phone = c.patientPhone.replace("whatsapp:", "").toLowerCase();
+        return searchTerms.every(term => name.includes(term) || phone.includes(term));
+      });
+    }
+    
+    // Filter by read status
+    if (filter === "unread") {
+      result = result.filter(c => c.unreadCount > 0);
+    }
+    
+    return result;
+  }, [conversations, searchQuery, filter]);
 
   const toggleConversation = (phone: string) => {
     setExpandedConversations(prev => {
@@ -163,6 +183,15 @@ export function WhatsAppInbox() {
               Necitite ({conversations.filter(c => c.unreadCount > 0).length})
             </Button>
           </div>
+        </div>
+        <div className="relative mt-3">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Caută după nume sau telefon..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
         </div>
       </CardHeader>
       <CardContent>
