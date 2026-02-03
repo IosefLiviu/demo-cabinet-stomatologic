@@ -100,15 +100,15 @@ export function AppointmentCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <span 
-              className={cn("text-xs font-semibold", !hasDoctorColor && cabinetTextColors[appointment.cabinetId])}
+              className={cn("text-sm font-semibold", !hasDoctorColor && cabinetTextColors[appointment.cabinetId])}
               style={textColorStyle}
             >
               {appointment.time}
             </span>
-            <span className="text-xs text-muted-foreground">• {appointment.duration} min</span>
+            <span className="text-sm text-muted-foreground">• {appointment.duration} min</span>
             {appointment.doctorName && (
               <span 
-                className="text-xs font-medium px-1.5 py-0.5 rounded-full"
+                className="text-sm font-medium px-1.5 py-0.5 rounded-full"
                 style={{ 
                   backgroundColor: `${appointment.doctorColor}20`,
                   color: appointment.doctorColor 
@@ -118,22 +118,22 @@ export function AppointmentCard({
               </span>
             )}
           </div>
-          <h4 className="font-semibold text-foreground truncate">
+          <h4 className="text-base font-semibold text-foreground truncate">
             {appointment.patientName}
           </h4>
           <p className="text-sm text-muted-foreground">{appointment.treatment}</p>
           {showCabinet && cabinet && (
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               {cabinet.name}
             </p>
           )}
-          <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
-            <Phone className="h-3 w-3" />
+          <div className="flex items-center gap-1.5 mt-2 text-sm text-muted-foreground">
+            <Phone className="h-3.5 w-3.5" />
             <span>{appointment.patientPhone}</span>
           </div>
           {appointment.notes && (
-            <div className="flex items-start gap-1 mt-1 text-xs text-muted-foreground">
-              <FileText className="h-3 w-3 mt-0.5" />
+            <div className="flex items-start gap-1.5 mt-1 text-sm text-muted-foreground">
+              <FileText className="h-3.5 w-3.5 mt-0.5" />
               <span className="line-clamp-2">{appointment.notes}</span>
             </div>
           )}
