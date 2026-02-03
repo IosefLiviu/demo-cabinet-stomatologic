@@ -134,6 +134,7 @@ const Index = () => {
     updateAppointment,
     deleteAppointment,
     completeAppointment,
+    uncompleteAppointment,
     cancelAppointment,
     updatePaymentAmount,
     checkOverlap,
@@ -536,6 +537,16 @@ const Index = () => {
       setCancelDialogOpen(false);
       setCancellingAppointmentId(null);
       setCancellingAppointmentName('');
+    }
+  };
+
+  // Handler for uncompleting (reverting) a completed appointment
+  const handleAppointmentUncomplete = async () => {
+    if (editingAppointmentData && editingAppointmentData.status === 'completed') {
+      await uncompleteAppointment(editingAppointmentData.id);
+      setShowAppointmentForm(false);
+      setEditingAppointmentData(undefined);
+      fetchAppointments(format(selectedDate, 'yyyy-MM-dd'));
     }
   };
 
@@ -996,6 +1007,7 @@ const Index = () => {
         }}
         onSubmit={handleAppointmentSubmit}
         onDelete={editingAppointmentData ? handleAppointmentDelete : undefined}
+        onUncomplete={editingAppointmentData?.status === 'completed' ? handleAppointmentUncomplete : undefined}
         onViewPatient={(patient) => {
           setShowAppointmentForm(false);
           pushNavState({ 

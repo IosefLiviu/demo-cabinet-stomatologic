@@ -897,6 +897,129 @@ export function useAppointmentsDB() {
     }
   };
 
+  // Revert a completed appointment back to scheduled status
+  const uncompleteAppointment = async (id: string) => {
+    try {
+      const appointment = appointments.find(a => a.id === id);
+      if (!appointment) throw new Error('Appointment not found');
+
+      // Remove the payment note from notes if it exists
+      let updatedNotes = appointment.notes || '';
+      updatedNotes = updatedNotes.replace(/\n?\[Plată:.*?\]/g, '').trim();
+
+      // Update the appointment status back to scheduled
+      const { data, error } = await supabase
+        .from('appointments')
+        .update({ 
+          status: 'scheduled',
+          is_paid: false,
+          paid_amount: 0,
+          payment_method: null,
+          notes: updatedNotes || null,
+        })
+        .eq('id', id)
+        .select(`
+          *,
+          patients (id, first_name, last_name, phone, allergies),
+          treatments (id, name, default_duration),
+          doctors (id, name, color),
+          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, laborator, duration, discount_percent, tooth_numbers, tooth_data, plan_item_id)
+        `)
+        .single();
+
+      if (error) throw error;
+
+      const uncompletedAppointment = data as unknown as AppointmentDB;
+
+      // Delete treatment_records created when appointment was completed
+      const { error: recordsDeleteError } = await supabase
+        .from('treatment_records')
+        .delete()
+        .eq('appointment_id', id);
+
+      if (recordsDeleteError) {
+        console.error('Error deleting treatment records:', recordsDeleteError);
+      }
+
+      // Revert CAS budget deduction if applicable
+      if (uncompletedAppointment.appointment_treatments) {
+        const totalCas = uncompletedAppointment.appointment_treatments.reduce(
+          (sum, t) => sum + (Number(t.decont) || 0), 
+          0
+        );
+        
+        if (totalCas > 0) {
+          const currentMonthYear = new Date().toISOString().slice(0, 7);
+          
+          const { data: budgetData } = await supabase
+            .from('cas_budget')
+            .select('*')
+            .eq('month_year', currentMonthYear)
+            .maybeSingle();
+
+          if (budgetData && budgetData.used_budget >= totalCas) {
+            await supabase
+              .from('cas_budget')
+              .update({ used_budget: budgetData.used_budget - totalCas })
+              .eq('month_year', currentMonthYear);
+          }
+        }
+
+        // Reset treatment plan items completion status
+        const planItemIds = uncompletedAppointment.appointment_treatments
+          .filter(t => t.plan_item_id)
+          .map(t => t.plan_item_id as string);
+        
+        if (planItemIds.length > 0) {
+          const uniquePlanItemIds = [...new Set(planItemIds)];
+          
+          for (const planItemId of uniquePlanItemIds) {
+            // Check if this plan item was completed by THIS appointment
+            const { data: planItem } = await supabase
+              .from('treatment_plan_items')
+              .select('completed_appointment_id')
+              .eq('id', planItemId)
+              .maybeSingle();
+            
+            if (planItem?.completed_appointment_id === id) {
+              const { error: planResetError } = await supabase
+                .from('treatment_plan_items')
+                .update({
+                  completed_at: null,
+                  payment_status: null,
+                  paid_amount: 0,
+                  completed_appointment_id: null,
+                })
+                .eq('id', planItemId);
+              
+              if (planResetError) {
+                console.error('Error resetting plan item:', planResetError);
+              }
+            }
+          }
+        }
+      }
+
+      setAppointments((prev) =>
+        prev.map((a) => (a.id === id ? uncompletedAppointment : a))
+      );
+      
+      toast({
+        title: 'Succes',
+        description: 'Finalizarea programării a fost anulată. Programarea este din nou activă.',
+      });
+      return data;
+    } catch (error: any) {
+      console.error('Error uncompleting appointment:', error);
+      toast({
+        title: 'Eroare',
+        description: 'Nu s-a putut anula finalizarea programării',
+        variant: 'destructive',
+      });
+      return null;
+    }
+  };
+
   return {
     appointments,
     loading,
@@ -906,6 +1029,7 @@ export function useAppointmentsDB() {
     updateAppointment,
     deleteAppointment,
     completeAppointment,
+    uncompleteAppointment,
     cancelAppointment,
     updatePaymentAmount,
     getAppointmentsForDate,

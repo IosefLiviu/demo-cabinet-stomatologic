@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { format, parse } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Search, Trash2, UserPlus, FileText, Smile, FileImage, ClipboardPlus, AlertTriangle, Calendar } from 'lucide-react';
+import { Search, Trash2, UserPlus, FileText, Smile, FileImage, ClipboardPlus, AlertTriangle, Calendar, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -97,6 +97,7 @@ interface AppointmentFormProps {
   onClose: () => void;
   onSubmit: (data: AppointmentFormData) => void;
   onDelete?: () => void;
+  onUncomplete?: () => void;
   onViewPatient?: (patient: Patient) => void;
   onViewDentalStatus?: (patient: Patient) => void;
   onViewRadiographs?: (patient: Patient) => void;
@@ -140,6 +141,7 @@ export function AppointmentForm({
   onClose,
   onSubmit,
   onDelete,
+  onUncomplete,
   onViewPatient,
   onViewDentalStatus,
   onViewRadiographs,
@@ -1044,7 +1046,7 @@ export function AppointmentForm({
 
             {/* Action buttons - stacked on mobile */}
             <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2 sm:gap-3 pt-2 sm:pt-4">
-              <div>
+              <div className="flex gap-2">
                 {editingAppointment && onDelete && (isAdmin || editingAppointment.status === 'cancelled') && (
                   <Button 
                     type="button" 
@@ -1054,6 +1056,18 @@ export function AppointmentForm({
                   >
                     <Trash2 className="h-4 w-4" />
                     Șterge
+                  </Button>
+                )}
+                {editingAppointment && editingAppointment.status === 'completed' && onUncomplete && isAdmin && (
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    onClick={onUncomplete}
+                    className="gap-2 w-full sm:w-auto text-sm h-9 sm:h-10 border-orange-300 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    <span className="hidden sm:inline">Revertește finalizarea</span>
+                    <span className="sm:hidden">Revert</span>
                   </Button>
                 )}
               </div>
