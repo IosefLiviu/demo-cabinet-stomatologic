@@ -138,13 +138,13 @@ export function AppointmentCard({
             </div>
           )}
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           {isCompleted ? (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="h-7 w-7 flex items-center justify-center text-green-600">
-                    <CheckCircle2 className="h-4 w-4" />
+                  <div className="h-9 w-9 flex items-center justify-center text-green-600">
+                    <CheckCircle2 className="h-5 w-5" />
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -159,10 +159,10 @@ export function AppointmentCard({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-100"
+                    className="h-9 w-9 text-green-600 hover:text-green-700 hover:bg-green-100"
                     onClick={() => onComplete(appointment.id)}
                   >
-                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <CheckCircle2 className="h-5 w-5" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -174,16 +174,16 @@ export function AppointmentCard({
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="h-9 w-9"
             onClick={() => onEdit(appointment)}
           >
-            <Edit className="h-3.5 w-3.5" />
+            <Edit className="h-5 w-5" />
           </Button>
           {isAdmin && (!isCompleted || canDeleteCompleted) && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive">
-                  <Trash2 className="h-3.5 w-3.5" />
+                <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:text-destructive">
+                  <Trash2 className="h-5 w-5" />
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
