@@ -241,8 +241,6 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
   }, [filteredAppointments]);
 
   // Doctor revenue data - includes all appointments with cash/card breakdown, CAS and Laborator
-  // Now properly handles debt payments: if debt_paid_at is set, the debt portion is attributed
-  // to the month when it was paid, not the appointment month
   const doctorRevenueData = useMemo(() => {
     const doctorStats = filteredAppointments.reduce((acc, a) => {
       const doctorName = a.doctors?.name || 'Fără doctor';
@@ -271,44 +269,6 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       }
       
       const price = a.price || 0;
-      
-      // Check if this appointment is included due to debt_paid_at (from a different month)
-      const appointmentDate = new Date(a.appointment_date);
-      const debtPaidAt = a.debt_paid_at ? new Date(a.debt_paid_at) : null;
-      const isFromDifferentMonth = appointmentDate < dateRange.from || appointmentDate > dateRange.to;
-      const hasDebtPaidInRange = debtPaidAt && debtPaidAt >= dateRange.from && debtPaidAt <= dateRange.to;
-      
-      // If this appointment is from a different month but has debt_paid_at in range,
-      // only count the debt payment portion for this doctor's revenue
-      if (isFromDifferentMonth && hasDebtPaidInRange) {
-        // This is a debt payment from a previous month - include the paid amount in this month's revenue
-        const paidAmount = a.paid_amount ?? 0;
-        
-        // Calculate CAS for the appointment (we need this for the split calculation)
-        let appointmentCas = 0;
-        if (a.appointment_treatments && a.appointment_treatments.length > 0) {
-          a.appointment_treatments.forEach(t => {
-            const discountPercent = (t as any).discount_percent || 0;
-            if (discountPercent < 100) {
-              appointmentCas += (t.decont || 0);
-            }
-          });
-        }
-        
-        // Add the debt payment to this month's revenue
-        const method = getPaymentMethod(a);
-        if (method?.includes('card')) {
-          acc[doctorName].paidCard += paidAmount;
-        } else {
-          acc[doctorName].paidCash += paidAmount;
-        }
-        acc[doctorName].paid += paidAmount;
-        // For revenue split, include CAS (clinic receives full CAS)
-        acc[doctorName].totalWithNetLab += (paidAmount + appointmentCas);
-        
-        return acc; // Don't process this appointment further
-      }
-      
       acc[doctorName].appointments += 1;
       
       if (a.status === 'completed') {
@@ -359,10 +319,6 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         const method = getPaymentMethod(a);
         const paidAmount = a.paid_amount ?? (a.is_paid ? payableAmount : 0);
         
-        // Check if this appointment has debt that will be paid in a FUTURE month
-        // If debt_paid_at is set and is OUTSIDE the current range, don't include that portion here
-        const debtWillBePaidLater = debtPaidAt && (debtPaidAt < dateRange.from || debtPaidAt > dateRange.to);
-        
         // For Clinică/Medic split: use total initial price (before CAS deduction) minus laborator
         // This ensures CAS is included in the revenue split calculation
         const revenueForSplit = appointmentTotalPrice - acc[doctorName].laborator;
@@ -380,26 +336,18 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         } else if (method === 'partial_card') {
           acc[doctorName].paidCard += paidAmount;
           acc[doctorName].paid += paidAmount;
-          // Only count unpaid portion if debt will NOT be paid in a different month
-          if (!debtWillBePaidLater) {
-            acc[doctorName].unpaid += Math.max(0, payableAmount - paidAmount);
-          }
+          acc[doctorName].unpaid += Math.max(0, payableAmount - paidAmount);
           // For partial payments, include full CAS (clinic receives it regardless of patient payment)
           acc[doctorName].totalWithNetLab += (paidAmount + appointmentCas);
         } else if (method === 'partial_cash') {
           acc[doctorName].paidCash += paidAmount;
           acc[doctorName].paid += paidAmount;
-          // Only count unpaid portion if debt will NOT be paid in a different month
-          if (!debtWillBePaidLater) {
-            acc[doctorName].unpaid += Math.max(0, payableAmount - paidAmount);
-          }
+          acc[doctorName].unpaid += Math.max(0, payableAmount - paidAmount);
           // For partial payments, include full CAS (clinic receives it regardless of patient payment)
           acc[doctorName].totalWithNetLab += (paidAmount + appointmentCas);
         } else if (method === 'unpaid' || !a.is_paid) {
-          // For unpaid, only count if debt won't be paid in a different month
-          if (!debtWillBePaidLater) {
-            acc[doctorName].unpaid += payableAmount;
-          }
+          // For unpaid, debt is payable amount (after CAS + discount)
+          acc[doctorName].unpaid += payableAmount;
         } else if (a.is_paid) {
           // Fallback for old data
           acc[doctorName].paidCash += payableAmount;
@@ -429,7 +377,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
     }, {} as Record<string, { name: string; revenue: number; discount: number; paid: number; paidCard: number; paidCash: number; unpaid: number; scheduled: number; cas: number; laborator: number; netLabRevenue: number; totalWithNetLab: number; totalWithNetLabAndUnpaid: number; sixtPercentTotal: number; fortyPercentTotal: number; appointments: number; color: string }>);
 
     return Object.values(doctorStats).sort((a, b) => (b.revenue + b.scheduled) - (a.revenue + a.scheduled));
-  }, [filteredAppointments, dateRange]);
+  }, [filteredAppointments]);
 
   // Unpaid amounts by patient report
   const unpaidByPatientData = useMemo(() => {
