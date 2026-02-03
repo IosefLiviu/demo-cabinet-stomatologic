@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { format } from 'date-fns';
-import { Search, Trash2, UserPlus, FileText, Smile, FileImage, ClipboardPlus, AlertTriangle } from 'lucide-react';
+import { format, parse } from 'date-fns';
+import { ro } from 'date-fns/locale';
+import { Search, Trash2, UserPlus, FileText, Smile, FileImage, ClipboardPlus, AlertTriangle, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,6 +35,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { TIME_SLOTS } from '@/types/appointment';
 import { Patient } from '@/hooks/usePatients';
 import { Cabinet } from '@/hooks/useCabinets';
@@ -99,6 +101,7 @@ interface AppointmentFormProps {
   onViewDentalStatus?: (patient: Patient) => void;
   onViewRadiographs?: (patient: Patient) => void;
   selectedDate: Date;
+  onDateChange?: (date: Date) => void;
   selectedTime?: string;
   selectedCabinet?: number;
   editingAppointment?: {
@@ -141,6 +144,7 @@ export function AppointmentForm({
   onViewDentalStatus,
   onViewRadiographs,
   selectedDate,
+  onDateChange,
   selectedTime,
   selectedCabinet,
   editingAppointment,
@@ -153,6 +157,7 @@ export function AppointmentForm({
   userDoctorId,
   checkOverlap,
 }: AppointmentFormProps) {
+  const [datePopoverOpen, setDatePopoverOpen] = useState(false);
   const [patientSearch, setPatientSearch] = useState('');
   const [patientPopoverOpen, setPatientPopoverOpen] = useState(false);
   const [isNewPatient, setIsNewPatient] = useState(false);
@@ -621,9 +626,40 @@ export function AppointmentForm({
         <DialogHeader className="pb-2 sm:pb-4">
           <DialogTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
             <span className="text-base sm:text-lg">{editingAppointment ? 'Editare programare' : 'Programare nouă'}</span>
-            <span className="text-xs sm:text-sm font-normal text-muted-foreground">
-              {format(selectedDate, 'dd.MM.yyyy')}
-            </span>
+            {onDateChange ? (
+              <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-xs sm:text-sm font-normal gap-1.5 h-7 sm:h-8"
+                  >
+                    <Calendar className="h-3.5 w-3.5" />
+                    {format(selectedDate, 'dd.MM.yyyy')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <CalendarComponent
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => {
+                      if (date) {
+                        onDateChange(date);
+                        setDatePopoverOpen(false);
+                      }
+                    }}
+                    locale={ro}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            ) : (
+              <span className="text-xs sm:text-sm font-normal text-muted-foreground">
+                {format(selectedDate, 'dd.MM.yyyy')}
+              </span>
+            )}
           </DialogTitle>
         </DialogHeader>
         
