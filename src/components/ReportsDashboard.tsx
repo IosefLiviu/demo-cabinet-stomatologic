@@ -281,30 +281,38 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       // If this appointment is from a different month but has debt_paid_at in range,
       // only count the debt payment portion for this doctor's revenue
       if (isFromDifferentMonth && hasDebtPaidInRange) {
-        // This is a debt payment from a previous month - include the paid amount in this month's revenue
-        const paidAmount = a.paid_amount ?? 0;
+        // This is a debt payment from a previous month
+        // The debt amount is: total payable - paid_amount (what was paid initially)
+        // We need to add the DEBT portion to this month, not the paid_amount
         
-        // Calculate CAS for the appointment (we need this for the split calculation)
-        let appointmentCas = 0;
+        // Calculate total payable for this appointment
+        let totalPayable = 0;
         if (a.appointment_treatments && a.appointment_treatments.length > 0) {
           a.appointment_treatments.forEach(t => {
+            const tPrice = t.price || 0;
+            const tCas = t.decont || 0;
             const discountPercent = (t as any).discount_percent || 0;
-            if (discountPercent < 100) {
-              appointmentCas += (t.decont || 0);
-            }
+            const priceAfterCas = tPrice - tCas;
+            const discountAmount = priceAfterCas * (discountPercent / 100);
+            totalPayable += (priceAfterCas - discountAmount);
           });
+        } else {
+          totalPayable = a.price || 0;
         }
+        
+        const paidInitially = a.paid_amount ?? 0;
+        const debtPaidNow = Math.max(0, totalPayable - paidInitially);
         
         // Add the debt payment to this month's revenue
         const method = getPaymentMethod(a);
         if (method?.includes('card')) {
-          acc[doctorName].paidCard += paidAmount;
+          acc[doctorName].paidCard += debtPaidNow;
         } else {
-          acc[doctorName].paidCash += paidAmount;
+          acc[doctorName].paidCash += debtPaidNow;
         }
-        acc[doctorName].paid += paidAmount;
-        // For revenue split, include CAS (clinic receives full CAS)
-        acc[doctorName].totalWithNetLab += (paidAmount + appointmentCas);
+        acc[doctorName].paid += debtPaidNow;
+        // For revenue split, the debt portion is already net of CAS (it's what patient owes)
+        acc[doctorName].totalWithNetLab += debtPaidNow;
         
         return acc; // Don't process this appointment further
       }
