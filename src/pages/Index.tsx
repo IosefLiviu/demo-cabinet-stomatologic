@@ -1027,6 +1027,7 @@ const Index = () => {
           setSelectedPatient(patient);
         }}
         selectedDate={selectedDate}
+        onDateChange={(newDate) => setSelectedDate(newDate)}
         selectedTime={selectedTime}
         selectedCabinet={selectedCabinetForForm}
         editingAppointment={editingAppointmentData}
