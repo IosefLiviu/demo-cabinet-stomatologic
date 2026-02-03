@@ -480,10 +480,10 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
               effectivePaidAmount = 0;
               isDebtPaymentFromOtherPeriod = false;
             } else if (currentReportMonth === debtPaidMonth) {
-              // Debt payment month - use the exact debt_amount if available
-              // Otherwise fall back to payableAmount (less accurate)
-              const exactDebtAmount = (a as any).debt_amount;
-              debtAmountOnly = exactDebtAmount != null ? exactDebtAmount : payableAmount;
+              // Debt payment month - count ONLY the debt amount, not the full paid_amount
+              // The debt amount = payableAmount (what patient owed after CAS)
+              // This is what was outstanding and paid in this month
+              debtAmountOnly = payableAmount; // The patient paid their remaining balance
               effectivePaidAmount = debtAmountOnly;
               isDebtPaymentFromOtherPeriod = true;
               acc[doctorName].debtPaidFromOtherMonths += debtAmountOnly;
