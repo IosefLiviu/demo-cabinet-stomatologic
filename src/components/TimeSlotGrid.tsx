@@ -203,7 +203,7 @@ export function TimeSlotGrid({
               {/* Regular time column */}
               <div 
                 key={`time-${time}`}
-                className="h-[40px] sm:h-[45px] flex items-center justify-center text-[10px] sm:text-xs font-medium text-muted-foreground border-r border-b border-border bg-muted/30"
+                className="h-[50px] sm:h-[55px] flex items-center justify-center text-xs sm:text-sm font-medium text-muted-foreground border-r border-b border-border bg-muted/30"
               >
                 {time}
               </div>
@@ -234,7 +234,7 @@ export function TimeSlotGrid({
                     <div
                       key={`${time}-${cabinet.id}`}
                       className={cn(
-                        "border-r last:border-r-0 h-[40px] sm:h-[45px] min-w-0 overflow-hidden px-0.5 sm:px-1",
+                        "border-r last:border-r-0 h-[50px] sm:h-[55px] min-w-0 overflow-hidden px-0.5 sm:px-1",
                         isLastContinuationSlot && "border-b border-border"
                       )}
                     >
@@ -278,7 +278,7 @@ export function TimeSlotGrid({
                   <div
                     key={`${time}-${cabinet.id}`}
                     className={cn(
-                      "border-r last:border-r-0 h-[40px] sm:h-[45px] min-w-0 overflow-hidden",
+                      "border-r last:border-r-0 h-[50px] sm:h-[55px] min-w-0 overflow-hidden",
                       "px-0.5 sm:px-1",
                       // Add bottom border unless this is the start of a multi-slot appointment
                       !(appointmentStarting && isMultiSlot) && "border-b border-border",
@@ -313,17 +313,17 @@ export function TimeSlotGrid({
                           onClick={() => onAppointmentClick(appointmentStarting)}
                           className="flex-1 min-w-0 h-full flex flex-col justify-center cursor-pointer"
                         >
-                          <div className="flex items-center gap-0.5 min-w-0">
-                            <User className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0 text-foreground/70" />
+                          <div className="flex items-center gap-1 min-w-0">
+                            <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0 text-foreground/70" />
                             <span className={cn(
-                              "text-[9px] sm:text-[10px] font-medium text-foreground truncate leading-none",
+                              "text-xs sm:text-sm font-semibold text-foreground truncate leading-none",
                               appointmentStarting.status === 'cancelled' && "line-through"
                             )}>
                               {appointmentStarting.patientName}
                             </span>
                           </div>
                           <p className={cn(
-                            "text-[8px] sm:text-[9px] text-muted-foreground truncate leading-none mt-0.5",
+                            "text-[11px] sm:text-xs font-medium text-muted-foreground truncate leading-none mt-0.5",
                             appointmentStarting.status === 'cancelled' && "line-through"
                           )}>
                             {appointmentStarting.time} - {(() => {
@@ -348,7 +348,7 @@ export function TimeSlotGrid({
                                       }}
                                       className="p-0.5 rounded hover:bg-green-200 dark:hover:bg-green-800 transition-colors"
                                     >
-                                      <CheckCircle2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-green-600" />
+                                      <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600" />
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -368,7 +368,7 @@ export function TimeSlotGrid({
                                       }}
                                       className="p-0.5 rounded hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
                                     >
-                                      <XCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-red-500" />
+                                      <XCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-500" />
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -381,7 +381,7 @@ export function TimeSlotGrid({
                         )}
                         {appointmentStarting.status === 'completed' && (
                           <div className="flex gap-0.5 flex-shrink-0">
-                            <CheckCircle2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-green-600" />
+                            <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600" />
                             {onEditPayment && (
                               <TooltipProvider>
                                 <Tooltip>
@@ -393,7 +393,7 @@ export function TimeSlotGrid({
                                       }}
                                       className="p-0.5 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
                                     >
-                                      <Edit3 className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-blue-600" />
+                                      <Edit3 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600" />
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent>
