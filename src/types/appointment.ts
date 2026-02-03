@@ -11,7 +11,7 @@ export interface Appointment {
   doctorId?: string;
   doctorName?: string;
   doctorColor?: string;
-  status?: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
+  status?: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show' | 'deleted';
 }
 
 export interface Cabinet {

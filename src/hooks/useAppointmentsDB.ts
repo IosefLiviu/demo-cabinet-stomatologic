@@ -34,7 +34,7 @@ export interface AppointmentDB {
   appointment_date: string;
   start_time: string;
   duration: number;
-  status: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
+  status: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show' | 'deleted';
   notes?: string;
   price?: number;
   is_paid: boolean;
@@ -306,11 +306,15 @@ export function useAppointmentsDB() {
     }
   };
 
+  // Soft delete - marks appointment as deleted but keeps it for reports
   const deleteAppointment = async (id: string) => {
     try {
       const { error } = await supabase
         .from('appointments')
-        .delete()
+        .update({ 
+          status: 'deleted',
+          updated_at: new Date().toISOString()
+        })
         .eq('id', id);
 
       if (error) throw error;
