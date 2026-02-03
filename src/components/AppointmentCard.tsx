@@ -143,8 +143,8 @@ export function AppointmentCard({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="h-9 w-9 flex items-center justify-center text-green-600">
-                    <CheckCircle2 className="h-5 w-5" />
+                  <div className="h-10 w-10 flex items-center justify-center text-green-600">
+                    <CheckCircle2 className="h-6 w-6" />
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -159,10 +159,10 @@ export function AppointmentCard({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 text-green-600 hover:text-green-700 hover:bg-green-100"
+                    className="h-10 w-10 text-green-600 hover:text-green-700 hover:bg-green-100"
                     onClick={() => onComplete(appointment.id)}
                   >
-                    <CheckCircle2 className="h-5 w-5" />
+                    <CheckCircle2 className="h-6 w-6" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -174,16 +174,16 @@ export function AppointmentCard({
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9"
+            className="h-10 w-10"
             onClick={() => onEdit(appointment)}
           >
-            <Edit className="h-5 w-5" />
+            <Edit className="h-6 w-6" />
           </Button>
           {isAdmin && (!isCompleted || canDeleteCompleted) && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:text-destructive">
-                  <Trash2 className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:text-destructive">
+                  <Trash2 className="h-6 w-6" />
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
