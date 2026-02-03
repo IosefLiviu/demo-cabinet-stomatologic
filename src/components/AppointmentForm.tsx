@@ -1058,7 +1058,7 @@ export function AppointmentForm({
                     Șterge
                   </Button>
                 )}
-                {editingAppointment && editingAppointment.status === 'completed' && onUncomplete && isAdmin && (
+                {editingAppointment && editingAppointment.status === 'completed' && onUncomplete && (
                   <Button 
                     type="button" 
                     variant="outline"
