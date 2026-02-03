@@ -42,6 +42,8 @@ export interface AppointmentDB {
   payment_method?: string;
   cancellation_reason?: string | null;
   cancelled_at?: string | null;
+  debt_amount?: number;
+  debt_paid_at?: string;
   created_at: string;
   updated_at: string;
   // Joined data
@@ -141,7 +143,9 @@ export function useAppointmentsDB() {
   const fetchAppointmentsRange = async (startDate: string, endDate: string) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // Fetch appointments in the date range
+      const { data: rangeData, error: rangeError } = await supabase
         .from('appointments')
         .select(`
           *,
@@ -155,8 +159,43 @@ export function useAppointmentsDB() {
         .order('appointment_date', { ascending: true })
         .order('start_time', { ascending: true });
 
-      if (error) throw error;
-      setAppointments((data as unknown as AppointmentDB[]) || []);
+      if (rangeError) throw rangeError;
+      
+      // Also fetch appointments from OUTSIDE the range where debt_paid_at falls WITHIN the range
+      // This ensures debt payments are attributed to the correct reporting period
+      const { data: debtData, error: debtError } = await supabase
+        .from('appointments')
+        .select(`
+          *,
+          patients (id, first_name, last_name, phone, allergies),
+          treatments (id, name, default_duration),
+          doctors (id, name, color),
+          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, laborator, duration, discount_percent, tooth_numbers, tooth_data)
+        `)
+        .lt('appointment_date', startDate) // Appointments from before the range
+        .gte('debt_paid_at', startDate)
+        .lte('debt_paid_at', endDate + 'T23:59:59')
+        .not('debt_amount', 'is', null)
+        .gt('debt_amount', 0);
+      
+      if (debtError) {
+        console.error('Error fetching debt payments:', debtError);
+        // Continue with just the range data if debt query fails
+      }
+      
+      // Combine and deduplicate by id
+      const allAppointments = [...(rangeData || [])];
+      const existingIds = new Set(allAppointments.map(a => a.id));
+      
+      if (debtData) {
+        debtData.forEach(apt => {
+          if (!existingIds.has(apt.id)) {
+            allAppointments.push(apt);
+          }
+        });
+      }
+      
+      setAppointments((allAppointments as unknown as AppointmentDB[]) || []);
     } catch (error: any) {
       console.error('Error fetching appointments range:', error);
       toast({
