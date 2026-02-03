@@ -1045,7 +1045,7 @@ export function AppointmentForm({
             {/* Action buttons - stacked on mobile */}
             <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2 sm:gap-3 pt-2 sm:pt-4">
               <div>
-                {editingAppointment && onDelete && isAdmin && (
+                {editingAppointment && onDelete && (isAdmin || editingAppointment.status === 'cancelled') && (
                   <Button 
                     type="button" 
                     variant="destructive" 
