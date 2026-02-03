@@ -118,6 +118,7 @@ export type Database = {
           cancellation_reason: string | null
           cancelled_at: string | null
           created_at: string
+          debt_paid_at: string | null
           doctor_id: string | null
           duration: number
           id: string
@@ -139,6 +140,7 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           created_at?: string
+          debt_paid_at?: string | null
           doctor_id?: string | null
           duration?: number
           id?: string
@@ -160,6 +162,7 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           created_at?: string
+          debt_paid_at?: string | null
           doctor_id?: string | null
           duration?: number
           id?: string

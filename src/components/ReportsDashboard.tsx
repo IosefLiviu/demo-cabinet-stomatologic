@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns';
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, isWithinInterval, parseISO } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChart, UserCircle, Filter, Download, FlaskConical, ClipboardList, Percent } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -25,6 +25,96 @@ interface ReportsDashboardProps {
 }
 
 const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+
+// Helper to calculate actual paid amount within a date range
+// If debt was paid after the appointment date, only count it in the month it was paid
+const getEffectivePaidAmount = (
+  apt: AppointmentDB,
+  dateRange: { from: Date; to: Date }
+): { 
+  effectivePaid: number; 
+  debtPaidInPeriod: number;
+  originalPaidInPeriod: number;
+} => {
+  const paidAmount = apt.paid_amount ?? (apt.is_paid ? (apt.price || 0) : 0);
+  const appointmentDate = parseISO(apt.appointment_date);
+  const isAppointmentInPeriod = isWithinInterval(appointmentDate, { start: dateRange.from, end: dateRange.to });
+  
+  // If no debt_paid_at, all payment counts for the appointment date
+  if (!apt.debt_paid_at) {
+    return { 
+      effectivePaid: isAppointmentInPeriod ? paidAmount : 0,
+      debtPaidInPeriod: 0,
+      originalPaidInPeriod: isAppointmentInPeriod ? paidAmount : 0
+    };
+  }
+  
+  const debtPaidDate = parseISO(apt.debt_paid_at);
+  const isDebtPaidInPeriod = isWithinInterval(debtPaidDate, { start: dateRange.from, end: dateRange.to });
+  
+  // Calculate payable amount (what should have been paid at appointment time)
+  const payableAmount = apt.appointment_treatments?.length
+    ? apt.appointment_treatments.reduce((sum, t) => {
+        const tPrice = t.price || 0;
+        const tCas = t.decont || 0;
+        const discountPercent = (t as any).discount_percent || 0;
+        const priceAfterCas = tPrice - tCas;
+        const discountAmount = priceAfterCas * (discountPercent / 100);
+        return sum + (priceAfterCas - discountAmount);
+      }, 0)
+    : (apt.price || 0);
+  
+  // If appointment date is different from debt_paid_at, it means there was a debt
+  const appointmentDateStr = format(appointmentDate, 'yyyy-MM-dd');
+  const debtPaidDateStr = format(debtPaidDate, 'yyyy-MM-dd');
+  
+  if (appointmentDateStr !== debtPaidDateStr) {
+    // There was a debt that was paid later
+    // The original payment (at appointment time) was less than payable
+    // The difference is the debt amount
+    const debtAmount = Math.max(0, paidAmount - (payableAmount - paidAmount > 0 ? paidAmount : payableAmount));
+    
+    // We need to figure out what was paid originally vs what was paid as debt
+    // If total paid == payable, then: originalPaid + debtPaid = payable
+    // We assume the debt was the remaining amount after initial payment
+    // Since we don't have separate tracking, we estimate based on the difference
+    
+    // If payment method includes 'partial', there was original partial payment
+    // The debt amount = paidAmount - originalPaid
+    
+    // For now, use a simpler approach:
+    // If debt was paid in a different month, split the amounts
+    if (isAppointmentInPeriod && !isDebtPaidInPeriod) {
+      // Appointment is in period, but debt was paid later (outside period)
+      // Only count the original payment, not the debt
+      // The debt portion should NOT be counted for this period
+      // We estimate original payment as what was due minus the debt
+      // Without exact tracking, we can't know the exact split
+      // Use an approximation: if paid fully now, the original was partial
+      return { 
+        effectivePaid: 0, // Don't count debt payments for appointment date
+        debtPaidInPeriod: 0,
+        originalPaidInPeriod: 0
+      };
+    } else if (!isAppointmentInPeriod && isDebtPaidInPeriod) {
+      // Appointment was in a previous period, debt paid in current period
+      // Count the debt payment in current period
+      // The debt amount is the full paid amount (since appointment was before)
+      return { 
+        effectivePaid: paidAmount,
+        debtPaidInPeriod: paidAmount,
+        originalPaidInPeriod: 0
+      };
+    }
+  }
+  
+  // Default: appointment and payment in same period
+  return { 
+    effectivePaid: isAppointmentInPeriod ? paidAmount : 0,
+    debtPaidInPeriod: 0,
+    originalPaidInPeriod: isAppointmentInPeriod ? paidAmount : 0
+  };
+};
 
 export function ReportsDashboard({ appointments, loading, onFetchRange }: ReportsDashboardProps) {
   const { doctors } = useDoctors();
@@ -241,6 +331,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
   }, [filteredAppointments]);
 
   // Doctor revenue data - includes all appointments with cash/card breakdown, CAS and Laborator
+  // IMPORTANT: Debt payments are allocated to the month they were paid, not the appointment month
   const doctorRevenueData = useMemo(() => {
     const doctorStats = filteredAppointments.reduce((acc, a) => {
       const doctorName = a.doctors?.name || 'Fără doctor';
@@ -264,12 +355,21 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
           sixtPercentTotal: 0, // 60% of totalWithNetLabAndUnpaid
           fortyPercentTotal: 0, // 40% of totalWithNetLabAndUnpaid
           appointments: 0,
+          debtPaidFromOtherMonths: 0, // Debt paid in this period from appointments in other periods
           color: doctorColor 
         };
       }
       
       const price = a.price || 0;
-      acc[doctorName].appointments += 1;
+      
+      // Check if this is a debt-payment-only record (appointment from another period)
+      const appointmentDate = parseISO(a.appointment_date);
+      const isAppointmentInPeriod = isWithinInterval(appointmentDate, { start: dateRange.from, end: dateRange.to });
+      
+      // Only count towards appointment statistics if the appointment is in this period
+      if (isAppointmentInPeriod) {
+        acc[doctorName].appointments += 1;
+      }
       
       if (a.status === 'completed') {
         // Calculate payable amount including discount_percent per treatment FIRST
@@ -319,40 +419,89 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         const method = getPaymentMethod(a);
         const paidAmount = a.paid_amount ?? (a.is_paid ? payableAmount : 0);
         
+        // Check if this payment includes debt paid at a different time
+        // If debt_paid_at exists and is different from appointment_date, 
+        // we need to determine which portion belongs to which period
+        let effectivePaidAmount = paidAmount;
+        let isDebtPaymentFromOtherPeriod = false;
+        
+        if (a.debt_paid_at) {
+          const appointmentDate = parseISO(a.appointment_date);
+          const debtPaidDate = parseISO(a.debt_paid_at);
+          const appointmentMonth = format(appointmentDate, 'yyyy-MM');
+          const debtPaidMonth = format(debtPaidDate, 'yyyy-MM');
+          const currentReportMonth = format(dateRange.from, 'yyyy-MM');
+          
+          // If debt was paid in a different month than the appointment
+          if (appointmentMonth !== debtPaidMonth) {
+            // If we're looking at the appointment's month
+            if (currentReportMonth === appointmentMonth) {
+              // Don't count the full paid_amount - the debt was paid later
+              // Set to 0 - the original partial payment would have been tracked differently
+              // For simplicity, we exclude this from the appointment month entirely
+              // since the final payment was made in a different month
+              effectivePaidAmount = 0;
+              isDebtPaymentFromOtherPeriod = false;
+            } else if (currentReportMonth === debtPaidMonth) {
+              // We're looking at the month where the debt was paid
+              // This payment should be counted here
+              effectivePaidAmount = paidAmount;
+              isDebtPaymentFromOtherPeriod = true;
+              acc[doctorName].debtPaidFromOtherMonths += paidAmount;
+            }
+          }
+        }
+        
         // For Clinică/Medic split: use total initial price (before CAS deduction) minus laborator
         // This ensures CAS is included in the revenue split calculation
         const revenueForSplit = appointmentTotalPrice - acc[doctorName].laborator;
         
-        if (method === 'card') {
-          // Use payable (net) amount for paid revenue display
-          acc[doctorName].paidCard += payableAmount;
-          acc[doctorName].paid += payableAmount;
-          // For revenue split, add CAS to get full income (paid + CAS = total price minus discount)
-          acc[doctorName].totalWithNetLab += (payableAmount + appointmentCas);
-        } else if (method === 'cash') {
-          acc[doctorName].paidCash += payableAmount;
-          acc[doctorName].paid += payableAmount;
-          acc[doctorName].totalWithNetLab += (payableAmount + appointmentCas);
-        } else if (method === 'partial_card') {
-          acc[doctorName].paidCard += paidAmount;
-          acc[doctorName].paid += paidAmount;
-          acc[doctorName].unpaid += Math.max(0, payableAmount - paidAmount);
-          // For partial payments, include full CAS (clinic receives it regardless of patient payment)
-          acc[doctorName].totalWithNetLab += (paidAmount + appointmentCas);
-        } else if (method === 'partial_cash') {
-          acc[doctorName].paidCash += paidAmount;
-          acc[doctorName].paid += paidAmount;
-          acc[doctorName].unpaid += Math.max(0, payableAmount - paidAmount);
-          // For partial payments, include full CAS (clinic receives it regardless of patient payment)
-          acc[doctorName].totalWithNetLab += (paidAmount + appointmentCas);
-        } else if (method === 'unpaid' || !a.is_paid) {
-          // For unpaid, debt is payable amount (after CAS + discount)
+        if (isDebtPaymentFromOtherPeriod) {
+          // Debt payment from other period - count in cash (most debt payments are cash)
+          acc[doctorName].paidCash += effectivePaidAmount;
+          acc[doctorName].paid += effectivePaidAmount;
+          acc[doctorName].totalWithNetLab += effectivePaidAmount; // No CAS to add for debt payments
+        } else if (effectivePaidAmount > 0) {
+          if (method === 'card') {
+            // Use payable (net) amount for paid revenue display
+            acc[doctorName].paidCard += payableAmount;
+            acc[doctorName].paid += payableAmount;
+            // For revenue split, add CAS to get full income (paid + CAS = total price minus discount)
+            acc[doctorName].totalWithNetLab += (payableAmount + appointmentCas);
+          } else if (method === 'cash') {
+            acc[doctorName].paidCash += payableAmount;
+            acc[doctorName].paid += payableAmount;
+            acc[doctorName].totalWithNetLab += (payableAmount + appointmentCas);
+          } else if (method === 'partial_card') {
+            acc[doctorName].paidCard += effectivePaidAmount;
+            acc[doctorName].paid += effectivePaidAmount;
+            acc[doctorName].unpaid += Math.max(0, payableAmount - effectivePaidAmount);
+            // For partial payments, include full CAS (clinic receives it regardless of patient payment)
+            acc[doctorName].totalWithNetLab += (effectivePaidAmount + appointmentCas);
+          } else if (method === 'partial_cash') {
+            acc[doctorName].paidCash += effectivePaidAmount;
+            acc[doctorName].paid += effectivePaidAmount;
+            acc[doctorName].unpaid += Math.max(0, payableAmount - effectivePaidAmount);
+            // For partial payments, include full CAS (clinic receives it regardless of patient payment)
+            acc[doctorName].totalWithNetLab += (effectivePaidAmount + appointmentCas);
+          } else if (method === 'unpaid' || !a.is_paid) {
+            // For unpaid, debt is payable amount (after CAS + discount)
+            acc[doctorName].unpaid += payableAmount;
+          } else if (a.is_paid) {
+            // Fallback for old data
+            acc[doctorName].paidCash += payableAmount;
+            acc[doctorName].paid += payableAmount;
+            acc[doctorName].totalWithNetLab += (payableAmount + appointmentCas);
+          }
+        } else if (effectivePaidAmount === 0 && a.debt_paid_at) {
+          // Appointment with debt that will be/was paid in a different period
+          // Show as unpaid for this period (the payment is attributed to the debt payment month)
           acc[doctorName].unpaid += payableAmount;
-        } else if (a.is_paid) {
-          // Fallback for old data
-          acc[doctorName].paidCash += payableAmount;
-          acc[doctorName].paid += payableAmount;
-          acc[doctorName].totalWithNetLab += (payableAmount + appointmentCas);
+        } else {
+          // Regular unpaid logic
+          if (method === 'unpaid' || !a.is_paid) {
+            acc[doctorName].unpaid += payableAmount;
+          }
         }
       } else if (a.status === 'scheduled') {
         acc[doctorName].scheduled += price;
@@ -374,10 +523,10 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       acc[doctorName].fortyPercentTotal = Math.round(totalWithNetLabMinusLab * doctorCommissionRate);
       
       return acc;
-    }, {} as Record<string, { name: string; revenue: number; discount: number; paid: number; paidCard: number; paidCash: number; unpaid: number; scheduled: number; cas: number; laborator: number; netLabRevenue: number; totalWithNetLab: number; totalWithNetLabAndUnpaid: number; sixtPercentTotal: number; fortyPercentTotal: number; appointments: number; color: string }>);
+    }, {} as Record<string, { name: string; revenue: number; discount: number; paid: number; paidCard: number; paidCash: number; unpaid: number; scheduled: number; cas: number; laborator: number; netLabRevenue: number; totalWithNetLab: number; totalWithNetLabAndUnpaid: number; sixtPercentTotal: number; fortyPercentTotal: number; appointments: number; debtPaidFromOtherMonths: number; color: string }>);
 
     return Object.values(doctorStats).sort((a, b) => (b.revenue + b.scheduled) - (a.revenue + a.scheduled));
-  }, [filteredAppointments]);
+  }, [filteredAppointments, dateRange]);
 
   // Unpaid amounts by patient report
   const unpaidByPatientData = useMemo(() => {

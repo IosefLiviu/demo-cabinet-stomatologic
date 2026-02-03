@@ -42,6 +42,7 @@ export interface AppointmentDB {
   payment_method?: string;
   cancellation_reason?: string | null;
   cancelled_at?: string | null;
+  debt_paid_at?: string | null; // When the debt was paid (for allocating to correct month)
   created_at: string;
   updated_at: string;
   // Joined data
@@ -141,7 +142,9 @@ export function useAppointmentsDB() {
   const fetchAppointmentsRange = async (startDate: string, endDate: string) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // Fetch appointments in the date range by appointment_date
+      const { data: appointmentsByDate, error: error1 } = await supabase
         .from('appointments')
         .select(`
           *,
@@ -155,8 +158,43 @@ export function useAppointmentsDB() {
         .order('appointment_date', { ascending: true })
         .order('start_time', { ascending: true });
 
-      if (error) throw error;
-      setAppointments((data as unknown as AppointmentDB[]) || []);
+      if (error1) throw error1;
+      
+      // Also fetch appointments where debt was paid in this period (but appointment was in a different period)
+      // This is important for revenue allocation
+      const { data: appointmentsByDebtPaid, error: error2 } = await supabase
+        .from('appointments')
+        .select(`
+          *,
+          patients (id, first_name, last_name, phone, allergies),
+          treatments (id, name, default_duration),
+          doctors (id, name, color),
+          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, laborator, duration, discount_percent, tooth_numbers, tooth_data)
+        `)
+        .gte('debt_paid_at', startDate)
+        .lte('debt_paid_at', endDate + 'T23:59:59')
+        .lt('appointment_date', startDate); // Only those with appointment BEFORE the start date
+      
+      if (error2) throw error2;
+      
+      // Merge and deduplicate
+      const allAppointments = [...(appointmentsByDate || [])];
+      const existingIds = new Set(allAppointments.map(a => a.id));
+      
+      (appointmentsByDebtPaid || []).forEach(a => {
+        if (!existingIds.has(a.id)) {
+          allAppointments.push(a);
+        }
+      });
+      
+      // Sort by appointment_date then start_time
+      allAppointments.sort((a, b) => {
+        const dateCompare = a.appointment_date.localeCompare(b.appointment_date);
+        if (dateCompare !== 0) return dateCompare;
+        return a.start_time.localeCompare(b.start_time);
+      });
+      
+      setAppointments((allAppointments as unknown as AppointmentDB[]) || []);
     } catch (error: any) {
       console.error('Error fetching appointments range:', error);
       toast({
