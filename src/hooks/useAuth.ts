@@ -10,6 +10,7 @@ export function useAuth() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [doctorId, setDoctorId] = useState<string | null>(null);
   const [mustChangePassword, setMustChangePassword] = useState(false);
+  const [displayName, setDisplayName] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -25,11 +26,13 @@ export function useAuth() {
             checkAdminRole(session.user.id);
             checkDoctorAssociation(session.user.id);
             checkMustChangePassword(session.user.id);
+            fetchDisplayName(session.user.id);
           }, 0);
         } else {
           setIsAdmin(false);
           setDoctorId(null);
           setMustChangePassword(false);
+          setDisplayName(null);
         }
       }
     );
@@ -43,6 +46,7 @@ export function useAuth() {
         checkAdminRole(session.user.id);
         checkDoctorAssociation(session.user.id);
         checkMustChangePassword(session.user.id);
+        fetchDisplayName(session.user.id);
       }
       setLoading(false);
     });
@@ -101,6 +105,23 @@ export function useAuth() {
     }
   };
 
+  const fetchDisplayName = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name, username')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) throw error;
+      // Prefer full_name, fallback to username
+      setDisplayName(data?.full_name || data?.username || null);
+    } catch (error) {
+      console.error('Error fetching display name:', error);
+      setDisplayName(null);
+    }
+  };
+
   const clearMustChangePassword = () => {
     setMustChangePassword(false);
   };
@@ -145,6 +166,7 @@ export function useAuth() {
     setIsAdmin(false);
     setDoctorId(null);
     setMustChangePassword(false);
+    setDisplayName(null);
     return { error: null };
   };
 
@@ -154,6 +176,7 @@ export function useAuth() {
     loading,
     isAdmin,
     doctorId,
+    displayName,
     mustChangePassword,
     clearMustChangePassword,
     signIn,
