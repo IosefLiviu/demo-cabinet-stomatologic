@@ -602,7 +602,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="container px-2 sm:px-4 py-4 sm:py-6">
+      <main className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4 sm:space-y-6">
           <div className="flex items-center gap-2">
             <NavigationButtons
