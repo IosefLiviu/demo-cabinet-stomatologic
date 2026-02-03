@@ -424,7 +424,6 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         // we need to determine which portion belongs to which period
         let effectivePaidAmount = paidAmount;
         let isDebtPaymentFromOtherPeriod = false;
-        let debtAmountOnly = 0; // Only the debt portion paid later
         
         if (a.debt_paid_at) {
           const appointmentDate = parseISO(a.appointment_date);
@@ -435,61 +434,20 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
           
           // If debt was paid in a different month than the appointment
           if (appointmentMonth !== debtPaidMonth) {
-            // Calculate the debt amount: difference between total paid and payable amount at appointment time
-            // The debt = payable - originalPayment, where originalPayment was made at appointment time
-            // Since paid_amount now includes the full payment, we need to calculate what was the debt
-            // Debt = payable - (payable - debt) = debt portion
-            // We can calculate this as: if fully paid now, debt = payable - what would have been paid originally
-            // For partial payments: the original partial amount + debt = paidAmount
-            // So debt = paidAmount - originalPartialPayment
-            // Since we don't track original partial payment, we assume:
-            // - If payment_method was partial_*, the remaining unpaid was the debt
-            // - Otherwise, we estimate debt based on the fact that there was a debt
-            
-            // Simple approach: the debt is what made the payment complete
-            // If payable = 1189 and paid = 1649 (overpaid due to price including CAS in old data),
-            // Actually paid_amount should equal the final total paid by patient
-            // Debt = payable amount - initial payment made at appointment time
-            // Since we can't know the exact split, use a heuristic:
-            // If the appointment is in the current report period but debt_paid_at is in a different period,
-            // we need to exclude the debt portion from this period
-            // If debt_paid_at is in the current period but appointment is not,
-            // we only count the debt portion (payable - any initial payment if tracked)
-            
-            // For now, use the exact debt calculation if we have it:
-            // Debt = payable - originalPaid. Since we have payment_method info:
-            // If method includes 'partial', original payment was paidAmount as recorded before debt
-            // But after debt payment, paid_amount is updated to full amount
-            
-            // Simplest accurate approach: 
-            // The debt_paid_at signifies WHEN the final payment was made
-            // If appointment and debt payment are in different months:
-            // - Appointment month: show as partial/unpaid with the original amount (before debt payment)
-            // - Debt payment month: show only the debt that was paid
-            
-            // Calculate the actual debt: this is what was outstanding and then paid
-            // Since paid_amount now includes everything, and payable is what patient owes,
-            // If paidAmount >= payable, patient fully paid
-            // The debt = payable - (initial partial payment)
-            // We assume: if debt_paid_at exists, there was debt = some portion of payable
-            // Without exact tracking, we'll attribute the full payable to the debt payment month
-            // and nothing to the appointment month (since the debt was paid later)
-            
+            // If we're looking at the appointment's month
             if (currentReportMonth === appointmentMonth) {
-              // Appointment month - don't count this payment here, it was paid in another month
+              // Don't count the full paid_amount - the debt was paid later
+              // Set to 0 - the original partial payment would have been tracked differently
+              // For simplicity, we exclude this from the appointment month entirely
+              // since the final payment was made in a different month
               effectivePaidAmount = 0;
               isDebtPaymentFromOtherPeriod = false;
             } else if (currentReportMonth === debtPaidMonth) {
-              // Debt payment month - count ONLY the debt amount, not the full paid_amount
-              // The debt amount = payableAmount (what patient owed after CAS)
-              // This is what was outstanding and paid in this month
-              debtAmountOnly = payableAmount; // The patient paid their remaining balance
-              effectivePaidAmount = debtAmountOnly;
+              // We're looking at the month where the debt was paid
+              // This payment should be counted here
+              effectivePaidAmount = paidAmount;
               isDebtPaymentFromOtherPeriod = true;
-              acc[doctorName].debtPaidFromOtherMonths += debtAmountOnly;
-            } else {
-              // Neither the appointment month nor debt payment month - don't count
-              effectivePaidAmount = 0;
+              acc[doctorName].debtPaidFromOtherMonths += paidAmount;
             }
           }
         }
@@ -500,11 +458,9 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         
         if (isDebtPaymentFromOtherPeriod) {
           // Debt payment from other period - count in cash (most debt payments are cash)
-          // Use debtAmountOnly (payable amount) not full paidAmount
           acc[doctorName].paidCash += effectivePaidAmount;
           acc[doctorName].paid += effectivePaidAmount;
-          // For debt payments, include CAS as well since clinic receives it
-          acc[doctorName].totalWithNetLab += (effectivePaidAmount + appointmentCas);
+          acc[doctorName].totalWithNetLab += effectivePaidAmount; // No CAS to add for debt payments
         } else if (effectivePaidAmount > 0) {
           if (method === 'card') {
             // Use payable (net) amount for paid revenue display
@@ -539,8 +495,8 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
           }
         } else if (effectivePaidAmount === 0 && a.debt_paid_at) {
           // Appointment with debt that will be/was paid in a different period
-          // Don't show as unpaid - the debt was already paid in another period
-          // This prevents double-counting
+          // Show as unpaid for this period (the payment is attributed to the debt payment month)
+          acc[doctorName].unpaid += payableAmount;
         } else {
           // Regular unpaid logic
           if (method === 'unpaid' || !a.is_paid) {
