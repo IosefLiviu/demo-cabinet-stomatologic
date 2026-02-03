@@ -43,6 +43,7 @@ export interface AppointmentDB {
   cancellation_reason?: string | null;
   cancelled_at?: string | null;
   debt_paid_at?: string | null; // When the debt was paid (for allocating to correct month)
+  debt_amount?: number | null; // The exact amount of debt paid (separate from original payment)
   created_at: string;
   updated_at: string;
   // Joined data
