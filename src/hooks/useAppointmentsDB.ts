@@ -42,6 +42,7 @@ export interface AppointmentDB {
   payment_method?: string;
   cancellation_reason?: string | null;
   cancelled_at?: string | null;
+  debt_paid_at?: string | null; // When a debt/remaining balance was paid (for correct monthly report attribution)
   created_at: string;
   updated_at: string;
   // Joined data
@@ -141,7 +142,9 @@ export function useAppointmentsDB() {
   const fetchAppointmentsRange = async (startDate: string, endDate: string) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // Query 1: Get appointments within the date range
+      const { data: appointmentsInRange, error: error1 } = await supabase
         .from('appointments')
         .select(`
           *,
@@ -155,8 +158,44 @@ export function useAppointmentsDB() {
         .order('appointment_date', { ascending: true })
         .order('start_time', { ascending: true });
 
-      if (error) throw error;
-      setAppointments((data as unknown as AppointmentDB[]) || []);
+      if (error1) throw error1;
+      
+      // Query 2: Get appointments from OTHER months that had debt paid within this date range
+      // These are appointments where debt_paid_at falls within the selected period
+      // but appointment_date is outside the range
+      const { data: debtPaidInRange, error: error2 } = await supabase
+        .from('appointments')
+        .select(`
+          *,
+          patients (id, first_name, last_name, phone, allergies),
+          treatments (id, name, default_duration),
+          doctors (id, name, color),
+          appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, laborator, duration, discount_percent, tooth_numbers, tooth_data)
+        `)
+        .gte('debt_paid_at', `${startDate}T00:00:00`)
+        .lte('debt_paid_at', `${endDate}T23:59:59`)
+        .or(`appointment_date.lt.${startDate},appointment_date.gt.${endDate}`);
+
+      if (error2) throw error2;
+      
+      // Combine results, avoiding duplicates
+      const allAppointments = [...(appointmentsInRange || [])];
+      const existingIds = new Set(allAppointments.map(a => a.id));
+      
+      (debtPaidInRange || []).forEach(apt => {
+        if (!existingIds.has(apt.id)) {
+          allAppointments.push(apt);
+        }
+      });
+      
+      // Sort combined results
+      allAppointments.sort((a, b) => {
+        const dateCompare = a.appointment_date.localeCompare(b.appointment_date);
+        if (dateCompare !== 0) return dateCompare;
+        return a.start_time.localeCompare(b.start_time);
+      });
+      
+      setAppointments((allAppointments as unknown as AppointmentDB[]) || []);
     } catch (error: any) {
       console.error('Error fetching appointments range:', error);
       toast({
@@ -511,13 +550,32 @@ export function useAppointmentsDB() {
         paymentMethod = paymentMethod.replace('partial_', '');
       }
 
+      // Check if this is a debt payment (paying off remaining balance from a past appointment)
+      // Set debt_paid_at if:
+      // 1. The payment amount increased (user is paying off debt)
+      // 2. The appointment was from a previous date
+      const previousPaidAmount = appointment.paid_amount ?? 0;
+      const appointmentDate = new Date(appointment.appointment_date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      appointmentDate.setHours(0, 0, 0, 0);
+      
+      const isPayingDebt = paidAmount > previousPaidAmount && appointmentDate < today;
+      
+      const updateData: Record<string, unknown> = {
+        paid_amount: paidAmount,
+        is_paid: isPaid,
+        payment_method: paymentMethod,
+      };
+      
+      // If paying off debt from a past appointment, record when the debt was paid
+      if (isPayingDebt) {
+        updateData.debt_paid_at = new Date().toISOString();
+      }
+
       const { data, error } = await supabase
         .from('appointments')
-        .update({
-          paid_amount: paidAmount,
-          is_paid: isPaid,
-          payment_method: paymentMethod,
-        })
+        .update(updateData)
         .eq('id', id)
         .select(`
           *,
