@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, ArrowLeft, Save, X, Users, Stethoscope, Shield, ShieldCheck, Palette, Mail, Download, FileText, CheckCircle, XCircle, ChevronLeft, ChevronRight, Loader2, KeyRound, CalendarClock, Settings } from 'lucide-react';
+import { Plus, Edit, Trash2, ArrowLeft, Save, X, Users, Stethoscope, Shield, ShieldCheck, Palette, Mail, Download, FileText, CheckCircle, XCircle, ChevronLeft, ChevronRight, Loader2, KeyRound, CalendarClock, Settings, ClipboardList } from 'lucide-react';
+import { TreatmentsManagement } from '@/components/TreatmentsManagement';
 import { TimeOffApprovalPanel } from '@/components/TimeOffApprovalPanel';
 import { WhatsAppSettingsCard } from '@/components/WhatsAppSettingsCard';
 import * as XLSX from 'xlsx';
@@ -775,30 +776,34 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="doctors" className="space-y-6">
-          <TabsList className="grid w-full max-w-4xl grid-cols-6">
+          <TabsList className="grid w-full max-w-5xl grid-cols-7">
             <TabsTrigger value="doctors" className="gap-2">
               <Stethoscope className="h-4 w-4" />
-              Doctori
+              <span className="hidden sm:inline">Doctori</span>
             </TabsTrigger>
             <TabsTrigger value="users" className="gap-2">
               <Users className="h-4 w-4" />
-              Utilizatori
+              <span className="hidden sm:inline">Utilizatori</span>
+            </TabsTrigger>
+            <TabsTrigger value="treatments" className="gap-2">
+              <ClipboardList className="h-4 w-4" />
+              <span className="hidden sm:inline">Intervenții</span>
             </TabsTrigger>
             <TabsTrigger value="statuses" className="gap-2">
               <Palette className="h-4 w-4" />
-              Statusuri
+              <span className="hidden sm:inline">Statusuri</span>
             </TabsTrigger>
             <TabsTrigger value="logs" className="gap-2">
               <FileText className="h-4 w-4" />
-              Loguri
+              <span className="hidden sm:inline">Loguri</span>
             </TabsTrigger>
             <TabsTrigger value="timeoff" className="gap-2">
               <CalendarClock className="h-4 w-4" />
-              Concedii
+              <span className="hidden sm:inline">Concedii</span>
             </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
               <Settings className="h-4 w-4" />
-              Setări
+              <span className="hidden sm:inline">Setări</span>
             </TabsTrigger>
           </TabsList>
 
@@ -908,6 +913,11 @@ export default function Admin() {
                 )}
               </div>
             )}
+          </TabsContent>
+
+          {/* ============ TREATMENTS TAB ============ */}
+          <TabsContent value="treatments" className="space-y-4">
+            <TreatmentsManagement />
           </TabsContent>
 
           <TabsContent value="users" className="space-y-4">
