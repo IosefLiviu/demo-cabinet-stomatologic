@@ -86,9 +86,16 @@ export function useLabSamples() {
 
   const addSample = async (sample: LabSampleInsert): Promise<LabSample | null> => {
     try {
+      // Clean empty strings to null for date fields
+      const cleanedSample = {
+        ...sample,
+        expected_return_date: sample.expected_return_date || null,
+        sample_date: sample.sample_date || undefined, // Let DB use default
+      };
+
       const { data, error } = await supabase
         .from('lab_samples')
-        .insert(sample)
+        .insert(cleanedSample)
         .select()
         .single();
 
