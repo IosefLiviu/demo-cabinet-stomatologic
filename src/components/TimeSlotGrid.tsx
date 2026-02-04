@@ -335,6 +335,17 @@ export function TimeSlotGrid({
                               return `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
                             })()} • {appointmentStarting.treatment}
                           </p>
+                          {appointmentStarting.doctorName && (
+                            <span 
+                              className="text-[10px] sm:text-[11px] font-semibold truncate leading-none mt-0.5 px-1 py-0.5 rounded"
+                              style={{ 
+                                backgroundColor: appointmentStarting.doctorColor ? `${appointmentStarting.doctorColor}25` : undefined,
+                                color: appointmentStarting.doctorColor || undefined 
+                              }}
+                            >
+                              {appointmentStarting.doctorName}
+                            </span>
+                          )}
                         </button>
                         {appointmentStarting.status !== 'completed' && appointmentStarting.status !== 'cancelled' && (
                           <div className="flex gap-0.5 flex-shrink-0">
