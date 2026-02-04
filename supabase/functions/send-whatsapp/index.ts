@@ -12,6 +12,12 @@ interface SendWhatsAppRequest {
   message: string;
   patientId?: string;
   patientName?: string;
+  // For template-based messages (reminders)
+  templateType?: "reminder" | "direct";
+  templateVariables?: {
+    date?: string;
+    time?: string;
+  };
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -59,11 +65,26 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { to, message, patientId, patientName }: SendWhatsAppRequest = await req.json();
+    const { to, message, patientId, patientName, templateType, templateVariables }: SendWhatsAppRequest = await req.json();
 
-    if (!to || !message) {
+    if (!to) {
       return new Response(
-        JSON.stringify({ error: "Missing 'to' or 'message' field" }),
+        JSON.stringify({ error: "Missing 'to' field" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // For template messages, we need templateVariables; for direct, we need message
+    if (templateType === "reminder" && (!templateVariables?.date || !templateVariables?.time)) {
+      return new Response(
+        JSON.stringify({ error: "Missing template variables (date, time) for reminder" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    if (!templateType && !message) {
+      return new Response(
+        JSON.stringify({ error: "Missing 'message' field" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -85,7 +106,7 @@ const handler = async (req: Request): Promise<Response> => {
       ? twilioWhatsAppNumber
       : `whatsapp:${twilioWhatsAppNumber}`;
 
-    console.log("Sending WhatsApp message:", { to: whatsappTo, from: whatsappFrom });
+    console.log("Sending WhatsApp message:", { to: whatsappTo, from: whatsappFrom, templateType });
 
     // Send message via Twilio API
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
@@ -97,8 +118,28 @@ const handler = async (req: Request): Promise<Response> => {
     const formData = new URLSearchParams();
     formData.append("To", whatsappTo);
     formData.append("From", whatsappFrom);
-    formData.append("Body", message);
     formData.append("StatusCallback", statusCallbackUrl);
+
+    // Template SIDs for approved WhatsApp templates
+    const REMINDER_TEMPLATE_SID = "HX6cd6d3274cd89e4dfcacbe860aa546b3";
+    
+    let messageBody = message || "";
+    
+    if (templateType === "reminder" && templateVariables) {
+      // Use approved template for reminders
+      // Variables: {{1}} = date, {{2}} = time
+      formData.append("ContentSid", REMINDER_TEMPLATE_SID);
+      formData.append("ContentVariables", JSON.stringify({
+        "1": templateVariables.date,
+        "2": templateVariables.time,
+      }));
+      // Store a readable version for our database
+      messageBody = `Reminder: ${templateVariables.date} la ora ${templateVariables.time}`;
+      console.log("Using reminder template:", { date: templateVariables.date, time: templateVariables.time });
+    } else {
+      // Direct message - use Body (requires active conversation or approved template)
+      formData.append("Body", message);
+    }
 
     const twilioResponse = await fetch(twilioUrl, {
       method: "POST",
@@ -137,7 +178,7 @@ const handler = async (req: Request): Promise<Response> => {
       .insert({
         patient_phone: whatsappTo,
         patient_name: patientName || null,
-        message_body: message,
+        message_body: messageBody,
         message_sid: twilioResult.sid,
         direction: "outbound",
         status: twilioResult.status || "sent",
