@@ -300,12 +300,14 @@ export function PendingAppointmentsByDoctorReport({ appointments, dateRange: ini
               {format(dateRange.from, 'dd MMM', { locale: ro })} - {format(dateRange.to, 'dd MMM yyyy', { locale: ro })}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto p-0 z-50" align="start" sideOffset={5}>
             <Calendar
               mode="range"
               selected={{ from: dateRange.from, to: dateRange.to }}
               onSelect={(range) => range && handleDateRangeChange(range)}
               numberOfMonths={2}
+              locale={ro}
+              weekStartsOn={1}
               className={cn("p-3 pointer-events-auto")}
             />
           </PopoverContent>
