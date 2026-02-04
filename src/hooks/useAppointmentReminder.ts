@@ -44,6 +44,18 @@ export async function sendAppointmentReminderIfTomorrow(params: SendReminderPara
     return false;
   }
 
+  // CRITICAL: Check if reminder was already sent (prevents duplicate from cron job)
+  const { data: appointment } = await supabase
+    .from("appointments")
+    .select("reminder_sent_at")
+    .eq("id", appointmentId)
+    .single();
+
+  if (appointment?.reminder_sent_at) {
+    console.log(`Reminder already sent for appointment ${appointmentId} at ${appointment.reminder_sent_at}. Skipping.`);
+    return false;
+  }
+
   // Format date for Romanian locale
   const appointmentDateObj = new Date(appointmentDate);
   const formattedDate = appointmentDateObj.toLocaleDateString("ro-RO", {
