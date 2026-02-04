@@ -131,14 +131,28 @@ const handler = async (req: Request): Promise<Response> => {
       console.log(`Sending reminder to ${patient.first_name} ${patient.last_name} at ${whatsappTo}`);
 
       try {
-        // Send message via Twilio API
+        // Send message via Twilio API using approved template
         const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
         const credentials = btoa(`${accountSid}:${authToken}`);
+
+        // Use the approved WhatsApp template (ContentSid) instead of Body
+        // Template SID for reminders - variables: {{1}} = date, {{2}} = time
+        const REMINDER_TEMPLATE_SID = "HX6cd6d3274cd89e4dfcacbe860aa546b3";
+
+        // Status callback URL for delivery updates
+        const statusCallbackUrl = `${supabaseUrl}/functions/v1/twilio-webhook?type=status`;
 
         const formData = new URLSearchParams();
         formData.append("To", whatsappTo);
         formData.append("From", whatsappFrom);
-        formData.append("Body", message);
+        formData.append("ContentSid", REMINDER_TEMPLATE_SID);
+        formData.append("ContentVariables", JSON.stringify({
+          "1": formattedDate,
+          "2": startTime,
+        }));
+        formData.append("StatusCallback", statusCallbackUrl);
+
+        console.log(`Using template with date=${formattedDate}, time=${startTime}`);
 
         const twilioResponse = await fetch(twilioUrl, {
           method: "POST",
