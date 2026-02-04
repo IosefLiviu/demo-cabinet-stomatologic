@@ -31,6 +31,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectGroup,
+  SelectLabel,
 } from '@/components/ui/select';
 import {
   AlertDialog,
@@ -45,6 +47,7 @@ import {
 import { useLabSamples, LabSampleInsert, LabSampleStatus } from '@/hooks/useLabSamples';
 import { Patient } from '@/hooks/usePatients';
 import { useCabinets } from '@/hooks/useCabinets';
+import { LAB_WORK_TYPES, getWorkTypesByCategory, getLabPrice, LABORATORIES } from '@/constants/laboratoryPricing';
 
 interface Doctor {
   id: string;
@@ -56,25 +59,6 @@ interface LaboratoryTabProps {
   patients: Patient[];
   doctors: Doctor[];
 }
-
-const COMMON_WORK_TYPES = [
-  'MCTF',
-  'Pivot Metal',
-  'Pivot Zirconiu',
-  'PMMA',
-  'Coroană ceramică',
-  'Coroană zirconiu',
-  'Schelet mobil',
-  'Proteza totală',
-  'Arcada',
-  'KTF',
-  'RCR',
-];
-
-const COMMON_LABORATORIES = [
-  'Chișinău',
-  'Necula',
-];
 
 const VITA_COLORS = [
   'A1', 'A2', 'A3', 'A3.5', 'A4',
@@ -608,7 +592,27 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
               )}
             </div>
 
-            {/* Work Type */}
+            {/* Laboratory - MUST be selected first to show prices */}
+            <div className="space-y-2">
+              <Label>Laborator *</Label>
+              <Select
+                value={formData.laboratory_name || ''}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, laboratory_name: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selectează laboratorul" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LABORATORIES.map((lab) => (
+                    <SelectItem key={lab.id} value={lab.name}>
+                      {lab.fullName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Work Type - grouped by category with prices */}
             <div className="space-y-2">
               <Label>Tip Lucrare *</Label>
               <Select
@@ -618,84 +622,41 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                 <SelectTrigger>
                   <SelectValue placeholder="Selectează tipul lucrării" />
                 </SelectTrigger>
-                <SelectContent>
-                  {COMMON_WORK_TYPES.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
+                <SelectContent className="max-h-[400px]">
+                  {Object.entries(getWorkTypesByCategory()).map(([category, workTypes]) => (
+                    <SelectGroup key={category}>
+                      <SelectLabel className="font-semibold text-primary">{category}</SelectLabel>
+                      {workTypes.map((workType) => {
+                        const price = formData.laboratory_name 
+                          ? getLabPrice(workType.id, formData.laboratory_name)
+                          : null;
+                        const priceText = price !== null ? ` - ${price} RON` : '';
+                        return (
+                          <SelectItem 
+                            key={workType.id} 
+                            value={workType.name}
+                            disabled={formData.laboratory_name ? price === null : false}
+                          >
+                            {workType.name}{priceText}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectGroup>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-
-            {/* Zone/Quadrant */}
-            <div className="space-y-2">
-              <Label>Zona / Cadran</Label>
-              <Input
-                placeholder="ex: 14, 15, SUP INF, etc."
-                value={formData.zone_quadrant || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, zone_quadrant: e.target.value }))}
-              />
-            </div>
-
-            {/* Dates */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Data Trimitere</Label>
-                <Input
-                  type="date"
-                  value={formData.sample_date || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, sample_date: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Data Gata (estimată)</Label>
-                <Input
-                  type="date"
-                  value={formData.expected_return_date || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, expected_return_date: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            {/* Vita Color */}
-            <div className="space-y-2">
-              <Label>Culoare Vita</Label>
-              <Select
-                value={formData.vita_color || ''}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, vita_color: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selectează culoarea" />
-                </SelectTrigger>
-                <SelectContent>
-                  {VITA_COLORS.map((color) => (
-                    <SelectItem key={color} value={color}>
-                      {color}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Laboratory */}
-            <div className="space-y-2">
-              <Label>Laborator</Label>
-              <Select
-                value={formData.laboratory_name || ''}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, laboratory_name: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selectează laboratorul" />
-                </SelectTrigger>
-                <SelectContent>
-                  {COMMON_LABORATORIES.map((lab) => (
-                    <SelectItem key={lab} value={lab}>
-                      {lab}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {formData.work_type && formData.laboratory_name && (
+                <p className="text-sm text-muted-foreground">
+                  Preț: {(() => {
+                    const workType = LAB_WORK_TYPES.find(w => w.name === formData.work_type);
+                    if (workType) {
+                      const price = getLabPrice(workType.id, formData.laboratory_name || '');
+                      return price !== null ? `${price} RON` : 'N/A';
+                    }
+                    return 'N/A';
+                  })()}
+                </p>
+              )}
             </div>
 
             {/* Doctor */}
