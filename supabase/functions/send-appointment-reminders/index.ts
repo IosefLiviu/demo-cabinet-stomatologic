@@ -119,10 +119,18 @@ const handler = async (req: Request): Promise<Response> => {
         .replace("{ora}", startTime);
 
       // Format phone number for WhatsApp
-      let formattedPhone = patient.phone.replace(/\D/g, "");
+      let formattedPhone = (patient.phone || "").replace(/\D/g, "");
+
+      // Remove leading 0 if present (e.g. 0725123456)
+      if (formattedPhone.startsWith("0")) {
+        formattedPhone = formattedPhone.substring(1);
+      }
+
+      // Add Romania country code if missing
       if (!formattedPhone.startsWith("40")) {
         formattedPhone = "40" + formattedPhone;
       }
+
       const whatsappTo = `whatsapp:+${formattedPhone}`;
       const whatsappFrom = twilioWhatsAppNumber.startsWith("whatsapp:")
         ? twilioWhatsAppNumber
@@ -152,7 +160,14 @@ const handler = async (req: Request): Promise<Response> => {
         }));
         formData.append("StatusCallback", statusCallbackUrl);
 
-        console.log(`Using template with date=${formattedDate}, time=${startTime}`);
+        console.log("Sending reminder via template", {
+          appointmentId: appointment.id,
+          to: whatsappTo,
+          from: whatsappFrom,
+          contentSid: REMINDER_TEMPLATE_SID,
+          date: formattedDate,
+          time: startTime,
+        });
 
         const twilioResponse = await fetch(twilioUrl, {
           method: "POST",
@@ -171,7 +186,14 @@ const handler = async (req: Request): Promise<Response> => {
           continue;
         }
 
-        console.log(`Message sent successfully: ${twilioResult.sid}`);
+        console.log("Twilio accepted message", {
+          sid: twilioResult.sid,
+          status: twilioResult.status,
+          to: twilioResult.to,
+          from: twilioResult.from,
+          errorCode: twilioResult.error_code,
+          errorMessage: twilioResult.error_message,
+        });
 
         // Store outbound message in database
         await supabase.from("whatsapp_messages").insert({
@@ -180,7 +202,7 @@ const handler = async (req: Request): Promise<Response> => {
           message_body: message,
           message_sid: twilioResult.sid,
           direction: "outbound",
-          status: "sent",
+          status: twilioResult.status || "sent",
           patient_id: patient.id,
         });
 
