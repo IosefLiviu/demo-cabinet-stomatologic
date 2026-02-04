@@ -44,16 +44,6 @@ export async function sendAppointmentReminderIfTomorrow(params: SendReminderPara
     return false;
   }
 
-  // Get custom message template
-  const { data: messageSetting } = await supabase
-    .from("app_settings")
-    .select("setting_value")
-    .eq("setting_key", "whatsapp_reminder_message")
-    .single();
-
-  const defaultMessage = "Bună ziua, vă așteptăm mâine, {data}, la ora {ora}, la Perfect Smile Glim. Adresa: Strada București 68–70. Dacă nu puteți ajunge, vă rugăm să ne contactați pentru reprogramare.";
-  const messageTemplate = messageSetting?.setting_value || defaultMessage;
-
   // Format date for Romanian locale
   const appointmentDateObj = new Date(appointmentDate);
   const formattedDate = appointmentDateObj.toLocaleDateString("ro-RO", {
@@ -65,19 +55,18 @@ export async function sendAppointmentReminderIfTomorrow(params: SendReminderPara
   // Format time (remove seconds if present)
   const formattedTime = startTime.substring(0, 5);
 
-  // Build message
-  const message = messageTemplate
-    .replace("{data}", formattedDate)
-    .replace("{ora}", formattedTime);
-
   try {
-    // Send WhatsApp message via edge function
+    // Send WhatsApp message via edge function using approved template
     const { data, error } = await supabase.functions.invoke("send-whatsapp", {
       body: {
         to: patientPhone,
-        message,
         patientId,
         patientName,
+        templateType: "reminder",
+        templateVariables: {
+          date: formattedDate,
+          time: formattedTime,
+        },
       },
     });
 
