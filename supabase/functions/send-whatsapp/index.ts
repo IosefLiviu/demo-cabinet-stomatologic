@@ -12,11 +12,12 @@ interface SendWhatsAppRequest {
   message: string;
   patientId?: string;
   patientName?: string;
-  // For template-based messages (reminders)
+  // For template-based messages
   templateType?: "reminder" | "direct";
   templateVariables?: {
     date?: string;
     time?: string;
+    name?: string;
   };
 }
 
@@ -74,7 +75,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // For template messages, we need templateVariables; for direct, we need message
+    // For template messages, validate required variables
     if (templateType === "reminder" && (!templateVariables?.date || !templateVariables?.time)) {
       return new Response(
         JSON.stringify({ error: "Missing template variables (date, time) for reminder" }),
@@ -82,6 +83,14 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
     
+    if (templateType === "direct" && !templateVariables?.name) {
+      return new Response(
+        JSON.stringify({ error: "Missing template variable (name) for direct message" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    // For non-template messages (replies within 24h window), we need message body
     if (!templateType && !message) {
       return new Response(
         JSON.stringify({ error: "Missing 'message' field" }),
@@ -122,6 +131,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Template SIDs for approved WhatsApp templates
     const REMINDER_TEMPLATE_SID = "HX6cd6d3274cd89e4dfcacbe860aa546b3";
+    const DIRECT_TEMPLATE_SID = "HXd7b671c57f63d19bd9957ee889e2a5bf";
     
     let messageBody = message || "";
     
@@ -136,8 +146,18 @@ const handler = async (req: Request): Promise<Response> => {
       // Store a readable version for our database
       messageBody = `Reminder: ${templateVariables.date} la ora ${templateVariables.time}`;
       console.log("Using reminder template:", { date: templateVariables.date, time: templateVariables.time });
+    } else if (templateType === "direct" && templateVariables) {
+      // Use approved template for direct messages
+      // Variables: {{1}} = name
+      formData.append("ContentSid", DIRECT_TEMPLATE_SID);
+      formData.append("ContentVariables", JSON.stringify({
+        "1": templateVariables.name,
+      }));
+      // Store a readable version for our database
+      messageBody = `Mesaj direct către ${templateVariables.name}`;
+      console.log("Using direct template:", { name: templateVariables.name });
     } else {
-      // Direct message - use Body (requires active conversation or approved template)
+      // Reply within 24h window - use Body (free-form text allowed)
       formData.append("Body", message);
     }
 

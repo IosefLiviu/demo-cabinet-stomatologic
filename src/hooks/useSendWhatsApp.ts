@@ -4,9 +4,16 @@ import { useToast } from "@/hooks/use-toast";
 
 interface SendWhatsAppParams {
   to: string;
-  message: string;
+  message?: string;
   patientId?: string;
   patientName?: string;
+  // For template-based messages
+  templateType?: "reminder" | "direct";
+  templateVariables?: {
+    date?: string;
+    time?: string;
+    name?: string;
+  };
 }
 
 export function useSendWhatsApp() {
@@ -14,9 +21,9 @@ export function useSendWhatsApp() {
   const { toast } = useToast();
 
   const mutation = useMutation({
-    mutationFn: async ({ to, message, patientId, patientName }: SendWhatsAppParams) => {
+    mutationFn: async ({ to, message, patientId, patientName, templateType, templateVariables }: SendWhatsAppParams) => {
       const { data, error } = await supabase.functions.invoke("send-whatsapp", {
-        body: { to, message, patientId, patientName },
+        body: { to, message, patientId, patientName, templateType, templateVariables },
       });
 
       if (error) throw error;

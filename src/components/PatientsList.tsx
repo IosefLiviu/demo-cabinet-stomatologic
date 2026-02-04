@@ -231,13 +231,19 @@ export function PatientsList({
   };
 
   const handleSendWhatsApp = () => {
-    if (!selectedPatientForWhatsApp || !whatsAppMessage.trim()) return;
+    if (!selectedPatientForWhatsApp) return;
     
+    const patientName = `${selectedPatientForWhatsApp.last_name} ${selectedPatientForWhatsApp.first_name}`;
+    
+    // Use approved template for initiating conversation
     sendMessage({
       to: selectedPatientForWhatsApp.phone,
-      message: whatsAppMessage.trim(),
       patientId: selectedPatientForWhatsApp.id,
-      patientName: `${selectedPatientForWhatsApp.last_name} ${selectedPatientForWhatsApp.first_name}`,
+      patientName: patientName,
+      templateType: "direct",
+      templateVariables: {
+        name: patientName,
+      },
     });
     
     setWhatsAppDialogOpen(false);
