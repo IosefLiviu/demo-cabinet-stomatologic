@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
 import { WhatsAppReplyDialog } from "./WhatsAppReplyDialog";
+import { WhatsAppNewContactDialog } from "./WhatsAppNewContactDialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface Conversation {
@@ -168,6 +169,7 @@ export function WhatsAppInbox() {
             )}
           </CardTitle>
           <div className="flex gap-2">
+            <WhatsAppNewContactDialog />
             <Button
               variant={filter === "all" ? "default" : "outline"}
               size="sm"
