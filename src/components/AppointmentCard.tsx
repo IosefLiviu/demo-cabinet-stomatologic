@@ -1,4 +1,5 @@
-import { Phone, Clock, FileText, Trash2, Edit, CheckCircle2 } from 'lucide-react';
+import { Phone, Clock, FileText, Trash2, Edit, CheckCircle2, Check } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Appointment, CABINETS } from '@/types/appointment';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -73,29 +74,22 @@ export function AppointmentCard({
     ? { color: appointment.doctorColor }
     : undefined;
 
-  // Style for completed appointments - use green
-  const completedStyle = isCompleted ? {
-    backgroundColor: 'rgb(240 253 244)', // green-50
-    borderColor: 'rgb(134 239 172)', // green-300
-  } : undefined;
-
-  // For non-completed: use doctor color if available
-  const activeCardStyle = !isCompleted && hasDoctorColor 
-    ? { 
-        backgroundColor: `${appointment.doctorColor}15`, 
-        borderColor: `${appointment.doctorColor}40`,
-      }
-    : undefined;
-
   return (
     <div
       className={cn(
-        "rounded-lg border p-3 transition-all hover:shadow-md",
-        !isCompleted && !hasDoctorColor && cabinetBgColors[appointment.cabinetId],
-        isCompleted && "opacity-60 dark:bg-green-950/20 dark:border-green-800"
+        "rounded-lg border p-3 transition-all hover:shadow-md relative",
+        !hasDoctorColor && cabinetBgColors[appointment.cabinetId],
+        isCompleted && "opacity-75"
       )}
-      style={isCompleted ? completedStyle : activeCardStyle}
+      style={cardStyle}
     >
+      {/* Completed badge */}
+      {isCompleted && (
+        <Badge className="absolute -top-2 -right-2 bg-green-500 hover:bg-green-500 text-white text-xs px-1.5 py-0.5 gap-0.5">
+          <Check className="h-3 w-3" />
+          Finalizată
+        </Badge>
+      )}
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
