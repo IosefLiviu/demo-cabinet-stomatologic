@@ -678,6 +678,17 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Observații */}
+            <div className="space-y-2">
+              <Label>Observații</Label>
+              <Textarea
+                placeholder="Observații suplimentare..."
+                value={formData.notes || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                rows={3}
+              />
+            </div>
           </div>
 
           <DialogFooter>
