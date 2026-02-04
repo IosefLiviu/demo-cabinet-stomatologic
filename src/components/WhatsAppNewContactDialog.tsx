@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Send, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -19,21 +18,22 @@ export function WhatsAppNewContactDialog() {
   const [open, setOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [contactName, setContactName] = useState("");
-  const [message, setMessage] = useState("");
   const { sendMessageAsync, isSending } = useSendWhatsApp();
 
   const handleSend = async () => {
-    if (!phoneNumber.trim() || !message.trim()) return;
+    if (!phoneNumber.trim() || !contactName.trim()) return;
 
     try {
       await sendMessageAsync({
         to: phoneNumber.trim(),
-        message: message.trim(),
-        patientName: contactName.trim() || undefined,
+        patientName: contactName.trim(),
+        templateType: "direct",
+        templateVariables: {
+          name: contactName.trim(),
+        },
       });
       setPhoneNumber("");
       setContactName("");
-      setMessage("");
       setOpen(false);
     } catch (error) {
       // Error handled by hook
@@ -43,7 +43,6 @@ export function WhatsAppNewContactDialog() {
   const resetForm = () => {
     setPhoneNumber("");
     setContactName("");
-    setMessage("");
   };
 
   return (
@@ -61,7 +60,8 @@ export function WhatsAppNewContactDialog() {
         <DialogHeader>
           <DialogTitle>Trimite mesaj WhatsApp</DialogTitle>
           <DialogDescription>
-            Trimite un mesaj către un număr de telefon care nu este în lista de pacienți
+            Trimite un mesaj către un număr de telefon care nu este în lista de pacienți.
+            Se va folosi șablonul pre-aprobat pentru mesaje directe.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -78,24 +78,16 @@ export function WhatsAppNewContactDialog() {
             </p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="name">Nume (opțional)</Label>
+            <Label htmlFor="name">Nume contact *</Label>
             <Input
               id="name"
               placeholder="ex: Ion Popescu"
               value={contactName}
               onChange={(e) => setContactName(e.target.value)}
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="message">Mesaj *</Label>
-            <Textarea
-              id="message"
-              placeholder="Scrie mesajul tău..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={4}
-              className="resize-none"
-            />
+            <p className="text-xs text-muted-foreground">
+              Numele va fi folosit în șablonul mesajului
+            </p>
           </div>
         </div>
         <DialogFooter>
@@ -108,7 +100,7 @@ export function WhatsAppNewContactDialog() {
           </Button>
           <Button
             onClick={handleSend}
-            disabled={!phoneNumber.trim() || !message.trim() || isSending}
+            disabled={!phoneNumber.trim() || !contactName.trim() || isSending}
             className="gap-2"
           >
             <Send className="h-4 w-4" />
