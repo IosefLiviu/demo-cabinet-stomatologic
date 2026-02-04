@@ -30,6 +30,7 @@ import { NavigationButtons } from '@/components/NavigationButtons';
 import { AvailableSlotsSearch } from '@/components/AvailableSlotsSearch';
 import { AppointmentSearch } from '@/components/AppointmentSearch';
 import { StockManagement } from '@/components/StockManagement';
+import { DoctorFilter } from '@/components/DoctorFilter';
 
 import { DoctorScheduleManagement } from '@/components/DoctorScheduleManagement';
 import { WhatsAppInbox } from '@/components/WhatsAppInbox';
@@ -58,6 +59,7 @@ const Index = () => {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedCabinet, setSelectedCabinet] = useState<number | null>(null);
+  const [selectedDoctorFilter, setSelectedDoctorFilter] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem('activeTab') || 'calendar';
   });
@@ -603,7 +605,12 @@ const Index = () => {
     };
   });
 
-  const todayAppointments = legacyAppointments.filter(
+  // Filter appointments by selected doctor
+  const filteredAppointments = selectedDoctorFilter
+    ? legacyAppointments.filter(apt => apt.doctorId === selectedDoctorFilter)
+    : legacyAppointments;
+
+  const todayAppointments = filteredAppointments.filter(
     (apt) =>
       apt.date === format(selectedDate, 'yyyy-MM-dd') &&
       (selectedCabinet === null || apt.cabinetId === selectedCabinet)
@@ -683,7 +690,14 @@ const Index = () => {
 
             {/* Controls */}
             <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+              <div className="flex items-center gap-2 flex-wrap">
+                <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+                <DoctorFilter
+                  doctors={doctors}
+                  selectedDoctorId={selectedDoctorFilter}
+                  onDoctorChange={setSelectedDoctorFilter}
+                />
+              </div>
               <div className="flex gap-2 w-full sm:w-auto">
                 <AppointmentSearch
                   appointments={legacyAppointments}
@@ -693,6 +707,10 @@ const Index = () => {
                     const apt = legacyAppointments.find(a => a.id === appointmentId);
                     if (apt) {
                       setSelectedCabinet(apt.cabinetId);
+                      // Also select the doctor filter if appointment has a doctor
+                      if (apt.doctorId) {
+                        setSelectedDoctorFilter(apt.doctorId);
+                      }
                     }
                   }}
                 />
@@ -723,7 +741,7 @@ const Index = () => {
             <TimeSlotGrid
               selectedDate={selectedDate}
               selectedCabinet={selectedCabinet}
-              appointments={legacyAppointments}
+              appointments={filteredAppointments}
               cabinets={cabinets}
               doctorShifts={doctorShifts}
               doctors={doctors}
