@@ -1,13 +1,16 @@
 import { useState, useMemo } from 'react';
-import { format } from 'date-fns';
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Clock, Download, Search, User, Phone, Calendar, MapPin, UserCircle } from 'lucide-react';
+import { Clock, Download, Search, User, Phone, Calendar as CalendarIcon, MapPin, UserCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 import { AppointmentDB } from '@/hooks/useAppointmentsDB';
 import { useDoctors } from '@/hooks/useDoctors';
 import * as XLSX from 'xlsx';
@@ -28,16 +31,47 @@ interface DoctorStats {
   appointments: AppointmentDB[];
 }
 
-export function PendingAppointmentsByDoctorReport({ appointments, dateRange }: PendingAppointmentsByDoctorReportProps) {
+export function PendingAppointmentsByDoctorReport({ appointments, dateRange: initialDateRange }: PendingAppointmentsByDoctorReportProps) {
   const { doctors } = useDoctors();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>('all');
   const [expandedDoctor, setExpandedDoctor] = useState<string | null>(null);
+  const [period, setPeriod] = useState<'week' | 'month' | 'custom'>('month');
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>(initialDateRange);
 
-  // Filter pending appointments (not completed, not cancelled, not no_show)
+  const handlePeriodChange = (newPeriod: 'week' | 'month' | 'custom') => {
+    setPeriod(newPeriod);
+    let from: Date, to: Date;
+    
+    if (newPeriod === 'week') {
+      from = startOfWeek(new Date(), { weekStartsOn: 1 });
+      to = endOfWeek(new Date(), { weekStartsOn: 1 });
+    } else if (newPeriod === 'month') {
+      from = startOfMonth(new Date());
+      to = endOfMonth(new Date());
+    } else {
+      return;
+    }
+    
+    setDateRange({ from, to });
+  };
+
+  const handleDateRangeChange = (range: { from?: Date; to?: Date }) => {
+    if (range.from && range.to) {
+      setDateRange({ from: range.from, to: range.to });
+      setPeriod('custom');
+    }
+  };
+
+  // Filter pending appointments (not completed, not cancelled, not no_show) and by date range
   const pendingAppointments = useMemo(() => {
     return appointments
       .filter(a => ['scheduled', 'confirmed', 'in_progress'].includes(a.status))
+      .filter(a => {
+        // Filter by date range
+        const aptDate = new Date(a.appointment_date);
+        return aptDate >= dateRange.from && aptDate <= dateRange.to;
+      })
       .filter(a => {
         if (!searchTerm) return true;
         const patientName = a.patients 
@@ -51,7 +85,7 @@ export function PendingAppointmentsByDoctorReport({ appointments, dateRange }: P
         if (dateCompare !== 0) return dateCompare;
         return a.start_time.localeCompare(b.start_time);
       });
-  }, [appointments, searchTerm]);
+  }, [appointments, searchTerm, dateRange]);
 
   // Group by doctor
   const doctorStats = useMemo(() => {
@@ -238,8 +272,46 @@ export function PendingAppointmentsByDoctorReport({ appointments, dateRange }: P
         </Card>
       </div>
 
-      {/* Filters */}
+      {/* Period Selector and Filters */}
       <div className="flex flex-wrap items-center gap-4">
+        {/* Period buttons */}
+        <div className="flex gap-2">
+          <Button
+            variant={period === 'week' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handlePeriodChange('week')}
+          >
+            Săptămâna curentă
+          </Button>
+          <Button
+            variant={period === 'month' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handlePeriodChange('month')}
+          >
+            Luna curentă
+          </Button>
+        </div>
+
+        {/* Date range picker */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2">
+              <CalendarIcon className="h-4 w-4" />
+              {format(dateRange.from, 'dd MMM', { locale: ro })} - {format(dateRange.to, 'dd MMM yyyy', { locale: ro })}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="range"
+              selected={{ from: dateRange.from, to: dateRange.to }}
+              onSelect={(range) => range && handleDateRangeChange(range)}
+              numberOfMonths={2}
+              className={cn("p-3 pointer-events-auto")}
+            />
+          </PopoverContent>
+        </Popover>
+
+        {/* Search */}
         <div className="relative flex-1 min-w-[200px] max-w-[300px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
