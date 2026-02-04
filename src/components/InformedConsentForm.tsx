@@ -61,22 +61,22 @@ export function InformedConsentForm({ patients, doctors }: InformedConsentFormPr
           <style>
             @page {
               size: A4;
-              margin: 12mm 15mm;
+              margin: 8mm 12mm;
             }
             body { 
               font-family: 'Times New Roman', Times, serif; 
               padding: 0; 
               margin: 0;
               color: #1a365d; 
-              font-size: 11px;
-              line-height: 1.4;
+              font-size: 9px;
+              line-height: 1.25;
             }
             .header { 
               display: flex;
               justify-content: space-between;
               align-items: flex-start;
-              margin-bottom: 10px;
-              padding-bottom: 8px;
+              margin-bottom: 6px;
+              padding-bottom: 4px;
               border-bottom: 2px solid #b8860b;
             }
             .logo-section {
@@ -85,80 +85,83 @@ export function InformedConsentForm({ patients, doctors }: InformedConsentFormPr
               align-items: flex-start;
             }
             .logo {
-              width: 90px;
+              width: 70px;
               height: auto;
               object-fit: contain;
             }
             .clinic-contact {
               text-align: right;
-              font-size: 10px;
+              font-size: 8px;
               color: #666;
             }
             .clinic-contact p {
-              margin: 1px 0;
+              margin: 0;
             }
             .legal-reference {
-              font-size: 9px;
+              font-size: 7px;
               color: #666;
-              margin-bottom: 12px;
+              margin-bottom: 6px;
               font-style: italic;
             }
             .title {
               text-align: center;
               font-weight: bold;
-              font-size: 13px;
-              margin-bottom: 4px;
+              font-size: 11px;
+              margin-bottom: 2px;
               text-transform: uppercase;
             }
             .subtitle {
               text-align: center;
-              font-size: 10px;
-              margin-bottom: 15px;
+              font-size: 8px;
+              margin-bottom: 8px;
               color: #666;
             }
             .patient-info {
-              margin-bottom: 12px;
+              margin-bottom: 6px;
               text-align: justify;
             }
             .patient-info p {
               margin: 0;
-              line-height: 1.6;
+              line-height: 1.35;
             }
             .underline {
               border-bottom: 1px solid #333;
               display: inline-block;
-              min-width: 120px;
-              padding: 0 5px;
+              min-width: 80px;
+              padding: 0 3px;
             }
             .underline-short {
               border-bottom: 1px solid #333;
               display: inline-block;
-              min-width: 60px;
-              padding: 0 3px;
+              min-width: 40px;
+              padding: 0 2px;
             }
             .content {
               text-align: justify;
             }
             .content p {
-              margin-bottom: 8px;
-              text-indent: 20px;
+              margin-bottom: 4px;
+              text-indent: 15px;
             }
             .risks-section {
-              margin: 10px 0;
+              margin: 4px 0;
             }
             .risks-section p {
-              margin-bottom: 6px;
-              text-indent: 20px;
+              margin-bottom: 3px;
+              text-indent: 15px;
             }
             .risks-list {
-              margin: 6px 0 6px 30px;
+              margin: 3px 0 3px 20px;
               padding: 0;
               list-style-type: none;
+              columns: 2;
+              column-gap: 15px;
             }
             .risks-list li {
-              margin-bottom: 2px;
-              padding-left: 15px;
+              margin-bottom: 1px;
+              padding-left: 10px;
               position: relative;
+              font-size: 8px;
             }
             .risks-list li:before {
               content: "-";
@@ -166,14 +169,14 @@ export function InformedConsentForm({ patients, doctors }: InformedConsentFormPr
               left: 0;
             }
             .declarations {
-              margin-top: 10px;
+              margin-top: 4px;
             }
             .declarations p {
-              margin-bottom: 6px;
-              text-indent: 20px;
+              margin-bottom: 3px;
+              text-indent: 15px;
             }
             .signature-section {
-              margin-top: 25px;
+              margin-top: 12px;
               display: flex;
               justify-content: space-between;
             }
@@ -181,26 +184,26 @@ export function InformedConsentForm({ patients, doctors }: InformedConsentFormPr
               text-align: left;
             }
             .signature-block p {
-              margin: 3px 0;
+              margin: 2px 0;
             }
             .signature-line {
-              margin-top: 30px;
+              margin-top: 20px;
               border-top: 1px solid #333;
-              width: 180px;
-              font-size: 9px;
+              width: 150px;
+              font-size: 7px;
               text-align: center;
-              padding-top: 3px;
+              padding-top: 2px;
             }
             .footer {
-              margin-top: 20px;
-              padding-top: 8px;
+              margin-top: 10px;
+              padding-top: 4px;
               border-top: 1px solid #b8860b;
               text-align: center;
-              font-size: 8px;
+              font-size: 7px;
               color: #666;
             }
             .footer p {
-              margin: 1px 0;
+              margin: 0;
             }
             @media print { 
               body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
