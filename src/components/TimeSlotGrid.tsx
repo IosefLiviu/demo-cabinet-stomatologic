@@ -243,22 +243,19 @@ export function TimeSlotGrid({
                         className={cn(
                           "w-full cursor-pointer border-l border-r",
                           isLastContinuationSlot ? "h-[calc(100%-2px)] sm:h-[calc(100%-4px)] rounded-b-sm border-b" : "h-full",
-                          appointmentCovering.status === 'completed' 
-                            ? "bg-green-100 dark:bg-green-950/30 border-green-300 dark:border-green-800"
-                            : appointmentCovering.status === 'cancelled'
+                          appointmentCovering.status === 'completed' && "opacity-75",
+                          appointmentCovering.status === 'cancelled'
                             ? "bg-red-100 dark:bg-red-950/30 border-red-300 dark:border-red-800 opacity-60"
                             : ""
                         )}
                         style={
-                          appointmentCovering.status !== 'completed' && 
                           appointmentCovering.status !== 'cancelled' && 
                           appointmentCovering.doctorColor 
                             ? { 
                                 backgroundColor: `${appointmentCovering.doctorColor}20`,
                                 borderColor: `${appointmentCovering.doctorColor}50`
                               } 
-                            : appointmentCovering.status !== 'completed' && 
-                              appointmentCovering.status !== 'cancelled'
+                            : appointmentCovering.status !== 'cancelled'
                             ? { 
                                 backgroundColor: cabinetBgLightColors[cabinet.id]?.includes('bg-cabinet') 
                                   ? undefined 
@@ -290,16 +287,14 @@ export function TimeSlotGrid({
                     {appointmentStarting ? (
                       <div
                         className={cn(
-                          "w-full h-full p-0.5 sm:p-1 text-left transition-all overflow-hidden min-w-0 flex items-center gap-0.5 border",
+                          "w-full h-full p-0.5 sm:p-1 text-left transition-all overflow-hidden min-w-0 flex items-center gap-0.5 border relative",
                           isMultiSlot ? "rounded-t-sm border-b-0" : "rounded-sm",
-                          appointmentStarting.status === 'completed' 
-                            ? "bg-green-100 dark:bg-green-950/30 border-green-300 dark:border-green-800"
-                            : appointmentStarting.status === 'cancelled'
+                          appointmentStarting.status === 'completed' && "opacity-75",
+                          appointmentStarting.status === 'cancelled'
                             ? "bg-red-100 dark:bg-red-950/30 border-red-300 dark:border-red-800 opacity-60"
                             : !appointmentStarting.doctorColor && cabinetBgLightColors[cabinet.id]
                         )}
                         style={
-                          appointmentStarting.status !== 'completed' && 
                           appointmentStarting.status !== 'cancelled' && 
                           appointmentStarting.doctorColor 
                             ? { 
@@ -309,6 +304,12 @@ export function TimeSlotGrid({
                             : undefined
                         }
                       >
+                        {/* Completed badge */}
+                        {appointmentStarting.status === 'completed' && (
+                          <div className="absolute -top-1 -right-1 bg-green-500 rounded-full p-0.5 z-10" title="Finalizată">
+                            <CheckCircle2 className="h-2.5 w-2.5 text-white" />
+                          </div>
+                        )}
                         <button
                           onClick={() => onAppointmentClick(appointmentStarting)}
                           className="flex-1 min-w-0 h-full flex flex-col justify-center cursor-pointer"
