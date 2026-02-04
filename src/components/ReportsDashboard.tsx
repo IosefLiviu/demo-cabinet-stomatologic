@@ -1,11 +1,12 @@
 import { useState, useMemo, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChart, UserCircle, Filter, Download, FlaskConical, ClipboardList, Percent } from 'lucide-react';
+import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChart, UserCircle, Filter, Download, FlaskConical, ClipboardList, Percent, AlertCircle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AppointmentsPatientReport } from './AppointmentsPatientReport';
 import { DiscountedAppointmentsReport } from './DiscountedAppointmentsReport';
 import { LaboratoryReport } from './LaboratoryReport';
+import { PendingAppointmentsByDoctorReport } from './PendingAppointmentsByDoctorReport';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -609,10 +610,14 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
 
   return (
     <Tabs defaultValue="financial" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-4 max-w-2xl">
+      <TabsList className="grid w-full grid-cols-5 max-w-3xl">
         <TabsTrigger value="financial" className="gap-2">
           <DollarSign className="h-4 w-4" />
           Financiar
+        </TabsTrigger>
+        <TabsTrigger value="pending" className="gap-2">
+          <AlertCircle className="h-4 w-4" />
+          Nefinalizate
         </TabsTrigger>
         <TabsTrigger value="laboratory" className="gap-2">
           <FlaskConical className="h-4 w-4" />
@@ -1093,6 +1098,13 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         </CardContent>
         </Card>
         </div>
+      </TabsContent>
+
+      <TabsContent value="pending">
+        <PendingAppointmentsByDoctorReport 
+          appointments={appointments} 
+          dateRange={dateRange}
+        />
       </TabsContent>
 
       <TabsContent value="laboratory">
