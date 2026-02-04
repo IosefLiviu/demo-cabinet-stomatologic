@@ -301,6 +301,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                         <TableHead>Data Gata</TableHead>
                         <TableHead>Laborator</TableHead>
                         <TableHead>Medic</TableHead>
+                        <TableHead>Observații</TableHead>
                         <TableHead className="text-right">Acțiuni</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -322,6 +323,9 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                           </TableCell>
                           <TableCell>{sample.laboratory_name || '-'}</TableCell>
                           <TableCell>{getDoctorName(sample.doctor_id)}</TableCell>
+                          <TableCell className="max-w-[150px] truncate" title={sample.notes || ''}>
+                            {sample.notes || '-'}
+                          </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
                               <Button
@@ -370,6 +374,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                         <TableHead>Laborator</TableHead>
                         <TableHead>Medic</TableHead>
                         <TableHead>Data Primire</TableHead>
+                        <TableHead>Observații</TableHead>
                         <TableHead className="text-right">Acțiuni</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -388,6 +393,9 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                             {sample.actual_return_date
                               ? format(new Date(sample.actual_return_date), 'dd.MM.yyyy', { locale: ro })
                               : '-'}
+                          </TableCell>
+                          <TableCell className="max-w-[150px] truncate" title={sample.notes || ''}>
+                            {sample.notes || '-'}
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
@@ -438,6 +446,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                         <TableHead>Cabinet</TableHead>
                         <TableHead>Laborator</TableHead>
                         <TableHead>Medic</TableHead>
+                        <TableHead>Observații</TableHead>
                         <TableHead className="text-right">Acțiuni</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -456,6 +465,9 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                           <TableCell>{getCabinetName(sample.cabinet_id)}</TableCell>
                           <TableCell>{sample.laboratory_name || '-'}</TableCell>
                           <TableCell>{getDoctorName(sample.doctor_id)}</TableCell>
+                          <TableCell className="max-w-[150px] truncate" title={sample.notes || ''}>
+                            {sample.notes || '-'}
+                          </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
                               <Button
@@ -512,6 +524,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                         <TableHead>Culoare Vita</TableHead>
                         <TableHead>Laborator</TableHead>
                         <TableHead>Medic</TableHead>
+                        <TableHead>Observații</TableHead>
                         <TableHead className="text-right">Acțiuni</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -529,6 +542,9 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                           <TableCell>{sample.vita_color || '-'}</TableCell>
                           <TableCell>{sample.laboratory_name || '-'}</TableCell>
                           <TableCell>{getDoctorName(sample.doctor_id)}</TableCell>
+                          <TableCell className="max-w-[150px] truncate" title={sample.notes || ''}>
+                            {sample.notes || '-'}
+                          </TableCell>
                           <TableCell className="text-right">
                             <Button
                               variant="ghost"
