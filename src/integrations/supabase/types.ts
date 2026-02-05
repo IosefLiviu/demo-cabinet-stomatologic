@@ -935,6 +935,7 @@ export type Database = {
           nr_fisa: string | null
           patient_id: string
           prescription_date: string
+          serie_nr: string | null
           unitate_sanitara: string | null
           updated_at: string
         }
@@ -948,6 +949,7 @@ export type Database = {
           nr_fisa?: string | null
           patient_id: string
           prescription_date?: string
+          serie_nr?: string | null
           unitate_sanitara?: string | null
           updated_at?: string
         }
@@ -961,6 +963,7 @@ export type Database = {
           nr_fisa?: string | null
           patient_id?: string
           prescription_date?: string
+          serie_nr?: string | null
           unitate_sanitara?: string | null
           updated_at?: string
         }
@@ -1475,6 +1478,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_prescription_serie_nr: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
