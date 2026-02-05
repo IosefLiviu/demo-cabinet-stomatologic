@@ -659,6 +659,7 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
                         value={patientSearch}
                         onChange={(e) => setPatientSearch(e.target.value)}
                         className="pl-8"
+                       onKeyDown={(e) => e.stopPropagation()}
                       />
                     </div>
                   </div>
