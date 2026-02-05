@@ -203,9 +203,9 @@ export function TimeSlotGrid({
               {/* Regular time column */}
               <div 
                 key={`time-${time}`}
-                className="h-[40px] sm:h-[45px] flex items-center justify-center text-[10px] sm:text-xs font-medium text-muted-foreground border-r border-b border-border bg-muted/30"
+                className="h-[20px] flex items-center justify-center text-[9px] font-medium text-muted-foreground border-r border-b border-border bg-muted/30"
               >
-                {time}
+                {time.endsWith(':00') ? time : ''}
               </div>
               {/* Cabinet columns for this time slot */}
               {cabinetsToShow.map((cabinet) => {
@@ -234,7 +234,7 @@ export function TimeSlotGrid({
                     <div
                       key={`${time}-${cabinet.id}`}
                       className={cn(
-                        "border-r last:border-r-0 h-[40px] sm:h-[45px] min-w-0 overflow-hidden px-0.5 sm:px-1",
+                        "border-r last:border-r-0 h-[20px] min-w-0 overflow-hidden px-0.5",
                         isLastContinuationSlot && "border-b border-border"
                       )}
                     >
@@ -275,8 +275,8 @@ export function TimeSlotGrid({
                   <div
                     key={`${time}-${cabinet.id}`}
                     className={cn(
-                      "border-r last:border-r-0 h-[40px] sm:h-[45px] min-w-0 overflow-hidden",
-                      "px-0.5 sm:px-1",
+                      "border-r last:border-r-0 h-[20px] min-w-0 overflow-hidden",
+                      "px-0.5",
                       // Add bottom border unless this is the start of a multi-slot appointment
                       !(appointmentStarting && isMultiSlot) && "border-b border-border",
                       appointmentStarting && "pt-0.5",
