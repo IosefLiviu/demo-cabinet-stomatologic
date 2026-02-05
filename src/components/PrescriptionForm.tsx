@@ -59,6 +59,7 @@ interface SavedPrescription {
   nr_fisa: string | null;
   diagnostic: string | null;
   created_at: string;
+  serie_nr: string | null;
   patients?: {
     first_name: string;
     last_name: string;
@@ -200,6 +201,8 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
   const [nrFisa, setNrFisa] = useState('');
   const [diagnostic, setDiagnostic] = useState('');
   const [prescriptionDate, setPrescriptionDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [serieNr, setSerieNr] = useState('');
+  const [loadingSerieNr, setLoadingSerieNr] = useState(false);
   
   // Prescription items
   const [prescriptionItems, setPrescriptionItems] = useState<PrescriptionItem[]>([
@@ -218,6 +221,28 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
 
   const selectedPatient = patients.find(p => p.id === selectedPatientId);
   const selectedDoctor = doctors.find(d => d.id === selectedDoctorId);
+
+  // Generate next serie_nr on mount
+  useEffect(() => {
+    const generateSerieNr = async () => {
+      setLoadingSerieNr(true);
+      try {
+        const { data, error } = await supabase.rpc('generate_prescription_serie_nr');
+        if (error) throw error;
+        setSerieNr(data);
+      } catch (error) {
+        console.error('Error generating serie_nr:', error);
+        // Fallback: generate based on current timestamp
+        setSerieNr(`PSG ${String(Date.now()).slice(-5)}`);
+      } finally {
+        setLoadingSerieNr(false);
+      }
+    };
+    
+    if (activeSubTab === 'new' && !serieNr) {
+      generateSerieNr();
+    }
+  }, [activeSubTab]);
 
   const filteredPatients = patients.filter(p => {
     const fullName = `${p.first_name} ${p.last_name}`.toLowerCase();
@@ -312,6 +337,7 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
           unitate_sanitara: unitateSanitara,
           nr_fisa: nrFisa || null,
           diagnostic: diagnostic || null,
+          serie_nr: serieNr || null,
         })
         .select()
         .single();
@@ -340,6 +366,10 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
       
       // Reset form
       resetForm();
+      
+      // Generate new serie_nr for next prescription
+      const { data: newSerieNr } = await supabase.rpc('generate_prescription_serie_nr');
+      if (newSerieNr) setSerieNr(newSerieNr);
       
     } catch (error: any) {
       console.error('Error saving prescription:', error);
@@ -372,6 +402,7 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
     const printNrFisa = prescription?.nr_fisa || nrFisa || patientToPrint?.cnp || '';
     const printDiagnostic = prescription?.diagnostic || diagnostic;
     const printDate = prescription?.prescription_date || prescriptionDate;
+    const printSerieNr = prescription?.serie_nr || serieNr;
 
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -542,6 +573,11 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
               <div class="header-title">REȚETĂ MEDICALĂ</div>
             </div>
           </div>
+
+          <div class="form-row" style="margin-bottom: 8px;">
+            <span class="form-label">Serie/Nr:</span>
+            <span class="form-value" style="font-weight: bold; font-size: 11pt;">${escapeHtml(printSerieNr || '')}</span>
+          </div>
           
           <div class="form-row-split">
             <div>
@@ -652,6 +688,7 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
     setDiagnostic('');
     setPrescriptionDate(format(new Date(), 'yyyy-MM-dd'));
     setPrescriptionItems([{ id: crypto.randomUUID(), medication: '', quantity: '', dosage: '' }]);
+    // Don't reset serieNr here - it will be regenerated after save
   };
 
   const handleViewPrescription = (prescription: SavedPrescription) => {
@@ -778,6 +815,16 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
 
               {/* Prescription Details */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Serie/Nr</Label>
+                  <Input 
+                    value={serieNr} 
+                    onChange={(e) => setSerieNr(e.target.value)}
+                    placeholder="PSG 00902"
+                    disabled={loadingSerieNr}
+                    className="font-semibold"
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label>CNP</Label>
                   <Input 
