@@ -203,7 +203,7 @@ export function TimeSlotGrid({
               {/* Regular time column */}
               <div 
                 key={`time-${time}`}
-                className="h-[65px] sm:h-[70px] flex items-center justify-center text-xs sm:text-sm font-medium text-muted-foreground border-r border-b border-border bg-muted/30"
+                className="h-[40px] sm:h-[45px] flex items-center justify-center text-[10px] sm:text-xs font-medium text-muted-foreground border-r border-b border-border bg-muted/30"
               >
                 {time}
               </div>
@@ -234,7 +234,7 @@ export function TimeSlotGrid({
                     <div
                       key={`${time}-${cabinet.id}`}
                       className={cn(
-                        "border-r last:border-r-0 h-[65px] sm:h-[70px] min-w-0 overflow-hidden px-0.5 sm:px-1",
+                        "border-r last:border-r-0 h-[40px] sm:h-[45px] min-w-0 overflow-hidden px-0.5 sm:px-1",
                         isLastContinuationSlot && "border-b border-border"
                       )}
                     >
@@ -275,19 +275,19 @@ export function TimeSlotGrid({
                   <div
                     key={`${time}-${cabinet.id}`}
                     className={cn(
-                      "border-r last:border-r-0 h-[65px] sm:h-[70px] min-w-0 overflow-hidden",
+                      "border-r last:border-r-0 h-[40px] sm:h-[45px] min-w-0 overflow-hidden",
                       "px-0.5 sm:px-1",
                       // Add bottom border unless this is the start of a multi-slot appointment
                       !(appointmentStarting && isMultiSlot) && "border-b border-border",
-                      appointmentStarting && "pt-0.5 sm:pt-1",
-                      appointmentStarting && !isMultiSlot && "pb-0.5 sm:pb-1",
-                      !appointmentStarting && "p-0.5 sm:p-1"
+                      appointmentStarting && "pt-0.5",
+                      appointmentStarting && !isMultiSlot && "pb-0.5",
+                      !appointmentStarting && "p-0.5"
                     )}
                   >
                     {appointmentStarting ? (
                       <div
                         className={cn(
-                          "w-full h-full p-0.5 sm:p-1 text-left transition-all overflow-hidden min-w-0 flex items-center gap-0.5 border relative",
+                          "w-full h-full p-0.5 text-left transition-all overflow-hidden min-w-0 flex items-center gap-0.5 border relative",
                           isMultiSlot ? "rounded-t-sm border-b-0" : "rounded-sm",
                           appointmentStarting.status === 'completed' && "opacity-75",
                           appointmentStarting.status === 'cancelled'
@@ -312,40 +312,17 @@ export function TimeSlotGrid({
                         )}
                         <button
                           onClick={() => onAppointmentClick(appointmentStarting)}
-                          className="flex-1 min-w-0 h-full flex flex-col justify-center cursor-pointer"
+                          className="flex-1 min-w-0 h-full flex items-center cursor-pointer"
                         >
                           <div className="flex items-center gap-1 min-w-0">
-                            <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0 text-foreground/70" />
+                            <User className="h-3 w-3 flex-shrink-0 text-foreground/70" />
                             <span className={cn(
-                              "text-xs sm:text-sm font-semibold text-foreground truncate leading-none",
+                              "text-[11px] font-semibold text-foreground truncate leading-tight",
                               appointmentStarting.status === 'cancelled' && "line-through"
                             )}>
                               {appointmentStarting.patientName}
                             </span>
                           </div>
-                          <p className={cn(
-                            "text-[11px] sm:text-xs font-medium text-muted-foreground truncate leading-none mt-0.5",
-                            appointmentStarting.status === 'cancelled' && "line-through"
-                          )}>
-                            {appointmentStarting.time} - {(() => {
-                              const [hours, minutes] = appointmentStarting.time.split(':').map(Number);
-                              const endMinutes = hours * 60 + minutes + (appointmentStarting.duration || SLOT_DURATION_MINUTES);
-                              const endHours = Math.floor(endMinutes / 60);
-                              const endMins = endMinutes % 60;
-                              return `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
-                            })()} • {appointmentStarting.treatment}
-                          </p>
-                          {appointmentStarting.doctorName && (
-                            <span 
-                              className="text-[10px] sm:text-[11px] font-semibold truncate leading-none mt-0.5 px-1 py-0.5 rounded"
-                              style={{ 
-                                backgroundColor: appointmentStarting.doctorColor ? `${appointmentStarting.doctorColor}25` : undefined,
-                                color: appointmentStarting.doctorColor || undefined 
-                              }}
-                            >
-                              {appointmentStarting.doctorName}
-                            </span>
-                          )}
                         </button>
                         {appointmentStarting.status !== 'completed' && appointmentStarting.status !== 'cancelled' && (
                           <div className="flex gap-0.5 flex-shrink-0">
