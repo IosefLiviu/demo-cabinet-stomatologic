@@ -319,7 +319,7 @@ export function TimeSlotGrid({
                               <User className="h-3 w-3 flex-shrink-0 text-foreground/70" />
                             )}
                             <span className={cn(
-                              "text-[11px] font-semibold text-foreground truncate leading-tight",
+                              "text-xs font-bold text-foreground truncate leading-tight",
                               appointmentStarting.status === 'cancelled' && "line-through"
                             )}>
                               {appointmentStarting.patientName}
