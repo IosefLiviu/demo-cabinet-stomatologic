@@ -304,12 +304,6 @@ export function TimeSlotGrid({
                             : undefined
                         }
                       >
-                        {/* Completed badge */}
-                        {appointmentStarting.status === 'completed' && (
-                          <div className="absolute bottom-0 right-0 bg-green-500 rounded-tl-md rounded-br-sm px-1 py-0.5 z-10" title="Finalizată">
-                            <CheckCircle2 className="h-3 w-3 text-white" />
-                          </div>
-                        )}
                         <button
                           onClick={() => onAppointmentClick(appointmentStarting)}
                           className="flex-1 min-w-0 h-full flex items-center cursor-pointer"
