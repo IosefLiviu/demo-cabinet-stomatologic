@@ -328,8 +328,39 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
     : null;
 
   const filteredPatients = patients.filter(p => {
-    const fullName = `${p.first_name} ${p.last_name}`.toLowerCase();
-    return fullName.includes(patientSearch.toLowerCase());
+    const lowerQuery = patientSearch.toLowerCase().trim();
+    if (!lowerQuery) return true;
+    
+    const firstName = p.first_name.toLowerCase();
+    const lastName = p.last_name.toLowerCase();
+    const fullName = `${firstName} ${lastName}`;
+    const reversedName = `${lastName} ${firstName}`;
+    const phone = p.phone || '';
+    
+    // Split query into individual words for flexible matching
+    const queryWords = lowerQuery.split(/\s+/).filter(word => word.length > 0);
+    
+    // If single word, check if it appears in any field
+    if (queryWords.length <= 1) {
+      return (
+        firstName.includes(lowerQuery) ||
+        lastName.includes(lowerQuery) ||
+        phone.includes(patientSearch)
+      );
+    }
+    
+    // For multiple words, check if ALL words appear in name (any order)
+    const allWordsMatch = queryWords.every(word =>
+      firstName.includes(word) ||
+      lastName.includes(word)
+    );
+    
+    // Also check direct full name match in either order
+    const directMatch = 
+      fullName.includes(lowerQuery) ||
+      reversedName.includes(lowerQuery);
+    
+    return allWordsMatch || directMatch;
   });
 
   const resetForm = () => {
