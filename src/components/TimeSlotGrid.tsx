@@ -308,8 +308,16 @@ export function TimeSlotGrid({
                           onClick={() => onAppointmentClick(appointmentStarting)}
                           className="flex-1 min-w-0 h-full flex items-center cursor-pointer"
                         >
+                          {/* Completed badge - left side */}
+                          {appointmentStarting.status === 'completed' && (
+                            <div className="bg-green-500 rounded-sm px-0.5 mr-1 flex-shrink-0" title="Finalizată">
+                              <CheckCircle2 className="h-2.5 w-2.5 text-white" />
+                            </div>
+                          )}
                           <div className="flex items-center gap-1 min-w-0 flex-1">
-                            <User className="h-3 w-3 flex-shrink-0 text-foreground/70" />
+                            {appointmentStarting.status !== 'completed' && (
+                              <User className="h-3 w-3 flex-shrink-0 text-foreground/70" />
+                            )}
                             <span className={cn(
                               "text-[11px] font-semibold text-foreground truncate leading-tight",
                               appointmentStarting.status === 'cancelled' && "line-through"
