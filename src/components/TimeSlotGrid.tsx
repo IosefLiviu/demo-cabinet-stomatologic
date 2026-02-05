@@ -314,7 +314,7 @@ export function TimeSlotGrid({
                           onClick={() => onAppointmentClick(appointmentStarting)}
                           className="flex-1 min-w-0 h-full flex items-center cursor-pointer"
                         >
-                          <div className="flex items-center gap-1 min-w-0">
+                          <div className="flex items-center gap-1 min-w-0 flex-1">
                             <User className="h-3 w-3 flex-shrink-0 text-foreground/70" />
                             <span className={cn(
                               "text-[11px] font-semibold text-foreground truncate leading-tight",
@@ -322,7 +322,21 @@ export function TimeSlotGrid({
                             )}>
                               {appointmentStarting.patientName}
                             </span>
+                            <span className="text-[9px] text-muted-foreground truncate hidden sm:inline">
+                              • {appointmentStarting.treatment}
+                            </span>
                           </div>
+                          {appointmentStarting.doctorName && (
+                            <span 
+                              className="text-[9px] font-medium truncate px-1 py-0.5 rounded ml-1 hidden md:inline"
+                              style={{ 
+                                backgroundColor: appointmentStarting.doctorColor ? `${appointmentStarting.doctorColor}30` : undefined,
+                                color: appointmentStarting.doctorColor || undefined 
+                              }}
+                            >
+                              {appointmentStarting.doctorName.replace('Dr. ', '')}
+                            </span>
+                          )}
                         </button>
                         {appointmentStarting.status !== 'completed' && appointmentStarting.status !== 'cancelled' && (
                           <div className="flex gap-0.5 flex-shrink-0">
