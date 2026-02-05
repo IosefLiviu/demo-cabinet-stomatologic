@@ -327,6 +327,11 @@ export function TimeSlotGrid({
                             <span className="text-[9px] text-muted-foreground truncate hidden sm:inline">
                               • {appointmentStarting.treatment}
                             </span>
+                           {appointmentStarting.notes && (
+                             <span className="text-[9px] text-primary/80 truncate hidden md:inline italic">
+                               • {appointmentStarting.notes}
+                             </span>
+                           )}
                           </div>
                           {appointmentStarting.doctorName && (
                             <span 
