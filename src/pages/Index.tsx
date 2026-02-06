@@ -689,26 +689,28 @@ const Index = () => {
             {/* Summary */}
             <TodaySummary selectedDate={selectedDate} appointments={legacyAppointments} />
 
-            {/* Controls */}
-            <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2 flex-wrap">
-                <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
-                <DoctorFilter
-                  doctors={doctors}
-                  selectedDoctorId={selectedDoctorFilter}
-                  onDoctorChange={setSelectedDoctorFilter}
-                />
-              </div>
-              <div className="flex gap-2 w-full sm:w-auto">
+            {/* Controls + Cabinet tabs - single line */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+              <DoctorFilter
+                doctors={doctors}
+                selectedDoctorId={selectedDoctorFilter}
+                onDoctorChange={setSelectedDoctorFilter}
+              />
+              <div className="border-l border-border h-6 mx-1 hidden sm:block" />
+              <CabinetTabs
+                selectedCabinet={selectedCabinet}
+                onSelectCabinet={setSelectedCabinet}
+                cabinets={cabinets}
+              />
+              <div className="flex gap-2 ml-auto">
                 <AppointmentSearch
                   appointments={legacyAppointments}
                   onAppointmentSelect={(date, appointmentId) => {
                     setSelectedDate(date);
-                    // Find and select the appointment's cabinet
                     const apt = legacyAppointments.find(a => a.id === appointmentId);
                     if (apt) {
                       setSelectedCabinet(apt.cabinetId);
-                      // Also select the doctor filter if appointment has a doctor
                       if (apt.doctorId) {
                         setSelectedDoctorFilter(apt.doctorId);
                       }
@@ -724,19 +726,12 @@ const Index = () => {
                     handleSlotClick(time, cabinetId);
                   }}
                 />
-                <Button className="gap-2 flex-1 sm:flex-none" onClick={handleNewAppointment}>
+                <Button className="gap-2" onClick={handleNewAppointment}>
                   <Plus className="h-4 w-4" />
                   Programare nouă
                 </Button>
               </div>
             </div>
-
-            {/* Cabinet tabs */}
-            <CabinetTabs
-              selectedCabinet={selectedCabinet}
-              onSelectCabinet={setSelectedCabinet}
-              cabinets={cabinets}
-            />
 
             {/* Time Grid */}
             <TimeSlotGrid
