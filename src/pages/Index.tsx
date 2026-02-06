@@ -689,51 +689,50 @@ const Index = () => {
             {/* Summary */}
             <TodaySummary selectedDate={selectedDate} appointments={legacyAppointments} />
 
-            {/* Sticky Controls */}
-            <div className="sticky top-0 z-20 bg-background pt-4 pb-3 space-y-3 sm:space-y-4">
-              {/* Controls */}
-              <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
-                  <DoctorFilter
-                    doctors={doctors}
-                    selectedDoctorId={selectedDoctorFilter}
-                    onDoctorChange={setSelectedDoctorFilter}
-                  />
-                </div>
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <AppointmentSearch
-                    appointments={legacyAppointments}
-                    onAppointmentSelect={(date, appointmentId) => {
-                      setSelectedDate(date);
-                      // Find and select the appointment's cabinet
-                      const apt = legacyAppointments.find(a => a.id === appointmentId);
-                      if (apt) {
-                        setSelectedCabinet(apt.cabinetId);
-                        // Also select the doctor filter if appointment has a doctor
-                        if (apt.doctorId) {
-                          setSelectedDoctorFilter(apt.doctorId);
-                        }
-                      }
-                    }}
-                  />
-                  <AvailableSlotsSearch
-                    appointments={legacyAppointments}
-                    cabinets={cabinets}
-                    onSlotSelect={(date, time, cabinetId) => {
-                      setSelectedDate(date);
-                      setSelectedCabinet(cabinetId);
-                      handleSlotClick(time, cabinetId);
-                    }}
-                  />
-                  <Button className="gap-2 flex-1 sm:flex-none" onClick={handleNewAppointment}>
-                    <Plus className="h-4 w-4" />
-                    Programare nouă
-                  </Button>
-                </div>
+            {/* Controls */}
+            <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between pt-4">
+              <div className="flex items-center gap-2 flex-wrap">
+                <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+                <DoctorFilter
+                  doctors={doctors}
+                  selectedDoctorId={selectedDoctorFilter}
+                  onDoctorChange={setSelectedDoctorFilter}
+                />
               </div>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <AppointmentSearch
+                  appointments={legacyAppointments}
+                  onAppointmentSelect={(date, appointmentId) => {
+                    setSelectedDate(date);
+                    // Find and select the appointment's cabinet
+                    const apt = legacyAppointments.find(a => a.id === appointmentId);
+                    if (apt) {
+                      setSelectedCabinet(apt.cabinetId);
+                      // Also select the doctor filter if appointment has a doctor
+                      if (apt.doctorId) {
+                        setSelectedDoctorFilter(apt.doctorId);
+                      }
+                    }
+                  }}
+                />
+                <AvailableSlotsSearch
+                  appointments={legacyAppointments}
+                  cabinets={cabinets}
+                  onSlotSelect={(date, time, cabinetId) => {
+                    setSelectedDate(date);
+                    setSelectedCabinet(cabinetId);
+                    handleSlotClick(time, cabinetId);
+                  }}
+                />
+                <Button className="gap-2 flex-1 sm:flex-none" onClick={handleNewAppointment}>
+                  <Plus className="h-4 w-4" />
+                  Programare nouă
+                </Button>
+              </div>
+            </div>
 
-              {/* Cabinet tabs */}
+            {/* Cabinet tabs */}
+            <div className="pt-3 sm:pt-4">
               <CabinetTabs
                 selectedCabinet={selectedCabinet}
                 onSelectCabinet={setSelectedCabinet}
@@ -741,8 +740,12 @@ const Index = () => {
               />
             </div>
 
-            {/* Scrollable Time Grid */}
-            <div className="flex-1 overflow-y-auto mt-2">
+            {/* Scrollable Time Grid with sticky date bar */}
+            <div className="flex-1 overflow-y-auto mt-2 relative">
+              {/* Sticky Date Bar */}
+              <div className="sticky top-0 z-20 bg-background py-2 flex justify-center border-b border-border">
+                <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+              </div>
               <TimeSlotGrid
                 selectedDate={selectedDate}
                 selectedCabinet={selectedCabinet}
