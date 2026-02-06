@@ -688,8 +688,8 @@ const Index = () => {
           <TabsContent value="calendar" className="space-y-4 sm:space-y-6">
             {/* Summary moved to Reports tab */}
 
-            {/* Controls + Cabinet tabs - single line */}
-            <div className="flex items-center gap-2 flex-wrap">
+            {/* Controls + Cabinet tabs - single line, sticky */}
+            <div className="flex items-center gap-2 flex-wrap sticky top-0 z-20 bg-background py-2 -mx-1 px-1 sm:-mx-2 sm:px-2 lg:-mx-4 lg:px-4 border-b border-border">
               <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
               <DoctorFilter
                 doctors={doctors}
