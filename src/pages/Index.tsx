@@ -687,7 +687,7 @@ const Index = () => {
 
           {/* Calendar controls - outside TabsContent for proper sticky */}
           {activeTab === 'calendar' && (
-            <div className="flex items-center gap-2 flex-wrap sticky top-0 z-30 bg-background py-2 border-b border-border -mx-1 px-1 sm:-mx-2 sm:px-2 lg:-mx-4 lg:px-4">
+            <div className="flex items-center gap-2 flex-wrap sticky top-14 sm:top-16 z-30 bg-background py-2 border-b border-border -mx-1 px-1 sm:-mx-2 sm:px-2 lg:-mx-4 lg:px-4">
               <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
               <DoctorFilter
                 doctors={doctors}
