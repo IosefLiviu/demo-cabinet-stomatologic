@@ -685,18 +685,16 @@ const Index = () => {
             </TabsList>
           </div>
 
-          {/* Sticky Date Navigator - outside TabsContent for proper sticky behavior */}
-          {activeTab === 'calendar' && (
-            <div className="sticky top-0 z-20 bg-background py-2 -mx-1 px-1 sm:-mx-2 sm:px-2 lg:-mx-4 lg:px-4 border-b border-border shadow-sm -mt-4 sm:-mt-6 mb-4 sm:mb-6">
+          <TabsContent value="calendar" className="space-y-4 sm:space-y-6">
+            {/* Summary */}
+            <TodaySummary selectedDate={selectedDate} appointments={legacyAppointments} />
+
+            {/* Sticky Date Navigator */}
+            <div className="sticky top-0 z-20 bg-background py-2 -mx-4 px-4 sm:-mx-6 sm:px-6 border-b border-border shadow-sm">
               <div className="flex justify-center">
                 <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
               </div>
             </div>
-          )}
-
-          <TabsContent value="calendar" className="space-y-4 sm:space-y-6">
-            {/* Summary */}
-            <TodaySummary selectedDate={selectedDate} appointments={legacyAppointments} />
 
             {/* Controls */}
             <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
