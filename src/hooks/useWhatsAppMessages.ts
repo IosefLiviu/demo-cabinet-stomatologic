@@ -85,6 +85,31 @@ export function useWhatsAppMessages() {
     },
   });
 
+  const markAsUnreadMutation = useMutation({
+    mutationFn: async (messageId: string) => {
+      const { error } = await supabase
+        .from("whatsapp_messages")
+        .update({ 
+          status: "unread",
+          read_at: null
+        })
+        .eq("id", messageId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["whatsapp-messages"] });
+    },
+    onError: (error) => {
+      console.error("Error marking message as unread:", error);
+      toast({
+        title: "Eroare",
+        description: "Nu s-a putut marca mesajul ca necitit",
+        variant: "destructive",
+      });
+    },
+  });
+
   const unreadCount = messages.filter(m => m.status === "unread").length;
 
   return {
@@ -93,8 +118,10 @@ export function useWhatsAppMessages() {
     error,
     unreadCount,
     markAsRead: markAsReadMutation.mutate,
+    markAsUnread: markAsUnreadMutation.mutate,
     deleteMessage: deleteMessageMutation.mutate,
     isMarkingAsRead: markAsReadMutation.isPending,
+    isMarkingAsUnread: markAsUnreadMutation.isPending,
     isDeleting: deleteMessageMutation.isPending,
   };
 }
