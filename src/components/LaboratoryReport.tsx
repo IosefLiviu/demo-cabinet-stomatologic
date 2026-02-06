@@ -35,12 +35,18 @@ interface DoctorLabStats {
 }
 
 export function LaboratoryReport({ appointments, dateRange }: LaboratoryReportProps) {
-  // Get all lab entries from completed appointments
+  // Get all lab entries from completed appointments whose date is within the selected range
+  // (exclude debt-payment-only appointments fetched from outside the range)
   const labEntries = useMemo(() => {
     const entries: LabEntry[] = [];
     
+    const isInRange = (dateStr: string) => {
+      const d = new Date(dateStr);
+      return d >= dateRange.from && d <= dateRange.to;
+    };
+    
     appointments
-      .filter(a => a.status === 'completed')
+      .filter(a => a.status === 'completed' && isInRange(a.appointment_date))
       .forEach(a => {
         if (a.appointment_treatments && a.appointment_treatments.length > 0) {
           a.appointment_treatments.forEach(t => {
@@ -63,7 +69,7 @@ export function LaboratoryReport({ appointments, dateRange }: LaboratoryReportPr
       });
     
     return entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [appointments]);
+  }, [appointments, dateRange]);
 
   // Aggregate by doctor
   const doctorLabStats = useMemo(() => {

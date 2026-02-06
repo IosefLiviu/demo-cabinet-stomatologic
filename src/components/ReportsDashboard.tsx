@@ -95,7 +95,9 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
 
   // Calculate statistics with partial payment support
   const stats = useMemo(() => {
-    const completed = filteredAppointments.filter(a => a.status === 'completed');
+    // Only count stats for appointments whose date is within the selected range
+    // (exclude debt-payment-only appointments fetched from outside the range)
+    const completed = filteredAppointments.filter(a => a.status === 'completed' && isAppointmentInRange(a.appointment_date));
     
     // Calculate totalRevenue as net payable (after discounts), and CAS/Laborator only for non-100% discounted treatments
     let totalRevenue = 0;
