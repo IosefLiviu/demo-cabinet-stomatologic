@@ -275,15 +275,14 @@ export function TimeSlotGrid({
                         }
                         onClick={() => onAppointmentClick(appointmentCovering)}
                       >
-                        {isFirstContinuation && (appointmentCovering.notes || appointmentCovering.treatment) && (
-                          <span className="text-[11px] font-semibold text-foreground/80 truncate leading-tight">
-                            {appointmentCovering.notes ? (
-                              <span className="italic">{cleanDentalNotes(appointmentCovering.notes).replace(/\[Plată:.*?\]/g, '').replace(/\[Restanță:.*?\]/g, '').trim() || appointmentCovering.treatment}</span>
-                            ) : (
-                              <span>{appointmentCovering.treatment}</span>
-                            )}
-                          </span>
-                        )}
+                        {isFirstContinuation && appointmentCovering.notes && (() => {
+                          const cleaned = cleanDentalNotes(appointmentCovering.notes).replace(/\[Plată:.*?\]/g, '').replace(/\[Restanță:.*?\]/g, '').trim();
+                          return cleaned ? (
+                            <span className="text-[11px] font-semibold text-foreground/80 truncate leading-tight italic">
+                              {cleaned}
+                            </span>
+                          ) : null;
+                        })()}
                       </div>
                     </div>
                   );
