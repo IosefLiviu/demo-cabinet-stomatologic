@@ -118,6 +118,7 @@ export function useAppointmentsDB() {
           doctors (id, name, color),
           appointment_treatments (id, appointment_id, treatment_id, treatment_name, price, decont, co_plata, laborator, duration, discount_percent, tooth_numbers, tooth_data)
         `)
+        .neq('status', 'deleted')
         .order('start_time', { ascending: true });
 
       if (date) {
