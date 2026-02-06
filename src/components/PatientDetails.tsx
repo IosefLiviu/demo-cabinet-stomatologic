@@ -25,6 +25,7 @@ import {
   FileImage,
   Plus,
   CalendarPlus,
+  MessageSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -58,6 +59,7 @@ import { PatientDentalStatusTab } from './PatientDentalStatusTab';
 import { useTreatmentPlans, TreatmentPlan } from '@/hooks/useTreatmentPlans';
 import { PatientRadiographs } from './PatientRadiographs';
 import { escapeHtml, escapeHtmlArray, escapeNumberArray } from '@/lib/print-utils';
+import { cleanDentalNotes } from '@/lib/cleanDentalNotes';
 
 interface ToothDataRecord {
   toothNumber: number;
@@ -82,6 +84,7 @@ interface TreatmentRecord {
   paid_amount: number | null;
   total_price: number | null;
   doctor_name: string | null;
+  appointment_notes: string | null;
 }
 
 type PaymentMethod = 'card' | 'cash' | 'unpaid' | 'partial_card' | 'partial_cash';
@@ -685,6 +688,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
             paid_amount: paidAmount,
             total_price: appointmentPrice,
             doctor_name: doctorName,
+            appointment_notes: appointment.notes || null,
           });
         });
       });
@@ -1147,6 +1151,21 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                                             </>
                                           )}
                                         </div>
+                                        {(() => {
+                                          const cleaned = cleanDentalNotes(record.appointment_notes);
+                                          // Strip old payment tags from notes
+                                          const visibleNotes = cleaned
+                                            .replace(/\[Plată:.*?\]/g, '')
+                                            .replace(/\[Restanță:.*?\]/g, '')
+                                            .trim();
+                                          if (!visibleNotes) return null;
+                                          return (
+                                            <div className="flex items-start gap-1 mt-1 text-xs text-muted-foreground">
+                                              <MessageSquare className="h-3 w-3 mt-0.5 shrink-0" />
+                                              <span className="italic line-clamp-2">{visibleNotes}</span>
+                                            </div>
+                                          );
+                                        })()}
                                       </div>
                                     </div>
                                     <div className="flex flex-col items-end gap-1 shrink-0">
