@@ -685,9 +685,9 @@ const Index = () => {
             </TabsList>
           </div>
 
-          <TabsContent value="calendar" className="mt-0 flex flex-col" style={{ height: 'calc(100vh - 70px)' }}>
-            {/* Controls + Cabinet tabs - single line, fixed at top */}
-            <div className="flex items-center gap-2 flex-wrap flex-shrink-0 bg-background py-2 border-b border-border">
+          {/* Calendar controls - outside TabsContent for proper sticky */}
+          {activeTab === 'calendar' && (
+            <div className="flex items-center gap-2 flex-wrap sticky top-0 z-30 bg-background py-2 border-b border-border -mx-1 px-1 sm:-mx-2 sm:px-2 lg:-mx-4 lg:px-4">
               <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
               <DoctorFilter
                 doctors={doctors}
@@ -729,9 +729,11 @@ const Index = () => {
                 </Button>
               </div>
             </div>
+          )}
 
-            {/* Time Grid - scrollable */}
-            <div className="flex-1 overflow-y-auto mt-2">
+          <TabsContent value="calendar" className="!mt-0">
+            {/* Time Grid */}
+            <div className="mt-2">
               <TimeSlotGrid
                 selectedDate={selectedDate}
                 selectedCabinet={selectedCabinet}
