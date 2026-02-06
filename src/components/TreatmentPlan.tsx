@@ -507,8 +507,9 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
   const totalDePlata = unpaidItems.reduce((sum, item) => sum + getDePlata(item), 0);
   const totalPaid = paidItems.reduce((sum, item) => sum + getDePlata(item), 0);
   
-  const discountAmount = subtotal * (discountPercent / 100);
-  const total = subtotal - discountAmount;
+  const allDePlata = planItems.reduce((sum, item) => sum + getDePlata(item), 0);
+  const discountAmount = allDePlata * (discountPercent / 100);
+  const total = allDePlata - discountAmount;
 
   const handleSave = async () => {
     if (!selectedPatientId) return;
@@ -1027,28 +1028,31 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
                 {planItems.map(item => {
                   const doctor = doctors.find(d => d.id === item.doctorId);
                   const quantity = item.toothNumbers.length > 0 ? item.toothNumbers.length : 1;
-                  const itemTotal = getItemTotal(item);
+                  const itemDePlata = getDePlata(item);
                   return (
                     <tr key={item.id}>
                       <td>{item.toothNumbers.length > 0 ? escapeNumberArray(item.toothNumbers, ', ') : '-'}</td>
                       <td>{escapeHtml(item.treatmentName)}</td>
                       <td>{escapeHtml(doctor?.name) || '-'}</td>
                       <td style={{ textAlign: 'center' }}>{quantity}</td>
-                      <td style={{ textAlign: 'right' }}>{itemTotal.toFixed(0)}</td>
+                      <td style={{ textAlign: 'right' }}>{itemDePlata.toFixed(0)}</td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
+            {totalCas > 0 && (
+              <p style={{ textAlign: 'right', fontSize: '12px', color: '#666' }}>CAS: {totalCas.toFixed(0)} LEI</p>
+            )}
             {discountPercent > 0 && (
               <>
-                <p className="total" style={{ textAlign: 'right' }}>Subtotal: {subtotal.toFixed(2)} LEI</p>
-                <p className="total" style={{ textAlign: 'right' }}>Discount ({discountPercent}%): -{discountAmount.toFixed(2)} LEI</p>
+                <p className="total" style={{ textAlign: 'right' }}>Subtotal: {totalDePlata.toFixed(0)} LEI</p>
+                <p className="total" style={{ textAlign: 'right' }}>Discount ({discountPercent}%): -{discountAmount.toFixed(0)} LEI</p>
               </>
             )}
           </div>
 
-          <div className="total">TOTAL: {total.toFixed(2)} LEI</div>
+          <div className="total">DE PLATĂ: {total.toFixed(0)} LEI</div>
           
           <div style={{ marginTop: '30px', paddingTop: '10px', borderTop: '2px solid #b8860b' }}>
             <div style={{ textAlign: 'center', fontSize: '9px', color: '#666' }}>
