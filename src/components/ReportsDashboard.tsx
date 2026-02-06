@@ -97,7 +97,11 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
   const stats = useMemo(() => {
     // Only count stats for appointments whose date is within the selected range
     // (exclude debt-payment-only appointments fetched from outside the range)
-    const completed = filteredAppointments.filter(a => a.status === 'completed' && isAppointmentInRange(a.appointment_date));
+    const completed = filteredAppointments.filter(a => {
+      if (a.status !== 'completed') return false;
+      const d = new Date(a.appointment_date);
+      return d >= dateRange.from && d <= dateRange.to;
+    });
     
     // Calculate totalRevenue as net payable (after discounts), and CAS/Laborator only for non-100% discounted treatments
     let totalRevenue = 0;
