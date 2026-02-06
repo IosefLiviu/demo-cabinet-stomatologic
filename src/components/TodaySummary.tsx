@@ -30,56 +30,42 @@ export function TodaySummary({ selectedDate, appointments }: TodaySummaryProps) 
   }, {});
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <div className="rounded-xl bg-card border border-border p-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-            <Calendar className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-foreground">{todayAppointments.length}</p>
-            <p className="text-xs text-muted-foreground">Programări azi</p>
-          </div>
-        </div>
+    <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex items-center gap-2 rounded-lg bg-card border border-border px-3 py-1.5 shadow-sm">
+        <Calendar className="h-4 w-4 text-primary" />
+        <span className="text-sm font-bold text-foreground">{todayAppointments.length}</span>
+        <span className="text-xs text-muted-foreground">Programări azi</span>
       </div>
 
-      <div className="rounded-xl bg-card border border-border p-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10">
-            <Clock className="h-5 w-5 text-success" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-foreground">
-              {hours > 0 ? `${hours}h ` : ''}{minutes > 0 ? `${minutes}m` : hours === 0 ? '0m' : ''}
-            </p>
-            <p className="text-xs text-muted-foreground">Timp total programat</p>
-          </div>
-        </div>
+      <div className="flex items-center gap-2 rounded-lg bg-card border border-border px-3 py-1.5 shadow-sm">
+        <Clock className="h-4 w-4 text-success" />
+        <span className="text-sm font-bold text-foreground">
+          {hours > 0 ? `${hours}h` : ''}{minutes > 0 ? `${minutes}m` : hours === 0 ? '0m' : ''}
+        </span>
+        <span className="text-xs text-muted-foreground">Timp total programat</span>
       </div>
 
-      <div className="rounded-xl bg-card border border-border p-4 shadow-sm sm:col-span-2">
-        <p className="text-xs font-medium text-muted-foreground mb-3">Per cabinet</p>
-        <div className="flex flex-wrap gap-2">
-          {CABINETS.map((cabinet) => (
-            <div
-              key={cabinet.id}
-              className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-1.5"
-            >
-              <span
-                className={cn(
-                  "w-2 h-2 rounded-full",
-                  cabinetBgColors[cabinet.id]
-                )}
-              />
-              <span className="text-sm font-medium text-foreground">
-                {cabinet.name}:
-              </span>
-              <span className="text-sm text-muted-foreground">
-                {appointmentsByHour[cabinet.id] || 0}
-              </span>
-            </div>
-          ))}
-        </div>
+      <div className="flex items-center gap-1.5 ml-auto">
+        <span className="text-xs text-muted-foreground mr-1">Per cabinet</span>
+        {CABINETS.map((cabinet) => (
+          <div
+            key={cabinet.id}
+            className="flex items-center gap-1 rounded-md bg-muted/50 px-2 py-1"
+          >
+            <span
+              className={cn(
+                "w-2 h-2 rounded-full",
+                cabinetBgColors[cabinet.id]
+              )}
+            />
+            <span className="text-xs font-medium text-foreground">
+              {cabinet.name}:
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {appointmentsByHour[cabinet.id] || 0}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );
