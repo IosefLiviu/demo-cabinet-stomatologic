@@ -686,8 +686,7 @@ const Index = () => {
           </div>
 
           <TabsContent value="calendar" className="space-y-4 sm:space-y-6">
-            {/* Summary */}
-            <TodaySummary selectedDate={selectedDate} appointments={legacyAppointments} />
+            {/* Summary moved to Reports tab */}
 
             {/* Controls + Cabinet tabs - single line */}
             <div className="flex items-center gap-2 flex-wrap">
@@ -797,7 +796,8 @@ const Index = () => {
             </Tabs>
           </TabsContent>
 
-          <TabsContent value="reports">
+          <TabsContent value="reports" className="space-y-4">
+            <TodaySummary selectedDate={selectedDate} appointments={legacyAppointments} />
             <ReportsDashboard
               appointments={appointments}
               loading={appointmentsLoading}
