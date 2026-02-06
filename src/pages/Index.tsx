@@ -685,9 +685,9 @@ const Index = () => {
             </TabsList>
           </div>
 
-          <TabsContent value="calendar" className="mt-0">
-            {/* Controls + Cabinet tabs - single line, sticky */}
-            <div className="flex items-center gap-2 flex-wrap sticky top-0 z-20 bg-background py-2 -mx-1 px-1 sm:-mx-2 sm:px-2 lg:-mx-4 lg:px-4 border-b border-border">
+          <TabsContent value="calendar" className="mt-0 flex flex-col" style={{ height: 'calc(100vh - 70px)' }}>
+            {/* Controls + Cabinet tabs - single line, fixed at top */}
+            <div className="flex items-center gap-2 flex-wrap flex-shrink-0 bg-background py-2 border-b border-border">
               <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
               <DoctorFilter
                 doctors={doctors}
@@ -730,21 +730,21 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Time Grid */}
-            <div className="mt-3">
-            <TimeSlotGrid
-              selectedDate={selectedDate}
-              selectedCabinet={selectedCabinet}
-              appointments={filteredAppointments}
-              cabinets={cabinets}
-              doctorShifts={doctorShifts}
-              doctors={doctors}
-              onSlotClick={handleSlotClick}
-              onAppointmentClick={handleAppointmentClick}
-              onAppointmentComplete={handleAppointmentComplete}
-              onAppointmentCancel={handleAppointmentCancelClick}
-              onEditPayment={handleEditPayment}
-            />
+            {/* Time Grid - scrollable */}
+            <div className="flex-1 overflow-y-auto mt-2">
+              <TimeSlotGrid
+                selectedDate={selectedDate}
+                selectedCabinet={selectedCabinet}
+                appointments={filteredAppointments}
+                cabinets={cabinets}
+                doctorShifts={doctorShifts}
+                doctors={doctors}
+                onSlotClick={handleSlotClick}
+                onAppointmentClick={handleAppointmentClick}
+                onAppointmentComplete={handleAppointmentComplete}
+                onAppointmentCancel={handleAppointmentCancelClick}
+                onEditPayment={handleEditPayment}
+              />
             </div>
           </TabsContent>
 
