@@ -337,7 +337,7 @@ export function TimeSlotGrid({
                               <User className="h-3 w-3 flex-shrink-0 text-foreground/70" />
                             )}
                             <span className={cn(
-                              "text-xs font-bold text-foreground truncate leading-tight",
+                              "text-xs font-bold text-foreground whitespace-nowrap leading-tight flex-shrink-0",
                               appointmentStarting.status === 'cancelled' && "line-through"
                             )}>
                               {appointmentStarting.patientName}
