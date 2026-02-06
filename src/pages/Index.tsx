@@ -685,9 +685,7 @@ const Index = () => {
             </TabsList>
           </div>
 
-          <TabsContent value="calendar" className="space-y-4 sm:space-y-6">
-            {/* Summary moved to Reports tab */}
-
+          <TabsContent value="calendar" className="mt-0">
             {/* Controls + Cabinet tabs - single line, sticky */}
             <div className="flex items-center gap-2 flex-wrap sticky top-0 z-20 bg-background py-2 -mx-1 px-1 sm:-mx-2 sm:px-2 lg:-mx-4 lg:px-4 border-b border-border">
               <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
@@ -733,6 +731,7 @@ const Index = () => {
             </div>
 
             {/* Time Grid */}
+            <div className="mt-3">
             <TimeSlotGrid
               selectedDate={selectedDate}
               selectedCabinet={selectedCabinet}
@@ -746,6 +745,7 @@ const Index = () => {
               onAppointmentCancel={handleAppointmentCancelClick}
               onEditPayment={handleEditPayment}
             />
+            </div>
           </TabsContent>
 
           <TabsContent value="patients">
