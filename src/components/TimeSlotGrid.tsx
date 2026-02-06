@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
-import { Plus, User, CheckCircle2, XCircle, Edit3, Users } from 'lucide-react';
+import { useRef, useEffect, useCallback } from 'react';
+import { Plus, User, CheckCircle2, XCircle, Edit3, Users, Clock } from 'lucide-react';
 import { TIME_SLOTS, SLOT_DURATION_MINUTES, Appointment } from '@/types/appointment';
 import { Cabinet } from '@/hooks/useCabinets';
 import { DoctorShift } from '@/hooks/useDoctorShifts';
@@ -56,9 +57,35 @@ export function TimeSlotGrid({
   onEditPayment,
 }: TimeSlotGridProps) {
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const hourRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const cabinetsToShow = selectedCabinet
     ? cabinets.filter((c) => c.id === selectedCabinet)
     : cabinets;
+
+  // Quick-jump hours for the navigation bar
+  const JUMP_HOURS = ['08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21'];
+
+  const scrollToHour = useCallback((hour: string) => {
+    const el = hourRefs.current[`${hour}:00`];
+    if (el && scrollContainerRef.current) {
+      const containerTop = scrollContainerRef.current.getBoundingClientRect().top;
+      const elTop = el.getBoundingClientRect().top;
+      scrollContainerRef.current.scrollTop += elTop - containerTop - 40; // 40px offset for nav bar
+    }
+  }, []);
+
+  const scrollToNow = useCallback(() => {
+    const now = new Date();
+    const currentHour = String(now.getHours()).padStart(2, '0');
+    scrollToHour(currentHour);
+  }, [scrollToHour]);
+
+  // Auto-scroll to current hour on mount
+  useEffect(() => {
+    const timer = setTimeout(scrollToNow, 100);
+    return () => clearTimeout(timer);
+  }, [scrollToNow]);
 
   // Helper to convert time string to minutes
   const timeToMinutes = (time: string): number => {
@@ -137,9 +164,29 @@ export function TimeSlotGrid({
   };
 
   return (
-    <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
+    <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm flex flex-col">
+      {/* Quick-jump hour navigation */}
+      <div className="sticky top-0 z-20 bg-muted/80 backdrop-blur-sm border-b border-border px-2 py-1 flex items-center gap-1 overflow-x-auto">
+        <button
+          onClick={scrollToNow}
+          className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex-shrink-0"
+        >
+          <Clock className="h-3 w-3" />
+          Acum
+        </button>
+        <div className="w-px h-4 bg-border flex-shrink-0" />
+        {JUMP_HOURS.map((hour) => (
+          <button
+            key={hour}
+            onClick={() => scrollToHour(hour)}
+            className="px-1.5 py-0.5 rounded text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors flex-shrink-0"
+          >
+            {hour}
+          </button>
+        ))}
+      </div>
       {/* Outer scroll container for horizontal scroll on mobile */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto overflow-y-auto flex-1" ref={scrollContainerRef} style={{ maxHeight: 'calc(100vh - 200px)' }}>
         {/* Inner container with minimum width for mobile horizontal scroll */}
         <div 
           className="min-w-[600px] md:min-w-0"
@@ -203,6 +250,7 @@ export function TimeSlotGrid({
               {/* Regular time column */}
               <div 
                 key={`time-${time}`}
+                ref={time.endsWith(':00') ? (el) => { hourRefs.current[time] = el; } : undefined}
                 className="h-[26px] flex items-center justify-center text-[9px] font-medium text-muted-foreground border-r border-b border-border bg-muted/30"
               >
                 {time.endsWith(':00') ? time : ''}
