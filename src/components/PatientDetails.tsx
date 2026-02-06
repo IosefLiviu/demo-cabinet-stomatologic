@@ -215,8 +215,15 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
   const handlePrintPlan = (plan: TreatmentPlan) => {
     const discountPercent = plan.discountPercent || 0;
     const subtotal = plan.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const discountAmount = subtotal * (discountPercent / 100);
-    const total = subtotal - discountAmount;
+    const totalCasPrint = plan.items.reduce((sum, item) => sum + (item.cas || 0), 0);
+    const totalDePlataPrint = plan.items.reduce((sum, item) => {
+      const itemDiscount = item.discountPercent || 0;
+      const gross = item.price * item.quantity;
+      const afterCas = gross - (item.cas || 0);
+      return sum + Math.max(0, afterCas * (1 - itemDiscount / 100));
+    }, 0);
+    const discountAmount = totalDePlataPrint * (discountPercent / 100);
+    const total = Math.max(0, totalDePlataPrint - discountAmount);
     
     // Collect all selected teeth from the plan - use toothNumbers array if available
     const selectedTeeth = new Set<number>();
@@ -338,19 +345,25 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                     <td>${teethDisplay}</td>
                     <td>${escapeHtml(item.treatmentName)}</td>
                     <td style="text-align: center">${item.quantity}</td>
-                    <td style="text-align: right">${(item.price * item.quantity).toFixed(0)} RON</td>
+                    <td style="text-align: right">${Math.max(0, (item.price * item.quantity) - (item.cas || 0)).toFixed(0)} RON</td>
                   </tr>
                 `}).join('')}
               </tbody>
             </table>
           </div>
-          ${discountPercent > 0 ? `
+          ${totalCasPrint > 0 ? `
             <div class="discount-info">
-              <p>Subtotal: ${subtotal.toFixed(2)} LEI</p>
-              <p>Discount (${discountPercent}%): -${discountAmount.toFixed(2)} LEI</p>
+              <p>Preț brut: ${subtotal.toFixed(0)} LEI</p>
+              <p>CAS: -${totalCasPrint.toFixed(0)} LEI</p>
             </div>
           ` : ''}
-          <div class="total">TOTAL: ${total.toFixed(2)} LEI</div>
+          ${discountPercent > 0 ? `
+            <div class="discount-info">
+              <p>Subtotal: ${totalDePlataPrint.toFixed(0)} LEI</p>
+              <p>Discount (${discountPercent}%): -${discountAmount.toFixed(0)} LEI</p>
+            </div>
+          ` : ''}
+          <div class="total">DE PLATĂ: ${total.toFixed(0)} LEI</div>
           
           <div style="margin-top: 30px; padding-top: 10px; border-top: 2px solid #b8860b;">
             <div style="text-align: center; font-size: 9px; color: #666;">
@@ -1277,7 +1290,16 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
             ) : (
               <div className="space-y-4">
                 {treatmentPlans.map((plan) => {
-                  const total = plan.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                  const planDiscount = plan.discountPercent || 0;
+                  const totalDePlata = plan.items.reduce((sum, item) => {
+                    const itemDiscount = item.discountPercent || 0;
+                    const gross = item.price * item.quantity;
+                    const afterCas = gross - (item.cas || 0);
+                    const afterItemDiscount = afterCas * (1 - itemDiscount / 100);
+                    return sum + Math.max(0, afterItemDiscount);
+                  }, 0);
+                  const total = Math.max(0, totalDePlata * (1 - planDiscount / 100));
+                  const totalCas = plan.items.reduce((sum, item) => sum + (item.cas || 0), 0);
                   
                   return (
                     <Collapsible key={plan.id} defaultOpen={false}>
@@ -1323,7 +1345,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                                     <th className="px-3 py-2 text-left font-medium">Dinte</th>
                                     <th className="px-3 py-2 text-left font-medium">Tratament</th>
                                     <th className="px-3 py-2 text-center font-medium">Cant.</th>
-                                    <th className="px-3 py-2 text-right font-medium">Preț</th>
+                                    <th className="px-3 py-2 text-right font-medium">De plată</th>
                                     <th className="px-3 py-2 text-center font-medium">Status</th>
                                   </tr>
                                 </thead>
@@ -1357,7 +1379,13 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                                           {item.quantity}
                                         </td>
                                         <td className={cn('px-3 py-2 text-right', (isCompleted || allTeethDone) && 'text-success')}>
-                                          {item.price} RON
+                                          {(() => {
+                                            const gross = item.price * item.quantity;
+                                            const afterCas = gross - (item.cas || 0);
+                                            const itemDisc = item.discountPercent || 0;
+                                            const dePlata = Math.max(0, afterCas * (1 - itemDisc / 100));
+                                            return `${dePlata.toFixed(0)} RON`;
+                                          })()}
                                         </td>
                                         <td className="px-3 py-2 text-center">
                                           {(isCompleted || allTeethDone) ? (
@@ -1388,8 +1416,14 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                                   })}
                                 </tbody>
                                 <tfoot>
-                                  <tr className="border-t bg-muted/30">
-                                    <td colSpan={4} className="px-3 py-2 text-right font-medium">Total:</td>
+                                  {totalCas > 0 && (
+                                    <tr className="border-t bg-muted/30">
+                                      <td colSpan={4} className="px-3 py-2 text-right text-xs text-muted-foreground">CAS:</td>
+                                      <td className="px-3 py-2 text-right text-xs text-success">{totalCas.toFixed(0)} RON</td>
+                                    </tr>
+                                  )}
+                                  <tr className={cn('border-t bg-muted/30', !totalCas && '')}>
+                                    <td colSpan={4} className="px-3 py-2 text-right font-medium">De plată:</td>
                                     <td className="px-3 py-2 text-right font-bold">{total.toFixed(0)} RON</td>
                                   </tr>
                                 </tfoot>
