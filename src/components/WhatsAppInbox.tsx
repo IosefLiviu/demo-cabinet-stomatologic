@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { ro } from "date-fns/locale";
 import {
   MessageSquare, Check, CheckCheck, Trash2, User, Phone, ExternalLink,
-  Send, ChevronLeft, Image, Search, UserPlus, ArrowDown, Clock,
+  Send, ChevronLeft, Image, Search, UserPlus, ArrowDown, Clock, MailOpen,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -72,7 +72,7 @@ function formatMessageDate(dateStr: string): string {
 
 export function WhatsAppInbox() {
   const navigate = useNavigate();
-  const { messages, isLoading, unreadCount, markAsRead, deleteMessage } = useWhatsAppMessages();
+  const { messages, isLoading, unreadCount, markAsRead, markAsUnread, deleteMessage } = useWhatsAppMessages();
   const { sendMessageAsync, isSending } = useSendWhatsApp();
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -340,6 +340,23 @@ export function WhatsAppInbox() {
                 </p>
               </div>
               <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-white hover:bg-white/10"
+                  onClick={() => {
+                    // Mark all inbound messages in this conversation as unread
+                    activeConv.messages.forEach((m) => {
+                      if (m.direction === "inbound" && m.status !== "unread") {
+                        markAsUnread(m.id);
+                      }
+                    });
+                    setActiveConversation(null);
+                  }}
+                  title="Marchează ca necitit"
+                >
+                  <MailOpen className="h-4 w-4" />
+                </Button>
                 {activeConv.patientId && (
                   <Button
                     variant="ghost"
