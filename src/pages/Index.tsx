@@ -685,78 +685,73 @@ const Index = () => {
             </TabsList>
           </div>
 
-          <TabsContent value="calendar" className="flex flex-col h-[calc(100vh-180px)]">
+          <TabsContent value="calendar" className="space-y-4 sm:space-y-6">
             {/* Summary */}
             <TodaySummary selectedDate={selectedDate} appointments={legacyAppointments} />
 
-            {/* Sticky Controls */}
-            <div className="sticky top-0 z-20 bg-background pt-4 pb-3 space-y-3 sm:space-y-4">
-              {/* Controls */}
-              <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
-                  <DoctorFilter
-                    doctors={doctors}
-                    selectedDoctorId={selectedDoctorFilter}
-                    onDoctorChange={setSelectedDoctorFilter}
-                  />
-                </div>
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <AppointmentSearch
-                    appointments={legacyAppointments}
-                    onAppointmentSelect={(date, appointmentId) => {
-                      setSelectedDate(date);
-                      // Find and select the appointment's cabinet
-                      const apt = legacyAppointments.find(a => a.id === appointmentId);
-                      if (apt) {
-                        setSelectedCabinet(apt.cabinetId);
-                        // Also select the doctor filter if appointment has a doctor
-                        if (apt.doctorId) {
-                          setSelectedDoctorFilter(apt.doctorId);
-                        }
-                      }
-                    }}
-                  />
-                  <AvailableSlotsSearch
-                    appointments={legacyAppointments}
-                    cabinets={cabinets}
-                    onSlotSelect={(date, time, cabinetId) => {
-                      setSelectedDate(date);
-                      setSelectedCabinet(cabinetId);
-                      handleSlotClick(time, cabinetId);
-                    }}
-                  />
-                  <Button className="gap-2 flex-1 sm:flex-none" onClick={handleNewAppointment}>
-                    <Plus className="h-4 w-4" />
-                    Programare nouă
-                  </Button>
-                </div>
+            {/* Controls */}
+            <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2 flex-wrap">
+                <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+                <DoctorFilter
+                  doctors={doctors}
+                  selectedDoctorId={selectedDoctorFilter}
+                  onDoctorChange={setSelectedDoctorFilter}
+                />
               </div>
-
-              {/* Cabinet tabs */}
-              <CabinetTabs
-                selectedCabinet={selectedCabinet}
-                onSelectCabinet={setSelectedCabinet}
-                cabinets={cabinets}
-              />
+              <div className="flex gap-2 w-full sm:w-auto">
+                <AppointmentSearch
+                  appointments={legacyAppointments}
+                  onAppointmentSelect={(date, appointmentId) => {
+                    setSelectedDate(date);
+                    // Find and select the appointment's cabinet
+                    const apt = legacyAppointments.find(a => a.id === appointmentId);
+                    if (apt) {
+                      setSelectedCabinet(apt.cabinetId);
+                      // Also select the doctor filter if appointment has a doctor
+                      if (apt.doctorId) {
+                        setSelectedDoctorFilter(apt.doctorId);
+                      }
+                    }
+                  }}
+                />
+                <AvailableSlotsSearch
+                  appointments={legacyAppointments}
+                  cabinets={cabinets}
+                  onSlotSelect={(date, time, cabinetId) => {
+                    setSelectedDate(date);
+                    setSelectedCabinet(cabinetId);
+                    handleSlotClick(time, cabinetId);
+                  }}
+                />
+                <Button className="gap-2 flex-1 sm:flex-none" onClick={handleNewAppointment}>
+                  <Plus className="h-4 w-4" />
+                  Programare nouă
+                </Button>
+              </div>
             </div>
 
-            {/* Scrollable Time Grid */}
-            <div className="flex-1 overflow-y-auto mt-2">
-              <TimeSlotGrid
-                selectedDate={selectedDate}
-                selectedCabinet={selectedCabinet}
-                appointments={filteredAppointments}
-                cabinets={cabinets}
-                doctorShifts={doctorShifts}
-                doctors={doctors}
-                onSlotClick={handleSlotClick}
-                onAppointmentClick={handleAppointmentClick}
-                onAppointmentComplete={handleAppointmentComplete}
-                onAppointmentCancel={handleAppointmentCancelClick}
-                onEditPayment={handleEditPayment}
-              />
-            </div>
+            {/* Cabinet tabs */}
+            <CabinetTabs
+              selectedCabinet={selectedCabinet}
+              onSelectCabinet={setSelectedCabinet}
+              cabinets={cabinets}
+            />
+
+            {/* Time Grid */}
+            <TimeSlotGrid
+              selectedDate={selectedDate}
+              selectedCabinet={selectedCabinet}
+              appointments={filteredAppointments}
+              cabinets={cabinets}
+              doctorShifts={doctorShifts}
+              doctors={doctors}
+              onSlotClick={handleSlotClick}
+              onAppointmentClick={handleAppointmentClick}
+              onAppointmentComplete={handleAppointmentComplete}
+              onAppointmentCancel={handleAppointmentCancelClick}
+              onEditPayment={handleEditPayment}
+            />
           </TabsContent>
 
           <TabsContent value="patients">
