@@ -95,6 +95,13 @@ export function TimeSlotGrid({
     return Math.ceil(duration / SLOT_DURATION_MINUTES);
   };
 
+  // Calculate end time from start time and duration
+  const getEndTime = (startTime: string, durationMinutes: number): string => {
+    const startMinutes = timeToMinutes(startTime);
+    const endMinutes = startMinutes + durationMinutes;
+    return `${String(Math.floor(endMinutes / 60)).padStart(2, '0')}:${String(endMinutes % 60).padStart(2, '0')}`;
+  };
+
   // Get doctors working at a specific time slot
   const getDoctorsAtTime = (time: string): Doctor[] => {
     const slotMinutes = timeToMinutes(time);
@@ -230,12 +237,6 @@ export function TimeSlotGrid({
                 
                 // If this slot is covered by an ongoing appointment, render continuation
                 // Check if this is the first continuation slot (right after start)
-                const isFirstContinuation = appointmentCovering && (() => {
-                  const aptStartMinutes = timeToMinutes(appointmentCovering.time);
-                  const slotStartMinutes = timeToMinutes(time);
-                  return slotStartMinutes === aptStartMinutes + SLOT_DURATION_MINUTES;
-                })();
-
                 if (appointmentCovering) {
                   return (
                     <div
@@ -245,7 +246,6 @@ export function TimeSlotGrid({
                         isLastContinuationSlot && "border-b border-border"
                       )}
                     >
-                      {/* Continuation of appointment - seamless colored background with side borders */}
                       <div
                         className={cn(
                           "w-full cursor-pointer border-l border-r",
@@ -253,8 +253,7 @@ export function TimeSlotGrid({
                           appointmentCovering.status === 'completed' && "opacity-75",
                           appointmentCovering.status === 'cancelled'
                             ? "bg-red-100 dark:bg-red-950/30 border-red-300 dark:border-red-800 opacity-60"
-                            : "",
-                          isFirstContinuation && "flex items-center px-1 gap-1"
+                            : ""
                         )}
                         style={
                           appointmentCovering.status !== 'cancelled' && 
@@ -273,17 +272,7 @@ export function TimeSlotGrid({
                             : undefined
                         }
                         onClick={() => onAppointmentClick(appointmentCovering)}
-                      >
-                        {isFirstContinuation && (appointmentCovering.notes || appointmentCovering.treatment) && (
-                          <span className="text-[11px] font-semibold text-foreground/80 truncate leading-tight">
-                            {appointmentCovering.notes ? (
-                              <span className="italic">{appointmentCovering.notes}</span>
-                            ) : (
-                              <span>{appointmentCovering.treatment}</span>
-                            )}
-                          </span>
-                        )}
-                      </div>
+                      />
                     </div>
                   );
                 }
@@ -293,78 +282,129 @@ export function TimeSlotGrid({
                   <div
                     key={`${time}-${cabinet.id}`}
                     className={cn(
-                      "border-r last:border-r-0 h-[26px] min-w-0 overflow-hidden",
-                      "px-0.5",
-                      // Add bottom border unless this is the start of a multi-slot appointment
+                      "border-r last:border-r-0 h-[26px] min-w-0 px-0.5",
                       !(appointmentStarting && isMultiSlot) && "border-b border-border",
-                      appointmentStarting && "pt-0.5",
-                      appointmentStarting && !isMultiSlot && "pb-0.5",
+                      appointmentStarting && isMultiSlot && "overflow-visible relative z-[5]",
+                      appointmentStarting && !isMultiSlot && "overflow-hidden pt-0.5 pb-0.5",
                       !appointmentStarting && "p-0.5"
                     )}
                   >
                     {appointmentStarting ? (
                       <div
                         className={cn(
-                          "w-full h-full p-0.5 text-left transition-all overflow-hidden min-w-0 flex items-center gap-0.5 border relative",
-                          isMultiSlot ? "rounded-t-sm border-b-0" : "rounded-sm",
+                          "text-left transition-all min-w-0 border",
+                          isMultiSlot 
+                            ? "absolute inset-x-[2px] top-0 rounded-sm flex flex-col p-1 overflow-hidden" 
+                            : "w-full h-full p-0.5 rounded-sm flex items-center gap-0.5 overflow-hidden relative",
                           appointmentStarting.status === 'completed' && "opacity-75",
                           appointmentStarting.status === 'cancelled'
                             ? "bg-red-100 dark:bg-red-950/30 border-red-300 dark:border-red-800 opacity-60"
                             : !appointmentStarting.doctorColor && cabinetBgLightColors[cabinet.id]
                         )}
-                        style={
-                          appointmentStarting.status !== 'cancelled' && 
-                          appointmentStarting.doctorColor 
+                        style={{
+                          ...(isMultiSlot ? { height: `${appointmentSpan * 26}px`, zIndex: 5 } : {}),
+                          ...(appointmentStarting.status !== 'cancelled' && appointmentStarting.doctorColor 
                             ? { 
                                 backgroundColor: `${appointmentStarting.doctorColor}20`, 
                                 borderColor: `${appointmentStarting.doctorColor}50` 
                               } 
                             : undefined
-                        }
+                          ),
+                        }}
                       >
                         <button
                           onClick={() => onAppointmentClick(appointmentStarting)}
-                          className="flex-1 min-w-0 h-full flex items-center cursor-pointer"
-                        >
-                          {/* Completed badge - left side */}
-                          {appointmentStarting.status === 'completed' && (
-                            <div className="bg-green-500 rounded-sm px-0.5 mr-1 flex-shrink-0" title="Finalizată">
-                              <CheckCircle2 className="h-2.5 w-2.5 text-white" />
-                            </div>
+                          className={cn(
+                            "flex-1 min-w-0 cursor-pointer text-left",
+                            isMultiSlot ? "flex flex-col gap-0.5" : "h-full flex items-center"
                           )}
-                          <div className="flex items-center gap-1 min-w-0 flex-1">
-                            {appointmentStarting.status !== 'completed' && (
-                              <User className="h-3 w-3 flex-shrink-0 text-foreground/70" />
-                            )}
-                            <span className={cn(
-                              "text-xs font-bold text-foreground whitespace-nowrap leading-tight flex-shrink-0",
-                              appointmentStarting.status === 'cancelled' && "line-through"
-                            )}>
-                              {appointmentStarting.patientName}
-                            </span>
-                            <span className="text-xs font-bold text-foreground/80 truncate hidden sm:inline">
-                              • {appointmentStarting.treatment}
-                            </span>
-                           {appointmentStarting.notes && (
-                             <span className="text-[10px] font-medium text-primary truncate hidden md:inline italic">
-                               • {appointmentStarting.notes}
-                             </span>
-                           )}
-                          </div>
-                          {appointmentStarting.doctorName && (
-                            <span 
-                              className="text-[9px] font-medium truncate px-1 py-0.5 rounded ml-1 hidden md:inline"
-                              style={{ 
-                                backgroundColor: appointmentStarting.doctorColor ? `${appointmentStarting.doctorColor}30` : undefined,
-                                color: appointmentStarting.doctorColor || undefined 
-                              }}
-                            >
-                              {appointmentStarting.doctorName.replace('Dr. ', '')}
-                            </span>
+                        >
+                          {isMultiSlot ? (
+                            <>
+                              <div className="flex items-center gap-1 min-w-0 flex-wrap">
+                                {appointmentStarting.status === 'completed' && (
+                                  <div className="bg-green-500 rounded-sm px-0.5 flex-shrink-0" title="Finalizată">
+                                    <CheckCircle2 className="h-2.5 w-2.5 text-white" />
+                                  </div>
+                                )}
+                                <span className="text-[10px] font-semibold text-foreground/60 flex-shrink-0">
+                                  {appointmentStarting.time}-{getEndTime(appointmentStarting.time, appointmentStarting.duration || SLOT_DURATION_MINUTES)}
+                                </span>
+                                <span className={cn(
+                                  "text-xs font-bold text-foreground",
+                                  appointmentStarting.status === 'cancelled' && "line-through"
+                                )}>
+                                  {appointmentStarting.patientName}
+                                </span>
+                                <span className="text-[10px] text-foreground/50 flex-shrink-0 hidden sm:inline">
+                                  {appointmentStarting.patientPhone}
+                                </span>
+                                {appointmentStarting.doctorName && (
+                                  <span 
+                                    className="text-[10px] font-medium hidden sm:inline"
+                                    style={{ color: appointmentStarting.doctorColor || undefined }}
+                                  >
+                                    ({appointmentStarting.doctorName})
+                                  </span>
+                                )}
+                              </div>
+                              {appointmentStarting.treatment && (
+                                <span className="text-[10px] font-semibold text-foreground/80 truncate">
+                                  {appointmentStarting.treatment}
+                                </span>
+                              )}
+                              {appointmentStarting.notes && (
+                                <span className="text-[10px] italic text-foreground/60 line-clamp-2">
+                                  {appointmentStarting.notes}
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              {appointmentStarting.status === 'completed' && (
+                                <div className="bg-green-500 rounded-sm px-0.5 mr-1 flex-shrink-0" title="Finalizată">
+                                  <CheckCircle2 className="h-2.5 w-2.5 text-white" />
+                                </div>
+                              )}
+                              <div className="flex items-center gap-1 min-w-0 flex-1">
+                                {appointmentStarting.status !== 'completed' && (
+                                  <User className="h-3 w-3 flex-shrink-0 text-foreground/70" />
+                                )}
+                                <span className={cn(
+                                  "text-xs font-bold text-foreground whitespace-nowrap leading-tight flex-shrink-0",
+                                  appointmentStarting.status === 'cancelled' && "line-through"
+                                )}>
+                                  {appointmentStarting.patientName}
+                                </span>
+                                <span className="text-xs font-bold text-foreground/80 truncate hidden sm:inline">
+                                  • {appointmentStarting.treatment}
+                                </span>
+                                {appointmentStarting.notes && (
+                                  <span className="text-[10px] font-medium text-primary truncate hidden md:inline italic">
+                                    • {appointmentStarting.notes}
+                                  </span>
+                                )}
+                              </div>
+                              {appointmentStarting.doctorName && (
+                                <span 
+                                  className="text-[9px] font-medium truncate px-1 py-0.5 rounded ml-1 hidden md:inline"
+                                  style={{ 
+                                    backgroundColor: appointmentStarting.doctorColor ? `${appointmentStarting.doctorColor}30` : undefined,
+                                    color: appointmentStarting.doctorColor || undefined 
+                                  }}
+                                >
+                                  {appointmentStarting.doctorName.replace('Dr. ', '')}
+                                </span>
+                              )}
+                            </>
                           )}
                         </button>
+                        {/* Action buttons */}
                         {appointmentStarting.status !== 'completed' && appointmentStarting.status !== 'cancelled' && (
-                          <div className="flex gap-0.5 flex-shrink-0">
+                          <div className={cn(
+                            "flex gap-0.5 flex-shrink-0",
+                            isMultiSlot && "absolute top-0.5 right-0.5 bg-card/60 rounded-sm px-0.5"
+                          )}>
                             {onAppointmentComplete && (
                               <TooltipProvider>
                                 <Tooltip>
@@ -408,7 +448,10 @@ export function TimeSlotGrid({
                           </div>
                         )}
                         {appointmentStarting.status === 'completed' && (
-                          <div className="flex gap-0.5 flex-shrink-0">
+                          <div className={cn(
+                            "flex gap-0.5 flex-shrink-0",
+                            isMultiSlot && "absolute top-0.5 right-0.5 bg-card/60 rounded-sm px-0.5"
+                          )}>
                             <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600" />
                             {onEditPayment && (
                               <TooltipProvider>
@@ -433,7 +476,12 @@ export function TimeSlotGrid({
                           </div>
                         )}
                         {appointmentStarting.status === 'cancelled' && (
-                          <XCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-red-500 flex-shrink-0" />
+                          <div className={cn(
+                            "flex-shrink-0",
+                            isMultiSlot && "absolute top-0.5 right-0.5"
+                          )}>
+                            <XCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-red-500" />
+                          </div>
                         )}
                       </div>
                     ) : (
