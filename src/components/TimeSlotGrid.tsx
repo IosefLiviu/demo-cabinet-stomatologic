@@ -345,11 +345,7 @@ export function TimeSlotGrid({
                             <span className="text-xs font-bold text-foreground/80 truncate hidden sm:inline">
                               • {appointmentStarting.treatment}
                             </span>
-                           {appointmentStarting.notes && cleanDentalNotes(appointmentStarting.notes).replace(/\[Plată:.*?\]/g, '').replace(/\[Restanță:.*?\]/g, '').trim() && (
-                             <span className="text-[10px] font-medium text-primary truncate hidden md:inline italic">
-                               • {cleanDentalNotes(appointmentStarting.notes).replace(/\[Plată:.*?\]/g, '').replace(/\[Restanță:.*?\]/g, '').trim()}
-                             </span>
-                           )}
+                           {/* Notes shown only on continuation row below to avoid duplication */}
                           </div>
                           {appointmentStarting.doctorName && (
                             <span 
