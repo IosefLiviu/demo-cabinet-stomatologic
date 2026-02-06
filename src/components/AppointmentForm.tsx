@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { format, parse } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Search, Trash2, UserPlus, FileText, Smile, FileImage, ClipboardPlus, AlertTriangle, Calendar, RotateCcw } from 'lucide-react';
+import { Search, Trash2, UserPlus, FileText, Smile, FileImage, ClipboardPlus, AlertTriangle, Calendar, RotateCcw, CalendarDays, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -160,6 +160,8 @@ export function AppointmentForm({
   checkOverlap,
 }: AppointmentFormProps) {
   const [datePopoverOpen, setDatePopoverOpen] = useState(false);
+  const [rescheduleDate, setRescheduleDate] = useState<Date | null>(null);
+  const [showRescheduleSection, setShowRescheduleSection] = useState(false);
   const [patientSearch, setPatientSearch] = useState('');
   const [patientPopoverOpen, setPatientPopoverOpen] = useState(false);
   const [isNewPatient, setIsNewPatient] = useState(false);
@@ -465,6 +467,8 @@ export function AppointmentForm({
       setPatientSearch('');
       setSelectedPlanId('');
       setPatientPlans([]);
+      setRescheduleDate(null);
+      setShowRescheduleSection(false);
     }
   }, [open, editingAppointment, existingInterventions, selectedTime, selectedCabinet, treatments, userDoctorId]);
 
@@ -628,40 +632,10 @@ export function AppointmentForm({
         <DialogHeader className="pb-2 sm:pb-4">
           <DialogTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
             <span className="text-base sm:text-lg">{editingAppointment ? 'Editare programare' : 'Programare nouă'}</span>
-            {onDateChange ? (
-              <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="text-xs sm:text-sm font-normal gap-1.5 h-7 sm:h-8"
-                  >
-                    <Calendar className="h-3.5 w-3.5" />
-                    {format(selectedDate, 'dd.MM.yyyy')}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <CalendarComponent
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => {
-                      if (date) {
-                        onDateChange(date);
-                        setDatePopoverOpen(false);
-                      }
-                    }}
-                    locale={ro}
-                    initialFocus
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            ) : (
-              <span className="text-xs sm:text-sm font-normal text-muted-foreground">
-                {format(selectedDate, 'dd.MM.yyyy')}
-              </span>
-            )}
+            <span className="text-xs sm:text-sm font-normal text-muted-foreground flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5" />
+              {format(selectedDate, 'dd MMMM yyyy', { locale: ro })}
+            </span>
           </DialogTitle>
         </DialogHeader>
         
@@ -1043,6 +1017,79 @@ export function AppointmentForm({
                 className="text-sm resize-none"
               />
             </div>
+
+            {/* Mutare programare Section */}
+            {editingAppointment && onDateChange && (
+              <div className="space-y-2">
+                {!showRescheduleSection ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2 text-sm h-9 sm:h-10 border-dashed border-primary/40 text-primary hover:bg-primary/5"
+                    onClick={() => setShowRescheduleSection(true)}
+                  >
+                    <CalendarDays className="h-4 w-4" />
+                    Mutare programare
+                  </Button>
+                ) : (
+                  <div className="rounded-lg border-2 border-primary/20 bg-primary/5 p-3 sm:p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-semibold flex items-center gap-2 text-primary">
+                        <CalendarDays className="h-4 w-4" />
+                        Mutare programare
+                      </Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs text-muted-foreground"
+                        onClick={() => {
+                          setShowRescheduleSection(false);
+                          setRescheduleDate(null);
+                        }}
+                      >
+                        Anulează
+                      </Button>
+                    </div>
+                    <div className="flex justify-center">
+                      <CalendarComponent
+                        mode="single"
+                        selected={rescheduleDate || undefined}
+                        onSelect={(date) => {
+                          if (date) {
+                            setRescheduleDate(date);
+                          }
+                        }}
+                        locale={ro}
+                        initialFocus
+                        className="rounded-md border bg-card pointer-events-auto"
+                      />
+                    </div>
+                    {rescheduleDate && (
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="text-sm text-muted-foreground">
+                          Noua dată: <span className="font-semibold text-foreground">{format(rescheduleDate, 'dd MMMM yyyy', { locale: ro })}</span>
+                        </span>
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="gap-1.5 text-sm"
+                          onClick={() => {
+                            onDateChange(rescheduleDate);
+                            setShowRescheduleSection(false);
+                            setRescheduleDate(null);
+                          }}
+                        >
+                          <Check className="h-4 w-4" />
+                          Confirmă mutarea
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Action buttons - stacked on mobile */}
             <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2 sm:gap-3 pt-2 sm:pt-4">
