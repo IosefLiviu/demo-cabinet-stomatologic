@@ -342,7 +342,7 @@ export function TimeSlotGrid({
                             )}>
                               {appointmentStarting.patientName}
                             </span>
-                            <span className="text-[10px] font-semibold text-foreground/70 truncate hidden sm:inline">
+                            <span className="text-xs font-bold text-foreground/80 truncate hidden sm:inline">
                               • {appointmentStarting.treatment}
                             </span>
                            {appointmentStarting.notes && (
