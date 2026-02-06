@@ -263,7 +263,8 @@ export function WhatsAppInbox() {
                   key={conv.patientPhone}
                   className={cn(
                     "w-full text-left px-3 py-3 flex items-center gap-3 border-b border-border/50 hover:bg-muted/50 transition-colors group/conv relative",
-                    isActive && "bg-muted"
+                    isActive && "bg-muted",
+                    conv.unreadCount > 0 && "border-l-[3px] border-l-[#25D366] bg-[#25D366]/5 dark:bg-[#25D366]/10"
                   )}
                 >
                   <button
@@ -271,16 +272,27 @@ export function WhatsAppInbox() {
                     onClick={() => setActiveConversation(conv.patientPhone)}
                   />
                   {/* Avatar */}
-                  <div className="w-11 h-11 rounded-full bg-[#25D366]/20 dark:bg-[#25D366]/10 flex items-center justify-center flex-shrink-0">
+                  <div className={cn(
+                    "w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 relative",
+                    conv.unreadCount > 0
+                      ? "bg-[#25D366]/30 dark:bg-[#25D366]/20 ring-2 ring-[#25D366]"
+                      : "bg-[#25D366]/20 dark:bg-[#25D366]/10"
+                  )}>
                     <span className="text-sm font-bold text-[#25D366]">
                       {getInitials(conv.patientName)}
                     </span>
+                    {conv.unreadCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-[#25D366] rounded-full border-2 border-card" />
+                    )}
                   </div>
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-semibold text-sm text-foreground truncate">
+                      <span className={cn(
+                        "text-sm truncate",
+                        conv.unreadCount > 0 ? "font-bold text-foreground" : "font-semibold text-foreground"
+                      )}>
                         {conv.patientName || conv.patientPhone.replace("whatsapp:", "")}
                       </span>
                       <div className="flex items-center gap-1 flex-shrink-0">
@@ -300,7 +312,7 @@ export function WhatsAppInbox() {
                         )}
                         <span className={cn(
                           "text-[11px]",
-                          conv.unreadCount > 0 ? "text-[#25D366] font-medium" : "text-muted-foreground"
+                          conv.unreadCount > 0 ? "text-[#25D366] font-bold" : "text-muted-foreground"
                         )}>
                           {formatMessageDate(conv.lastMessageAt)}
                         </span>
@@ -311,14 +323,17 @@ export function WhatsAppInbox() {
                         {latestMsg.direction === "outbound" && (
                           <MessageStatusIcon status={latestMsg.status} direction="outbound" />
                         )}
-                        <span className="text-xs text-muted-foreground truncate">
+                        <span className={cn(
+                          "text-xs truncate",
+                          conv.unreadCount > 0 ? "text-foreground font-medium" : "text-muted-foreground"
+                        )}>
                           {latestMsg.media_urls?.length
                             ? `📷 ${latestMsg.media_urls.length === 1 ? "Imagine" : `${latestMsg.media_urls.length} imagini`}`
                             : latestMsg.message_body || "(mesaj gol)"}
                         </span>
                       </div>
                       {conv.unreadCount > 0 && (
-                        <span className="bg-[#25D366] text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 flex-shrink-0">
+                        <span className="bg-[#25D366] text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 flex-shrink-0 animate-pulse">
                           {conv.unreadCount}
                         </span>
                       )}
