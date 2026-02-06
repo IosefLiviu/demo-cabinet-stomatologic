@@ -203,7 +203,7 @@ export function TimeSlotGrid({
               {/* Regular time column */}
               <div 
                 key={`time-${time}`}
-                className="h-[20px] flex items-center justify-center text-[9px] font-medium text-muted-foreground border-r border-b border-border bg-muted/30"
+                className="h-[26px] flex items-center justify-center text-[9px] font-medium text-muted-foreground border-r border-b border-border bg-muted/30"
               >
                 {time.endsWith(':00') ? time : ''}
               </div>
@@ -234,7 +234,7 @@ export function TimeSlotGrid({
                     <div
                       key={`${time}-${cabinet.id}`}
                       className={cn(
-                        "border-r last:border-r-0 h-[20px] min-w-0 overflow-hidden px-0.5",
+                        "border-r last:border-r-0 h-[26px] min-w-0 overflow-hidden px-0.5",
                         isLastContinuationSlot && "border-b border-border"
                       )}
                     >
@@ -275,7 +275,7 @@ export function TimeSlotGrid({
                   <div
                     key={`${time}-${cabinet.id}`}
                     className={cn(
-                      "border-r last:border-r-0 h-[20px] min-w-0 overflow-hidden",
+                      "border-r last:border-r-0 h-[26px] min-w-0 overflow-hidden",
                       "px-0.5",
                       // Add bottom border unless this is the start of a multi-slot appointment
                       !(appointmentStarting && isMultiSlot) && "border-b border-border",
