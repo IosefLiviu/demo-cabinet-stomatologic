@@ -229,6 +229,13 @@ export function TimeSlotGrid({
                 const isMultiSlot = appointmentSpan > 1;
                 
                 // If this slot is covered by an ongoing appointment, render continuation
+                // Check if this is the first continuation slot (right after start)
+                const isFirstContinuation = appointmentCovering && (() => {
+                  const aptStartMinutes = timeToMinutes(appointmentCovering.time);
+                  const slotStartMinutes = timeToMinutes(time);
+                  return slotStartMinutes === aptStartMinutes + SLOT_DURATION_MINUTES;
+                })();
+
                 if (appointmentCovering) {
                   return (
                     <div
@@ -246,7 +253,8 @@ export function TimeSlotGrid({
                           appointmentCovering.status === 'completed' && "opacity-75",
                           appointmentCovering.status === 'cancelled'
                             ? "bg-red-100 dark:bg-red-950/30 border-red-300 dark:border-red-800 opacity-60"
-                            : ""
+                            : "",
+                          isFirstContinuation && "flex items-center px-1 gap-1"
                         )}
                         style={
                           appointmentCovering.status !== 'cancelled' && 
@@ -265,7 +273,17 @@ export function TimeSlotGrid({
                             : undefined
                         }
                         onClick={() => onAppointmentClick(appointmentCovering)}
-                      />
+                      >
+                        {isFirstContinuation && (appointmentCovering.notes || appointmentCovering.treatment) && (
+                          <span className="text-[9px] text-muted-foreground truncate leading-tight">
+                            {appointmentCovering.notes ? (
+                              <span className="italic">{appointmentCovering.notes}</span>
+                            ) : (
+                              <span>{appointmentCovering.treatment}</span>
+                            )}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   );
                 }
