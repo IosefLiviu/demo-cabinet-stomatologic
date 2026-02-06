@@ -275,7 +275,7 @@ export function TimeSlotGrid({
                         onClick={() => onAppointmentClick(appointmentCovering)}
                       >
                         {isFirstContinuation && (appointmentCovering.notes || appointmentCovering.treatment) && (
-                          <span className="text-[9px] text-muted-foreground truncate leading-tight">
+                          <span className="text-[11px] font-semibold text-foreground/80 truncate leading-tight">
                             {appointmentCovering.notes ? (
                               <span className="italic">{appointmentCovering.notes}</span>
                             ) : (
@@ -342,11 +342,11 @@ export function TimeSlotGrid({
                             )}>
                               {appointmentStarting.patientName}
                             </span>
-                            <span className="text-[9px] text-muted-foreground truncate hidden sm:inline">
+                            <span className="text-[10px] font-semibold text-foreground/70 truncate hidden sm:inline">
                               • {appointmentStarting.treatment}
                             </span>
                            {appointmentStarting.notes && (
-                             <span className="text-[9px] text-primary/80 truncate hidden md:inline italic">
+                             <span className="text-[10px] font-medium text-primary truncate hidden md:inline italic">
                                • {appointmentStarting.notes}
                              </span>
                            )}
