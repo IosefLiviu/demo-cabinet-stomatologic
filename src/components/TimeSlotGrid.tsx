@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
 import { Plus, User, CheckCircle2, XCircle, Edit3, Users } from 'lucide-react';
+import { cleanDentalNotes } from '@/lib/cleanDentalNotes';
 import { TIME_SLOTS, SLOT_DURATION_MINUTES, Appointment } from '@/types/appointment';
 import { Cabinet } from '@/hooks/useCabinets';
 import { DoctorShift } from '@/hooks/useDoctorShifts';
@@ -277,7 +278,7 @@ export function TimeSlotGrid({
                         {isFirstContinuation && (appointmentCovering.notes || appointmentCovering.treatment) && (
                           <span className="text-[11px] font-semibold text-foreground/80 truncate leading-tight">
                             {appointmentCovering.notes ? (
-                              <span className="italic">{appointmentCovering.notes}</span>
+                              <span className="italic">{cleanDentalNotes(appointmentCovering.notes).replace(/\[Plată:.*?\]/g, '').replace(/\[Restanță:.*?\]/g, '').trim() || appointmentCovering.treatment}</span>
                             ) : (
                               <span>{appointmentCovering.treatment}</span>
                             )}
@@ -345,9 +346,9 @@ export function TimeSlotGrid({
                             <span className="text-xs font-bold text-foreground/80 truncate hidden sm:inline">
                               • {appointmentStarting.treatment}
                             </span>
-                           {appointmentStarting.notes && (
+                           {appointmentStarting.notes && cleanDentalNotes(appointmentStarting.notes).replace(/\[Plată:.*?\]/g, '').replace(/\[Restanță:.*?\]/g, '').trim() && (
                              <span className="text-[10px] font-medium text-primary truncate hidden md:inline italic">
-                               • {appointmentStarting.notes}
+                               • {cleanDentalNotes(appointmentStarting.notes).replace(/\[Plată:.*?\]/g, '').replace(/\[Restanță:.*?\]/g, '').trim()}
                              </span>
                            )}
                           </div>
