@@ -259,14 +259,17 @@ export function WhatsAppInbox() {
               const latestMsg = conv.messages[0];
               const isActive = activeConversation === conv.patientPhone;
               return (
-                <button
+                <div
                   key={conv.patientPhone}
-                  onClick={() => setActiveConversation(conv.patientPhone)}
                   className={cn(
-                    "w-full text-left px-3 py-3 flex items-center gap-3 border-b border-border/50 hover:bg-muted/50 transition-colors",
+                    "w-full text-left px-3 py-3 flex items-center gap-3 border-b border-border/50 hover:bg-muted/50 transition-colors group/conv relative",
                     isActive && "bg-muted"
                   )}
                 >
+                  <button
+                    className="absolute inset-0 w-full h-full z-0"
+                    onClick={() => setActiveConversation(conv.patientPhone)}
+                  />
                   {/* Avatar */}
                   <div className="w-11 h-11 rounded-full bg-[#25D366]/20 dark:bg-[#25D366]/10 flex items-center justify-center flex-shrink-0">
                     <span className="text-sm font-bold text-[#25D366]">
@@ -280,12 +283,28 @@ export function WhatsAppInbox() {
                       <span className="font-semibold text-sm text-foreground truncate">
                         {conv.patientName || conv.patientPhone.replace("whatsapp:", "")}
                       </span>
-                      <span className={cn(
-                        "text-[11px] flex-shrink-0",
-                        conv.unreadCount > 0 ? "text-[#25D366] font-medium" : "text-muted-foreground"
-                      )}>
-                        {formatMessageDate(conv.lastMessageAt)}
-                      </span>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {/* Mark as unread button - visible on hover when conversation has no unread */}
+                        {conv.unreadCount === 0 && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const lastInbound = conv.messages.find(m => m.direction === "inbound");
+                              if (lastInbound) markAsUnread(lastInbound.id);
+                            }}
+                            className="opacity-0 group-hover/conv:opacity-100 transition-opacity z-10 p-0.5 rounded hover:bg-muted"
+                            title="Marchează ca necitit"
+                          >
+                            <MailOpen className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                          </button>
+                        )}
+                        <span className={cn(
+                          "text-[11px]",
+                          conv.unreadCount > 0 ? "text-[#25D366] font-medium" : "text-muted-foreground"
+                        )}>
+                          {formatMessageDate(conv.lastMessageAt)}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex items-center justify-between gap-2 mt-0.5">
                       <div className="flex items-center gap-1 min-w-0 flex-1">
@@ -305,7 +324,7 @@ export function WhatsAppInbox() {
                       )}
                     </div>
                   </div>
-                </button>
+                </div>
               );
             })
           )}
