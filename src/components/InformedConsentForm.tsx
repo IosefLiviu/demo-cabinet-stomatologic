@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Patient } from '@/hooks/usePatients';
-import { CLINIC } from '@/constants/clinic';
+import { CLINIC, getLogoPrintUrl } from '@/constants/clinic';
 import { escapeHtml } from '@/lib/print-utils';
 
 interface Doctor {
@@ -322,7 +322,7 @@ export function InformedConsentForm({ patients, doctors }: InformedConsentFormPr
         <div ref={printRef}>
           <div className="header">
             <div className="logo-section">
-              <img src={CLINIC.logoPrint} alt="Perfect Smile Logo" className="logo" />
+              <img src={getLogoPrintUrl()} alt="Perfect Smile Logo" className="logo" />
             </div>
             <div className="clinic-contact">
               <p>{CLINIC.phone}</p>

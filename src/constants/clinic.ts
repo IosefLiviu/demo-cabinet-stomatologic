@@ -22,6 +22,9 @@ export const getClinicCopyright = (year?: number) => {
   return `© ${currentYear} ${CLINIC.shortName}. Toate drepturile rezervate.`;
 };
 
+// Helper to get the absolute URL for the print logo (needed in window.open print windows)
+export const getLogoPrintUrl = () => `${window.location.origin}${CLINIC.logoPrint}`;
+
 // Helper function to get full contact line for print footers
 export const getClinicContactLine = () => {
   return `${CLINIC.name} | ${CLINIC.address}`;

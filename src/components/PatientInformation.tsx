@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/popover";
 import { supabase } from '@/integrations/supabase/client';
 import { Patient } from '@/hooks/usePatients';
-import { CLINIC, getClinicCopyright } from '@/constants/clinic';
+import { CLINIC, getClinicCopyright, getLogoPrintUrl } from '@/constants/clinic';
 import { escapeHtml, escapeNumberArray } from '@/lib/print-utils';
 
 interface Doctor {
@@ -535,7 +535,7 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
           
           <div className="header">
             <div className="logo-section">
-              <img src={CLINIC.logoPrint} alt="Perfect Smile Logo" className="logo" />
+              <img src={getLogoPrintUrl()} alt="Perfect Smile Logo" className="logo" />
               <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
                 {CLINIC.shortName}
               </div>

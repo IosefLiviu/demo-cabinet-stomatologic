@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Patient } from '@/hooks/usePatients';
-import { CLINIC, getClinicCopyright } from '@/constants/clinic';
+import { CLINIC, getClinicCopyright, getLogoPrintUrl } from '@/constants/clinic';
 import { escapeHtml } from '@/lib/print-utils';
 
 interface Doctor {
@@ -306,7 +306,7 @@ export function SpecialistReferral({ patients, doctors }: SpecialistReferralProp
         <div ref={printRef}>
           <div className="header">
             <div className="logo-section">
-              <img src={CLINIC.logoPrint} alt="Perfect Smile Logo" className="logo" />
+              <img src={getLogoPrintUrl()} alt="Perfect Smile Logo" className="logo" />
               <div className="clinic-name">{CLINIC.shortName}</div>
             </div>
             <div className="clinic-contact">
