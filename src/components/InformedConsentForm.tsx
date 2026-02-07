@@ -322,7 +322,7 @@ export function InformedConsentForm({ patients, doctors }: InformedConsentFormPr
         <div ref={printRef}>
           <div className="header">
             <div className="logo-section">
-              <img src="/images/perfect-smile-logo-print.jpg" alt="Perfect Smile Logo" className="logo" />
+              <img src={CLINIC.logoPrint} alt="Perfect Smile Logo" className="logo" />
             </div>
             <div className="clinic-contact">
               <p>{CLINIC.phone}</p>

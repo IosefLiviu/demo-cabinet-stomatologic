@@ -535,9 +535,9 @@ export function PatientInformation({ patients, doctors }: PatientInformationProp
           
           <div className="header">
             <div className="logo-section">
-              <img src="/images/perfect-smile-logo-print.jpg" alt="Perfect Smile Logo" className="logo" />
+              <img src={CLINIC.logoPrint} alt="Perfect Smile Logo" className="logo" />
               <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
-                PERFECT SMILE GLIM
+                {CLINIC.shortName}
               </div>
             </div>
             <div className="clinic-contact">
