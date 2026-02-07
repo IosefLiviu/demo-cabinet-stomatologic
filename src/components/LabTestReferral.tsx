@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Patient } from '@/hooks/usePatients';
-import { CLINIC, getClinicCopyright } from '@/constants/clinic';
+import { CLINIC, getClinicCopyright, getLogoPrintUrl } from '@/constants/clinic';
 import { escapeHtml } from '@/lib/print-utils';
 
 interface Doctor {
@@ -245,7 +245,7 @@ export function LabTestReferral({ patients, doctors }: LabTestReferralProps) {
         <body>
           <div class="header">
             <div class="logo-section">
-              <img src="${CLINIC.logoPrint}" alt="Logo" class="logo" />
+              <img src="${getLogoPrintUrl()}" alt="Logo" class="logo" />
               <span class="clinic-name">${escapeHtml(CLINIC.shortName)}</span>
             </div>
             <div class="clinic-contact">

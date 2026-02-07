@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Printer, FileText, Stethoscope, Baby, AlertTriangle, Scissors, Heart, Smile, Crown, CircleDot } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CLINIC, getClinicCopyright } from '@/constants/clinic';
+import { CLINIC, getClinicCopyright, getLogoPrintUrl } from '@/constants/clinic';
 
 const ProtocolsIndicatii = () => {
   const printRef = useRef<HTMLDivElement>(null);
@@ -118,7 +118,7 @@ const ProtocolsIndicatii = () => {
       </head>
       <body>
         <div class="header">
-          <img src="${CLINIC.logoPrint}" alt="Perfect Smile" class="logo" />
+          <img src="${getLogoPrintUrl()}" alt="Perfect Smile" class="logo" />
           <div class="clinic-info">
             <strong>${CLINIC.name}</strong><br/>
             ${CLINIC.address}<br/>

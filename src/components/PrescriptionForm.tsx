@@ -31,7 +31,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Patient } from '@/hooks/usePatients';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { CLINIC, getClinicCopyright } from '@/constants/clinic';
+import { CLINIC, getClinicCopyright, getLogoPrintUrl } from '@/constants/clinic';
 import { escapeHtml } from '@/lib/print-utils';
 
 interface Doctor {
@@ -568,7 +568,7 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
         </head>
         <body>
           <div class="header">
-            <img src="${CLINIC.logoPrint}" alt="Perfect Smile Logo" class="header-logo" />
+            <img src="${getLogoPrintUrl()}" alt="Perfect Smile Logo" class="header-logo" />
             <div>
               <div class="header-title">REȚETĂ MEDICALĂ</div>
             </div>

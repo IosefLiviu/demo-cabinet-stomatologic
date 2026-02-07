@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useTreatments } from '@/hooks/useTreatments';
-import { CLINIC, getClinicCopyright } from '@/constants/clinic';
+import { CLINIC, getClinicCopyright, getLogoPrintUrl } from '@/constants/clinic';
 
 interface Patient {
   id: string;
@@ -251,7 +251,7 @@ const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients }) => {
               <p>IBAN:</p>
             </div>
             <div class="logo-section">
-              <img src="${CLINIC.logoPrint}" alt="Perfect Smile Logo" class="logo" />
+              <img src="${getLogoPrintUrl()}" alt="Perfect Smile Logo" class="logo" />
               <div class="phone-email">
                 <p>${CLINIC.phone}</p>
                 <p>${CLINIC.email}</p>

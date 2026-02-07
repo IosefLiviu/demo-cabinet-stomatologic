@@ -33,7 +33,7 @@ import { useTreatmentPlans, TreatmentPlanItem as TreatmentPlanItemType } from '@
 import { MiniDentalChart } from './MiniDentalChart';
 import { ToothSelector } from './dental/ToothSelector';
 import { supabase } from '@/integrations/supabase/client';
-import { CLINIC, getClinicCopyright } from '@/constants/clinic';
+import { CLINIC, getClinicCopyright, getLogoPrintUrl } from '@/constants/clinic';
 import { escapeHtml, escapeNumberArray } from '@/lib/print-utils';
 import { toothImages } from './dental/toothImages';
 
@@ -948,7 +948,7 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
         <div ref={printRef}>
           <div className="header">
             <div className="logo-section">
-              <img src={CLINIC.logoPrint} alt="Perfect Smile Logo" className="logo" />
+              <img src={getLogoPrintUrl()} alt="Perfect Smile Logo" className="logo" />
               <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
                 {CLINIC.shortName}
               </div>
