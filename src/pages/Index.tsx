@@ -632,101 +632,109 @@ const Index = () => {
               onBack={handleNavBack}
               onForward={handleNavForward}
             />
-            <TabsList className="flex flex-wrap flex-1 h-auto gap-1">
-            <TabsTrigger value="calendar" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-              <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Calendar</span>
-            </TabsTrigger>
-            <TabsTrigger value="patients" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-              <Users className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Pacienți</span>
-            </TabsTrigger>
-            {!isReception && (
-              <TabsTrigger value="reports" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-                <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Rapoarte</span>
-              </TabsTrigger>
-            )}
-            {isAdmin && (
-              <TabsTrigger value="expenses" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-                <Wallet className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Cheltuieli</span>
-              </TabsTrigger>
-            )}
-            <TabsTrigger value="treatment-plan" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-              <ClipboardList className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Plan Tratament</span>
-            </TabsTrigger>
-            <TabsTrigger value="printabile" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-              <Printer className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Printabile</span>
-            </TabsTrigger>
-            <TabsTrigger value="stock" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-              <Package className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Stoc</span>
-            </TabsTrigger>
-            <TabsTrigger value="schedule" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-              <CalendarClock className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Program</span>
-            </TabsTrigger>
-            <TabsTrigger value="whatsapp" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 relative">
-              <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">WhatsApp</span>
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="laborator" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-              <FlaskRound className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Laborator</span>
-            </TabsTrigger>
-            </TabsList>
+            <div className="flex-1 overflow-x-auto scrollbar-hide">
+              <TabsList className="inline-flex w-auto h-auto gap-1 flex-nowrap">
+                <TabsTrigger value="calendar" className="gap-1 sm:gap-2 text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-3 shrink-0">
+                  <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Calendar</span>
+                </TabsTrigger>
+                <TabsTrigger value="patients" className="gap-1 sm:gap-2 text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-3 shrink-0">
+                  <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Pacienți</span>
+                </TabsTrigger>
+                {!isReception && (
+                  <TabsTrigger value="reports" className="gap-1 sm:gap-2 text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-3 shrink-0">
+                    <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Rapoarte</span>
+                  </TabsTrigger>
+                )}
+                {isAdmin && (
+                  <TabsTrigger value="expenses" className="gap-1 sm:gap-2 text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-3 shrink-0">
+                    <Wallet className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Cheltuieli</span>
+                  </TabsTrigger>
+                )}
+                <TabsTrigger value="treatment-plan" className="gap-1 sm:gap-2 text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-3 shrink-0">
+                  <ClipboardList className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Plan</span>
+                </TabsTrigger>
+                <TabsTrigger value="printabile" className="gap-1 sm:gap-2 text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-3 shrink-0">
+                  <Printer className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Printabile</span>
+                </TabsTrigger>
+                <TabsTrigger value="stock" className="gap-1 sm:gap-2 text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-3 shrink-0">
+                  <Package className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Stoc</span>
+                </TabsTrigger>
+                <TabsTrigger value="schedule" className="gap-1 sm:gap-2 text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-3 shrink-0">
+                  <CalendarClock className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Program</span>
+                </TabsTrigger>
+                <TabsTrigger value="whatsapp" className="gap-1 sm:gap-2 text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-3 shrink-0 relative">
+                  <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">WhatsApp</span>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="laborator" className="gap-1 sm:gap-2 text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-3 shrink-0">
+                  <FlaskRound className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Laborator</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
           </div>
 
           {/* Calendar controls - outside TabsContent for proper sticky */}
           {activeTab === 'calendar' && (
-            <div className="flex items-center gap-2 flex-wrap sticky top-14 sm:top-16 z-30 bg-background py-2 border-b border-border -mx-1 px-1 sm:-mx-2 sm:px-2 lg:-mx-4 lg:px-4">
-              <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
-              <DoctorFilter
-                doctors={doctors}
-                selectedDoctorId={selectedDoctorFilter}
-                onDoctorChange={setSelectedDoctorFilter}
-              />
-              <div className="border-l border-border h-6 mx-1 hidden sm:block" />
-              <CabinetTabs
-                selectedCabinet={selectedCabinet}
-                onSelectCabinet={setSelectedCabinet}
-                cabinets={cabinets}
-              />
-              <div className="flex gap-2 ml-auto">
-                <AppointmentSearch
-                  appointments={legacyAppointments}
-                  onAppointmentSelect={(date, appointmentId) => {
-                    setSelectedDate(date);
-                    const apt = legacyAppointments.find(a => a.id === appointmentId);
-                    if (apt) {
-                      setSelectedCabinet(apt.cabinetId);
-                      if (apt.doctorId) {
-                        setSelectedDoctorFilter(apt.doctorId);
+            <div className="sticky top-14 sm:top-16 z-30 bg-background py-2 border-b border-border -mx-1 px-1 sm:-mx-2 sm:px-2 lg:-mx-4 lg:px-4 space-y-2">
+              {/* Row 1: Date nav + actions */}
+              <div className="flex items-center gap-2">
+                <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+                <div className="flex gap-1.5 sm:gap-2 ml-auto">
+                  <AppointmentSearch
+                    appointments={legacyAppointments}
+                    onAppointmentSelect={(date, appointmentId) => {
+                      setSelectedDate(date);
+                      const apt = legacyAppointments.find(a => a.id === appointmentId);
+                      if (apt) {
+                        setSelectedCabinet(apt.cabinetId);
+                        if (apt.doctorId) {
+                          setSelectedDoctorFilter(apt.doctorId);
+                        }
                       }
-                    }
-                  }}
+                    }}
+                  />
+                  <AvailableSlotsSearch
+                    appointments={legacyAppointments}
+                    cabinets={cabinets}
+                    onSlotSelect={(date, time, cabinetId) => {
+                      setSelectedDate(date);
+                      setSelectedCabinet(cabinetId);
+                      handleSlotClick(time, cabinetId);
+                    }}
+                  />
+                  <Button className="gap-2" size="sm" onClick={handleNewAppointment}>
+                    <Plus className="h-4 w-4" />
+                    <span className="hidden sm:inline">Programare nouă</span>
+                  </Button>
+                </div>
+              </div>
+              {/* Row 2: Doctor filter + cabinet tabs */}
+              <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+                <DoctorFilter
+                  doctors={doctors}
+                  selectedDoctorId={selectedDoctorFilter}
+                  onDoctorChange={setSelectedDoctorFilter}
                 />
-                <AvailableSlotsSearch
-                  appointments={legacyAppointments}
+                <div className="border-l border-border h-6 mx-0.5 shrink-0 hidden sm:block" />
+                <CabinetTabs
+                  selectedCabinet={selectedCabinet}
+                  onSelectCabinet={setSelectedCabinet}
                   cabinets={cabinets}
-                  onSlotSelect={(date, time, cabinetId) => {
-                    setSelectedDate(date);
-                    setSelectedCabinet(cabinetId);
-                    handleSlotClick(time, cabinetId);
-                  }}
                 />
-                <Button className="gap-2" onClick={handleNewAppointment}>
-                  <Plus className="h-4 w-4" />
-                  Programare nouă
-                </Button>
               </div>
             </div>
           )}
@@ -823,40 +831,46 @@ const Index = () => {
 
           <TabsContent value="printabile">
             <Tabs defaultValue="radiology-referral" className="space-y-4">
-              <TabsList className="flex flex-wrap w-full h-auto gap-1">
-                <TabsTrigger value="radiology-referral" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-                  <Radio className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>Radiologie</span>
-                </TabsTrigger>
-                <TabsTrigger value="billing" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-                  <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>Proforma</span>
-                </TabsTrigger>
-                <TabsTrigger value="prescription" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-                  <Pill className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>Rețetă</span>
-                </TabsTrigger>
-                <TabsTrigger value="patient-info" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-                  <UserCheck className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>Informare</span>
-                </TabsTrigger>
-                <TabsTrigger value="specialist-referral" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-                  <Stethoscope className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>Trimitere M. Specialist</span>
-                </TabsTrigger>
-                <TabsTrigger value="lab-test-referral" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-                  <FlaskConical className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>Trimitere Analize</span>
-                </TabsTrigger>
-                <TabsTrigger value="informed-consent" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-                  <FileSignature className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>Consimțământ</span>
-                </TabsTrigger>
-                <TabsTrigger value="protocols" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-                  <ClipboardList className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>Protocoale & Indicații</span>
-                </TabsTrigger>
-              </TabsList>
+              <div className="overflow-x-auto scrollbar-hide">
+                <TabsList className="inline-flex w-auto h-auto gap-1 flex-nowrap">
+                  <TabsTrigger value="radiology-referral" className="gap-1 sm:gap-2 text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-3 shrink-0">
+                    <Radio className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span>Radiologie</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="billing" className="gap-1 sm:gap-2 text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-3 shrink-0">
+                    <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span>Proforma</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="prescription" className="gap-1 sm:gap-2 text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-3 shrink-0">
+                    <Pill className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span>Rețetă</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="patient-info" className="gap-1 sm:gap-2 text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-3 shrink-0">
+                    <UserCheck className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span>Informare</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="specialist-referral" className="gap-1 sm:gap-2 text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-3 shrink-0">
+                    <Stethoscope className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Trimitere M. Specialist</span>
+                    <span className="sm:hidden">Specialist</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="lab-test-referral" className="gap-1 sm:gap-2 text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-3 shrink-0">
+                    <FlaskConical className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Trimitere Analize</span>
+                    <span className="sm:hidden">Analize</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="informed-consent" className="gap-1 sm:gap-2 text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-3 shrink-0">
+                    <FileSignature className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Consimțământ</span>
+                    <span className="sm:hidden">Consimț.</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="protocols" className="gap-1 sm:gap-2 text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-3 shrink-0">
+                    <ClipboardList className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Protocoale & Indicații</span>
+                    <span className="sm:hidden">Protocoale</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
               <TabsContent value="radiology-referral">
                 <RadiologyReferral
