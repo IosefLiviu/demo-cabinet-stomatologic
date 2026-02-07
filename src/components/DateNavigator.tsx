@@ -23,12 +23,12 @@ export function DateNavigator({ selectedDate, onDateChange }: DateNavigatorProps
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
 
   return (
-    <div className="flex items-center gap-1 sm:gap-2">
+    <div className="flex items-center gap-2 sm:gap-4">
       <Button
         variant="outline"
         size="icon"
         onClick={goToPreviousDay}
-        className="h-8 w-8 sm:h-9 sm:w-9 shrink-0"
+        className="h-9 w-9"
       >
         <ChevronLeft className="h-4 w-4" />
       </Button>
@@ -37,16 +37,14 @@ export function DateNavigator({ selectedDate, onDateChange }: DateNavigatorProps
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            size="sm"
             className={cn(
-              "justify-center gap-1.5 sm:gap-2 font-medium text-xs sm:text-sm px-2 sm:px-3",
+              "min-w-[200px] justify-center gap-2 font-medium",
               isToday && "border-primary text-primary"
             )}
           >
-            <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-            <span className="capitalize whitespace-nowrap">
-              <span className="hidden sm:inline">{format(selectedDate, 'EEEE, d MMMM yyyy', { locale: ro })}</span>
-              <span className="sm:hidden">{format(selectedDate, 'd MMM yyyy', { locale: ro })}</span>
+            <Calendar className="h-4 w-4" />
+            <span className="capitalize">
+              {format(selectedDate, 'EEEE, d MMMM yyyy', { locale: ro })}
             </span>
           </Button>
         </PopoverTrigger>
@@ -65,13 +63,13 @@ export function DateNavigator({ selectedDate, onDateChange }: DateNavigatorProps
         variant="outline"
         size="icon"
         onClick={goToNextDay}
-        className="h-8 w-8 sm:h-9 sm:w-9 shrink-0"
+        className="h-9 w-9"
       >
         <ChevronRight className="h-4 w-4" />
       </Button>
 
       {!isToday && (
-        <Button variant="secondary" size="sm" onClick={goToToday} className="text-xs sm:text-sm shrink-0">
+        <Button variant="secondary" size="sm" onClick={goToToday}>
           Astăzi
         </Button>
       )}

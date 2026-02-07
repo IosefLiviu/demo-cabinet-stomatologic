@@ -22,7 +22,7 @@ export function DoctorFilter({ doctors, selectedDoctorId, onDoctorChange }: Doct
       value={selectedDoctorId || "all"}
       onValueChange={(value) => onDoctorChange(value === "all" ? null : value)}
     >
-      <SelectTrigger className="w-[140px] sm:w-[180px] gap-2 shrink-0">
+      <SelectTrigger className="w-[180px] gap-2">
         <Stethoscope className="h-4 w-4 text-muted-foreground" />
         <SelectValue placeholder="Toți doctorii" />
       </SelectTrigger>
