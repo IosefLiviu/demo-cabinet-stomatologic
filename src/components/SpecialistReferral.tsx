@@ -306,8 +306,8 @@ export function SpecialistReferral({ patients, doctors }: SpecialistReferralProp
         <div ref={printRef}>
           <div className="header">
             <div className="logo-section">
-              <img src="/images/perfect-smile-logo-print.jpg" alt="Perfect Smile Logo" className="logo" />
-              <div className="clinic-name">PERFECT SMILE</div>
+              <img src={CLINIC.logoPrint} alt="Perfect Smile Logo" className="logo" />
+              <div className="clinic-name">{CLINIC.shortName}</div>
             </div>
             <div className="clinic-contact">
               <p>0721.702.820</p>

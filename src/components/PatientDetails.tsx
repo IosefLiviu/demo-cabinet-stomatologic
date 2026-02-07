@@ -60,6 +60,7 @@ import { useTreatmentPlans, TreatmentPlan } from '@/hooks/useTreatmentPlans';
 import { PatientRadiographs } from './PatientRadiographs';
 import { escapeHtml, escapeHtmlArray, escapeNumberArray } from '@/lib/print-utils';
 import { cleanDentalNotes } from '@/lib/cleanDentalNotes';
+import { CLINIC, getClinicCopyright } from '@/constants/clinic';
 
 interface ToothDataRecord {
   toothNumber: number;
@@ -285,9 +286,9 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
         <body>
           <div class="header">
             <div class="logo-section">
-              <img src="/images/perfect-smile-logo-print.jpg" alt="Perfect Smile Logo" class="logo" />
+              <img src="${CLINIC.logoPrint}" alt="Perfect Smile Logo" class="logo" />
               <div style="font-weight: bold; font-size: 14px;">
-                PERFECT SMILE GLIM
+                ${CLINIC.shortName}
               </div>
             </div>
             <div class="clinic-contact">
@@ -471,9 +472,9 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
         <body>
           <div class="header">
             <div class="logo-section">
-              <img src="/images/perfect-smile-logo-print.jpg" alt="Perfect Smile Logo" class="logo" />
+              <img src="${CLINIC.logoPrint}" alt="Perfect Smile Logo" class="logo" />
               <div style="font-weight: bold; font-size: 14px; color: #b8860b;">
-                PERFECT SMILE GLIM
+                ${CLINIC.shortName}
               </div>
             </div>
             <div class="clinic-contact">
