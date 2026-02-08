@@ -102,9 +102,13 @@ export function WhatsAppInbox() {
       if (message.patient_name && !conv.patientName) conv.patientName = message.patient_name;
       if (message.patient_id && !conv.patientId) conv.patientId = message.patient_id;
     });
-    return Array.from(grouped.values()).sort(
-      (a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
-    );
+    return Array.from(grouped.values()).sort((a, b) => {
+      // Unread conversations first
+      if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
+      if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
+      // Then by most recent message
+      return new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime();
+    });
   }, [messages]);
 
   const filteredConversations = useMemo(() => {
