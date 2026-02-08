@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.send-appointment-reminders]
 verify_jwt = false
+
+[functions.send-lab-notification]
+verify_jwt = false
