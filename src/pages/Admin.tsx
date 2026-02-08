@@ -103,6 +103,7 @@ export default function Admin() {
     specialization: '',
     doctor_code: '',
     email: '',
+    phone: '',
     email_notifications_enabled: true,
   });
 
@@ -243,6 +244,7 @@ export default function Admin() {
         specialization: doctor.specialization || '',
         doctor_code: doctor.doctor_code || '',
         email: doctor.email || '',
+        phone: (doctor as any).phone || '',
         email_notifications_enabled: doctor.email_notifications_enabled !== false,
       });
     } else {
@@ -253,6 +255,7 @@ export default function Admin() {
         specialization: '',
         doctor_code: '',
         email: '',
+        phone: '',
         email_notifications_enabled: true,
       });
     }
@@ -279,6 +282,7 @@ export default function Admin() {
             specialization: formData.specialization || null,
             doctor_code: formData.doctor_code || null,
             email: formData.email || null,
+            phone: formData.phone || null,
             email_notifications_enabled: formData.email_notifications_enabled,
           })
           .eq('id', editingDoctor.id);
@@ -294,6 +298,7 @@ export default function Admin() {
             specialization: formData.specialization || null,
             doctor_code: formData.doctor_code || null,
             email: formData.email || null,
+            phone: formData.phone || null,
             email_notifications_enabled: formData.email_notifications_enabled,
           });
 
@@ -1310,6 +1315,19 @@ export default function Admin() {
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="doctor@exemplu.ro"
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="doctor-phone">Telefon (pentru WhatsApp)</Label>
+                <Input
+                  id="doctor-phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="0722123456"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Număr WhatsApp pentru notificări laborator
+                </p>
               </div>
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">

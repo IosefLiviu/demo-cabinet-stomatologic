@@ -2,6 +2,24 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+const sendLabReturnedNotification = async (sample: { doctor_id: string | null; patient_name: string; work_type: string }) => {
+  if (!sample.doctor_id) return;
+  try {
+    const { error } = await supabase.functions.invoke('send-lab-notification', {
+      body: {
+        doctorId: sample.doctor_id,
+        patientName: sample.patient_name,
+        workType: sample.work_type,
+      },
+    });
+    if (error) {
+      console.error('Error sending lab notification:', error);
+    }
+  } catch (err) {
+    console.error('Failed to send lab notification:', err);
+  }
+};
+
 export type LabSampleStatus = 'sent' | 'returned' | 'trial' | 'finalized' | 'resent';
 
 export interface LabSample {
@@ -182,10 +200,16 @@ export function useLabSamples() {
   };
 
   const markAsReturned = async (id: string, returnDate?: string): Promise<boolean> => {
-    return updateSample(id, {
+    const sample = samples.find(s => s.id === id);
+    const result = await updateSample(id, {
       status: 'returned',
       actual_return_date: returnDate || new Date().toISOString().split('T')[0],
     });
+    // Send WhatsApp notification to doctor (fire-and-forget)
+    if (result && sample) {
+      sendLabReturnedNotification(sample);
+    }
+    return result;
   };
 
   const markAsTrial = async (id: string, cabinetId: number): Promise<boolean> => {
