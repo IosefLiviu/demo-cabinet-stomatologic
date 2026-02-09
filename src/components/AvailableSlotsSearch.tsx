@@ -153,9 +153,9 @@ export function AvailableSlotsSearch({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
+        <Button variant="outline" className="gap-2" size="sm">
           <Search className="h-4 w-4" />
-          Caută sloturi libere
+          <span className="hidden sm:inline">Caută sloturi libere</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">

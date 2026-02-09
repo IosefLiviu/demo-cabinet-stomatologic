@@ -66,9 +66,9 @@ export function AppointmentSearch({ appointments, onAppointmentSelect }: Appoint
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
+        <Button variant="outline" className="gap-2" size="sm">
           <Search className="h-4 w-4" />
-          Căutare programare
+          <span className="hidden sm:inline">Căutare programare</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">

@@ -30,22 +30,22 @@ export function TodaySummary({ selectedDate, appointments }: TodaySummaryProps) 
   }, {});
 
   return (
-    <div className="flex items-center gap-3 flex-wrap">
-      <div className="flex items-center gap-2 rounded-lg bg-card border border-border px-3 py-1.5 shadow-sm">
-        <Calendar className="h-4 w-4 text-primary" />
+    <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+      <div className="flex items-center gap-2 rounded-lg bg-card border border-border px-2 sm:px-3 py-1.5 shadow-sm">
+        <Calendar className="h-4 w-4 text-primary shrink-0" />
         <span className="text-sm font-bold text-foreground">{todayAppointments.length}</span>
-        <span className="text-xs text-muted-foreground">Programări azi</span>
+        <span className="text-xs text-muted-foreground hidden sm:inline">Programări azi</span>
       </div>
 
-      <div className="flex items-center gap-2 rounded-lg bg-card border border-border px-3 py-1.5 shadow-sm">
-        <Clock className="h-4 w-4 text-success" />
+      <div className="flex items-center gap-2 rounded-lg bg-card border border-border px-2 sm:px-3 py-1.5 shadow-sm">
+        <Clock className="h-4 w-4 text-success shrink-0" />
         <span className="text-sm font-bold text-foreground">
           {hours > 0 ? `${hours}h` : ''}{minutes > 0 ? `${minutes}m` : hours === 0 ? '0m' : ''}
         </span>
-        <span className="text-xs text-muted-foreground">Timp total programat</span>
+        <span className="text-xs text-muted-foreground hidden sm:inline">Timp total programat</span>
       </div>
 
-      <div className="flex items-center gap-1.5 ml-auto">
+      <div className="flex items-center gap-1.5 ml-auto hidden md:flex">
         <span className="text-xs text-muted-foreground mr-1">Per cabinet</span>
         {CABINETS.map((cabinet) => (
           <div

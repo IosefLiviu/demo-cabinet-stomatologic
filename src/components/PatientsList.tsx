@@ -294,7 +294,7 @@ export function PatientsList({
       />
 
       {/* Table */}
-      <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+      <div className="rounded-xl border bg-card shadow-sm overflow-hidden overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
@@ -317,7 +317,7 @@ export function PatientsList({
                 </div>
               </TableHead>
               <TableHead 
-                className="cursor-pointer hover:bg-muted/80 transition-colors"
+                className="hidden md:table-cell cursor-pointer hover:bg-muted/80 transition-colors"
                 onClick={() => handleSort('age')}
               >
                 <div className="flex items-center gap-2">
@@ -325,9 +325,9 @@ export function PatientsList({
                   <SortIcon field="age" />
                 </div>
               </TableHead>
-              <TableHead>Alerte medicale</TableHead>
+              <TableHead className="hidden lg:table-cell">Alerte medicale</TableHead>
               <TableHead 
-                className="cursor-pointer hover:bg-muted/80 transition-colors"
+                className="hidden md:table-cell cursor-pointer hover:bg-muted/80 transition-colors"
                 onClick={() => handleSort('created_at')}
               >
                 <div className="flex items-center gap-2">
@@ -335,7 +335,7 @@ export function PatientsList({
                   <SortIcon field="created_at" />
                 </div>
               </TableHead>
-              <TableHead className="w-[120px] text-right">Acțiuni</TableHead>
+              <TableHead className="w-[100px] sm:w-[120px] text-right">Acțiuni</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -385,14 +385,14 @@ export function PatientsList({
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     {patient.date_of_birth ? (
                       <span>{calculateAge(patient.date_of_birth)} ani</span>
                     ) : (
                       <span className="text-muted-foreground">-</span>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden lg:table-cell">
                     <div className="flex flex-wrap gap-1">
                       {patient.allergies && patient.allergies.length > 0 && (
                         <Badge variant="destructive" className="gap-1 text-xs">
@@ -411,7 +411,7 @@ export function PatientsList({
                         )}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                       <Calendar className="h-3.5 w-3.5" />
                       {format(new Date(patient.created_at), 'd MMM yyyy', { locale: ro })}
