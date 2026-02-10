@@ -727,7 +727,7 @@ const Index = () => {
                 </div>
               </div>
               {/* Row 2: Cabinet tabs - separate row on mobile */}
-              <div className="flex items-center gap-2 mt-1 md:hidden">
+              <div className="flex items-center gap-2 mt-2 md:hidden">
                 <CabinetTabs
                   selectedCabinet={selectedCabinet}
                   onSelectCabinet={setSelectedCabinet}
@@ -735,7 +735,7 @@ const Index = () => {
                 />
               </div>
               {/* Desktop inline cabinet tabs */}
-              <div className="hidden md:flex md:items-center md:gap-2 md:mt-3">
+              <div className="hidden md:flex md:items-center md:gap-2 md:mt-4">
                 <div className="border-l border-border h-6 mx-1" />
                 <CabinetTabs
                   selectedCabinet={selectedCabinet}
