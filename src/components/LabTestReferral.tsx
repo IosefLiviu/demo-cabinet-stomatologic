@@ -342,6 +342,7 @@ export function LabTestReferral({ patients, doctors }: LabTestReferralProps) {
                         placeholder="Caută pacient..."
                         value={patientSearch}
                         onChange={(e) => setPatientSearch(e.target.value)}
+                        onKeyDown={(e) => e.stopPropagation()}
                         className="pl-8"
                       />
                     </div>
