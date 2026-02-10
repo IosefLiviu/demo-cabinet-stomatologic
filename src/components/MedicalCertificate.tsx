@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Printer, Search } from 'lucide-react';
+import { Printer } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,7 +42,12 @@ export function MedicalCertificate({ patients, doctors }: MedicalCertificateProp
   const [useDiacritics, setUseDiacritics] = useState(true);
 
   // Form fields
+  const [judet, setJudet] = useState('Ilfov');
+  const [localitate, setLocalitate] = useState('');
+  const [strada, setStrada] = useState('');
+  const [numar, setNumar] = useState('');
   const [occupation, setOccupation] = useState('');
+  const [workplace, setWorkplace] = useState('');
   const [diagnosis, setDiagnosis] = useState('');
   const [recommendation, setRecommendation] = useState('Se recomandă: repaus la domiciliu pe perioada evoluției procesului inflamatoriu, tratamentul medicamentos conform prescripției medicale');
   const [purpose, setPurpose] = useState('');
@@ -94,8 +99,10 @@ export function MedicalCertificate({ patients, doctors }: MedicalCertificateProp
       ? `${selectedPatient.last_name} ${selectedPatient.first_name}` 
       : '________________';
     const patientAge = selectedPatient ? getPatientAge(selectedPatient) : '____';
-    const patientAddress = selectedPatient?.address || '';
-    const patientCity = selectedPatient?.city || '';
+    const patientAddress = strada || selectedPatient?.address || '';
+    const patientCity = localitate || selectedPatient?.city || '';
+    const patientJudet = judet;
+    const patientNr = numar;
 
     const t = (text: string) => removeDiacritics(text);
 
@@ -174,16 +181,16 @@ export function MedicalCertificate({ patients, doctors }: MedicalCertificateProp
               ${t('în vârstă de')} 
               <span class="field-line">${patientAge}</span> 
               ${t('ani')}, ${t('domiciliat în')}: ${t('Județul')} 
-              <span class="field-line">${escapeHtml(patientCity) || '________'}</span>
+              <span class="field-line">${escapeHtml(patientJudet) || '________'}</span>
             </p>
             <p>
               ${t('Localitatea')} <span class="field-line">${escapeHtml(patientCity) || '________________'}</span>
               ${t('Strada')} <span class="field-line">${escapeHtml(patientAddress) || '________________'}</span>
             </p>
             <p>
-              Nr. <span class="field-line">${'______'}</span>, ${t('Având ocupația de')} 
+              Nr. <span class="field-line">${escapeHtml(patientNr) || '______'}</span>, ${t('Având ocupația de')} 
               <span class="field-line">${escapeHtml(occupation) || '________________'}</span>
-              La <span class="field-line">${'________________'}</span>
+              La <span class="field-line">${escapeHtml(workplace) || '________________'}</span>
             </p>
             <p>
               ${t('Este suferind de')}: ${escapeHtml(t(diagnosis)) || '________________________________________________'}
@@ -242,24 +249,31 @@ export function MedicalCertificate({ patients, doctors }: MedicalCertificateProp
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-3">
             {/* Patient selector */}
             <div className="space-y-2">
               <Label>Pacient</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Caută pacient..."
-                  value={patientSearch}
-                  onChange={(e) => setPatientSearch(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
+              <Select value={selectedPatientId} onValueChange={(id) => {
+                setSelectedPatientId(id);
+                const p = patients.find(pt => pt.id === id);
+                if (p) {
+                  setLocalitate(p.city || '');
+                  setStrada(p.address || '');
+                }
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selectează pacient" />
                 </SelectTrigger>
                 <SelectContent>
+                  <div className="px-2 pb-2">
+                    <Input
+                      placeholder="Caută pacient..."
+                      value={patientSearch}
+                      onChange={(e) => setPatientSearch(e.target.value)}
+                      onKeyDown={(e) => e.stopPropagation()}
+                      className="h-8"
+                    />
+                  </div>
                   {filteredPatients.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       {p.last_name} {p.first_name}
@@ -294,6 +308,46 @@ export function MedicalCertificate({ patients, doctors }: MedicalCertificateProp
               />
             </div>
 
+            {/* Județul */}
+            <div className="space-y-2">
+              <Label>Județul</Label>
+              <Input
+                value={judet}
+                onChange={(e) => setJudet(e.target.value)}
+                placeholder="ex: Ilfov"
+              />
+            </div>
+
+            {/* Localitatea */}
+            <div className="space-y-2">
+              <Label>Localitatea</Label>
+              <Input
+                value={localitate}
+                onChange={(e) => setLocalitate(e.target.value)}
+                placeholder="ex: Măgurele"
+              />
+            </div>
+
+            {/* Strada */}
+            <div className="space-y-2">
+              <Label>Strada</Label>
+              <Input
+                value={strada}
+                onChange={(e) => setStrada(e.target.value)}
+                placeholder="ex: Str. București 68-70"
+              />
+            </div>
+
+            {/* Nr. */}
+            <div className="space-y-2">
+              <Label>Nr.</Label>
+              <Input
+                value={numar}
+                onChange={(e) => setNumar(e.target.value)}
+                placeholder="ex: 10"
+              />
+            </div>
+
             {/* Occupation */}
             <div className="space-y-2">
               <Label>Ocupația</Label>
@@ -301,6 +355,16 @@ export function MedicalCertificate({ patients, doctors }: MedicalCertificateProp
                 placeholder="ex: elev, student, angajat..."
                 value={occupation}
                 onChange={(e) => setOccupation(e.target.value)}
+              />
+            </div>
+
+            {/* La (workplace) */}
+            <div className="space-y-2">
+              <Label>La (locul de muncă/studiu)</Label>
+              <Input
+                placeholder="ex: Liceul &quot;Horia Hulubei&quot;"
+                value={workplace}
+                onChange={(e) => setWorkplace(e.target.value)}
               />
             </div>
           </div>
