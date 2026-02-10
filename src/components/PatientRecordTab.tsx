@@ -6,11 +6,14 @@ import {
   FileText,
   Stethoscope,
   MessageSquare,
-  CreditCard,
   Banknote,
   AlertCircle,
   ChevronDown,
+  ChevronRight,
   Calendar,
+  Maximize2,
+  Minimize2,
+  X,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -72,6 +75,7 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
   const [toothComments, setToothComments] = useState<ToothComment[]>([]);
   const [treatments, setTreatments] = useState<TreatmentEntry[]>([]);
   const [unpaidAppointments, setUnpaidAppointments] = useState<UnpaidAppointment[]>([]);
+  const [fullscreen, setFullscreen] = useState(false);
   
   // Payment dialog
   const [editPaymentOpen, setEditPaymentOpen] = useState(false);
@@ -81,6 +85,15 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
   useEffect(() => {
     loadAllData();
   }, [patientId]);
+
+  // Close fullscreen on Escape
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && fullscreen) setFullscreen(false);
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [fullscreen]);
 
   const loadAllData = async () => {
     setLoading(true);
@@ -94,7 +107,6 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
 
   const loadToothComments = async () => {
     try {
-      // 1. Current dental_status notes
       const { data: statusData } = await supabase
         .from('dental_status')
         .select('tooth_number, status, notes, updated_at')
@@ -111,7 +123,6 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
           status: STATUS_ENUM_TO_NAME[d.status] || d.status,
         }));
 
-      // 2. Dental status history notes
       const { data: historyData } = await supabase
         .from('dental_status_history')
         .select('tooth_number, new_status, notes, changed_at, changed_by')
@@ -129,7 +140,6 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
           status: STATUS_ENUM_TO_NAME[d.new_status] || d.new_status,
         }));
 
-      // 3. Tooth data from appointment_treatments (intervention comments)
       const { data: interventionData } = await supabase
         .from('appointment_treatments')
         .select(`
@@ -158,7 +168,6 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
         });
       });
 
-      // Combine and deduplicate
       const all = [...statusComments, ...historyComments, ...interventionComments];
       setToothComments(all);
     } catch (error) {
@@ -302,234 +311,325 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
     return acc;
   }, {} as Record<string, TreatmentEntry[]>);
 
+  // Stats
+  const totalTreatments = treatments.length;
+  const totalSpent = treatments.reduce((s, t) => s + t.price, 0);
+  const totalCas = treatments.reduce((s, t) => s + t.cas, 0);
+  const totalDebt = unpaidAppointments.reduce((s, a) => s + a.remaining, 0);
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary/50" />
       </div>
     );
   }
 
-  return (
-    <div className="space-y-8">
-      {/* Section 1: Tooth Comments */}
-      <section className="space-y-3">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase flex items-center gap-2">
-          <MessageSquare className="h-4 w-4" />
-          Observații pe dinți
-        </h3>
-        {toothComments.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">Nu există observații.</p>
-        ) : (
-          <div className="space-y-1">
-            {Object.entries(commentsByDate)
-              .sort(([a], [b]) => b.localeCompare(a))
-              .map(([dateKey, comments]) => (
-                <Collapsible key={dateKey} defaultOpen={false}>
-                  <CollapsibleTrigger asChild>
-                    <button className="w-full flex items-center justify-between bg-muted/50 hover:bg-muted/70 rounded-lg px-3 py-2 transition-colors cursor-pointer">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-3.5 w-3.5 text-primary" />
-                        <span className="text-xs font-medium">
-                          {dateKey !== 'unknown'
-                            ? format(new Date(dateKey), 'd MMMM yyyy', { locale: ro })
-                            : 'Dată necunoscută'}{' '}
-                          ({comments.length})
-                        </span>
-                      </div>
-                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-                    </button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="ml-2 mt-1 space-y-1 border-l-2 border-muted pl-3">
-                      {comments.map((c, idx) => {
-                        const hexColor = c.status ? getStatusHexColor(c.status) : null;
-                        return (
-                          <div key={idx} className="py-2 flex items-start justify-between gap-2">
-                            <div className="flex items-start gap-2 text-sm min-w-0">
-                              <span className="text-xs text-muted-foreground font-mono shrink-0">#{c.tooth_number}</span>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  {c.status && (
-                                    <Badge
-                                      variant="outline"
-                                      className="text-[10px] px-1.5 py-0"
-                                      style={{
-                                        backgroundColor: hexColor ? `${hexColor}20` : undefined,
-                                        borderColor: hexColor || undefined,
-                                        color: hexColor || undefined,
-                                      }}
-                                    >
-                                      {c.status}
-                                    </Badge>
-                                  )}
-                                  {c.treatment_name && (
-                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                      {c.treatment_name}
-                                    </Badge>
-                                  )}
-                                </div>
-                                <p className="text-xs text-foreground/80 mt-0.5">{c.notes}</p>
-                              </div>
-                            </div>
-                            <span className="text-[10px] text-muted-foreground shrink-0">
-                              {c.source === 'intervention' ? 'Intervenție' : 'Status'}
-                              {c.doctor_name && ` • Dr. ${c.doctor_name}`}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-              ))}
-          </div>
-        )}
-      </section>
+  const content = (
+    <div className={cn(
+      "space-y-6",
+      fullscreen && "h-full overflow-y-auto"
+    )}>
+      {/* Header with patient name and fullscreen toggle */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-foreground">{patientName}</h2>
+          <p className="text-xs text-muted-foreground">Fișă pacient consolidată</p>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => setFullscreen(!fullscreen)}
+          title={fullscreen ? 'Ieși din ecran complet' : 'Ecran complet'}
+        >
+          {fullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+        </Button>
+      </div>
 
-      {/* Section 2: Treatments with observations */}
-      <section className="space-y-3">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase flex items-center gap-2">
-          <Stethoscope className="h-4 w-4" />
-          Tratamente efectuate
-        </h3>
-        {treatments.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">Nu există tratamente înregistrate.</p>
-        ) : (
-          <div className="space-y-1">
-            {Object.entries(treatmentsByDate)
-              .sort(([a], [b]) => b.localeCompare(a))
-              .map(([dateKey, entries]) => {
-                const totalPrice = entries.reduce((sum, e) => sum + e.price, 0);
-                return (
-                  <Collapsible key={dateKey} defaultOpen={false}>
-                    <CollapsibleTrigger asChild>
-                      <button className="w-full flex items-center justify-between bg-muted/50 hover:bg-muted/70 rounded-lg px-3 py-2 transition-colors cursor-pointer">
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-3.5 w-3.5 text-primary" />
-                          <span className="text-xs font-medium">
-                            {format(new Date(dateKey), 'd MMMM yyyy', { locale: ro })} ({entries.length})
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">{totalPrice} RON</Badge>
-                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-                        </div>
-                      </button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="ml-2 mt-1 space-y-1 border-l-2 border-muted pl-3">
-                        {entries.map((entry) => {
-                          const cleanedNotes = entry.appointment_notes
-                            ? cleanDentalNotes(entry.appointment_notes)
-                                .replace(/\[Plată:.*?\]/g, '')
-                                .replace(/\[Restanță:.*?\]/g, '')
-                                .trim()
-                            : '';
-                          return (
-                            <div key={entry.id} className="py-2">
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="space-y-0.5">
-                                  <div className="text-sm font-medium">{entry.treatment_name}</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    Ora {entry.start_time.slice(0, 5)}
-                                    {entry.duration && ` • ${entry.duration} min`}
-                                    {entry.doctor_name && ` • Dr. ${entry.doctor_name}`}
-                                    {entry.tooth_numbers && entry.tooth_numbers.length > 0 && (
-                                      <> • Dinți: {entry.tooth_numbers.join(', ')}</>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="rounded-xl border bg-card p-3 space-y-1">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Stethoscope className="h-3.5 w-3.5" />
+            <span className="text-[11px] font-medium uppercase tracking-wide">Tratamente</span>
+          </div>
+          <p className="text-xl font-bold text-foreground">{totalTreatments}</p>
+        </div>
+        <div className="rounded-xl border bg-card p-3 space-y-1">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <FileText className="h-3.5 w-3.5" />
+            <span className="text-[11px] font-medium uppercase tracking-wide">Total</span>
+          </div>
+          <p className="text-xl font-bold text-foreground">{totalSpent.toLocaleString()} <span className="text-sm font-normal text-muted-foreground">RON</span></p>
+        </div>
+        <div className="rounded-xl border bg-card p-3 space-y-1">
+          <div className="flex items-center gap-2 text-cyan-600">
+            <Badge variant="outline" className="h-4 w-4 p-0 flex items-center justify-center text-[8px] border-cyan-500 text-cyan-600">C</Badge>
+            <span className="text-[11px] font-medium uppercase tracking-wide">CAS</span>
+          </div>
+          <p className="text-xl font-bold text-cyan-600">{totalCas.toLocaleString()} <span className="text-sm font-normal opacity-70">RON</span></p>
+        </div>
+        <div className={cn(
+          "rounded-xl border p-3 space-y-1",
+          totalDebt > 0 ? "border-orange-300 dark:border-orange-700 bg-orange-50/50 dark:bg-orange-950/20" : "bg-card"
+        )}>
+          <div className="flex items-center gap-2 text-orange-600">
+            <AlertCircle className="h-3.5 w-3.5" />
+            <span className="text-[11px] font-medium uppercase tracking-wide">Restanțe</span>
+          </div>
+          <p className={cn("text-xl font-bold", totalDebt > 0 ? "text-orange-600" : "text-muted-foreground")}>
+            {totalDebt > 0 ? totalDebt.toLocaleString() : '0'} <span className="text-sm font-normal opacity-70">RON</span>
+          </p>
+        </div>
+      </div>
+
+      {/* Main Content - 2 column layout on larger screens */}
+      <div className={cn(
+        "grid gap-6",
+        fullscreen ? "md:grid-cols-2" : "grid-cols-1"
+      )}>
+        {/* Left Column: Treatments */}
+        <section className="space-y-3">
+          <div className="flex items-center gap-2 pb-2 border-b">
+            <Stethoscope className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-semibold text-foreground">Tratamente efectuate</h3>
+            <Badge variant="secondary" className="text-[10px] ml-auto">{treatments.length}</Badge>
+          </div>
+          {treatments.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">Nu există tratamente înregistrate.</p>
+          ) : (
+            <div className="space-y-1">
+              {Object.entries(treatmentsByDate)
+                .sort(([a], [b]) => b.localeCompare(a))
+                .map(([dateKey, entries]) => {
+                  const totalPrice = entries.reduce((sum, e) => sum + e.price, 0);
+                  const totalDateCas = entries.reduce((sum, e) => sum + e.cas, 0);
+                  return (
+                    <Collapsible key={dateKey} defaultOpen={false}>
+                      <CollapsibleTrigger asChild>
+                        <button className="w-full flex items-center justify-between bg-muted/40 hover:bg-muted/70 rounded-lg px-3 py-2.5 transition-colors cursor-pointer group">
+                          <div className="flex items-center gap-2">
+                            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground transition-transform group-data-[state=open]:rotate-90" />
+                            <Calendar className="h-3.5 w-3.5 text-primary" />
+                            <span className="text-xs font-medium">
+                              {format(new Date(dateKey), 'd MMM yyyy', { locale: ro })}
+                            </span>
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">{entries.length}</Badge>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {totalDateCas > 0 && (
+                              <span className="text-[10px] text-cyan-600 font-medium">CAS {totalDateCas}</span>
+                            )}
+                            <Badge className="bg-primary/10 text-primary hover:bg-primary/20 text-xs border-0">
+                              {totalPrice.toLocaleString()} RON
+                            </Badge>
+                          </div>
+                        </button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="ml-6 mt-1 space-y-0.5 border-l-2 border-primary/20 pl-3 pb-2">
+                          {entries.map((entry) => {
+                            const cleanedNotes = entry.appointment_notes
+                              ? cleanDentalNotes(entry.appointment_notes)
+                                  .replace(/\[Plată:.*?\]/g, '')
+                                  .replace(/\[Restanță:.*?\]/g, '')
+                                  .trim()
+                              : '';
+                            return (
+                              <div key={entry.id} className="py-2 hover:bg-muted/30 rounded px-2 -mx-2 transition-colors">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="space-y-0.5 min-w-0">
+                                    <div className="text-sm font-medium text-foreground">{entry.treatment_name}</div>
+                                    <div className="text-[11px] text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                      <span>{entry.start_time.slice(0, 5)}</span>
+                                      {entry.duration && <span>{entry.duration} min</span>}
+                                      {entry.doctor_name && <span>Dr. {entry.doctor_name}</span>}
+                                      {entry.tooth_numbers && entry.tooth_numbers.length > 0 && (
+                                        <span className="font-mono">#{entry.tooth_numbers.join(', ')}</span>
+                                      )}
+                                    </div>
+                                    {cleanedNotes && (
+                                      <div className="flex items-start gap-1 mt-1">
+                                        <MessageSquare className="h-3 w-3 mt-0.5 shrink-0 text-muted-foreground/50" />
+                                        <span className="text-[11px] text-muted-foreground italic">{cleanedNotes}</span>
+                                      </div>
                                     )}
                                   </div>
-                                  {cleanedNotes && (
-                                    <div className="flex items-start gap-1 mt-1 text-xs text-muted-foreground">
-                                      <MessageSquare className="h-3 w-3 mt-0.5 shrink-0" />
-                                      <span className="italic">{cleanedNotes}</span>
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="flex flex-col items-end gap-0.5 shrink-0">
-                                  {entry.cas > 0 && (
-                                    <span className="text-[10px] text-cyan-600">CAS: {entry.cas} RON</span>
-                                  )}
-                                  <Badge variant="outline" className="text-xs">
-                                    {entry.cas > 0 ? `${entry.price - entry.cas} RON` : `${entry.price} RON`}
-                                  </Badge>
+                                  <div className="flex flex-col items-end gap-0.5 shrink-0">
+                                    {entry.cas > 0 && (
+                                      <span className="text-[10px] text-cyan-600 font-medium">CAS: {entry.cas}</span>
+                                    )}
+                                    <span className="text-xs font-semibold text-foreground">
+                                      {entry.cas > 0 ? `${entry.price - entry.cas}` : entry.price} RON
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                );
-              })}
-          </div>
-        )}
-      </section>
+                            );
+                          })}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  );
+                })}
+            </div>
+          )}
+        </section>
 
-      {/* Section 3: Unpaid Appointments */}
-      <section className="space-y-3">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase flex items-center gap-2">
-          <AlertCircle className="h-4 w-4" />
-          Restanțe de plată
-        </h3>
-        {unpaidAppointments.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">Nu există restanțe.</p>
-        ) : (
-          <div className="space-y-2">
-            {unpaidAppointments.map((apt) => (
-              <div
-                key={apt.id}
-                className="p-3 rounded-lg border border-orange-200 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-950/20"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-1 min-w-0">
-                    <div className="text-sm font-medium">
-                      {format(new Date(apt.appointment_date), 'd MMMM yyyy', { locale: ro })}
-                      <span className="text-muted-foreground font-normal"> • {apt.start_time.slice(0, 5)}</span>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {apt.treatments.join(', ')}
-                      {apt.doctor_name && ` • Dr. ${apt.doctor_name}`}
-                    </div>
-                    <div className="text-xs space-x-3">
-                      <span>Total: <strong>{apt.price.toLocaleString()} RON</strong></span>
-                      {apt.paid_amount > 0 && (
-                        <span className="text-green-600">Achitat: {apt.paid_amount.toLocaleString()} RON</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-2 shrink-0">
-                    <Badge className="bg-orange-500 hover:bg-orange-600 text-white">
-                      Rest: {apt.remaining.toLocaleString()} RON
-                    </Badge>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 text-xs gap-1"
-                      onClick={() => {
-                        setSelectedUnpaid(apt);
-                        setEditPaymentOpen(true);
-                      }}
-                    >
-                      <Banknote className="h-3 w-3" />
-                      Achită
-                    </Button>
-                  </div>
+        {/* Right Column: Tooth Comments + Unpaid */}
+        <div className="space-y-6">
+          {/* Tooth Comments */}
+          <section className="space-y-3">
+            <div className="flex items-center gap-2 pb-2 border-b">
+              <MessageSquare className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">Observații pe dinți</h3>
+              <Badge variant="secondary" className="text-[10px] ml-auto">{toothComments.length}</Badge>
+            </div>
+            {toothComments.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">Nu există observații.</p>
+            ) : (
+              <div className="space-y-1">
+                {Object.entries(commentsByDate)
+                  .sort(([a], [b]) => b.localeCompare(a))
+                  .map(([dateKey, comments]) => (
+                    <Collapsible key={dateKey} defaultOpen={false}>
+                      <CollapsibleTrigger asChild>
+                        <button className="w-full flex items-center justify-between bg-muted/40 hover:bg-muted/70 rounded-lg px-3 py-2.5 transition-colors cursor-pointer group">
+                          <div className="flex items-center gap-2">
+                            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground transition-transform group-data-[state=open]:rotate-90" />
+                            <Calendar className="h-3.5 w-3.5 text-primary" />
+                            <span className="text-xs font-medium">
+                              {dateKey !== 'unknown'
+                                ? format(new Date(dateKey), 'd MMM yyyy', { locale: ro })
+                                : 'Dată necunoscută'}
+                            </span>
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">{comments.length}</Badge>
+                          </div>
+                        </button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="ml-6 mt-1 space-y-0.5 border-l-2 border-primary/20 pl-3 pb-2">
+                          {comments.map((c, idx) => {
+                            const hexColor = c.status ? getStatusHexColor(c.status) : null;
+                            return (
+                              <div key={idx} className="py-2 hover:bg-muted/30 rounded px-2 -mx-2 transition-colors">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex items-start gap-2 text-sm min-w-0">
+                                    <span className="text-xs text-primary font-mono font-bold shrink-0 bg-primary/10 rounded px-1.5 py-0.5">
+                                      #{c.tooth_number}
+                                    </span>
+                                    <div className="min-w-0">
+                                      <div className="flex items-center gap-1.5 flex-wrap">
+                                        {c.status && (
+                                          <Badge
+                                            variant="outline"
+                                            className="text-[10px] px-1.5 py-0"
+                                            style={{
+                                              backgroundColor: hexColor ? `${hexColor}20` : undefined,
+                                              borderColor: hexColor || undefined,
+                                              color: hexColor || undefined,
+                                            }}
+                                          >
+                                            {c.status}
+                                          </Badge>
+                                        )}
+                                        {c.treatment_name && (
+                                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                            {c.treatment_name}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <p className="text-[11px] text-foreground/80 mt-0.5">{c.notes}</p>
+                                    </div>
+                                  </div>
+                                  <span className="text-[10px] text-muted-foreground shrink-0 text-right">
+                                    {c.source === 'intervention' ? 'Intervenție' : 'Status'}
+                                    {c.doctor_name && <><br />Dr. {c.doctor_name}</>}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  ))}
+              </div>
+            )}
+          </section>
+
+          {/* Unpaid Appointments */}
+          <section className="space-y-3">
+            <div className="flex items-center gap-2 pb-2 border-b border-orange-200 dark:border-orange-800">
+              <AlertCircle className="h-4 w-4 text-orange-500" />
+              <h3 className="text-sm font-semibold text-foreground">Restanțe de plată</h3>
+              {unpaidAppointments.length > 0 && (
+                <Badge className="bg-orange-500 text-white text-[10px] ml-auto">{unpaidAppointments.length}</Badge>
+              )}
+            </div>
+            {unpaidAppointments.length === 0 ? (
+              <div className="text-center py-6">
+                <div className="inline-flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-950/20 rounded-full px-4 py-2">
+                  <span>✓</span> Fără restanțe
                 </div>
               </div>
-            ))}
+            ) : (
+              <div className="space-y-2">
+                {unpaidAppointments.map((apt) => (
+                  <div
+                    key={apt.id}
+                    className="p-3 rounded-xl border border-orange-200 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-950/20 hover:border-orange-300 dark:hover:border-orange-700 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1 min-w-0">
+                        <div className="text-sm font-medium">
+                          {format(new Date(apt.appointment_date), 'd MMM yyyy', { locale: ro })}
+                          <span className="text-muted-foreground font-normal"> • {apt.start_time.slice(0, 5)}</span>
+                        </div>
+                        <div className="text-[11px] text-muted-foreground">
+                          {apt.treatments.join(', ')}
+                          {apt.doctor_name && ` • Dr. ${apt.doctor_name}`}
+                        </div>
+                        <div className="text-[11px] space-x-3">
+                          <span>Total: <strong>{apt.price.toLocaleString()} RON</strong></span>
+                          {apt.paid_amount > 0 && (
+                            <span className="text-green-600">Achitat: {apt.paid_amount.toLocaleString()} RON</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2 shrink-0">
+                        <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-xs">
+                          {apt.remaining.toLocaleString()} RON
+                        </Badge>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs gap-1 border-orange-300 hover:bg-orange-100 dark:border-orange-700 dark:hover:bg-orange-900/30"
+                          onClick={() => {
+                            setSelectedUnpaid(apt);
+                            setEditPaymentOpen(true);
+                          }}
+                        >
+                          <Banknote className="h-3 w-3" />
+                          Achită
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
 
-            {/* Total */}
-            <div className="flex items-center justify-between bg-orange-100 dark:bg-orange-950/30 rounded-lg px-4 py-3 mt-2">
-              <span className="font-medium text-sm text-orange-700 dark:text-orange-400">Total restanțe</span>
-              <Badge className="bg-orange-600 hover:bg-orange-700 text-white font-medium">
-                {unpaidAppointments.reduce((sum, a) => sum + a.remaining, 0).toLocaleString()} RON
-              </Badge>
-            </div>
-          </div>
-        )}
-      </section>
+                <div className="flex items-center justify-between bg-orange-100 dark:bg-orange-950/30 rounded-xl px-4 py-3 mt-2">
+                  <span className="font-medium text-sm text-orange-700 dark:text-orange-400">Total restanțe</span>
+                  <Badge className="bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm px-3">
+                    {totalDebt.toLocaleString()} RON
+                  </Badge>
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
+      </div>
 
       {/* Payment Dialog */}
       {selectedUnpaid && (
@@ -548,4 +648,16 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
       )}
     </div>
   );
+
+  if (fullscreen) {
+    return (
+      <div className="fixed inset-0 z-50 bg-background overflow-hidden flex flex-col">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+          {content}
+        </div>
+      </div>
+    );
+  }
+
+  return content;
 }
