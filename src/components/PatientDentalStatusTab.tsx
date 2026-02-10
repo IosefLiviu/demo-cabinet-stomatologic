@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { TOOTH_STATUSES, getStatusHexColor as getStatusHexColorUtil } from '@/constants/toothStatuses';
 import { getToothImage } from './dental/toothImages';
 import {
@@ -59,6 +60,7 @@ const statusEnumToName: Record<string, string> = {
 
 export function PatientDentalStatusTab({ patientId, dentalStatus }: PatientDentalStatusTabProps) {
   const [hoveredTooth, setHoveredTooth] = useState<number | null>(null);
+  const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
   const [allHistoryEntries, setAllHistoryEntries] = useState<ToothHistoryEntry[]>([]);
   
   const activeStatuses = TOOTH_STATUSES;
@@ -122,8 +124,14 @@ export function PatientDentalStatusTab({ patientId, dentalStatus }: PatientDenta
     return statusEnumToName[status] || status;
   };
 
+  const getToothNotes = (toothNumber: number): string | undefined => {
+    const tooth = dentalStatus.find((t) => t.tooth_number === toothNumber);
+    return tooth?.notes;
+  };
+
   const renderTooth = (toothNumber: number, isDeciduous: boolean = false, isLower: boolean = false) => {
     const status = getToothStatus(toothNumber);
+    const notes = getToothNotes(toothNumber);
     const isHovered = hoveredTooth === toothNumber;
     const toothImage = getToothImage(toothNumber);
     const hexColor = getStatusHexColor(status);
@@ -148,10 +156,11 @@ export function PatientDentalStatusTab({ patientId, dentalStatus }: PatientDenta
         <div
           onMouseEnter={() => setHoveredTooth(toothNumber)}
           onMouseLeave={() => setHoveredTooth(null)}
+          onDoubleClick={() => setSelectedTooth(toothNumber)}
           className={cn(
             'relative flex items-center justify-center rounded-lg overflow-hidden',
             'transition-all duration-300 ease-out',
-            'bg-muted/30 cursor-default p-1',
+            'bg-muted/30 cursor-pointer p-1',
             isHovered && 'ring-2 ring-offset-1 ring-primary z-10',
             hasStatus && !isMissing && 'ring-2',
             isDeciduous 
@@ -202,6 +211,11 @@ export function PatientDentalStatusTab({ patientId, dentalStatus }: PatientDenta
               className="absolute inset-0 pointer-events-none rounded-lg transition-all duration-300"
               style={{ backgroundColor: isHovered ? `${hexColor}50` : `${hexColor}30` }}
             />
+          )}
+
+          {/* Notes indicator */}
+          {notes && (
+            <div className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-primary border border-background shadow-sm" />
           )}
         </div>
         
@@ -367,6 +381,38 @@ export function PatientDentalStatusTab({ patientId, dentalStatus }: PatientDenta
           </div>
         </div>
       )}
+      {/* Tooth notes dialog */}
+      <Dialog open={selectedTooth !== null} onOpenChange={(open) => !open && setSelectedTooth(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Dinte {selectedTooth} — Observații</DialogTitle>
+          </DialogHeader>
+          {selectedTooth && (() => {
+            const status = getToothStatus(selectedTooth);
+            const notes = getToothNotes(selectedTooth);
+            const hexColor = getStatusHexColor(status);
+            return (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Status:</span>
+                  <span 
+                    className="px-2 py-0.5 rounded text-sm font-medium"
+                    style={hexColor ? { backgroundColor: `${hexColor}20`, color: hexColor } : undefined}
+                  >
+                    {status}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-sm font-medium">Observații:</span>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {notes || 'Nicio observație'}
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
