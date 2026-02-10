@@ -56,6 +56,7 @@ import { Patient } from '@/hooks/usePatients';
 import { supabase } from '@/integrations/supabase/client';
 import { MiniDentalChart, ToothData } from './MiniDentalChart';
 import { PatientDentalStatusTab } from './PatientDentalStatusTab';
+import { PatientRecordTab } from './PatientRecordTab';
 import { useTreatmentPlans, TreatmentPlan } from '@/hooks/useTreatmentPlans';
 import { PatientRadiographs } from './PatientRadiographs';
 import { escapeHtml, escapeHtmlArray, escapeNumberArray } from '@/lib/print-utils';
@@ -896,8 +897,12 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
         </SheetHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full grid grid-cols-5">
+          <TabsList className="w-full grid grid-cols-6">
             <TabsTrigger value="info">Informații</TabsTrigger>
+            <TabsTrigger value="record" className="gap-1">
+              <FileText className="h-3 w-3" />
+              Fișă
+            </TabsTrigger>
             <TabsTrigger value="dental" className="gap-1">
               <Stethoscope className="h-3 w-3" />
               Status Dentar
@@ -1030,6 +1035,14 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
               <Calendar className="h-3.5 w-3.5" />
               Înregistrat la {format(new Date(patient.created_at), 'd MMMM yyyy', { locale: ro })}
             </div>
+          </TabsContent>
+
+          {/* Patient Record Tab */}
+          <TabsContent value="record" className="mt-6">
+            <PatientRecordTab
+              patientId={patient.id}
+              patientName={`${patient.first_name} ${patient.last_name}`}
+            />
           </TabsContent>
 
           {/* Dental Status Tab */}
