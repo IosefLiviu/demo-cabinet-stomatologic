@@ -4,9 +4,12 @@ import { ro } from 'date-fns/locale';
 import { ChevronDown, ChevronUp, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { toast } from '@/hooks/use-toast';
 import { TOOTH_STATUSES, getStatusHexColor as getStatusHexColorUtil } from '@/constants/toothStatuses';
 import { getToothImage } from './dental/toothImages';
 import {
@@ -58,9 +61,11 @@ const statusEnumToName: Record<string, string> = {
   'extraction_needed': 'Rest Radicular',
 };
 
-export function PatientDentalStatusTab({ patientId, dentalStatus }: PatientDentalStatusTabProps) {
+export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange }: PatientDentalStatusTabProps) {
   const [hoveredTooth, setHoveredTooth] = useState<number | null>(null);
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
+  const [dialogNotes, setDialogNotes] = useState('');
+  const [savingNotes, setSavingNotes] = useState(false);
   const [allHistoryEntries, setAllHistoryEntries] = useState<ToothHistoryEntry[]>([]);
   
   const activeStatuses = TOOTH_STATUSES;
@@ -129,6 +134,42 @@ export function PatientDentalStatusTab({ patientId, dentalStatus }: PatientDenta
     return tooth?.notes;
   };
 
+  const openToothDialog = (toothNumber: number) => {
+    setSelectedTooth(toothNumber);
+    setDialogNotes(getToothNotes(toothNumber) || '');
+  };
+
+  const handleSaveNotes = async () => {
+    if (!selectedTooth) return;
+    setSavingNotes(true);
+    try {
+      const existing = dentalStatus.find(t => t.tooth_number === selectedTooth);
+      if (existing) {
+        const { error } = await supabase
+          .from('dental_status')
+          .update({ notes: dialogNotes || null })
+          .eq('patient_id', patientId)
+          .eq('tooth_number', selectedTooth);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('dental_status')
+          .insert({ patient_id: patientId, tooth_number: selectedTooth, status: 'healthy', notes: dialogNotes || null });
+        if (error) throw error;
+      }
+      onStatusChange?.(dentalStatus.map(t => 
+        t.tooth_number === selectedTooth ? { ...t, notes: dialogNotes || undefined } : t
+      ));
+      toast({ title: 'Observații salvate', description: `Dinte ${selectedTooth}` });
+      setSelectedTooth(null);
+    } catch (error) {
+      console.error('Error saving notes:', error);
+      toast({ title: 'Eroare', description: 'Nu s-au putut salva observațiile', variant: 'destructive' });
+    } finally {
+      setSavingNotes(false);
+    }
+  };
+
   const renderTooth = (toothNumber: number, isDeciduous: boolean = false, isLower: boolean = false) => {
     const status = getToothStatus(toothNumber);
     const notes = getToothNotes(toothNumber);
@@ -156,7 +197,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus }: PatientDenta
         <div
           onMouseEnter={() => setHoveredTooth(toothNumber)}
           onMouseLeave={() => setHoveredTooth(null)}
-          onDoubleClick={() => setSelectedTooth(toothNumber)}
+          onDoubleClick={() => openToothDialog(toothNumber)}
           className={cn(
             'relative flex items-center justify-center rounded-lg overflow-hidden',
             'transition-all duration-300 ease-out',
@@ -383,16 +424,15 @@ export function PatientDentalStatusTab({ patientId, dentalStatus }: PatientDenta
       )}
       {/* Tooth notes dialog */}
       <Dialog open={selectedTooth !== null} onOpenChange={(open) => !open && setSelectedTooth(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>Dinte {selectedTooth} — Observații</DialogTitle>
+            <DialogTitle>Dinte {selectedTooth}</DialogTitle>
           </DialogHeader>
           {selectedTooth && (() => {
             const status = getToothStatus(selectedTooth);
-            const notes = getToothNotes(selectedTooth);
             const hexColor = getStatusHexColor(status);
             return (
-              <div className="space-y-3">
+              <div className="space-y-4 py-4">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">Status:</span>
                   <span 
@@ -402,15 +442,26 @@ export function PatientDentalStatusTab({ patientId, dentalStatus }: PatientDenta
                     {status}
                   </span>
                 </div>
-                <div>
-                  <span className="text-sm font-medium">Observații:</span>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {notes || 'Nicio observație'}
-                  </p>
+                <div className="space-y-2">
+                  <Label>Observații</Label>
+                  <Textarea
+                    value={dialogNotes}
+                    onChange={(e) => setDialogNotes(e.target.value)}
+                    placeholder="Adaugă observații despre dinte..."
+                    rows={3}
+                  />
                 </div>
               </div>
             );
           })()}
+          <div className="flex justify-end gap-3">
+            <Button type="button" variant="outline" onClick={() => setSelectedTooth(null)}>
+              Anulează
+            </Button>
+            <Button type="button" onClick={handleSaveNotes} disabled={savingNotes}>
+              {savingNotes ? 'Se salvează...' : 'Salvează'}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
