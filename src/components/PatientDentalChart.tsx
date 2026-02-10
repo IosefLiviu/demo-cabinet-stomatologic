@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { TOOTH_STATUSES, STATUS_ENUM_TO_NAME, getStatusHexColor as getStatusHexColorUtil } from '@/constants/toothStatuses';
 import { getToothImage } from './dental/toothImages';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export interface ToothData {
   tooth_number: number;
@@ -26,6 +27,7 @@ const lowerDeciduousTeeth = [85, 84, 83, 82, 81, 71, 72, 73, 74, 75];
 
 export function PatientDentalChart({ dentalStatus }: PatientDentalChartProps) {
   const [hoveredTooth, setHoveredTooth] = useState<number | null>(null);
+  const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
 
   const statusList = TOOTH_STATUSES;
 
@@ -66,8 +68,9 @@ export function PatientDentalChart({ dentalStatus }: PatientDentalChartProps) {
         <div
           onMouseEnter={() => setHoveredTooth(toothNumber)}
           onMouseLeave={() => setHoveredTooth(null)}
+          onDoubleClick={() => setSelectedTooth(toothNumber)}
           className={cn(
-            'relative flex items-center justify-center transition-all rounded-md overflow-hidden cursor-default',
+            'relative flex items-center justify-center transition-all rounded-md overflow-hidden cursor-pointer',
             isHovered && 'ring-2 ring-offset-1 ring-primary',
             hasStatus && 'ring-2',
             isDeciduous 
@@ -185,6 +188,39 @@ export function PatientDentalChart({ dentalStatus }: PatientDentalChartProps) {
           </div>
         </div>
       </div>
+
+      {/* Tooth notes dialog */}
+      <Dialog open={selectedTooth !== null} onOpenChange={(open) => !open && setSelectedTooth(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Dinte {selectedTooth} — Observații</DialogTitle>
+          </DialogHeader>
+          {selectedTooth && (() => {
+            const status = getToothStatus(selectedTooth);
+            const notes = getToothNotes(selectedTooth);
+            const hexColor = getStatusHexColor(status);
+            return (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Status:</span>
+                  <span 
+                    className="px-2 py-0.5 rounded text-sm font-medium"
+                    style={hexColor ? { backgroundColor: `${hexColor}20`, color: hexColor } : undefined}
+                  >
+                    {status}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-sm font-medium">Observații:</span>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {notes || 'Nicio observație'}
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
