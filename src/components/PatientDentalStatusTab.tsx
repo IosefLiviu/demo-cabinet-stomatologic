@@ -15,7 +15,6 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { Tooth3DDialog } from './dental/Tooth3DDialog';
-import { DiagnosticPoint, DiagnosticLine } from './dental/Tooth3DViewer';
 
 // Helper to extract balanced JSON array from string
 function extractBalancedJson(str: string, startIndex: number): string | null {
@@ -368,7 +367,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
     });
   };
 
-  const handleSaveToothStatus = async (status: string, notes: string, diagnosticPoints: DiagnosticPoint[], diagnosticLines: DiagnosticLine[] = [], statuses?: string[]) => {
+  const handleSaveToothStatus = async (status: string, notes: string, statuses?: string[]) => {
     if (!toothDialog) return;
 
     try {
@@ -383,10 +382,10 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
 
-      // Prepare notes with diagnostic points and lines
+      // Prepare notes
       let finalNotes = notes.trim();
 
-      // Remove any existing diagnostic data and statuses from notes before adding new (balanced-safe)
+      // Remove any existing tagged data from notes
       finalNotes = stripTaggedBalanced(finalNotes, '[DIAGNOSTICS:');
       finalNotes = stripTaggedBalanced(finalNotes, '[DIAGLINES:');
       finalNotes = stripTaggedBalanced(finalNotes, '[STATUSES:');
@@ -397,15 +396,6 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
       if (statuses && statuses.length > 1) {
         const statusesJson = JSON.stringify(statuses);
         finalNotes = finalNotes ? `${finalNotes}\n[STATUSES:${statusesJson}]` : `[STATUSES:${statusesJson}]`;
-      }
-
-      if (diagnosticPoints.length > 0) {
-        const diagnosticsJson = JSON.stringify(diagnosticPoints);
-        finalNotes = finalNotes ? `${finalNotes}\n[DIAGNOSTICS:${diagnosticsJson}]` : `[DIAGNOSTICS:${diagnosticsJson}]`;
-      }
-      if (diagnosticLines.length > 0) {
-        const linesJson = JSON.stringify(diagnosticLines);
-        finalNotes = finalNotes ? `${finalNotes}\n[DIAGLINES:${linesJson}]` : `[DIAGLINES:${linesJson}]`;
       }
 
       // Check if there are any changes (status, notes, diagnostics)
