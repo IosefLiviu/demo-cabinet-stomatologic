@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, ArrowLeft, Save, X, Users, Stethoscope, Shield, ShieldCheck, Palette, Mail, Download, FileText, CheckCircle, XCircle, ChevronLeft, ChevronRight, Loader2, KeyRound, CalendarClock, Settings, ClipboardList } from 'lucide-react';
+import { Plus, Edit, Trash2, ArrowLeft, Save, X, Users, Stethoscope, Shield, ShieldCheck, Mail, Download, FileText, CheckCircle, XCircle, ChevronLeft, ChevronRight, Loader2, KeyRound, CalendarClock, Settings, ClipboardList } from 'lucide-react';
 import { TreatmentsManagement } from '@/components/TreatmentsManagement';
 import { TimeOffApprovalPanel } from '@/components/TimeOffApprovalPanel';
 import { WhatsAppSettingsCard } from '@/components/WhatsAppSettingsCard';
@@ -39,7 +39,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { useToothStatuses, ToothStatusCustom } from '@/hooks/useToothStatuses';
+
 import {
   Table,
   TableBody,
@@ -130,14 +130,6 @@ export default function Admin() {
   const [newPassword, setNewPassword] = useState('');
   const [resettingPassword, setResettingPassword] = useState(false);
 
-  // Tooth statuses state
-  const { statuses: toothStatuses, loading: loadingStatuses, addStatus, updateStatus, deleteStatus, toggleActive: toggleStatusActive } = useToothStatuses();
-  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
-  const [editingStatus, setEditingStatus] = useState<ToothStatusCustom | null>(null);
-  const [statusFormData, setStatusFormData] = useState({
-    name: '',
-    color: PRESET_COLORS[0],
-  });
 
   // Login logs state
   const [loginLogs, setLoginLogs] = useState<LoginLog[]>([]);
@@ -723,41 +715,6 @@ export default function Admin() {
     });
   };
 
-  // ============ TOOTH STATUSES FUNCTIONS ============
-  const handleOpenStatusDialog = (status?: ToothStatusCustom) => {
-    if (status) {
-      setEditingStatus(status);
-      setStatusFormData({
-        name: status.name,
-        color: status.color,
-      });
-    } else {
-      setEditingStatus(null);
-      setStatusFormData({
-        name: '',
-        color: PRESET_COLORS[0],
-      });
-    }
-    setStatusDialogOpen(true);
-  };
-
-  const handleSaveStatus = async () => {
-    if (!statusFormData.name.trim()) {
-      toast({
-        title: 'Eroare',
-        description: 'Numele statusului este obligatoriu',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (editingStatus) {
-      await updateStatus(editingStatus.id, statusFormData.name, statusFormData.color);
-    } else {
-      await addStatus(statusFormData.name, statusFormData.color);
-    }
-    setStatusDialogOpen(false);
-  };
 
   if (loading) {
     return (
@@ -776,12 +733,12 @@ export default function Admin() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold">Administrare</h1>
-            <p className="text-muted-foreground">Gestionează doctori, utilizatori și statusuri</p>
+            <p className="text-muted-foreground">Gestionează doctori, utilizatori și setări</p>
           </div>
         </div>
 
         <Tabs defaultValue="doctors" className="space-y-6">
-          <TabsList className="grid w-full max-w-5xl grid-cols-7">
+          <TabsList className="grid w-full max-w-5xl grid-cols-6">
             <TabsTrigger value="doctors" className="gap-2">
               <Stethoscope className="h-4 w-4" />
               <span className="hidden sm:inline">Doctori</span>
@@ -793,10 +750,6 @@ export default function Admin() {
             <TabsTrigger value="treatments" className="gap-2">
               <ClipboardList className="h-4 w-4" />
               <span className="hidden sm:inline">Intervenții</span>
-            </TabsTrigger>
-            <TabsTrigger value="statuses" className="gap-2">
-              <Palette className="h-4 w-4" />
-              <span className="hidden sm:inline">Statusuri</span>
             </TabsTrigger>
             <TabsTrigger value="logs" className="gap-2">
               <FileText className="h-4 w-4" />
@@ -1042,95 +995,6 @@ export default function Admin() {
                       <Button onClick={() => setNewUserDialogOpen(true)}>
                         <Plus className="h-4 w-4 mr-2" />
                         Creează primul utilizator
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
-          </TabsContent>
-
-          {/* ============ TOOTH STATUSES TAB ============ */}
-          <TabsContent value="statuses" className="space-y-4">
-            <div className="flex justify-end">
-              <Button onClick={() => handleOpenStatusDialog()} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Adaugă Status
-              </Button>
-            </div>
-
-            {loadingStatuses ? (
-              <div className="flex justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
-            ) : (
-              <div className="grid gap-4">
-                {toothStatuses.map((status) => (
-                  <Card key={status.id} className={!status.is_active ? 'opacity-50' : ''}>
-                    <CardContent className="flex items-center justify-between py-4">
-                      <div className="flex items-center gap-4">
-                        <div
-                          className="w-10 h-10 rounded-lg flex items-center justify-center font-bold border-2"
-                          style={{ 
-                            backgroundColor: `${status.color}20`, 
-                            borderColor: status.color,
-                            color: status.color 
-                          }}
-                        >
-                          {status.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <h3 className="font-semibold">{status.name}</h3>
-                          <p className="text-sm text-muted-foreground">{status.color}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => toggleStatusActive(status.id, !status.is_active)}
-                        >
-                          {status.is_active ? 'Activ' : 'Inactiv'}
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleOpenStatusDialog(status)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Ștergeți statusul?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Această acțiune nu poate fi anulată. Statusul {status.name} va fi șters definitiv.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Anulează</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => deleteStatus(status.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Șterge
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-
-                {toothStatuses.length === 0 && (
-                  <Card>
-                    <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                      <p className="text-muted-foreground mb-4">Nu există statusuri dentare</p>
-                      <Button onClick={() => handleOpenStatusDialog()}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Adaugă primul status
                       </Button>
                     </CardContent>
                   </Card>
@@ -1501,72 +1365,6 @@ export default function Admin() {
               <Button onClick={handleSaveUser} disabled={savingUser}>
                 <Save className="h-4 w-4 mr-2" />
                 {savingUser ? 'Se salvează...' : 'Salvează'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Status Add/Edit Dialog */}
-        <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>
-                {editingStatus ? 'Editare Status' : 'Adaugă Status Nou'}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="status-name">Nume *</Label>
-                <Input
-                  id="status-name"
-                  value={statusFormData.name}
-                  onChange={(e) => setStatusFormData({ ...statusFormData, name: e.target.value })}
-                  placeholder="Ex: Carie, Plombat..."
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Culoare</Label>
-                <div className="flex flex-wrap gap-2">
-                  {PRESET_COLORS.map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      className={`w-8 h-8 rounded-full border-2 transition-all ${
-                        statusFormData.color === color ? 'border-foreground scale-110' : 'border-transparent'
-                      }`}
-                      style={{ backgroundColor: color }}
-                      onClick={() => setStatusFormData({ ...statusFormData, color })}
-                    />
-                  ))}
-                </div>
-                <div className="flex items-center gap-2 mt-2">
-                  <Label htmlFor="status-custom-color" className="text-sm">Culoare personalizată:</Label>
-                  <Input
-                    id="status-custom-color"
-                    type="color"
-                    value={statusFormData.color}
-                    onChange={(e) => setStatusFormData({ ...statusFormData, color: e.target.value })}
-                    className="w-12 h-8 p-0 border-0"
-                  />
-                </div>
-                <div className="mt-4 p-4 rounded-lg border-2" style={{ 
-                  backgroundColor: `${statusFormData.color}20`, 
-                  borderColor: statusFormData.color 
-                }}>
-                  <span className="font-medium" style={{ color: statusFormData.color }}>
-                    {statusFormData.name || 'Preview'}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setStatusDialogOpen(false)}>
-                <X className="h-4 w-4 mr-2" />
-                Anulează
-              </Button>
-              <Button onClick={handleSaveStatus}>
-                <Save className="h-4 w-4 mr-2" />
-                {editingStatus ? 'Salvează' : 'Adaugă'}
               </Button>
             </DialogFooter>
           </DialogContent>
