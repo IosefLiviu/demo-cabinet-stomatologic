@@ -912,38 +912,6 @@ export function InterventionSelector({
           </DialogHeader>
           
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Status (selectează unul sau mai multe)</Label>
-              <div className="grid grid-cols-4 gap-2">
-                {activeStatuses.map((status) => {
-                  const hexColor = status.color;
-                  const isSelected = toothDialog?.statuses?.includes(status.name) || false;
-                  return (
-                    <button
-                      key={status.dbValue}
-                      type="button"
-                      onClick={() => toggleToothStatus(status.name)}
-                      className={cn(
-                        'px-2 py-2 rounded-lg border-2 text-xs font-medium transition-all',
-                        isSelected && 'ring-2 ring-primary ring-offset-2'
-                      )}
-                      style={{
-                        backgroundColor: `${hexColor}20`,
-                        borderColor: hexColor,
-                        color: hexColor,
-                      }}
-                    >
-                      {status.name}
-                    </button>
-                  );
-                })}
-              </div>
-              {toothDialog?.statuses && toothDialog.statuses.length > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  Selectate: {toothDialog.statuses.join(', ')}
-                </p>
-              )}
-            </div>
 
             <div className="space-y-2">
               <Label>Note</Label>
