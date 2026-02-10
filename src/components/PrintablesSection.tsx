@@ -36,15 +36,15 @@ interface PrintablesSectionProps {
 }
 
 const menuItems = [
-  { id: 'radiology-referral', label: 'Trimitere Radiologie', icon: Radio },
-  { id: 'billing', label: 'Proforma', icon: FileText },
-  { id: 'prescription', label: 'Rețetă', icon: Pill },
-  { id: 'patient-info', label: 'Informare Pacient', icon: UserCheck },
-  { id: 'specialist-referral', label: 'Trimitere M. Specialist', icon: Stethoscope },
-  { id: 'lab-test-referral', label: 'Trimitere Analize', icon: FlaskConical },
-  { id: 'informed-consent', label: 'Consimțământ Informat', icon: FileSignature },
-  { id: 'medical-certificate', label: 'Adeverință Medicală', icon: BadgeCheck },
-  { id: 'protocols', label: 'Protocoale & Indicații', icon: ClipboardList },
+  { id: 'radiology-referral', label: 'Trimitere Radiologie', icon: Radio, iconColor: 'text-blue-500' },
+  { id: 'billing', label: 'Proforma', icon: FileText, iconColor: 'text-emerald-500' },
+  { id: 'prescription', label: 'Rețetă', icon: Pill, iconColor: 'text-rose-500' },
+  { id: 'patient-info', label: 'Informare Pacient', icon: UserCheck, iconColor: 'text-indigo-500' },
+  { id: 'specialist-referral', label: 'Trimitere M. Specialist', icon: Stethoscope, iconColor: 'text-teal-500' },
+  { id: 'lab-test-referral', label: 'Trimitere Analize', icon: FlaskConical, iconColor: 'text-purple-500' },
+  { id: 'informed-consent', label: 'Consimțământ Informat', icon: FileSignature, iconColor: 'text-amber-500' },
+  { id: 'medical-certificate', label: 'Adeverință Medicală', icon: BadgeCheck, iconColor: 'text-cyan-500' },
+  { id: 'protocols', label: 'Protocoale & Indicații', icon: ClipboardList, iconColor: 'text-orange-500' },
 ];
 
 export function PrintablesSection({ patients, doctors }: PrintablesSectionProps) {
@@ -93,7 +93,7 @@ export function PrintablesSection({ patients, doctors }: PrintablesSectionProps)
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               )}
             >
-              <Icon className="h-4 w-4 shrink-0" />
+              <Icon className={`h-4 w-4 shrink-0 ${isActive ? '' : item.iconColor || ''}`} />
               <span>{item.label}</span>
             </button>
           );
