@@ -356,44 +356,63 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
           
           // Calculate amount to attribute to THIS period
           // If debt was paid in a DIFFERENT period, exclude it
+          // Also exclude CAS from this period - it will be attributed to the debt payment month
           let periodPaidAmount = totalPaidAmount;
-          if (debtAmount > 0 && debtPaidAt && !debtPaidInCurrentPeriod) {
+          let periodCas = appointmentCas;
+          const hasDebtPaidElsewhere = debtAmount > 0 && debtPaidAt && !debtPaidInCurrentPeriod;
+          if (hasDebtPaidElsewhere) {
             periodPaidAmount = Math.max(0, totalPaidAmount - debtAmount);
+            periodCas = 0; // CAS moves to the month when debt is fully paid
           }
           
           if (method === 'card') {
             doctorStats[doctorName].paidCard += payableAmount;
             doctorStats[doctorName].paid += payableAmount;
-            doctorStats[doctorName].totalWithNetLab += (periodPaidAmount + appointmentCas);
+            doctorStats[doctorName].totalWithNetLab += (periodPaidAmount + periodCas);
           } else if (method === 'cash') {
             doctorStats[doctorName].paidCash += payableAmount;
             doctorStats[doctorName].paid += payableAmount;
-            doctorStats[doctorName].totalWithNetLab += (periodPaidAmount + appointmentCas);
+            doctorStats[doctorName].totalWithNetLab += (periodPaidAmount + periodCas);
           } else if (method === 'partial_card') {
             doctorStats[doctorName].paidCard += periodPaidAmount;
             doctorStats[doctorName].paid += periodPaidAmount;
             doctorStats[doctorName].unpaid += Math.max(0, payableAmount - periodPaidAmount);
-            doctorStats[doctorName].totalWithNetLab += (periodPaidAmount + appointmentCas);
+            doctorStats[doctorName].totalWithNetLab += (periodPaidAmount + periodCas);
           } else if (method === 'partial_cash') {
             doctorStats[doctorName].paidCash += periodPaidAmount;
             doctorStats[doctorName].paid += periodPaidAmount;
             doctorStats[doctorName].unpaid += Math.max(0, payableAmount - periodPaidAmount);
-            doctorStats[doctorName].totalWithNetLab += (periodPaidAmount + appointmentCas);
+            doctorStats[doctorName].totalWithNetLab += (periodPaidAmount + periodCas);
           } else if (method === 'unpaid' || !a.is_paid) {
             doctorStats[doctorName].unpaid += payableAmount;
           } else if (a.is_paid) {
             doctorStats[doctorName].paidCash += payableAmount;
             doctorStats[doctorName].paid += payableAmount;
-            doctorStats[doctorName].totalWithNetLab += (periodPaidAmount + appointmentCas);
+            doctorStats[doctorName].totalWithNetLab += (periodPaidAmount + periodCas);
           }
         }
         // CASE 2: Appointment is OUTSIDE range but debt was paid IN this period
-        // Only add the debt payment amount to this period's revenue
+        // Include debt amount + CAS from original appointment in this period's commission base
         else if (debtAmount > 0 && debtPaidInCurrentPeriod) {
-          // Add only the debt amount to this period's cash flow
+          // Calculate CAS and Lab from the original appointment treatments
+          let debtAppointmentCas = 0;
+          let debtAppointmentLab = 0;
+          if (a.appointment_treatments && a.appointment_treatments.length > 0) {
+            a.appointment_treatments.forEach(t => {
+              const discountPercent = (t as any).discount_percent || 0;
+              if (discountPercent < 100) {
+                debtAppointmentCas += (t.decont || 0);
+                const labCost = Number((t as any).laborator) || 0;
+                debtAppointmentLab += labCost;
+              }
+            });
+          }
+          
           doctorStats[doctorName].paid += debtAmount;
-          doctorStats[doctorName].paidCash += debtAmount; // Assume cash for debt payments
-          doctorStats[doctorName].totalWithNetLab += debtAmount;
+          doctorStats[doctorName].paidCash += debtAmount;
+          doctorStats[doctorName].totalWithNetLab += debtAmount + debtAppointmentCas;
+          doctorStats[doctorName].cas += debtAppointmentCas;
+          doctorStats[doctorName].laborator += debtAppointmentLab;
         }
       } else if (a.status === 'scheduled' && appointmentInRange) {
         doctorStats[doctorName].scheduled += price;
