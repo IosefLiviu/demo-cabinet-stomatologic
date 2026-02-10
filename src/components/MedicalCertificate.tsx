@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
+
 import {
   Select,
   SelectContent,
@@ -38,8 +38,6 @@ export function MedicalCertificate({ patients, doctors }: MedicalCertificateProp
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
   const [certificateDate, setCertificateDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
   const [patientSearch, setPatientSearch] = useState('');
-  const [showLogo, setShowLogo] = useState(true);
-  const [useDiacritics, setUseDiacritics] = useState(true);
 
   // Form fields
   const [judet, setJudet] = useState('Ilfov');
@@ -78,15 +76,7 @@ export function MedicalCertificate({ patients, doctors }: MedicalCertificateProp
     return format(date, 'yyyy MMMM dd', { locale: ro });
   };
 
-  const removeDiacritics = (text: string): string => {
-    if (useDiacritics) return text;
-    return text
-      .replace(/ă/g, 'a').replace(/Ă/g, 'A')
-      .replace(/â/g, 'a').replace(/Â/g, 'A')
-      .replace(/î/g, 'i').replace(/Î/g, 'I')
-      .replace(/ș/g, 's').replace(/Ș/g, 'S')
-      .replace(/ț/g, 't').replace(/Ț/g, 'T');
-  };
+  const t = (text: string) => text;
 
   const handlePrint = () => {
     const printContent = printRef.current;
@@ -104,7 +94,7 @@ export function MedicalCertificate({ patients, doctors }: MedicalCertificateProp
     const patientJudet = judet;
     const patientNr = numar;
 
-    const t = (text: string) => removeDiacritics(text);
+    
 
     printWindow.document.write(`
       <html>
@@ -216,7 +206,7 @@ export function MedicalCertificate({ patients, doctors }: MedicalCertificateProp
         <body>
           <div class="header">
             <div class="logo-section">
-              ${showLogo ? `<img src="${getLogoPrintUrl()}" alt="Logo" class="logo" />` : ''}
+              <img src="${getLogoPrintUrl()}" alt="Logo" class="logo" />
               <div class="clinic-name">${CLINIC.shortName}</div>
             </div>
             <div class="clinic-contact">
@@ -292,25 +282,6 @@ export function MedicalCertificate({ patients, doctors }: MedicalCertificateProp
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Options */}
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="show-logo-cert"
-                checked={showLogo}
-                onCheckedChange={(v) => setShowLogo(!!v)}
-              />
-              <Label htmlFor="show-logo-cert">Imprimă logo</Label>
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="use-diacritics-cert"
-                checked={useDiacritics}
-                onCheckedChange={(v) => setUseDiacritics(!!v)}
-              />
-              <Label htmlFor="use-diacritics-cert">Cu diacritice</Label>
-            </div>
-          </div>
 
           <div className="grid gap-4 md:grid-cols-3">
             {/* Patient selector */}
