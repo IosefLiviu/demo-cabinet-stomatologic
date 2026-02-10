@@ -1,22 +1,13 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Plus, Check, Trash2, Search, Send, ArrowDownToLine, FlaskConical, RotateCcw, CheckCircle } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Plus, Check, Trash2, Search, Send, ArrowDownToLine, FlaskConical, RotateCcw, CheckCircle, User, Calendar, Palette, MapPin, Stethoscope, Clock, Building2, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -44,10 +35,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useLabSamples, LabSampleInsert, LabSampleStatus } from '@/hooks/useLabSamples';
 import { Patient } from '@/hooks/usePatients';
 import { useCabinets } from '@/hooks/useCabinets';
 import { LAB_WORK_TYPES, getWorkTypesByCategory, getLabPrice, LABORATORIES } from '@/constants/laboratoryPricing';
+import { cn } from '@/lib/utils';
 
 interface Doctor {
   id: string;
@@ -68,6 +65,14 @@ const VITA_COLORS = [
 ];
 
 type TabStatus = 'sent' | 'returned' | 'trial' | 'finalized';
+
+const STATUS_CONFIG: Record<LabSampleStatus, { label: string; color: string; bgColor: string; borderColor: string; icon: typeof Send }> = {
+  sent: { label: 'Trimis', color: 'text-blue-700 dark:text-blue-400', bgColor: 'bg-blue-50 dark:bg-blue-950/30', borderColor: 'border-blue-200 dark:border-blue-800', icon: Send },
+  resent: { label: 'Retrimis', color: 'text-orange-700 dark:text-orange-400', bgColor: 'bg-orange-50 dark:bg-orange-950/30', borderColor: 'border-orange-200 dark:border-orange-800', icon: RotateCcw },
+  returned: { label: 'Primit', color: 'text-emerald-700 dark:text-emerald-400', bgColor: 'bg-emerald-50 dark:bg-emerald-950/30', borderColor: 'border-emerald-200 dark:border-emerald-800', icon: ArrowDownToLine },
+  trial: { label: 'La Probă', color: 'text-violet-700 dark:text-violet-400', bgColor: 'bg-violet-50 dark:bg-violet-950/30', borderColor: 'border-violet-200 dark:border-violet-800', icon: FlaskConical },
+  finalized: { label: 'Finalizat', color: 'text-emerald-700 dark:text-emerald-400', bgColor: 'bg-emerald-50 dark:bg-emerald-950/30', borderColor: 'border-emerald-200 dark:border-emerald-800', icon: CheckCircle },
+};
 
 export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
   const { samples, loading, addSample, markAsReturned, markAsTrial, markAsFinalized, resendToLab, deleteSample } = useLabSamples();
@@ -100,7 +105,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
   const activeDoctors = doctors.filter(d => d.is_active);
   const activeCabinets = cabinets.filter(c => c.is_active);
 
-  // Filter samples by status - resent samples show in "sent" tab as they are back in lab
+  // Filter samples by status
   const sentSamples = samples.filter(s => s.status === 'sent' || s.status === 'resent');
   const returnedSamples = samples.filter(s => s.status === 'returned');
   const trialSamples = samples.filter(s => s.status === 'trial');
@@ -140,10 +145,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
   };
 
   const handleAddSample = async () => {
-    if (!formData.patient_name || !formData.work_type) {
-      return;
-    }
-
+    if (!formData.patient_name || !formData.work_type) return;
     await addSample(formData);
     setShowAddDialog(false);
     resetForm();
@@ -160,9 +162,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
   };
 
   const handleMarkAsTrial = async () => {
-    if (!trialSampleId || !selectedCabinetId) {
-      return;
-    }
+    if (!trialSampleId || !selectedCabinetId) return;
     await markAsTrial(trialSampleId, parseInt(selectedCabinetId));
     setShowTrialDialog(false);
     setTrialSampleId(null);
@@ -180,9 +180,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
   };
 
   const handleResend = async () => {
-    if (!resendSampleId || !resendReason.trim()) {
-      return;
-    }
+    if (!resendSampleId || !resendReason.trim()) return;
     await resendToLab(resendSampleId, resendReason.trim());
     setShowResendDialog(false);
     setResendSampleId(null);
@@ -204,382 +202,294 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
   };
 
   const getDoctorName = (doctorId: string | null) => {
-    if (!doctorId) return '-';
+    if (!doctorId) return null;
     const doctor = doctors.find(d => d.id === doctorId);
-    return doctor?.name || '-';
+    return doctor?.name || null;
   };
 
   const getCabinetName = (cabinetId: number | null) => {
-    if (!cabinetId) return '-';
+    if (!cabinetId) return null;
     const cabinet = cabinets.find(c => c.id === cabinetId);
-    return cabinet?.name || '-';
+    return cabinet?.name || null;
   };
 
-  const getStatusBadge = (status: LabSampleStatus) => {
-    const statusConfig: Record<LabSampleStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-      sent: { label: 'Trimis', variant: 'default' },
-      resent: { label: 'Retrimis', variant: 'destructive' },
-      returned: { label: 'Primit', variant: 'secondary' },
-      trial: { label: 'La Probă', variant: 'outline' },
-      finalized: { label: 'Finalizat', variant: 'secondary' },
-    };
-    const config = statusConfig[status];
-    return <Badge variant={config.variant}>{config.label}</Badge>;
+  // Render a sample card
+  const renderSampleCard = (sample: typeof samples[0], tab: TabStatus) => {
+    const config = STATUS_CONFIG[sample.status];
+    const StatusIcon = config.icon;
+    const doctorName = getDoctorName(sample.doctor_id);
+    const cabinetName = getCabinetName(sample.cabinet_id);
+
+    // Determine the primary date to show
+    const primaryDate = tab === 'finalized' ? sample.finalized_date
+      : tab === 'trial' ? sample.trial_date
+      : tab === 'returned' ? sample.actual_return_date
+      : sample.resend_date || sample.sample_date;
+
+    return (
+      <div
+        key={sample.id}
+        className={cn(
+          "group relative rounded-xl border p-4 transition-all hover:shadow-md",
+          config.bgColor, config.borderColor
+        )}
+      >
+        {/* Top row: status + date + actions */}
+        <div className="flex items-start justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2">
+            <div className={cn("flex items-center justify-center h-7 w-7 rounded-lg", config.bgColor)}>
+              <StatusIcon className={cn("h-3.5 w-3.5", config.color)} />
+            </div>
+            <Badge variant="outline" className={cn("text-[10px] font-medium border", config.borderColor, config.color)}>
+              {config.label}
+            </Badge>
+            {primaryDate && (
+              <span className="text-[11px] text-muted-foreground">
+                {format(new Date(primaryDate), 'd MMM yyyy', { locale: ro })}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            {tab === 'sent' && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMarkAsReturned(sample.id)}>
+                    <Check className="h-3.5 w-3.5 text-emerald-600" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Marchează ca primită</TooltipContent>
+              </Tooltip>
+            )}
+            {tab === 'returned' && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleOpenTrialDialog(sample.id)}>
+                    <FlaskConical className="h-3.5 w-3.5 text-violet-600" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Trimite la probă</TooltipContent>
+              </Tooltip>
+            )}
+            {tab === 'trial' && (
+              <>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMarkAsFinalized(sample.id)}>
+                      <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Finalizează</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleOpenResendDialog(sample.id)}>
+                      <RotateCcw className="h-3.5 w-3.5 text-orange-600" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Retrimite</TooltipContent>
+                </Tooltip>
+              </>
+            )}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDeleteConfirmId(sample.id)}>
+                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Șterge</TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
+
+        {/* Patient name + work type */}
+        <div className="mb-2">
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <User className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="font-semibold text-sm text-foreground">{sample.patient_name}</span>
+          </div>
+          <div className="text-xs font-medium text-primary ml-5">{sample.work_type}</div>
+        </div>
+
+        {/* Details grid */}
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1 ml-5 text-[11px] text-muted-foreground">
+          {sample.zone_quadrant && (
+            <div className="flex items-center gap-1">
+              <MapPin className="h-3 w-3" />
+              <span>{sample.zone_quadrant}</span>
+            </div>
+          )}
+          {sample.vita_color && (
+            <div className="flex items-center gap-1">
+              <Palette className="h-3 w-3" />
+              <span className="font-medium">{sample.vita_color}</span>
+            </div>
+          )}
+          {sample.laboratory_name && (
+            <div className="flex items-center gap-1">
+              <Building2 className="h-3 w-3" />
+              <span>{sample.laboratory_name}</span>
+            </div>
+          )}
+          {doctorName && (
+            <div className="flex items-center gap-1">
+              <Stethoscope className="h-3 w-3" />
+              <span>Dr. {doctorName}</span>
+            </div>
+          )}
+          {sample.expected_return_date && tab === 'sent' && (
+            <div className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              <span>Gata: {format(new Date(sample.expected_return_date), 'd MMM', { locale: ro })}</span>
+            </div>
+          )}
+          {cabinetName && tab === 'trial' && (
+            <div className="flex items-center gap-1">
+              <Building2 className="h-3 w-3" />
+              <span>{cabinetName}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Notes */}
+        {sample.notes && (
+          <div className="mt-2 ml-5 flex items-start gap-1 text-[11px] text-muted-foreground">
+            <MessageSquare className="h-3 w-3 mt-0.5 shrink-0" />
+            <span className="italic line-clamp-2" title={sample.notes}>{sample.notes}</span>
+          </div>
+        )}
+
+        {/* Resend reason */}
+        {sample.status === 'resent' && sample.resend_reason && (
+          <div className="mt-2 ml-5 text-[10px] text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/20 rounded px-2 py-1">
+            <span className="font-medium">Motiv retrimitere:</span> {sample.resend_reason}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderEmptyState = (message: string) => (
+    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+      <FlaskConical className="h-10 w-10 mb-3 opacity-30" />
+      <p className="text-sm">{message}</p>
+    </div>
+  );
+
+  const renderCardGrid = (sampleList: typeof samples, tab: TabStatus) => {
+    if (loading) return <div className="text-center py-8 text-muted-foreground">Se încarcă...</div>;
+    if (sampleList.length === 0) return renderEmptyState(searchTerm ? 'Nicio probă găsită' : 'Nu există lucrări în acest stadiu');
+    return (
+      <div className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+        {sampleList.map(s => renderSampleCard(s, tab))}
+      </div>
+    );
   };
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <CardTitle className="flex items-center gap-2">
-              <span>Laborator</span>
-              <Badge variant="secondary" className="ml-2">
-                {sentSamples.length} în laborator
-              </Badge>
-              <Badge variant="outline" className="ml-1">
-                {trialSamples.length} la probă
-              </Badge>
-            </CardTitle>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-              <div className="relative flex-1 sm:flex-initial">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Caută..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 w-full sm:w-[200px]"
-                />
-              </div>
-              <Button onClick={() => setShowAddDialog(true)} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Trimite Probă
-              </Button>
-            </div>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+            <FlaskConical className="h-5 w-5 text-primary" />
           </div>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={activeSubTab} onValueChange={(v) => setActiveSubTab(v as TabStatus)}>
-            <TabsList className="mb-4">
-              <TabsTrigger value="sent" className="gap-2">
-                <Send className="h-4 w-4" />
-                La Laborator ({sentSamples.length})
-              </TabsTrigger>
-              <TabsTrigger value="returned" className="gap-2">
-                <ArrowDownToLine className="h-4 w-4" />
-                Primite ({returnedSamples.length})
-              </TabsTrigger>
-              <TabsTrigger value="trial" className="gap-2">
-                <FlaskConical className="h-4 w-4" />
-                La Probă ({trialSamples.length})
-              </TabsTrigger>
-              <TabsTrigger value="finalized" className="gap-2">
-                <CheckCircle className="h-4 w-4" />
-                Finalizate ({finalizedSamples.length})
-              </TabsTrigger>
-            </TabsList>
+          <div>
+            <h2 className="text-lg font-bold text-foreground">Laborator</h2>
+            <p className="text-xs text-muted-foreground">
+              {samples.length} lucrări totale
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="relative flex-1 sm:flex-initial">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Caută..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8 w-full sm:w-[200px] h-9"
+            />
+          </div>
+          <Button onClick={() => setShowAddDialog(true)} className="gap-2 h-9">
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Lucrare Nouă</span>
+          </Button>
+        </div>
+      </div>
 
-            {/* Tab: La Laborator (sent + resent) */}
-            <TabsContent value="sent">
-              {loading ? (
-                <div className="text-center py-8 text-muted-foreground">Se încarcă...</div>
-              ) : filteredSentSamples.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  {searchTerm ? 'Nicio probă găsită' : 'Nu există probe la laborator'}
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Data</TableHead>
-                        <TableHead>Pacient</TableHead>
-                        <TableHead>Tip Lucrare</TableHead>
-                        <TableHead>Zona/Cadran</TableHead>
-                        <TableHead>Culoare Vita</TableHead>
-                        <TableHead>Data Gata</TableHead>
-                        <TableHead>Laborator</TableHead>
-                        <TableHead>Medic</TableHead>
-                        <TableHead>Observații</TableHead>
-                        <TableHead className="text-right">Acțiuni</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredSentSamples.map((sample) => (
-                        <TableRow key={sample.id}>
-                          <TableCell>{getStatusBadge(sample.status)}</TableCell>
-                          <TableCell>
-                            {format(new Date(sample.resend_date || sample.sample_date), 'dd.MM.yyyy', { locale: ro })}
-                          </TableCell>
-                          <TableCell className="font-medium">{sample.patient_name}</TableCell>
-                          <TableCell>{sample.work_type}</TableCell>
-                          <TableCell>{sample.zone_quadrant || '-'}</TableCell>
-                          <TableCell>{sample.vita_color || '-'}</TableCell>
-                          <TableCell>
-                            {sample.expected_return_date
-                              ? format(new Date(sample.expected_return_date), 'dd.MM.yyyy', { locale: ro })
-                              : '-'}
-                          </TableCell>
-                          <TableCell>{sample.laboratory_name || '-'}</TableCell>
-                          <TableCell>{getDoctorName(sample.doctor_id)}</TableCell>
-                          <TableCell className="max-w-[150px] truncate" title={sample.notes || ''}>
-                            {sample.notes || '-'}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleMarkAsReturned(sample.id)}
-                                title="Marchează ca primită"
-                              >
-                                <Check className="h-4 w-4 text-green-600" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setDeleteConfirmId(sample.id)}
-                                title="Șterge"
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </TabsContent>
+      {/* Summary stats */}
+      <div className="grid grid-cols-4 gap-2">
+        {([
+          { key: 'sent' as TabStatus, count: sentSamples.length, label: 'La Laborator', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/30', border: 'border-blue-200 dark:border-blue-800', Icon: Send },
+          { key: 'returned' as TabStatus, count: returnedSamples.length, label: 'Primite', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-200 dark:border-emerald-800', Icon: ArrowDownToLine },
+          { key: 'trial' as TabStatus, count: trialSamples.length, label: 'La Probă', color: 'text-violet-600', bg: 'bg-violet-50 dark:bg-violet-950/30', border: 'border-violet-200 dark:border-violet-800', Icon: FlaskConical },
+          { key: 'finalized' as TabStatus, count: finalizedSamples.length, label: 'Finalizate', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-200 dark:border-emerald-800', Icon: CheckCircle },
+        ]).map(({ key, count, label, color, bg, border, Icon }) => (
+          <button
+            key={key}
+            onClick={() => setActiveSubTab(key)}
+            className={cn(
+              "rounded-xl border p-3 text-left transition-all hover:shadow-sm cursor-pointer",
+              activeSubTab === key ? `${bg} ${border} ring-1 ring-primary/20` : "bg-card border-border"
+            )}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <Icon className={cn("h-3.5 w-3.5", color)} />
+              <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{label}</span>
+            </div>
+            <p className={cn("text-2xl font-bold", color)}>{count}</p>
+          </button>
+        ))}
+      </div>
 
-            {/* Tab: Primite */}
-            <TabsContent value="returned">
-              {loading ? (
-                <div className="text-center py-8 text-muted-foreground">Se încarcă...</div>
-              ) : filteredReturnedSamples.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  {searchTerm ? 'Nicio probă găsită' : 'Nu există probe primite'}
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Data Trimitere</TableHead>
-                        <TableHead>Pacient</TableHead>
-                        <TableHead>Tip Lucrare</TableHead>
-                        <TableHead>Culoare Vita</TableHead>
-                        <TableHead>Laborator</TableHead>
-                        <TableHead>Medic</TableHead>
-                        <TableHead>Data Primire</TableHead>
-                        <TableHead>Observații</TableHead>
-                        <TableHead className="text-right">Acțiuni</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredReturnedSamples.map((sample) => (
-                        <TableRow key={sample.id}>
-                          <TableCell>
-                            {format(new Date(sample.sample_date), 'dd.MM.yyyy', { locale: ro })}
-                          </TableCell>
-                          <TableCell className="font-medium">{sample.patient_name}</TableCell>
-                          <TableCell>{sample.work_type}</TableCell>
-                          <TableCell>{sample.vita_color || '-'}</TableCell>
-                          <TableCell>{sample.laboratory_name || '-'}</TableCell>
-                          <TableCell>{getDoctorName(sample.doctor_id)}</TableCell>
-                          <TableCell>
-                            {sample.actual_return_date
-                              ? format(new Date(sample.actual_return_date), 'dd.MM.yyyy', { locale: ro })
-                              : '-'}
-                          </TableCell>
-                          <TableCell className="max-w-[150px] truncate" title={sample.notes || ''}>
-                            {sample.notes || '-'}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleOpenTrialDialog(sample.id)}
-                                title="Trimite la cabinet pentru probă"
-                              >
-                                <FlaskConical className="h-4 w-4 text-blue-600" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setDeleteConfirmId(sample.id)}
-                                title="Șterge"
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </TabsContent>
+      {/* Tabs content */}
+      <Tabs value={activeSubTab} onValueChange={(v) => setActiveSubTab(v as TabStatus)}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="sent" className="gap-1.5">
+            <Send className="h-3.5 w-3.5" />
+            La Laborator
+            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{sentSamples.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="returned" className="gap-1.5">
+            <ArrowDownToLine className="h-3.5 w-3.5" />
+            Primite
+            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{returnedSamples.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="trial" className="gap-1.5">
+            <FlaskConical className="h-3.5 w-3.5" />
+            La Probă
+            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{trialSamples.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="finalized" className="gap-1.5">
+            <CheckCircle className="h-3.5 w-3.5" />
+            Finalizate
+            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{finalizedSamples.length}</Badge>
+          </TabsTrigger>
+        </TabsList>
 
-            {/* Tab: La Probă */}
-            <TabsContent value="trial">
-              {loading ? (
-                <div className="text-center py-8 text-muted-foreground">Se încarcă...</div>
-              ) : filteredTrialSamples.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  {searchTerm ? 'Nicio probă găsită' : 'Nu există probe la probă client'}
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Data Probă</TableHead>
-                        <TableHead>Pacient</TableHead>
-                        <TableHead>Tip Lucrare</TableHead>
-                        <TableHead>Zona/Cadran</TableHead>
-                        <TableHead>Culoare Vita</TableHead>
-                        <TableHead>Cabinet</TableHead>
-                        <TableHead>Laborator</TableHead>
-                        <TableHead>Medic</TableHead>
-                        <TableHead>Observații</TableHead>
-                        <TableHead className="text-right">Acțiuni</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredTrialSamples.map((sample) => (
-                        <TableRow key={sample.id}>
-                          <TableCell>
-                            {sample.trial_date
-                              ? format(new Date(sample.trial_date), 'dd.MM.yyyy', { locale: ro })
-                              : '-'}
-                          </TableCell>
-                          <TableCell className="font-medium">{sample.patient_name}</TableCell>
-                          <TableCell>{sample.work_type}</TableCell>
-                          <TableCell>{sample.zone_quadrant || '-'}</TableCell>
-                          <TableCell>{sample.vita_color || '-'}</TableCell>
-                          <TableCell>{getCabinetName(sample.cabinet_id)}</TableCell>
-                          <TableCell>{sample.laboratory_name || '-'}</TableCell>
-                          <TableCell>{getDoctorName(sample.doctor_id)}</TableCell>
-                          <TableCell className="max-w-[150px] truncate" title={sample.notes || ''}>
-                            {sample.notes || '-'}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleMarkAsFinalized(sample.id)}
-                                title="Marchează ca finalizat"
-                              >
-                                <CheckCircle className="h-4 w-4 text-green-600" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleOpenResendDialog(sample.id)}
-                                title="Retrimite la laborator"
-                              >
-                                <RotateCcw className="h-4 w-4 text-orange-600" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setDeleteConfirmId(sample.id)}
-                                title="Șterge"
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </TabsContent>
-
-            {/* Tab: Finalizate */}
-            <TabsContent value="finalized">
-              {loading ? (
-                <div className="text-center py-8 text-muted-foreground">Se încarcă...</div>
-              ) : filteredFinalizedSamples.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  {searchTerm ? 'Nicio probă găsită' : 'Nu există lucrări finalizate'}
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Data Finalizare</TableHead>
-                        <TableHead>Pacient</TableHead>
-                        <TableHead>Tip Lucrare</TableHead>
-                        <TableHead>Zona/Cadran</TableHead>
-                        <TableHead>Culoare Vita</TableHead>
-                        <TableHead>Laborator</TableHead>
-                        <TableHead>Medic</TableHead>
-                        <TableHead>Observații</TableHead>
-                        <TableHead className="text-right">Acțiuni</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredFinalizedSamples.map((sample) => (
-                        <TableRow key={sample.id}>
-                          <TableCell>
-                            {sample.finalized_date
-                              ? format(new Date(sample.finalized_date), 'dd.MM.yyyy', { locale: ro })
-                              : '-'}
-                          </TableCell>
-                          <TableCell className="font-medium">{sample.patient_name}</TableCell>
-                          <TableCell>{sample.work_type}</TableCell>
-                          <TableCell>{sample.zone_quadrant || '-'}</TableCell>
-                          <TableCell>{sample.vita_color || '-'}</TableCell>
-                          <TableCell>{sample.laboratory_name || '-'}</TableCell>
-                          <TableCell>{getDoctorName(sample.doctor_id)}</TableCell>
-                          <TableCell className="max-w-[150px] truncate" title={sample.notes || ''}>
-                            {sample.notes || '-'}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setDeleteConfirmId(sample.id)}
-                              title="Șterge"
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+        <TabsContent value="sent">{renderCardGrid(filteredSentSamples, 'sent')}</TabsContent>
+        <TabsContent value="returned">{renderCardGrid(filteredReturnedSamples, 'returned')}</TabsContent>
+        <TabsContent value="trial">{renderCardGrid(filteredTrialSamples, 'trial')}</TabsContent>
+        <TabsContent value="finalized">{renderCardGrid(filteredFinalizedSamples, 'finalized')}</TabsContent>
+      </Tabs>
 
       {/* Add Sample Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Trimite Probă la Laborator</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <FlaskConical className="h-5 w-5 text-primary" />
+              Lucrare Nouă
+            </DialogTitle>
             <DialogDescription>
-              Completează datele pentru trimiterea probei
+              Completează datele pentru trimiterea la laborator
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             {/* Patient Selection */}
             <div className="space-y-2">
-              <Label>Pacient *</Label>
+              <Label className="text-xs font-medium">Pacient *</Label>
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -593,44 +503,65 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                 />
               </div>
               {patientSearch && filteredPatients.length > 0 && (
-                <div className="border rounded-md max-h-32 overflow-y-auto">
+                <div className="border rounded-lg max-h-32 overflow-y-auto bg-popover">
                   {filteredPatients.slice(0, 5).map((patient) => (
                     <button
                       key={patient.id}
                       type="button"
-                      className="w-full px-3 py-2 text-left hover:bg-muted text-sm"
+                      className="w-full px-3 py-2 text-left hover:bg-muted text-sm transition-colors"
                       onClick={() => handleSelectPatient(patient)}
                     >
-                      {patient.first_name} {patient.last_name}
+                      <span className="font-medium">{patient.first_name} {patient.last_name}</span>
+                      <span className="text-xs text-muted-foreground ml-2">{patient.phone}</span>
                     </button>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* Laboratory - MUST be selected first to show prices */}
-            <div className="space-y-2">
-              <Label>Laborator *</Label>
-              <Select
-                value={formData.laboratory_name || ''}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, laboratory_name: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selectează laboratorul" />
-                </SelectTrigger>
-                <SelectContent>
-                  {LABORATORIES.map((lab) => (
-                    <SelectItem key={lab.id} value={lab.name}>
-                      {lab.fullName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Laboratory + Doctor row */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Laborator *</Label>
+                <Select
+                  value={formData.laboratory_name || ''}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, laboratory_name: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selectează" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LABORATORIES.map((lab) => (
+                      <SelectItem key={lab.id} value={lab.name}>
+                        {lab.fullName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Medic</Label>
+                <Select
+                  value={formData.doctor_id || ''}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, doctor_id: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selectează" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activeDoctors.map((doctor) => (
+                      <SelectItem key={doctor.id} value={doctor.id}>
+                        {doctor.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            {/* Work Type - grouped by category with prices */}
+            {/* Work Type */}
             <div className="space-y-2">
-              <Label>Tip Lucrare *</Label>
+              <Label className="text-xs font-medium">Tip Lucrare *</Label>
               <Select
                 value={formData.work_type}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, work_type: value }))}
@@ -646,7 +577,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                         const price = formData.laboratory_name 
                           ? getLabPrice(workType.id, formData.laboratory_name)
                           : null;
-                        const priceText = price !== null ? ` - ${price} RON` : '';
+                        const priceText = price !== null ? ` — ${price} RON` : '';
                         return (
                           <SelectItem 
                             key={workType.id} 
@@ -662,7 +593,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
                 </SelectContent>
               </Select>
               {formData.work_type && formData.laboratory_name && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Preț: {(() => {
                     const workType = LAB_WORK_TYPES.find(w => w.name === formData.work_type);
                     if (workType) {
@@ -675,34 +606,62 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
               )}
             </div>
 
-            {/* Doctor */}
-            <div className="space-y-2">
-              <Label>Medic</Label>
-              <Select
-                value={formData.doctor_id || ''}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, doctor_id: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selectează medicul" />
-                </SelectTrigger>
-                <SelectContent>
-                  {activeDoctors.map((doctor) => (
-                    <SelectItem key={doctor.id} value={doctor.id}>
-                      {doctor.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Zone + Vita Color + Dates row */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Zonă / Cadran</Label>
+                <Input
+                  placeholder="ex: 1.4-1.6"
+                  value={formData.zone_quadrant || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, zone_quadrant: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Culoare Vita</Label>
+                <Select
+                  value={formData.vita_color || ''}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, vita_color: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selectează" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {VITA_COLORS.map((color) => (
+                      <SelectItem key={color} value={color}>{color}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            {/* Observații */}
+            {/* Dates row */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Data trimitere</Label>
+                <Input
+                  type="date"
+                  value={formData.sample_date || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, sample_date: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Data estimată primire</Label>
+                <Input
+                  type="date"
+                  value={formData.expected_return_date || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, expected_return_date: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            {/* Notes */}
             <div className="space-y-2">
-              <Label>Observații</Label>
+              <Label className="text-xs font-medium">Observații</Label>
               <Textarea
                 placeholder="Observații suplimentare..."
                 value={formData.notes || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                rows={3}
+                rows={2}
               />
             </div>
           </div>
@@ -714,18 +673,23 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
             <Button
               onClick={handleAddSample}
               disabled={!formData.patient_name || !formData.work_type}
+              className="gap-2"
             >
+              <Send className="h-4 w-4" />
               Trimite
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Trial Dialog - requires cabinet selection */}
+      {/* Trial Dialog */}
       <Dialog open={showTrialDialog} onOpenChange={setShowTrialDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Trimite la Cabinet pentru Probă</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <FlaskConical className="h-5 w-5 text-violet-600" />
+              Trimite la Cabinet pentru Probă
+            </DialogTitle>
             <DialogDescription>
               Selectează cabinetul unde va avea loc proba
             </DialogDescription>
@@ -733,11 +697,8 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Cabinet *</Label>
-              <Select
-                value={selectedCabinetId}
-                onValueChange={setSelectedCabinetId}
-              >
+              <Label className="text-xs font-medium">Cabinet *</Label>
+              <Select value={selectedCabinetId} onValueChange={setSelectedCabinetId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selectează cabinetul" />
                 </SelectTrigger>
@@ -756,21 +717,22 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
             <Button variant="outline" onClick={() => { setShowTrialDialog(false); setSelectedCabinetId(''); setTrialSampleId(null); }}>
               Anulează
             </Button>
-            <Button
-              onClick={handleMarkAsTrial}
-              disabled={!selectedCabinetId}
-            >
+            <Button onClick={handleMarkAsTrial} disabled={!selectedCabinetId} className="gap-2">
+              <FlaskConical className="h-4 w-4" />
               Trimite la Probă
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Resend Dialog - requires reason */}
+      {/* Resend Dialog */}
       <Dialog open={showResendDialog} onOpenChange={setShowResendDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Retrimite la Laborator</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <RotateCcw className="h-5 w-5 text-orange-600" />
+              Retrimite la Laborator
+            </DialogTitle>
             <DialogDescription>
               Specifică motivul retrimirii la laborator
             </DialogDescription>
@@ -778,7 +740,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Motiv Retrimitere *</Label>
+              <Label className="text-xs font-medium">Motiv Retrimitere *</Label>
               <Textarea
                 placeholder="Descrie motivul retrimirii (ex: ajustare contact, modificare formă, etc.)"
                 value={resendReason}
@@ -792,10 +754,8 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
             <Button variant="outline" onClick={() => { setShowResendDialog(false); setResendReason(''); setResendSampleId(null); }}>
               Anulează
             </Button>
-            <Button
-              onClick={handleResend}
-              disabled={!resendReason.trim()}
-            >
+            <Button onClick={handleResend} disabled={!resendReason.trim()} className="gap-2">
+              <RotateCcw className="h-4 w-4" />
               Retrimite
             </Button>
           </DialogFooter>
