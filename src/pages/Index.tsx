@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
-import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, Radio, FileText, Pill, UserCheck, Printer, Stethoscope, ClipboardList, FlaskConical, Package, List, Home, CalendarClock, MessageSquare, FlaskRound, Bell, FileSignature } from 'lucide-react';
+import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, Radio, FileText, Pill, UserCheck, Printer, Stethoscope, ClipboardList, FlaskConical, Package, List, Home, CalendarClock, MessageSquare, FlaskRound, Bell, FileSignature, BadgeCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/Header';
 import { DateNavigator } from '@/components/DateNavigator';
@@ -19,6 +19,7 @@ import { RadiologyReferral } from '@/components/RadiologyReferral';
 import { SpecialistReferral } from '@/components/SpecialistReferral';
 import { LabTestReferral } from '@/components/LabTestReferral';
 import { InformedConsentForm } from '@/components/InformedConsentForm';
+import { MedicalCertificate } from '@/components/MedicalCertificate';
 import ProtocolsIndicatii from '@/components/ProtocolsIndicatii';
 import BillingInvoice from '@/components/BillingInvoice';
 import PrescriptionForm from '@/components/PrescriptionForm';
@@ -867,6 +868,10 @@ const Index = () => {
                   <FileSignature className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span>Consimțământ</span>
                 </TabsTrigger>
+                <TabsTrigger value="medical-certificate" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 shrink-0">
+                  <BadgeCheck className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Adeverință</span>
+                </TabsTrigger>
                 <TabsTrigger value="protocols" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 shrink-0">
                   <ClipboardList className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span>Protocoale & Indicații</span>
@@ -902,6 +907,10 @@ const Index = () => {
 
               <TabsContent value="informed-consent">
                 <InformedConsentForm patients={patients} doctors={doctors} />
+              </TabsContent>
+
+              <TabsContent value="medical-certificate">
+                <MedicalCertificate patients={patients} doctors={doctors} />
               </TabsContent>
 
               <TabsContent value="protocols">
