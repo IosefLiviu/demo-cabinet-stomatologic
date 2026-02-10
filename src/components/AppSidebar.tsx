@@ -30,6 +30,7 @@ interface NavItem {
   hideForReception?: boolean;
   badge?: number;
   badgeType?: 'whatsapp' | 'reminders';
+  iconColor?: string;
 }
 
 interface AppSidebarProps {
@@ -42,17 +43,17 @@ interface AppSidebarProps {
 }
 
 const navItems: NavItem[] = [
-  { id: 'calendar', label: 'Calendar', icon: CalendarIcon },
-  { id: 'patients', label: 'Pacienți', icon: Users },
-  { id: 'reports', label: 'Rapoarte', icon: BarChart3, hideForReception: true },
-  { id: 'expenses', label: 'Cheltuieli', icon: Wallet, adminOnly: true },
-  { id: 'treatment-plan', label: 'Plan Tratament', icon: ClipboardList },
-  { id: 'printabile', label: 'Printabile', icon: Printer },
-  { id: 'stock', label: 'Stoc', icon: Package },
-  { id: 'schedule', label: 'Program', icon: CalendarClock },
-  { id: 'laborator', label: 'Laborator', icon: FlaskRound },
-  { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare, badgeType: 'whatsapp' },
-  { id: 'reminders', label: 'Rechemări', icon: Bell, badgeType: 'reminders' },
+  { id: 'calendar', label: 'Calendar', icon: CalendarIcon, iconColor: 'text-blue-500' },
+  { id: 'patients', label: 'Pacienți', icon: Users, iconColor: 'text-indigo-500' },
+  { id: 'reports', label: 'Rapoarte', icon: BarChart3, hideForReception: true, iconColor: 'text-purple-500' },
+  { id: 'expenses', label: 'Cheltuieli', icon: Wallet, adminOnly: true, iconColor: 'text-red-500' },
+  { id: 'treatment-plan', label: 'Plan Tratament', icon: ClipboardList, iconColor: 'text-cyan-500' },
+  { id: 'printabile', label: 'Printabile', icon: Printer, iconColor: 'text-slate-500' },
+  { id: 'stock', label: 'Stoc', icon: Package, iconColor: 'text-amber-600' },
+  { id: 'schedule', label: 'Program', icon: CalendarClock, iconColor: 'text-teal-500' },
+  { id: 'laborator', label: 'Laborator', icon: FlaskRound, iconColor: 'text-pink-500' },
+  { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare, badgeType: 'whatsapp', iconColor: 'text-green-500' },
+  { id: 'reminders', label: 'Rechemări', icon: Bell, badgeType: 'reminders', iconColor: 'text-orange-500' },
 ];
 
 export function AppSidebar({ activeTab, onTabChange, isAdmin, isReception, unreadCount = 0, pendingRemindersCount = 0 }: AppSidebarProps) {
@@ -89,7 +90,7 @@ export function AppSidebar({ activeTab, onTabChange, isAdmin, isReception, unrea
                       onClick={() => handleClick(item.id)}
                       className="relative"
                     >
-                      <Icon className="h-4 w-4 shrink-0" />
+                      <Icon className={`h-4 w-4 shrink-0 ${isActive ? '' : item.iconColor || ''}`} />
                       <span>{item.label}</span>
                       {badge > 0 && (
                         <span className={`absolute ${isCollapsed ? 'top-0 right-0' : 'right-2'} flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-medium px-1`}>
