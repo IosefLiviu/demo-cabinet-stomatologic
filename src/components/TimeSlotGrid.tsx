@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { Plus, User, CheckCircle2, XCircle, Edit3, Users } from 'lucide-react';
 import { cleanDentalNotes } from '@/lib/cleanDentalNotes';
@@ -57,9 +58,91 @@ export function TimeSlotGrid({
   onEditPayment,
 }: TimeSlotGridProps) {
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
+  const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [currentTimeTop, setCurrentTimeTop] = useState<number | null>(null);
+
   const cabinetsToShow = selectedCabinet
     ? cabinets.filter((c) => c.id === selectedCabinet)
     : cabinets;
+
+  // Update current time indicator position
+  useEffect(() => {
+    if (!isToday) {
+      setCurrentTimeTop(null);
+      return;
+    }
+
+    const updatePosition = () => {
+      const grid = gridRef.current;
+      if (!grid) return;
+
+      const now = new Date();
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      const firstSlotMinutes = 8 * 60; // 08:00
+      const lastSlotMinutes = 21 * 60; // 21:00
+
+      if (currentMinutes < firstSlotMinutes || currentMinutes > lastSlotMinutes) {
+        setCurrentTimeTop(null);
+        return;
+      }
+
+      // Find all time label cells (first column cells with time data)
+      const timeCells = grid.querySelectorAll('[data-time-slot]');
+      if (timeCells.length === 0) {
+        setCurrentTimeTop(null);
+        return;
+      }
+
+      // Find the two slots that bracket the current time
+      let prevCell: Element | null = null;
+      let nextCell: Element | null = null;
+      let prevMinutes = firstSlotMinutes;
+      let nextMinutes = firstSlotMinutes;
+
+      for (const cell of timeCells) {
+        const slotTime = cell.getAttribute('data-time-slot') || '';
+        const [h, m] = slotTime.split(':').map(Number);
+        const slotMinutes = h * 60 + m;
+
+        if (slotMinutes <= currentMinutes) {
+          prevCell = cell;
+          prevMinutes = slotMinutes;
+        }
+        if (slotMinutes > currentMinutes && !nextCell) {
+          nextCell = cell;
+          nextMinutes = slotMinutes;
+        }
+      }
+
+      if (prevCell) {
+        const gridRect = grid.getBoundingClientRect();
+        const prevRect = prevCell.getBoundingClientRect();
+        const prevTop = prevRect.top - gridRect.top;
+
+        if (nextCell) {
+          const nextRect = nextCell.getBoundingClientRect();
+          const nextTop = nextRect.top - gridRect.top;
+          const fraction = (currentMinutes - prevMinutes) / (nextMinutes - prevMinutes);
+          setCurrentTimeTop(prevTop + fraction * (nextTop - prevTop));
+        } else {
+          // Current time is after last slot
+          const fraction = (currentMinutes - prevMinutes) / 15;
+          setCurrentTimeTop(prevTop + fraction * prevRect.height);
+        }
+      }
+    };
+
+    updatePosition();
+    const interval = setInterval(updatePosition, 60000); // update every minute
+    // Also update on resize
+    window.addEventListener('resize', updatePosition);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [isToday, cabinetsToShow.length]);
 
   // Helper to convert time string to minutes
   const timeToMinutes = (time: string): number => {
@@ -140,9 +223,21 @@ export function TimeSlotGrid({
   return (
     <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
       {/* Outer scroll container for horizontal scroll on mobile */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto relative" ref={gridRef}>
+        {/* Current time indicator */}
+        {isToday && currentTimeTop !== null && (
+          <div
+            className="absolute left-0 right-0 z-20 pointer-events-none"
+            style={{ top: currentTimeTop }}
+          >
+            <div className="relative flex items-center">
+              <div className="w-2.5 h-2.5 rounded-full bg-red-500 -ml-1 shrink-0" />
+              <div className="flex-1 h-[2px] bg-red-500" />
+            </div>
+          </div>
+        )}
         {/* Inner container with minimum width for mobile horizontal scroll */}
-        <div 
+        <div
           className="min-w-[600px] md:min-w-0"
           style={{ 
             display: 'grid',
@@ -204,6 +299,7 @@ export function TimeSlotGrid({
               {/* Regular time column */}
               <div 
                 key={`time-${time}`}
+                data-time-slot={time}
                 className="h-[26px] flex items-center justify-center text-[9px] font-medium text-muted-foreground border-r border-b border-border bg-muted/30"
               >
                 {time.endsWith(':00') ? time : ''}
