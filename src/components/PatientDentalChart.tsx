@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { TOOTH_STATUSES, STATUS_ENUM_TO_NAME, STATUS_NAME_TO_ENUM, getStatusHexColor as getStatusHexColorUtil } from '@/constants/toothStatuses';
 import { supabase } from '@/integrations/supabase/client';
 import { getToothImage } from './dental/toothImages';
 import { toast } from 'sonner';
@@ -45,30 +46,12 @@ export function PatientDentalChart({ patientId, dentalStatus, onStatusChange, re
   } | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Hardcoded statuses based on DB enum
-  const statusList = [
-    { name: 'Sănătos', color: '#10B981', dbValue: 'healthy' },
-    { name: 'Carie', color: '#EF4444', dbValue: 'cavity' },
-    { name: 'Obt Foto', color: '#3B82F6', dbValue: 'filled' },
-    { name: 'Coroană', color: '#F59E0B', dbValue: 'crown' },
-    { name: 'Absent', color: '#6B7280', dbValue: 'missing' },
-    { name: 'Implant', color: '#8B5CF6', dbValue: 'implant' },
-    { name: 'OBT Canal', color: '#EC4899', dbValue: 'root_canal' },
-    { name: 'Rest Radicular', color: '#F97316', dbValue: 'extraction_needed' },
-  ];
-
-  // Map DB enum values to display names
-  const statusEnumToName: Record<string, string> = {};
-  const statusNameToEnum: Record<string, string> = {};
-  statusList.forEach(s => {
-    statusEnumToName[s.dbValue] = s.name;
-    statusNameToEnum[s.name] = s.dbValue;
-  });
+  const statusList = TOOTH_STATUSES;
 
   const getToothStatus = (toothNumber: number): string => {
     const tooth = dentalStatus.find((t) => t.tooth_number === toothNumber);
     if (!tooth) return 'Sănătos';
-    return statusEnumToName[tooth.status] || tooth.status;
+    return STATUS_ENUM_TO_NAME[tooth.status] || tooth.status;
   };
 
   const getToothNotes = (toothNumber: number): string | undefined => {
@@ -77,8 +60,7 @@ export function PatientDentalChart({ patientId, dentalStatus, onStatusChange, re
   };
 
   const getStatusHexColor = (statusName: string): string | null => {
-    const found = statusList.find(s => s.name.toLowerCase() === statusName.toLowerCase());
-    return found?.color || null;
+    return getStatusHexColorUtil(statusName);
   };
 
   const openToothDialog = (toothNumber: number) => {
@@ -94,15 +76,13 @@ export function PatientDentalChart({ patientId, dentalStatus, onStatusChange, re
     });
   };
 
-  // Add RCR alias
-  statusNameToEnum['RCR'] = 'extraction_needed';
 
   const handleSaveToothDialog = async () => {
     if (!toothDialog) return;
     setSaving(true);
 
     try {
-      const dbStatus = statusNameToEnum[toothDialog.status] || 'healthy';
+      const dbStatus = STATUS_NAME_TO_ENUM[toothDialog.status] || 'healthy';
       
       // Upsert the dental status
       const { error } = await supabase

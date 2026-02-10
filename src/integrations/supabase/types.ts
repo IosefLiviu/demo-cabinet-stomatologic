@@ -1114,36 +1114,6 @@ export type Database = {
           },
         ]
       }
-      tooth_statuses: {
-        Row: {
-          color: string
-          created_at: string
-          id: string
-          is_active: boolean
-          name: string
-          sort_order: number | null
-          updated_at: string
-        }
-        Insert: {
-          color?: string
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          name: string
-          sort_order?: number | null
-          updated_at?: string
-        }
-        Update: {
-          color?: string
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          name?: string
-          sort_order?: number | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
       treatment_plan_items: {
         Row: {
           cas: number | null

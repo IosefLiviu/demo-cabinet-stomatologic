@@ -33,9 +33,9 @@ interface ToothHistoryEntry {
 }
 
 interface ToothStatus {
-  id: string;
   name: string;
   color: string;
+  dbValue: string;
 }
 
 interface Tooth3DDialogProps {
@@ -227,7 +227,7 @@ export function Tooth3DDialog({
                 const isSelected = statuses.includes(s.name);
                 return (
                   <button
-                    key={s.id}
+                    key={s.dbValue}
                     type="button"
                     onClick={() => toggleStatus(s.name)}
                     className={cn(

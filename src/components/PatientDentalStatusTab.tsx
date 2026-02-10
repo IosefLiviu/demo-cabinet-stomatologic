@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { useToothStatuses } from '@/hooks/useToothStatuses';
+import { TOOTH_STATUSES, getStatusHexColor as getStatusHexColorUtil } from '@/constants/toothStatuses';
 import { getToothImage } from './dental/toothImages';
 import { toast } from 'sonner';
 import {
@@ -272,7 +272,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
   } | null>(null);
   const [allHistoryEntries, setAllHistoryEntries] = useState<ToothHistoryEntry[]>([]);
   
-  const { activeStatuses } = useToothStatuses();
+  const activeStatuses = TOOTH_STATUSES;
 
   // Load all history entries
   useEffect(() => {
@@ -339,8 +339,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
   };
 
   const getStatusHexColor = (statusName: string): string | null => {
-    const dbStatus = activeStatuses.find(s => s.name.toLowerCase() === statusName.toLowerCase());
-    return dbStatus?.color || null;
+    return getStatusHexColorUtil(statusName);
   };
 
   const getStatusDisplayName = (status: string): string => {
@@ -627,7 +626,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
       <div className="flex flex-wrap justify-center gap-2 text-xs">
         {activeStatuses.map((status) => (
           <div
-            key={status.id}
+            key={status.dbValue}
             className="px-3 py-1.5 rounded-lg border-2 flex items-center gap-2 shadow-sm transition-all duration-200 hover:scale-105 cursor-default"
             style={{
               backgroundColor: `${status.color}20`,

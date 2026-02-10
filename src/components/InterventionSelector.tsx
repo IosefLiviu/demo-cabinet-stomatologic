@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { TreatmentListDialog } from './TreatmentListDialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ToothStatus } from './DentalChart';
-import { useToothStatuses } from '@/hooks/useToothStatuses';
+import { TOOTH_STATUSES, getStatusHexColor as getStatusHexColorUtil } from '@/constants/toothStatuses';
 import { getToothImage } from './dental/toothImages';
 import { supabase } from '@/integrations/supabase/client';
 import { cleanDentalNotes } from '@/lib/cleanDentalNotes';
@@ -141,8 +141,7 @@ export function InterventionSelector({
   // Patient dental status loaded from database
   const [patientDentalStatus, setPatientDentalStatus] = useState<PatientToothStatus[]>([]);
   
-  // Fetch custom tooth statuses from database
-  const { activeStatuses } = useToothStatuses();
+  const activeStatuses = TOOTH_STATUSES;
 
   // Load patient dental status when patientId changes
   useEffect(() => {
@@ -190,8 +189,7 @@ export function InterventionSelector({
   };
   
   const getStatusHexColor = (statusName: string): string | null => {
-    const dbStatus = activeStatuses.find(s => s.name.toLowerCase() === statusName.toLowerCase());
-    return dbStatus?.color || null;
+    return getStatusHexColorUtil(statusName);
   };
   
   const getStatusLabel = (statusName: string): string => {
@@ -922,7 +920,7 @@ export function InterventionSelector({
                   const isSelected = toothDialog?.statuses?.includes(status.name) || false;
                   return (
                     <button
-                      key={status.id}
+                      key={status.dbValue}
                       type="button"
                       onClick={() => toggleToothStatus(status.name)}
                       className={cn(

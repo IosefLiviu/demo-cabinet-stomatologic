@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { getToothImage } from './dental/toothImages';
-import { useToothStatuses } from '@/hooks/useToothStatuses';
+import { TOOTH_STATUSES, getStatusHexColor as getStatusHexColorUtil } from '@/constants/toothStatuses';
 
 export interface ToothData {
   tooth_number: number;
@@ -38,7 +38,6 @@ interface MiniDentalChartProps {
 
 export function MiniDentalChart({ treatedTeeth, teethData = [], className, useImages = true }: MiniDentalChartProps) {
   const [hoveredTooth, setHoveredTooth] = useState<number | null>(null);
-  const { activeStatuses } = useToothStatuses();
 
   const getToothData = (toothNumber: number): ToothData | undefined => {
     return teethData.find((t) => t.tooth_number === toothNumber);
@@ -52,8 +51,7 @@ export function MiniDentalChart({ treatedTeeth, teethData = [], className, useIm
   // Get hex color for status from database
   const getStatusHexColor = (status: string): string | null => {
     const displayName = getStatusDisplayName(status);
-    const dbStatus = activeStatuses.find(s => s.name.toLowerCase() === displayName.toLowerCase());
-    return dbStatus?.color || null;
+    return getStatusHexColorUtil(displayName);
   };
 
   // Check if status is healthy (either enum or name)
