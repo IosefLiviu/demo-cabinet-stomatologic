@@ -816,15 +816,15 @@ export function AppointmentForm({
                     <Button
                       type="button"
                       variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      title="Printabile"
+                      size="sm"
+                      className="text-xs sm:text-sm gap-1"
                       onClick={() => {
                         const patient = patients.find(p => p.id === formData.patientId);
                         if (patient) onViewPrintables(patient);
                       }}
                     >
                       <Printer className="h-3.5 w-3.5" />
+                      Printabile
                     </Button>
                   )}
                   {formData.patientId && onViewReminder && (
