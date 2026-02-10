@@ -31,6 +31,7 @@ import { WhatsAppInbox } from '@/components/WhatsAppInbox';
 import { LaboratoryTab } from '@/components/LaboratoryTab';
 import { PatientRemindersPanel } from '@/components/PatientRemindersPanel';
 import { PatientReminderDialog } from '@/components/PatientReminderDialog';
+import { WhatsAppQuickSendDialog } from '@/components/WhatsAppQuickSendDialog';
 import { useWhatsAppMessages } from '@/hooks/useWhatsAppMessages';
 import { usePendingReminders } from '@/hooks/usePatientReminders';
 import { Button } from '@/components/ui/button';
@@ -100,6 +101,7 @@ const Index = () => {
   } | undefined>();
   const [existingInterventions, setExistingInterventions] = useState<SelectedIntervention[]>([]);
   const [reminderDialogPatient, setReminderDialogPatient] = useState<Patient | null>(null);
+  const [whatsappDialogPatient, setWhatsappDialogPatient] = useState<Patient | null>(null);
 
   // Complete appointment dialog state
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
@@ -1010,10 +1012,8 @@ const Index = () => {
         onViewReminder={(patient) => {
           setReminderDialogPatient(patient);
         }}
-        onSendWhatsApp={() => {
-          setShowAppointmentForm(false);
-          pushNavState({ tab: 'whatsapp' });
-          setActiveTab('whatsapp');
+        onSendWhatsApp={(patient) => {
+          setWhatsappDialogPatient(patient);
         }}
         selectedDate={selectedDate}
         onDateChange={(newDate) => setSelectedDate(newDate)}
@@ -1037,6 +1037,17 @@ const Index = () => {
           onClose={() => setReminderDialogPatient(null)}
           patientId={reminderDialogPatient.id}
           patientName={`${reminderDialogPatient.last_name} ${reminderDialogPatient.first_name}`}
+        />
+      )}
+
+      {/* WhatsApp Quick Send Dialog from Appointment Form */}
+      {whatsappDialogPatient && (
+        <WhatsAppQuickSendDialog
+          open={!!whatsappDialogPatient}
+          onOpenChange={(open) => { if (!open) setWhatsappDialogPatient(null); }}
+          patientPhone={whatsappDialogPatient.phone}
+          patientName={`${whatsappDialogPatient.last_name} ${whatsappDialogPatient.first_name}`}
+          patientId={whatsappDialogPatient.id}
         />
       )}
 
