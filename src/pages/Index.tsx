@@ -741,11 +741,11 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header />
 
-      <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <div className="flex min-h-[calc(100svh-3.5rem)] sm:min-h-[calc(100svh-4rem)] w-full">
+      <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen} style={{ '--sidebar-top': '3.5rem' } as React.CSSProperties} className="!min-h-0 flex-1 sm:[--sidebar-top:4rem]">
+        <div className="flex w-full">
           <AppSidebar
             activeTab={activeTab}
             onTabChange={handleTabChange}
