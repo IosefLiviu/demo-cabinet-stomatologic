@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Patient } from '@/hooks/usePatients';
-import { CLINIC, getLogoPrintUrl } from '@/constants/clinic';
+import { CLINIC, getLogoPrintUrl, getClinicCopyright } from '@/constants/clinic';
 import { escapeHtml } from '@/lib/print-utils';
 
 interface Doctor {
@@ -112,38 +112,65 @@ export function MedicalCertificate({ patients, doctors }: MedicalCertificateProp
           <title>${t('Adeverință Medicală')}</title>
           <style>
             body { 
-              font-family: 'Times New Roman', Times, serif; 
-              padding: 40px 50px; 
-              color: #000; 
-              font-size: 14px;
-              line-height: 1.8;
+              font-family: Arial, sans-serif; 
+              padding: 30px 40px; 
+              color: #1a365d; 
+              font-size: 13px;
+              line-height: 1.6;
+            }
+            .header { 
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              margin-bottom: 25px;
+              padding-bottom: 15px;
+              border-bottom: 3px solid #b8860b;
             }
             .logo-section {
-              text-align: center;
-              margin-bottom: 10px;
+              display: flex;
+              flex-direction: column;
+              align-items: flex-start;
             }
             .logo {
-              width: 100px;
+              width: 120px;
               height: auto;
+              object-fit: contain;
+              margin-bottom: 5px;
+            }
+            .clinic-name {
+              font-weight: bold;
+              font-size: 16px;
+              color: #b8860b;
+            }
+            .clinic-contact {
+              text-align: right;
+              font-size: 11px;
+              color: #666;
+            }
+            .clinic-contact p {
+              margin: 2px 0;
             }
             .title {
               text-align: center;
-              font-size: 22px;
+              font-size: 20px;
               font-weight: bold;
-              margin: 20px 0 5px 0;
+              margin: 25px 0 5px 0;
               letter-spacing: 2px;
+              color: #1a365d;
             }
             .date-center {
               text-align: center;
-              margin-bottom: 30px;
-              font-size: 14px;
+              margin-bottom: 25px;
+              font-size: 13px;
+              color: #666;
             }
             .field-line {
-              border-bottom: 1px solid #000;
+              border-bottom: 1px solid #1a365d;
               display: inline;
               padding: 0 5px;
-              min-width: 100px;
+              min-width: 80px;
               font-weight: bold;
+              color: #1a365d;
             }
             .content {
               margin: 20px 0;
@@ -153,15 +180,33 @@ export function MedicalCertificate({ patients, doctors }: MedicalCertificateProp
               text-align: justify;
             }
             .signature-area {
-              margin-top: 60px;
+              margin-top: 50px;
               text-align: right;
-              font-size: 14px;
+              font-size: 13px;
+              font-weight: bold;
             }
             .date-footer {
-              margin-top: 40px;
+              margin-top: 30px;
             }
             .date-footer p {
               margin: 3px 0;
+            }
+            .doctor-info {
+              margin-top: 40px;
+            }
+            .doctor-info p {
+              margin: 3px 0;
+            }
+            .footer {
+              margin-top: 50px;
+              padding-top: 15px;
+              border-top: 2px solid #b8860b;
+              text-align: center;
+              font-size: 9px;
+              color: #666;
+            }
+            .footer p {
+              margin: 2px 0;
             }
             @media print { 
               body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
@@ -169,7 +214,16 @@ export function MedicalCertificate({ patients, doctors }: MedicalCertificateProp
           </style>
         </head>
         <body>
-          ${showLogo ? `<div class="logo-section"><img src="${getLogoPrintUrl()}" class="logo" /></div>` : ''}
+          <div class="header">
+            <div class="logo-section">
+              ${showLogo ? `<img src="${getLogoPrintUrl()}" alt="Logo" class="logo" />` : ''}
+              <div class="clinic-name">${CLINIC.shortName}</div>
+            </div>
+            <div class="clinic-contact">
+              <p>${CLINIC.phone}</p>
+              <p>${CLINIC.address}</p>
+            </div>
+          </div>
           
           <div class="title">${t('ADEVERINȚĂ MEDICALĂ')}</div>
           <div class="date-center">${formatDateRomanian(certificateDate)}</div>
@@ -205,9 +259,18 @@ export function MedicalCertificate({ patients, doctors }: MedicalCertificateProp
             ${t('Semnătura și parafa')}
           </div>
           
+          <div class="doctor-info">
+            <p><strong>${selectedDoctor ? escapeHtml(selectedDoctor.name) : '___________________'}</strong></p>
+          </div>
+
           <div class="date-footer">
-            <p>${t('Data eliberării')}:</p>
-            <p>${formatDateRomanian(certificateDate)}</p>
+            <p>${t('Data eliberării')}: ${format(new Date(certificateDate), 'dd.MM.yyyy')}</p>
+          </div>
+
+          <div class="footer">
+            <p><strong>${CLINIC.name}</strong> | ${CLINIC.address}</p>
+            <p>Tel: ${CLINIC.phone} | Email: ${CLINIC.email} | ${CLINIC.website}</p>
+            <p style="margin-top: 5px; font-size: 8px; color: #999;">${getClinicCopyright()}</p>
           </div>
         </body>
       </html>
