@@ -1,209 +1,18 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { ChevronDown, ChevronUp, History, MapPin, Pencil } from 'lucide-react';
+import { ChevronDown, ChevronUp, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { TOOTH_STATUSES, getStatusHexColor as getStatusHexColorUtil } from '@/constants/toothStatuses';
 import { getToothImage } from './dental/toothImages';
-import { toast } from 'sonner';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { Tooth3DDialog } from './dental/Tooth3DDialog';
-
-// Helper to extract balanced JSON array from string
-function extractBalancedJson(str: string, startIndex: number): string | null {
-  if (str[startIndex] !== '[') return null;
-  
-  let depth = 0;
-  let endIndex = startIndex;
-  
-  for (let i = startIndex; i < str.length; i++) {
-    if (str[i] === '[') depth++;
-    else if (str[i] === ']') depth--;
-    
-    if (depth === 0) {
-      endIndex = i;
-      break;
-    }
-  }
-  
-  if (depth !== 0) return null;
-  return str.slice(startIndex, endIndex + 1);
-}
-
-function stripTaggedBalanced(input: string, tag: '[DIAGNOSTICS:' | '[DIAGLINES:' | '[STATUSES:'): string {
-  let result = input;
-
-  // handle multiple occurrences defensively
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    const tagIndex = result.indexOf(tag);
-    if (tagIndex === -1) break;
-
-    const jsonStart = tagIndex + tag.length;
-    const json = extractBalancedJson(result, jsonStart);
-    if (!json) {
-      // If we can't parse balanced JSON, avoid infinite loop.
-      break;
-    }
-
-    result = result.replace(`${tag}${json}]`, '');
-  }
-
-  return result;
-}
-
-function stripOrphanLeadingJsonArray(input: string): string {
-  const trimmed = input.trimStart();
-
-  // Heuristic for older broken saves where the start of notes contains only numeric coordinate arrays.
-  // Example: [[-0.01,0.02,0.03], ...]
-  if (!trimmed.startsWith('[[')) return input;
-
-  // If there are letters, we assume it's user text.
-  if (/[a-zA-ZăâîșțĂÂÎȘȚ]/.test(trimmed)) return input;
-
-  const json = extractBalancedJson(trimmed, 0);
-  if (!json) return input;
-
-  const without = trimmed.slice(json.length);
-  return without.replace(/^\s*\n+/, '').trimStart();
-}
-
-// Helper function to parse diagnostic data from notes
-function parseDiagnosticData(notes: string | null): { points: number; lines: number } {
-  if (!notes) return { points: 0, lines: 0 };
-  
-  let points = 0;
-  let lines = 0;
-  
-  // Parse diagnostic points - find balanced JSON array
-  const pointsStartIndex = notes.indexOf('[DIAGNOSTICS:');
-  if (pointsStartIndex !== -1) {
-    const jsonStart = pointsStartIndex + '[DIAGNOSTICS:'.length;
-    const jsonContent = extractBalancedJson(notes, jsonStart);
-    if (jsonContent) {
-      try {
-        const parsed = JSON.parse(jsonContent);
-        points = Array.isArray(parsed) ? parsed.length : 0;
-      } catch (e) {
-        // Ignore parse errors
-      }
-    }
-  }
-  
-  // Parse diagnostic lines - find balanced JSON array
-  const linesStartIndex = notes.indexOf('[DIAGLINES:');
-  if (linesStartIndex !== -1) {
-    const jsonStart = linesStartIndex + '[DIAGLINES:'.length;
-    const jsonContent = extractBalancedJson(notes, jsonStart);
-    if (jsonContent) {
-      try {
-        const parsed = JSON.parse(jsonContent);
-        lines = Array.isArray(parsed) ? parsed.length : 0;
-      } catch (e) {
-        // Ignore parse errors
-      }
-    }
-  }
-  
-  return { points, lines };
-}
-
-function parseDiagnosticLabels(notes: string | null): { pointLabels: string[]; lineLabels: string[] } {
-  if (!notes) return { pointLabels: [], lineLabels: [] };
-
-  const pointLabels: string[] = [];
-  const lineLabels: string[] = [];
-
-  const pointsStartIndex = notes.indexOf('[DIAGNOSTICS:');
-  if (pointsStartIndex !== -1) {
-    const jsonStart = pointsStartIndex + '[DIAGNOSTICS:'.length;
-    const jsonContent = extractBalancedJson(notes, jsonStart);
-    if (jsonContent) {
-      try {
-        const parsed = JSON.parse(jsonContent);
-        if (Array.isArray(parsed)) {
-          parsed.forEach((p: any) => {
-            const label = typeof p?.label === 'string' ? p.label.trim() : '';
-            if (label) pointLabels.push(label);
-          });
-        }
-      } catch {
-        // ignore
-      }
-    }
-  }
-
-  const linesStartIndex = notes.indexOf('[DIAGLINES:');
-  if (linesStartIndex !== -1) {
-    const jsonStart = linesStartIndex + '[DIAGLINES:'.length;
-    const jsonContent = extractBalancedJson(notes, jsonStart);
-    if (jsonContent) {
-      try {
-        const parsed = JSON.parse(jsonContent);
-        if (Array.isArray(parsed)) {
-          parsed.forEach((l: any) => {
-            const label = typeof l?.label === 'string' ? l.label.trim() : '';
-            if (label) lineLabels.push(label);
-          });
-        }
-      } catch {
-        // ignore
-      }
-    }
-  }
-
-  // unique
-  return {
-    pointLabels: Array.from(new Set(pointLabels)),
-    lineLabels: Array.from(new Set(lineLabels)),
-  };
-}
-
-// Helper to get clean notes without diagnostic data
-function getCleanNotes(notes: string | null): string {
-  if (!notes) return '';
-  
-  let result = notes;
-
-  // Remove tagged technical data
-  result = stripTaggedBalanced(result, '[DIAGNOSTICS:');
-  result = stripTaggedBalanced(result, '[DIAGLINES:');
-
-  // Remove any orphaned leading JSON arrays from older broken regex-strips
-  result = stripOrphanLeadingJsonArray(result);
-
-  return result.replace(/^\n+|\n+$/g, '').trim();
-}
-
-// Helper to extract multiple statuses from notes
-function extractStatusesFromNotes(notes: string | null): string[] {
-  if (!notes) return [];
-  
-  const statusesStartIndex = notes.indexOf('[STATUSES:');
-  if (statusesStartIndex === -1) return [];
-  
-  const jsonStart = statusesStartIndex + '[STATUSES:'.length;
-  const jsonContent = extractBalancedJson(notes, jsonStart);
-  if (!jsonContent) return [];
-  
-  try {
-    const parsed = JSON.parse(jsonContent);
-    if (Array.isArray(parsed)) {
-      return parsed.filter((s): s is string => typeof s === 'string');
-    }
-  } catch {
-    // ignore
-  }
-  return [];
-}
 
 export interface ToothData {
   tooth_number: number;
@@ -248,38 +57,17 @@ const statusEnumToName: Record<string, string> = {
   'extraction_needed': 'Rest Radicular',
 };
 
-// Map display name to DB enum value
-const statusNameToEnum: Record<string, string> = {
-  'Sănătos': 'healthy',
-  'Carie': 'cavity',
-  'Obt Foto': 'filled',
-  'Coroană': 'crown',
-  'Absent': 'missing',
-  'Implant': 'implant',
-  'OBT Canal': 'root_canal',
-  'Rest Radicular': 'extraction_needed',
-  'RCR': 'extraction_needed',
-};
-
-export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange }: PatientDentalStatusTabProps) {
+export function PatientDentalStatusTab({ patientId, dentalStatus }: PatientDentalStatusTabProps) {
   const [hoveredTooth, setHoveredTooth] = useState<number | null>(null);
-  const [toothDialog, setToothDialog] = useState<{
-    open: boolean;
-    toothNumber: number;
-    status: string;
-    statuses: string[];
-    notes: string;
-  } | null>(null);
   const [allHistoryEntries, setAllHistoryEntries] = useState<ToothHistoryEntry[]>([]);
   
   const activeStatuses = TOOTH_STATUSES;
 
-  // Load all history entries
   useEffect(() => {
-    loadAllTeethHistoryFn();
+    loadAllTeethHistory();
   }, [patientId, dentalStatus]);
 
-  const loadAllTeethHistoryFn = async () => {
+  const loadAllTeethHistory = async () => {
     try {
       const { data, error } = await supabase
         .from('dental_status_history')
@@ -289,7 +77,6 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
 
       if (error) throw error;
       
-      // Fetch doctor names for changed_by user IDs
       const userIds = [...new Set((data || []).map(d => d.changed_by).filter(Boolean))];
       let doctorMap: Record<string, string> = {};
       
@@ -305,23 +92,18 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
         }, {} as Record<string, string>);
       }
       
-      const entriesWithDoctorNames = (data || []).map(entry => ({
+      setAllHistoryEntries((data || []).map(entry => ({
         ...entry,
         doctor_name: entry.changed_by ? doctorMap[entry.changed_by] || null : null
-      }));
-      
-      setAllHistoryEntries(entriesWithDoctorNames);
+      })));
     } catch (error) {
       console.error('Error loading all teeth history:', error);
     }
   };
 
-  // Group history entries by date
   const historyByDate = allHistoryEntries.reduce((acc, entry) => {
     const dateKey = format(new Date(entry.changed_at), 'yyyy-MM-dd');
-    if (!acc[dateKey]) {
-      acc[dateKey] = [];
-    }
+    if (!acc[dateKey]) acc[dateKey] = [];
     acc[dateKey].push(entry);
     return acc;
   }, {} as Record<string, ToothHistoryEntry[]>);
@@ -329,13 +111,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
   const getToothStatus = (toothNumber: number): string => {
     const tooth = dentalStatus.find((t) => t.tooth_number === toothNumber);
     if (!tooth) return 'Sănătos';
-    const displayName = statusEnumToName[tooth.status] || tooth.status;
-    return displayName;
-  };
-
-  const getToothNotes = (toothNumber: number): string | undefined => {
-    const tooth = dentalStatus.find((t) => t.tooth_number === toothNumber);
-    return tooth?.notes;
+    return statusEnumToName[tooth.status] || tooth.status;
   };
 
   const getStatusHexColor = (statusName: string): string | null => {
@@ -346,127 +122,8 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
     return statusEnumToName[status] || status;
   };
 
-  const openToothDialog = (toothNumber: number) => {
-    const currentStatus = getToothStatus(toothNumber);
-    const currentNotes = getToothNotes(toothNumber) || '';
-    
-    // Extract multiple statuses from notes if present
-    const savedStatuses = extractStatusesFromNotes(currentNotes);
-    // If no saved statuses, use current status (unless it's healthy/default)
-    const currentStatuses = savedStatuses.length > 0 
-      ? savedStatuses 
-      : (currentStatus && currentStatus !== 'Sănătos' ? [currentStatus] : []);
-    
-    setToothDialog({
-      open: true,
-      toothNumber,
-      status: currentStatus,
-      statuses: currentStatuses,
-      notes: currentNotes,
-    });
-  };
-
-  const handleSaveToothStatus = async (status: string, notes: string, statuses?: string[]) => {
-    if (!toothDialog) return;
-
-    try {
-      const oldStatus = getToothStatus(toothDialog.toothNumber);
-      const oldNotes = getToothNotes(toothDialog.toothNumber) || '';
-      
-      // Use primary status (first from statuses array or the single status)
-      const primaryStatus = statuses && statuses.length > 0 ? statuses[0] : status;
-      const dbStatus = statusNameToEnum[primaryStatus] || 'healthy';
-      const oldDbStatus = statusNameToEnum[oldStatus] || 'healthy';
-
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-
-      // Prepare notes
-      let finalNotes = notes.trim();
-
-      // Remove any existing tagged data from notes
-      finalNotes = stripTaggedBalanced(finalNotes, '[DIAGNOSTICS:');
-      finalNotes = stripTaggedBalanced(finalNotes, '[DIAGLINES:');
-      finalNotes = stripTaggedBalanced(finalNotes, '[STATUSES:');
-      finalNotes = stripOrphanLeadingJsonArray(finalNotes);
-      finalNotes = finalNotes.trim();
-
-      // Add multiple statuses if present
-      if (statuses && statuses.length > 1) {
-        const statusesJson = JSON.stringify(statuses);
-        finalNotes = finalNotes ? `${finalNotes}\n[STATUSES:${statusesJson}]` : `[STATUSES:${statusesJson}]`;
-      }
-
-      // Check if there are any changes (status, notes, diagnostics)
-      const hasStatusChange = oldDbStatus !== dbStatus;
-      const hasNotesChange = oldNotes !== finalNotes;
-      const hasAnyChange = hasStatusChange || hasNotesChange;
-
-      // Save history entry if anything changed
-      if (hasAnyChange) {
-        const { error: historyError } = await supabase
-          .from('dental_status_history')
-          .insert({
-            patient_id: patientId,
-            tooth_number: toothDialog.toothNumber,
-            old_status: oldDbStatus,
-            new_status: dbStatus,
-            notes: finalNotes || null,
-            changed_by: user?.id || null,
-          });
-
-        if (historyError) throw historyError;
-      }
-
-      // Upsert the dental status (and return row for state sync)
-      const { data: savedRow, error: upsertError } = await supabase
-        .from('dental_status')
-        .upsert({
-          patient_id: patientId,
-          tooth_number: toothDialog.toothNumber,
-          status: dbStatus as any,
-          notes: finalNotes || null,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'patient_id,tooth_number',
-        })
-        .select('tooth_number,status,notes')
-        .maybeSingle();
-
-      if (upsertError) throw upsertError;
-
-      const syncedStatus = savedRow?.status ?? dbStatus;
-      const syncedNotes = (savedRow?.notes ?? finalNotes) || '';
-
-      // Update local state
-      const newStatus = dentalStatus.filter(t => t.tooth_number !== toothDialog.toothNumber);
-      if (status !== 'Sănătos' || syncedNotes) {
-        newStatus.push({
-          tooth_number: toothDialog.toothNumber,
-          status: syncedStatus,
-          notes: syncedNotes || undefined,
-        });
-      }
-
-      onStatusChange?.(newStatus);
-
-      // Reload history after save if there were changes
-      if (hasAnyChange) {
-        await loadAllTeethHistoryFn();
-      }
-
-      toast.success('Status dentar salvat');
-      setToothDialog(null);
-    } catch (e: any) {
-      console.error('Save dental status failed:', e);
-      toast.error('Nu s-a putut salva. Verifică și încearcă din nou.');
-      throw e;
-    }
-  };
-
   const renderTooth = (toothNumber: number, isDeciduous: boolean = false, isLower: boolean = false) => {
     const status = getToothStatus(toothNumber);
-    const notes = getToothNotes(toothNumber);
     const isHovered = hoveredTooth === toothNumber;
     const toothImage = getToothImage(toothNumber);
     const hexColor = getStatusHexColor(status);
@@ -477,9 +134,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
       <div 
         key={toothNumber} 
         className="relative flex flex-col items-center group"
-        style={{ perspective: '500px' }}
       >
-        {/* Tooth number - above for upper teeth */}
         {!isLower && (
           <span className={cn(
             "text-[10px] font-semibold mb-1 transition-all duration-300",
@@ -490,28 +145,21 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
           </span>
         )}
         
-        <button
-          type="button"
-          onClick={() => openToothDialog(toothNumber)}
+        <div
           onMouseEnter={() => setHoveredTooth(toothNumber)}
           onMouseLeave={() => setHoveredTooth(null)}
           className={cn(
             'relative flex items-center justify-center rounded-lg overflow-hidden',
             'transition-all duration-300 ease-out',
-            'bg-muted/30',
-            'cursor-pointer p-1',
-            'hover:bg-muted/50',
+            'bg-muted/30 cursor-default p-1',
             isHovered && 'ring-2 ring-offset-1 ring-primary z-10',
             hasStatus && !isMissing && 'ring-2',
-            // Adjusted sizes for proper image framing
             isDeciduous 
               ? 'w-9 h-11 sm:w-10 sm:h-12' 
               : 'w-10 h-14 sm:w-11 sm:h-16'
           )}
           style={{
-            transform: isHovered 
-              ? 'scale(1.15) translateY(-4px)'
-              : 'scale(1) translateY(0)',
+            transform: isHovered ? 'scale(1.15) translateY(-4px)' : 'scale(1) translateY(0)',
             boxShadow: isHovered 
               ? hasStatus && hexColor 
                 ? `0 0 0 2px ${hexColor}, 0 8px 20px -4px ${hexColor}60, 0 4px 12px rgba(0,0,0,0.15)`
@@ -522,20 +170,16 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease-out',
           }}
         >
-          {/* Tooth image - properly framed */}
           {toothImage ? (
             <img 
               src={toothImage} 
               alt={`Dinte ${toothNumber}`}
               className={cn(
-                "w-full h-full object-contain",
-                "transition-all duration-300",
+                "w-full h-full object-contain transition-all duration-300",
                 isMissing && 'opacity-20 grayscale',
                 isLower && 'rotate-180',
               )}
               style={{
-                maxWidth: '100%',
-                maxHeight: '100%',
                 filter: isHovered && !isMissing 
                   ? 'brightness(1.1) drop-shadow(0 2px 4px rgba(0,0,0,0.2))' 
                   : undefined,
@@ -545,41 +189,22 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             <div className={cn(
               "w-full h-full flex items-center justify-center",
               "bg-gradient-to-b from-muted/40 to-muted/20 border-2 rounded-lg",
-              "transition-all duration-300",
               isDeciduous && 'border-dashed',
-              isHovered && 'from-muted/60 to-muted/40'
             )}>
-              <span className={cn(
-                "text-xs font-medium text-muted-foreground transition-colors duration-300",
-                isHovered && 'text-foreground'
-              )}>
+              <span className="text-xs font-medium text-muted-foreground">
                 {toothNumber}
               </span>
             </div>
           )}
           
-          {/* Status overlay with hover glow */}
           {hasStatus && hexColor && !isMissing && (
             <div 
               className="absolute inset-0 pointer-events-none rounded-lg transition-all duration-300"
-              style={{ 
-                backgroundColor: isHovered ? `${hexColor}50` : `${hexColor}30`,
-              }}
+              style={{ backgroundColor: isHovered ? `${hexColor}50` : `${hexColor}30` }}
             />
           )}
-
-          {/* Shine effect on hover */}
-          {isHovered && (
-            <div 
-              className="absolute inset-0 pointer-events-none rounded-lg overflow-hidden"
-              style={{
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 50%, transparent 100%)',
-              }}
-            />
-          )}
-        </button>
+        </div>
         
-        {/* Tooth number - below for lower teeth */}
         {isLower && (
           <span className={cn(
             "text-[10px] font-semibold mt-1 transition-all duration-300",
@@ -590,30 +215,14 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
           </span>
         )}
         
-        {/* Enhanced 3D Tooltip */}
         {isHovered && (
-          <div 
-            className={cn(
-              "absolute z-50 px-3 py-2 rounded-xl",
-              "bg-popover/95 backdrop-blur-sm border shadow-xl",
-              "text-xs whitespace-nowrap",
-              "animate-in fade-in-0 zoom-in-95 duration-200",
-              isLower ? 'top-full mt-2' : 'bottom-full mb-2',
-              "left-1/2 -translate-x-1/2"
-            )}
-            style={{
-              boxShadow: '0 10px 40px -10px rgba(0,0,0,0.3)',
-            }}
-          >
+          <div className={cn(
+            "absolute z-50 px-3 py-2 rounded-xl",
+            "bg-popover/95 backdrop-blur-sm border shadow-xl text-xs whitespace-nowrap",
+            isLower ? 'top-full mt-2' : 'bottom-full mb-2',
+            "left-1/2 -translate-x-1/2"
+          )}>
             <div className="font-semibold text-foreground">{status}</div>
-            {/* Tooltip arrow */}
-            <div 
-              className={cn(
-                "absolute left-1/2 -translate-x-1/2 w-2 h-2 rotate-45",
-                "bg-popover/95 border",
-                isLower ? '-top-1 border-t border-l' : '-bottom-1 border-b border-r'
-              )}
-            />
           </div>
         )}
       </div>
@@ -622,32 +231,28 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
 
   return (
     <div className="space-y-6">
-      {/* Enhanced 3D Legend */}
+      {/* Legend */}
       <div className="flex flex-wrap justify-center gap-2 text-xs">
         {activeStatuses.map((status) => (
           <div
             key={status.dbValue}
-            className="px-3 py-1.5 rounded-lg border-2 flex items-center gap-2 shadow-sm transition-all duration-200 hover:scale-105 cursor-default"
+            className="px-3 py-1.5 rounded-lg border-2 flex items-center gap-2 shadow-sm cursor-default"
             style={{
               backgroundColor: `${status.color}20`,
               borderColor: status.color,
               color: status.color,
             }}
           >
-            {/* Status indicator dot with glow */}
             <div 
               className="w-2 h-2 rounded-full"
-              style={{
-                backgroundColor: status.color,
-                boxShadow: `0 0 6px ${status.color}99`,
-              }}
+              style={{ backgroundColor: status.color, boxShadow: `0 0 6px ${status.color}99` }}
             />
             <span className="font-medium">{status.name}</span>
           </div>
         ))}
       </div>
 
-      {/* 3D Dental Chart Container */}
+      {/* Dental Chart */}
       <div 
         className="relative rounded-2xl p-4 sm:p-6"
         style={{
@@ -655,16 +260,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
           boxShadow: 'inset 0 2px 20px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1)',
         }}
       >
-        {/* Ambient light effect */}
-        <div 
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 pointer-events-none"
-          style={{
-            background: 'radial-gradient(ellipse at center top, rgba(255,255,255,0.15) 0%, transparent 70%)',
-          }}
-        />
-
         <div className="space-y-4 relative z-10">
-          {/* Upper jaw - permanent teeth */}
           <div className="space-y-2">
             <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase">
               Maxilar Superior — Dinți Permanenți
@@ -674,7 +270,6 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             </div>
           </div>
 
-          {/* Upper jaw - deciduous teeth */}
           <div className="space-y-2 mt-4">
             <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase opacity-70">
               Dinți Temporari — Superior
@@ -684,7 +279,6 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             </div>
           </div>
 
-          {/* Enhanced Divider with glow */}
           <div className="flex justify-center py-4">
             <div 
               className="w-full max-w-3xl h-px"
@@ -694,7 +288,6 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             />
           </div>
 
-          {/* Lower jaw - deciduous teeth */}
           <div className="space-y-2">
             <div className="flex justify-center gap-0.5 sm:gap-1">
               {lowerDeciduousTeeth.map(tooth => renderTooth(tooth, true, true))}
@@ -704,7 +297,6 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             </div>
           </div>
 
-          {/* Lower jaw - permanent teeth */}
           <div className="space-y-2 mt-4">
             <div className="flex justify-center gap-0.5 sm:gap-1">
               {lowerTeeth.map(tooth => renderTooth(tooth, false, true))}
@@ -714,34 +306,66 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             </div>
           </div>
         </div>
-
-        {/* Bottom shadow gradient */}
-        <div 
-          className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none"
-          style={{
-            background: 'linear-gradient(to top, hsl(var(--muted)/0.2) 0%, transparent 100%)',
-          }}
-        />
       </div>
 
-
-      {/* 3D Tooth Dialog */}
-      {toothDialog && (
-        <Tooth3DDialog
-          open={toothDialog.open}
-          onOpenChange={(open) => {
-            if (!open) setToothDialog(null);
-          }}
-          toothNumber={toothDialog.toothNumber}
-          currentStatus={toothDialog.status}
-          currentStatuses={toothDialog.statuses}
-          currentNotes={toothDialog.notes}
-          patientId={patientId}
-          activeStatuses={activeStatuses}
-          onSave={handleSaveToothStatus}
-          getStatusHexColor={getStatusHexColor}
-          getStatusDisplayName={getStatusDisplayName}
-        />
+      {/* History */}
+      {allHistoryEntries.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium flex items-center gap-2">
+            <History className="h-4 w-4" />
+            Istoric modificări
+          </h3>
+          <div className="space-y-1">
+            {Object.entries(historyByDate)
+              .sort(([a], [b]) => b.localeCompare(a))
+              .slice(0, 5)
+              .map(([dateKey, entries]) => (
+                <Collapsible key={dateKey}>
+                  <CollapsibleTrigger asChild>
+                    <button className="w-full flex items-center justify-between bg-muted/50 hover:bg-muted/70 rounded-lg px-3 py-2 transition-colors cursor-pointer">
+                      <div className="flex items-center gap-2">
+                        <History className="h-3.5 w-3.5 text-primary" />
+                        <span className="text-xs font-medium">
+                          {format(new Date(dateKey), 'd MMMM yyyy', { locale: ro })} ({entries.length})
+                        </span>
+                      </div>
+                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="ml-2 mt-1 space-y-1 border-l-2 border-muted pl-3">
+                      {entries.map((entry) => {
+                        const oldColor = getStatusHexColor(getStatusDisplayName(entry.old_status || 'healthy'));
+                        const newColor = getStatusHexColor(getStatusDisplayName(entry.new_status));
+                        return (
+                          <div key={entry.id} className="py-2 flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-sm">
+                              <span className="text-xs text-muted-foreground">#{entry.tooth_number}</span>
+                              {entry.old_status && (
+                                <>
+                                  <Badge variant="outline" className="text-xs" style={{ backgroundColor: oldColor ? `${oldColor}20` : undefined, borderColor: oldColor || undefined, color: oldColor || undefined }}>
+                                    {getStatusDisplayName(entry.old_status)}
+                                  </Badge>
+                                  <span className="text-muted-foreground">→</span>
+                                </>
+                              )}
+                              <Badge variant="outline" className="text-xs" style={{ backgroundColor: newColor ? `${newColor}20` : undefined, borderColor: newColor || undefined, color: newColor || undefined }}>
+                                {getStatusDisplayName(entry.new_status)}
+                              </Badge>
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {entry.doctor_name && <span className="font-medium mr-1">{entry.doctor_name} •</span>}
+                              {format(new Date(entry.changed_at), 'HH:mm')}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              ))}
+          </div>
+        </div>
       )}
     </div>
   );
