@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { format, parse } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Search, Trash2, UserPlus, FileText, Smile, FileImage, ClipboardPlus, AlertTriangle, Calendar, RotateCcw, CalendarDays, Check } from 'lucide-react';
+import { Search, Trash2, UserPlus, FileText, Smile, FileImage, ClipboardPlus, AlertTriangle, Calendar, RotateCcw, CalendarDays, Check, Printer, Bell, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -101,6 +101,9 @@ interface AppointmentFormProps {
   onViewPatient?: (patient: Patient) => void;
   onViewDentalStatus?: (patient: Patient) => void;
   onViewRadiographs?: (patient: Patient) => void;
+  onViewPrintables?: (patient: Patient) => void;
+  onViewReminder?: (patient: Patient) => void;
+  onSendWhatsApp?: (patient: Patient) => void;
   selectedDate: Date;
   onDateChange?: (date: Date) => void;
   selectedTime?: string;
@@ -145,6 +148,9 @@ export function AppointmentForm({
   onViewPatient,
   onViewDentalStatus,
   onViewRadiographs,
+  onViewPrintables,
+  onViewReminder,
+  onSendWhatsApp,
   selectedDate,
   onDateChange,
   selectedTime,
@@ -804,6 +810,51 @@ export function AppointmentForm({
                     >
                       <FileImage className="h-3.5 w-3.5" />
                       Imagistică
+                    </Button>
+                   )}
+                  {formData.patientId && onViewPrintables && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      title="Printabile"
+                      onClick={() => {
+                        const patient = patients.find(p => p.id === formData.patientId);
+                        if (patient) onViewPrintables(patient);
+                      }}
+                    >
+                      <Printer className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                  {formData.patientId && onViewReminder && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 text-orange-500 hover:text-orange-600"
+                      title="Rechemare"
+                      onClick={() => {
+                        const patient = patients.find(p => p.id === formData.patientId);
+                        if (patient) onViewReminder(patient);
+                      }}
+                    >
+                      <Bell className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                  {formData.patientId && onSendWhatsApp && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 text-green-600 hover:text-green-700"
+                      title="WhatsApp"
+                      onClick={() => {
+                        const patient = patients.find(p => p.id === formData.patientId);
+                        if (patient) onSendWhatsApp(patient);
+                      }}
+                    >
+                      <MessageSquare className="h-3.5 w-3.5" />
                     </Button>
                   )}
                   <Button

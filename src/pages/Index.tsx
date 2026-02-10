@@ -1000,6 +1000,28 @@ const Index = () => {
           setPatientDetailsInitialTab('radiographs');
           setSelectedPatient(patient);
         }}
+        onViewPrintables={() => {
+          setShowAppointmentForm(false);
+          pushNavState({ tab: 'printabile' });
+          setActiveTab('printabile');
+        }}
+        onViewReminder={(patient) => {
+          setShowAppointmentForm(false);
+          pushNavState({ 
+            tab: 'patients', 
+            patientId: patient.id, 
+            patientName: `${patient.first_name} ${patient.last_name}` 
+          });
+          setPatientDetailsInitialTab('info');
+          setSelectedPatient(patient);
+          // Navigate to reminders sub-tab in patients
+          setActiveTab('patients');
+        }}
+        onSendWhatsApp={() => {
+          setShowAppointmentForm(false);
+          pushNavState({ tab: 'whatsapp' });
+          setActiveTab('whatsapp');
+        }}
         selectedDate={selectedDate}
         onDateChange={(newDate) => setSelectedDate(newDate)}
         selectedTime={selectedTime}
