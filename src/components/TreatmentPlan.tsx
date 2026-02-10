@@ -556,7 +556,7 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
     const printWindow = window.open('', '', 'width=800,height=600');
     if (!printWindow) return;
 
-    printWindow.document.write(`
+    const html = `
       <html>
         <head>
           <title>Plan de Tratament</title>
@@ -599,9 +599,31 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
           ${printContent.innerHTML}
         </body>
       </html>
-    `);
+    `;
+    printWindow.document.write(html);
     printWindow.document.close();
-    printWindow.print();
+    // Wait for all images to load before printing
+    const images = printWindow.document.querySelectorAll('img');
+    let loaded = 0;
+    const total = images.length;
+    if (total === 0) {
+      printWindow.print();
+      return;
+    }
+    const onImageReady = () => {
+      loaded++;
+      if (loaded >= total) {
+        printWindow.print();
+      }
+    };
+    images.forEach(img => {
+      if (img.complete) {
+        onImageReady();
+      } else {
+        img.addEventListener('load', onImageReady);
+        img.addEventListener('error', onImageReady);
+      }
+    });
   };
 
   return (
@@ -986,13 +1008,14 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
             {/* Dental Chart Visual with anatomical images */}
             {(() => {
               const selectedTeeth = new Set(planItems.flatMap(item => item.toothNumbers));
+              const toAbsolute = (src: string) => src.startsWith('http') ? src : `${window.location.origin}${src}`;
               return (
                 <div className="dental-chart">
                   <div className="dental-row">
                     {[18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28].map(tooth => (
                       <div key={tooth} className={`tooth ${selectedTeeth.has(tooth) ? 'selected' : ''}`}>
                         {selectedTeeth.has(tooth) && <span className="checkmark">✓</span>}
-                        <img src={toothImages[tooth]} alt={`${tooth}`} />
+                        <img src={toAbsolute(toothImages[tooth])} alt={`${tooth}`} />
                         <span className="tooth-number">{tooth}</span>
                       </div>
                     ))}
@@ -1001,7 +1024,7 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
                     {[48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38].map(tooth => (
                       <div key={tooth} className={`tooth lower ${selectedTeeth.has(tooth) ? 'selected' : ''}`}>
                         {selectedTeeth.has(tooth) && <span className="checkmark">✓</span>}
-                        <img src={toothImages[tooth]} alt={`${tooth}`} />
+                        <img src={toAbsolute(toothImages[tooth])} alt={`${tooth}`} />
                         <span className="tooth-number">{tooth}</span>
                       </div>
                     ))}
