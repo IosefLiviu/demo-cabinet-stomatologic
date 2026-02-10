@@ -1,9 +1,6 @@
-import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
-import { ro } from 'date-fns/locale';
-import { ChevronDown, ChevronUp, History } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -12,11 +9,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { toast } from '@/hooks/use-toast';
 import { TOOTH_STATUSES, getStatusHexColor as getStatusHexColorUtil } from '@/constants/toothStatuses';
 import { getToothImage } from './dental/toothImages';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 
 export interface ToothData {
   tooth_number: number;
@@ -24,16 +16,6 @@ export interface ToothData {
   notes?: string;
 }
 
-interface ToothHistoryEntry {
-  id: string;
-  tooth_number: number;
-  old_status: string | null;
-  new_status: string;
-  notes: string | null;
-  changed_at: string;
-  changed_by: string | null;
-  doctor_name?: string | null;
-}
 
 interface PatientDentalStatusTabProps {
   patientId: string;
@@ -66,54 +48,10 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
   const [dialogNotes, setDialogNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
-  const [allHistoryEntries, setAllHistoryEntries] = useState<ToothHistoryEntry[]>([]);
+  
   
   const activeStatuses = TOOTH_STATUSES;
 
-  useEffect(() => {
-    loadAllTeethHistory();
-  }, [patientId, dentalStatus]);
-
-  const loadAllTeethHistory = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('dental_status_history')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('changed_at', { ascending: false });
-
-      if (error) throw error;
-      
-      const userIds = [...new Set((data || []).map(d => d.changed_by).filter(Boolean))];
-      let doctorMap: Record<string, string> = {};
-      
-      if (userIds.length > 0) {
-        const { data: doctorsData } = await supabase
-          .from('doctors')
-          .select('user_id, name')
-          .in('user_id', userIds);
-        
-        doctorMap = (doctorsData || []).reduce((acc, doc) => {
-          if (doc.user_id) acc[doc.user_id] = doc.name;
-          return acc;
-        }, {} as Record<string, string>);
-      }
-      
-      setAllHistoryEntries((data || []).map(entry => ({
-        ...entry,
-        doctor_name: entry.changed_by ? doctorMap[entry.changed_by] || null : null
-      })));
-    } catch (error) {
-      console.error('Error loading all teeth history:', error);
-    }
-  };
-
-  const historyByDate = allHistoryEntries.reduce((acc, entry) => {
-    const dateKey = format(new Date(entry.changed_at), 'yyyy-MM-dd');
-    if (!acc[dateKey]) acc[dateKey] = [];
-    acc[dateKey].push(entry);
-    return acc;
-  }, {} as Record<string, ToothHistoryEntry[]>);
 
   const getToothStatus = (toothNumber: number): string => {
     const tooth = dentalStatus.find((t) => t.tooth_number === toothNumber);
@@ -344,65 +282,6 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
         </div>
       </div>
 
-      {/* History */}
-      {allHistoryEntries.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium flex items-center gap-2">
-            <History className="h-4 w-4" />
-            Istoric modificări
-          </h3>
-          <div className="space-y-1">
-            {Object.entries(historyByDate)
-              .sort(([a], [b]) => b.localeCompare(a))
-              .slice(0, 5)
-              .map(([dateKey, entries]) => (
-                <Collapsible key={dateKey}>
-                  <CollapsibleTrigger asChild>
-                    <button className="w-full flex items-center justify-between bg-muted/50 hover:bg-muted/70 rounded-lg px-3 py-2 transition-colors cursor-pointer">
-                      <div className="flex items-center gap-2">
-                        <History className="h-3.5 w-3.5 text-primary" />
-                        <span className="text-xs font-medium">
-                          {format(new Date(dateKey), 'd MMMM yyyy', { locale: ro })} ({entries.length})
-                        </span>
-                      </div>
-                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-                    </button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="ml-2 mt-1 space-y-1 border-l-2 border-muted pl-3">
-                      {entries.map((entry) => {
-                        const oldColor = getStatusHexColor(getStatusDisplayName(entry.old_status || 'healthy'));
-                        const newColor = getStatusHexColor(getStatusDisplayName(entry.new_status));
-                        return (
-                          <div key={entry.id} className="py-2 flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-sm">
-                              <span className="text-xs text-muted-foreground">#{entry.tooth_number}</span>
-                              {entry.old_status && (
-                                <>
-                                  <Badge variant="outline" className="text-xs" style={{ backgroundColor: oldColor ? `${oldColor}20` : undefined, borderColor: oldColor || undefined, color: oldColor || undefined }}>
-                                    {getStatusDisplayName(entry.old_status)}
-                                  </Badge>
-                                  <span className="text-muted-foreground">→</span>
-                                </>
-                              )}
-                              <Badge variant="outline" className="text-xs" style={{ backgroundColor: newColor ? `${newColor}20` : undefined, borderColor: newColor || undefined, color: newColor || undefined }}>
-                                {getStatusDisplayName(entry.new_status)}
-                              </Badge>
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                              {entry.doctor_name && <span className="font-medium mr-1">{entry.doctor_name} •</span>}
-                              {format(new Date(entry.changed_at), 'HH:mm')}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-              ))}
-          </div>
-        </div>
-      )}
       {/* Tooth notes dialog */}
       <Dialog open={selectedTooth !== null} onOpenChange={(open) => !open && setSelectedTooth(null)}>
         <DialogContent className="sm:max-w-[400px]">
