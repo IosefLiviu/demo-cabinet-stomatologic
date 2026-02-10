@@ -689,6 +689,7 @@ const Index = () => {
           {activeTab === 'calendar' && (
             <div className="sticky top-14 sm:top-16 z-30 bg-background py-2 border-b border-border -mx-1 px-1 sm:-mx-2 sm:px-2 lg:-mx-4 lg:px-4 space-y-2 md:space-y-0">
               {/* Row 1: Date navigator + Doctor filter + action buttons */}
+              {/* Row 1: Date navigator + Doctor filter + Cabinet tabs + action buttons */}
               <div className="flex items-center gap-2 flex-wrap">
                 <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
                 <DoctorFilter
@@ -696,6 +697,14 @@ const Index = () => {
                   selectedDoctorId={selectedDoctorFilter}
                   onDoctorChange={setSelectedDoctorFilter}
                 />
+                <div className="hidden md:flex md:items-center md:gap-2">
+                  <div className="border-l border-border h-6 mx-1" />
+                  <CabinetTabs
+                    selectedCabinet={selectedCabinet}
+                    onSelectCabinet={setSelectedCabinet}
+                    cabinets={cabinets}
+                  />
+                </div>
                 <div className="flex gap-2 ml-auto">
                   <AppointmentSearch
                     appointments={legacyAppointments}
@@ -726,17 +735,8 @@ const Index = () => {
                   </Button>
                 </div>
               </div>
-              {/* Row 2: Cabinet tabs - separate row on mobile */}
+              {/* Row 2: Cabinet tabs - mobile only */}
               <div className="flex items-center gap-2 mt-2 md:hidden">
-                <CabinetTabs
-                  selectedCabinet={selectedCabinet}
-                  onSelectCabinet={setSelectedCabinet}
-                  cabinets={cabinets}
-                />
-              </div>
-              {/* Desktop inline cabinet tabs */}
-              <div className="hidden md:flex md:items-center md:gap-2 md:mt-4">
-                <div className="border-l border-border h-6 mx-1" />
                 <CabinetTabs
                   selectedCabinet={selectedCabinet}
                   onSelectCabinet={setSelectedCabinet}
