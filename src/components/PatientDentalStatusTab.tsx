@@ -286,26 +286,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
 
   return (
     <div className="space-y-6">
-      {/* Legend */}
-      <div className="flex flex-wrap justify-center gap-2 text-xs">
-        {activeStatuses.map((status) => (
-          <div
-            key={status.dbValue}
-            className="px-3 py-1.5 rounded-lg border-2 flex items-center gap-2 shadow-sm cursor-default"
-            style={{
-              backgroundColor: `${status.color}20`,
-              borderColor: status.color,
-              color: status.color,
-            }}
-          >
-            <div 
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: status.color, boxShadow: `0 0 6px ${status.color}99` }}
-            />
-            <span className="font-medium">{status.name}</span>
-          </div>
-        ))}
-      </div>
+
 
       {/* Dental Chart */}
       <div 
