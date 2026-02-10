@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Loader2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { useToothStatuses } from '@/hooks/useToothStatuses';
 import { getToothImage } from './dental/toothImages';
 import { toast } from 'sonner';
 import {
@@ -45,27 +44,31 @@ export function PatientDentalChart({ patientId, dentalStatus, onStatusChange, re
     notes: string;
   } | null>(null);
   const [saving, setSaving] = useState(false);
-  
-  const { activeStatuses } = useToothStatuses();
+
+  // Hardcoded statuses based on DB enum
+  const statusList = [
+    { name: 'Sănătos', color: '#10B981', dbValue: 'healthy' },
+    { name: 'Carie', color: '#EF4444', dbValue: 'cavity' },
+    { name: 'Obt Foto', color: '#3B82F6', dbValue: 'filled' },
+    { name: 'Coroană', color: '#F59E0B', dbValue: 'crown' },
+    { name: 'Absent', color: '#6B7280', dbValue: 'missing' },
+    { name: 'Implant', color: '#8B5CF6', dbValue: 'implant' },
+    { name: 'OBT Canal', color: '#EC4899', dbValue: 'root_canal' },
+    { name: 'Rest Radicular', color: '#F97316', dbValue: 'extraction_needed' },
+  ];
 
   // Map DB enum values to display names
-  const statusEnumToName: Record<string, string> = {
-    'healthy': 'Sănătos',
-    'cavity': 'Carie',
-    'filled': 'Obt Foto',
-    'crown': 'Coroană',
-    'missing': 'Absent',
-    'implant': 'Implant',
-    'root_canal': 'OBT Canal',
-    'extraction_needed': 'Rest Radicular',
-  };
+  const statusEnumToName: Record<string, string> = {};
+  const statusNameToEnum: Record<string, string> = {};
+  statusList.forEach(s => {
+    statusEnumToName[s.dbValue] = s.name;
+    statusNameToEnum[s.name] = s.dbValue;
+  });
 
   const getToothStatus = (toothNumber: number): string => {
     const tooth = dentalStatus.find((t) => t.tooth_number === toothNumber);
     if (!tooth) return 'Sănătos';
-    // Convert DB enum to display name if needed
-    const displayName = statusEnumToName[tooth.status] || tooth.status;
-    return displayName;
+    return statusEnumToName[tooth.status] || tooth.status;
   };
 
   const getToothNotes = (toothNumber: number): string | undefined => {
@@ -74,8 +77,8 @@ export function PatientDentalChart({ patientId, dentalStatus, onStatusChange, re
   };
 
   const getStatusHexColor = (statusName: string): string | null => {
-    const dbStatus = activeStatuses.find(s => s.name.toLowerCase() === statusName.toLowerCase());
-    return dbStatus?.color || null;
+    const found = statusList.find(s => s.name.toLowerCase() === statusName.toLowerCase());
+    return found?.color || null;
   };
 
   const openToothDialog = (toothNumber: number) => {
@@ -91,18 +94,8 @@ export function PatientDentalChart({ patientId, dentalStatus, onStatusChange, re
     });
   };
 
-  // Map display name to DB enum value
-  const statusNameToEnum: Record<string, string> = {
-    'Sănătos': 'healthy',
-    'Carie': 'cavity',
-    'Obt Foto': 'filled',
-    'Coroană': 'crown',
-    'Absent': 'missing',
-    'Implant': 'implant',
-    'OBT Canal': 'root_canal',
-    'Rest Radicular': 'extraction_needed',
-    'RCR': 'extraction_needed',
-  };
+  // Add RCR alias
+  statusNameToEnum['RCR'] = 'extraction_needed';
 
   const handleSaveToothDialog = async () => {
     if (!toothDialog) return;
@@ -241,9 +234,9 @@ export function PatientDentalChart({ patientId, dentalStatus, onStatusChange, re
     <div className="space-y-4">
       {/* Legend */}
       <div className="flex flex-wrap gap-2 text-xs">
-        {activeStatuses.map((status) => (
+        {statusList.map((status) => (
           <div
-            key={status.id}
+            key={status.dbValue}
             className="px-2 py-1 rounded-md border flex items-center gap-1.5"
             style={{
               backgroundColor: `${status.color}20`,
@@ -315,11 +308,11 @@ export function PatientDentalChart({ patientId, dentalStatus, onStatusChange, re
             <div className="space-y-2">
               <Label>Status</Label>
               <div className="grid grid-cols-4 gap-2">
-                {activeStatuses.map((status) => {
+                {statusList.map((status) => {
                   const isSelected = toothDialog?.status === status.name;
                   return (
                     <button
-                      key={status.id}
+                      key={status.dbValue}
                       type="button"
                       onClick={() => setToothDialog(prev => prev ? { ...prev, status: status.name } : null)}
                       className={cn(
