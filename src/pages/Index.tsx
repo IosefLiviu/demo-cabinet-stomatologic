@@ -30,6 +30,7 @@ import { DoctorScheduleManagement } from '@/components/DoctorScheduleManagement'
 import { WhatsAppInbox } from '@/components/WhatsAppInbox';
 import { LaboratoryTab } from '@/components/LaboratoryTab';
 import { PatientRemindersPanel } from '@/components/PatientRemindersPanel';
+import { PatientReminderDialog } from '@/components/PatientReminderDialog';
 import { useWhatsAppMessages } from '@/hooks/useWhatsAppMessages';
 import { usePendingReminders } from '@/hooks/usePatientReminders';
 import { Button } from '@/components/ui/button';
@@ -98,6 +99,7 @@ const Index = () => {
     status?: string;
   } | undefined>();
   const [existingInterventions, setExistingInterventions] = useState<SelectedIntervention[]>([]);
+  const [reminderDialogPatient, setReminderDialogPatient] = useState<Patient | null>(null);
 
   // Complete appointment dialog state
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
@@ -1006,16 +1008,7 @@ const Index = () => {
           setActiveTab('printabile');
         }}
         onViewReminder={(patient) => {
-          setShowAppointmentForm(false);
-          pushNavState({ 
-            tab: 'patients', 
-            patientId: patient.id, 
-            patientName: `${patient.first_name} ${patient.last_name}` 
-          });
-          setPatientDetailsInitialTab('info');
-          setSelectedPatient(patient);
-          // Navigate to reminders sub-tab in patients
-          setActiveTab('patients');
+          setReminderDialogPatient(patient);
         }}
         onSendWhatsApp={() => {
           setShowAppointmentForm(false);
@@ -1036,6 +1029,16 @@ const Index = () => {
         userDoctorId={doctorId}
         checkOverlap={checkOverlap}
       />
+
+      {/* Patient Reminder Dialog from Appointment Form */}
+      {reminderDialogPatient && (
+        <PatientReminderDialog
+          open={!!reminderDialogPatient}
+          onClose={() => setReminderDialogPatient(null)}
+          patientId={reminderDialogPatient.id}
+          patientName={`${reminderDialogPatient.last_name} ${reminderDialogPatient.first_name}`}
+        />
+      )}
 
       {/* Cabinet Settings */}
       <CabinetSettings
