@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
-import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, Radio, FileText, Pill, UserCheck, Printer, Stethoscope, ClipboardList, FlaskConical, Package, List, Home, CalendarClock, MessageSquare, FlaskRound, Bell, FileSignature, BadgeCheck } from 'lucide-react';
+import { Plus, Users, Calendar as CalendarIcon, BarChart3, Wallet, FileText, Pill, UserCheck, Printer, Stethoscope, ClipboardList, Package, List, Home, CalendarClock, MessageSquare, FlaskRound, Bell } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/Header';
 import { DateNavigator } from '@/components/DateNavigator';
@@ -15,15 +15,7 @@ import { SelectedIntervention } from '@/components/InterventionSelector';
 import { ReportsDashboard } from '@/components/ReportsDashboard';
 import { MonthlyExpenses } from '@/components/MonthlyExpenses';
 import { TreatmentPlan } from '@/components/TreatmentPlan';
-import { RadiologyReferral } from '@/components/RadiologyReferral';
-import { SpecialistReferral } from '@/components/SpecialistReferral';
-import { LabTestReferral } from '@/components/LabTestReferral';
-import { InformedConsentForm } from '@/components/InformedConsentForm';
-import { MedicalCertificate } from '@/components/MedicalCertificate';
-import ProtocolsIndicatii from '@/components/ProtocolsIndicatii';
-import BillingInvoice from '@/components/BillingInvoice';
-import PrescriptionForm from '@/components/PrescriptionForm';
-import PatientInformation from '@/components/PatientInformation';
+import { PrintablesSection } from '@/components/PrintablesSection';
 import { CabinetSettings } from '@/components/CabinetSettings';
 import { CompleteAppointmentDialog, PaymentData } from '@/components/CompleteAppointmentDialog';
 import { EditPaymentDialog } from '@/components/EditPaymentDialog';
@@ -838,85 +830,7 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="printabile">
-            <Tabs defaultValue="radiology-referral" className="space-y-4">
-              <TabsList className="flex w-full h-auto gap-1 overflow-x-auto scrollbar-hide flex-nowrap md:flex-wrap">
-                <TabsTrigger value="radiology-referral" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 shrink-0">
-                  <Radio className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>Radiologie</span>
-                </TabsTrigger>
-                <TabsTrigger value="billing" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 shrink-0">
-                  <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>Proforma</span>
-                </TabsTrigger>
-                <TabsTrigger value="prescription" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 shrink-0">
-                  <Pill className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>Rețetă</span>
-                </TabsTrigger>
-                <TabsTrigger value="patient-info" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 shrink-0">
-                  <UserCheck className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>Informare</span>
-                </TabsTrigger>
-                <TabsTrigger value="specialist-referral" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 shrink-0">
-                  <Stethoscope className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>Trimitere M. Specialist</span>
-                </TabsTrigger>
-                <TabsTrigger value="lab-test-referral" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 shrink-0">
-                  <FlaskConical className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>Trimitere Analize</span>
-                </TabsTrigger>
-                <TabsTrigger value="informed-consent" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 shrink-0">
-                  <FileSignature className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>Consimțământ</span>
-                </TabsTrigger>
-                <TabsTrigger value="medical-certificate" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 shrink-0">
-                  <BadgeCheck className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>Adeverință</span>
-                </TabsTrigger>
-                <TabsTrigger value="protocols" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 shrink-0">
-                  <ClipboardList className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>Protocoale & Indicații</span>
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="radiology-referral">
-                <RadiologyReferral
-                  patients={patients}
-                  doctors={doctors}
-                />
-              </TabsContent>
-
-              <TabsContent value="billing">
-                <BillingInvoice patients={patients} />
-              </TabsContent>
-
-              <TabsContent value="prescription">
-                <PrescriptionForm patients={patients} doctors={doctors} />
-              </TabsContent>
-
-              <TabsContent value="patient-info">
-                <PatientInformation patients={patients} doctors={doctors} />
-              </TabsContent>
-
-              <TabsContent value="specialist-referral">
-                <SpecialistReferral patients={patients} doctors={doctors} />
-              </TabsContent>
-
-              <TabsContent value="lab-test-referral">
-                <LabTestReferral patients={patients} doctors={doctors} />
-              </TabsContent>
-
-              <TabsContent value="informed-consent">
-                <InformedConsentForm patients={patients} doctors={doctors} />
-              </TabsContent>
-
-              <TabsContent value="medical-certificate">
-                <MedicalCertificate patients={patients} doctors={doctors} />
-              </TabsContent>
-
-              <TabsContent value="protocols">
-                <ProtocolsIndicatii />
-              </TabsContent>
-            </Tabs>
+            <PrintablesSection patients={patients} doctors={doctors} />
           </TabsContent>
 
           {isAdmin && (
