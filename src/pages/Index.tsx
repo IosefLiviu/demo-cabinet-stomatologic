@@ -607,50 +607,28 @@ const Index = () => {
         );
       case 'patients':
         return (
-          <Tabs defaultValue="patients-list" className="space-y-4">
-            <TabsList className="flex w-full h-auto gap-1">
-              <TabsTrigger value="patients-list" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-                <List className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span>Listă Pacienți</span>
-              </TabsTrigger>
-              <TabsTrigger value="reminders" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-                <Bell className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span>Rechemări</span>
-                {pendingReminders.length > 0 && (
-                  <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-medium text-white">
-                    {pendingReminders.length}
-                  </span>
-                )}
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="patients-list">
-              <PatientsList
-                patients={patients}
-                loading={patientsLoading}
-                onEdit={handleEditPatient}
-                onDelete={deletePatient}
-                onAddNew={() => {
-                  setEditingPatient(undefined);
-                  setShowPatientForm(true);
-                }}
-                onViewDetails={(patient) => {
-                  pushNavState({ 
-                    tab: 'patients', 
-                    patientId: patient.id, 
-                    patientName: `${patient.first_name} ${patient.last_name}` 
-                  });
-                  setSelectedPatient(patient);
-                }}
-                onRefetch={refetchPatients}
-              />
-            </TabsContent>
-
-            <TabsContent value="reminders">
-              <PatientRemindersPanel />
-            </TabsContent>
-          </Tabs>
+          <PatientsList
+            patients={patients}
+            loading={patientsLoading}
+            onEdit={handleEditPatient}
+            onDelete={deletePatient}
+            onAddNew={() => {
+              setEditingPatient(undefined);
+              setShowPatientForm(true);
+            }}
+            onViewDetails={(patient) => {
+              pushNavState({ 
+                tab: 'patients', 
+                patientId: patient.id, 
+                patientName: `${patient.first_name} ${patient.last_name}` 
+              });
+              setSelectedPatient(patient);
+            }}
+            onRefetch={refetchPatients}
+          />
         );
+      case 'reminders':
+        return <PatientRemindersPanel />;
       case 'reports':
         return (
           <div className="space-y-4">
@@ -709,6 +687,7 @@ const Index = () => {
             isAdmin={isAdmin}
             isReception={isReception}
             unreadCount={unreadCount}
+            pendingRemindersCount={pendingReminders.length}
           />
 
           <main className="flex-1 min-w-0 w-full">
