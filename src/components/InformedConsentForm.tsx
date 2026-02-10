@@ -262,6 +262,7 @@ export function InformedConsentForm({ patients, doctors }: InformedConsentFormPr
                         placeholder="Caută pacient..."
                         value={patientSearch}
                         onChange={(e) => setPatientSearch(e.target.value)}
+                        onKeyDown={(e) => e.stopPropagation()}
                         className="pl-8"
                       />
                     </div>

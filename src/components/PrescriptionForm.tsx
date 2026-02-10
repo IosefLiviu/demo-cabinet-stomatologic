@@ -744,6 +744,7 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
                           placeholder="Caută pacient..."
                           value={patientSearch}
                           onChange={(e) => setPatientSearch(e.target.value)}
+                          onKeyDown={(e) => e.stopPropagation()}
                           className="mb-2"
                         />
                       </div>
