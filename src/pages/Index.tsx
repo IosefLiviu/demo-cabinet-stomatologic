@@ -20,7 +20,7 @@ import { CabinetSettings } from '@/components/CabinetSettings';
 import { CompleteAppointmentDialog, PaymentData } from '@/components/CompleteAppointmentDialog';
 import { EditPaymentDialog } from '@/components/EditPaymentDialog';
 import { CancelAppointmentDialog } from '@/components/CancelAppointmentDialog';
-import { NavigationButtons } from '@/components/NavigationButtons';
+
 import { AvailableSlotsSearch } from '@/components/AvailableSlotsSearch';
 import { AppointmentSearch } from '@/components/AppointmentSearch';
 import { StockManagement } from '@/components/StockManagement';
@@ -189,49 +189,6 @@ const Index = () => {
     setNavIndex(prev => prev + 1);
   }, [navIndex]);
 
-  const handleNavBack = useCallback(() => {
-    if (navIndex > 0) {
-      isNavigatingRef.current = true;
-      const prevState = navHistory[navIndex - 1];
-      setNavIndex(navIndex - 1);
-      
-      // Apply the previous state
-      setActiveTab(prevState.tab);
-      if (prevState.patientId) {
-        const patient = patients.find(p => p.id === prevState.patientId);
-        if (patient) {
-          setSelectedPatient(patient);
-        }
-      } else {
-        setSelectedPatient(null);
-      }
-      setTreatmentPlanSourcePatient(null);
-    }
-  }, [navIndex, navHistory, patients]);
-
-  const handleNavForward = useCallback(() => {
-    if (navIndex < navHistory.length - 1) {
-      isNavigatingRef.current = true;
-      const nextState = navHistory[navIndex + 1];
-      setNavIndex(navIndex + 1);
-      
-      // Apply the next state
-      setActiveTab(nextState.tab);
-      if (nextState.patientId) {
-        const patient = patients.find(p => p.id === nextState.patientId);
-        if (patient) {
-          setSelectedPatient(patient);
-        }
-      } else {
-        setSelectedPatient(null);
-      }
-    }
-  }, [navIndex, navHistory, patients]);
-
-  const canGoBack = navIndex > 0;
-  const canGoForward = navIndex < navHistory.length - 1;
-  const previousState = navIndex > 0 ? navHistory[navIndex - 1] : null;
-  const nextState = navIndex < navHistory.length - 1 ? navHistory[navIndex + 1] : null;
 
   // Track tab changes for navigation history
   const handleTabChange = useCallback((tab: string) => {
@@ -758,14 +715,6 @@ const Index = () => {
             {/* Top bar with navigation + sidebar trigger + calendar controls */}
             <div className="flex items-center gap-2 px-1 sm:px-2 lg:px-4 py-2 border-b border-border">
               <SidebarTrigger />
-              <NavigationButtons
-                canGoBack={canGoBack}
-                canGoForward={canGoForward}
-                previousLabel={previousState?.patientName || previousState?.tab}
-                nextLabel={nextState?.patientName || nextState?.tab}
-                onBack={handleNavBack}
-                onForward={handleNavForward}
-              />
             </div>
 
             {/* Calendar controls - only shown on calendar tab */}
