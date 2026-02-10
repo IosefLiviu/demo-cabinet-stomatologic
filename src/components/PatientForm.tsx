@@ -74,9 +74,7 @@ export function PatientForm({
       if (editingPatient && p.id === editingPatient.id) return false;
       
       const patientPhone = normalizePhone(p.phone);
-      return patientPhone === normalizedPhone || 
-             patientPhone.includes(normalizedPhone) || 
-             normalizedPhone.includes(patientPhone);
+      return patientPhone === normalizedPhone;
     });
   }, [formData.phone, allPatients, editingPatient]);
 
