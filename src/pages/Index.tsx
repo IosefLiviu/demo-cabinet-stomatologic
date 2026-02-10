@@ -32,10 +32,12 @@ import { LaboratoryTab } from '@/components/LaboratoryTab';
 import { PatientRemindersPanel } from '@/components/PatientRemindersPanel';
 import { PatientReminderDialog } from '@/components/PatientReminderDialog';
 import { WhatsAppQuickSendDialog } from '@/components/WhatsAppQuickSendDialog';
+import { AppSidebar } from '@/components/AppSidebar';
 import { useWhatsAppMessages } from '@/hooks/useWhatsAppMessages';
 import { usePendingReminders } from '@/hooks/usePatientReminders';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
 import { usePatients, Patient } from '@/hooks/usePatients';
 import { useAppointmentsDB, AppointmentDB } from '@/hooks/useAppointmentsDB';
 import { useTreatments } from '@/hooks/useTreatments';
@@ -61,9 +63,20 @@ const Index = () => {
   });
   const [showCabinetSettings, setShowCabinetSettings] = useState(false);
 
+  // Sidebar state: collapsed on calendar, expanded on other tabs
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    const saved = localStorage.getItem('activeTab') || 'calendar';
+    return saved !== 'calendar';
+  });
+
   // Persist active tab to localStorage
   useEffect(() => {
     localStorage.setItem('activeTab', activeTab);
+  }, [activeTab]);
+
+  // Auto-collapse sidebar on calendar, expand on other tabs
+  useEffect(() => {
+    setSidebarOpen(activeTab !== 'calendar');
   }, [activeTab]);
 
   // Navigation history state
@@ -236,6 +249,7 @@ const Index = () => {
     }
   }, [selectedDate, activeTab]);
 
+  // handlePatientFormSubmit, handleEditPatient, handleClosePatientForm
   const handlePatientFormSubmit = async (data: any) => {
     if (editingPatient) {
       return await updatePatient(editingPatient.id, data);
@@ -614,255 +628,212 @@ const Index = () => {
       (selectedCabinet === null || apt.cabinetId === selectedCabinet)
   ).sort((a, b) => a.time.localeCompare(b.time));
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Header />
-
-      <main className="w-full px-1 sm:px-2 lg:px-4 py-2 sm:py-4">
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4 sm:space-y-6">
-          <div className="flex items-center gap-2">
-            <NavigationButtons
-              canGoBack={canGoBack}
-              canGoForward={canGoForward}
-              previousLabel={previousState?.patientName || previousState?.tab}
-              nextLabel={nextState?.patientName || nextState?.tab}
-              onBack={handleNavBack}
-              onForward={handleNavForward}
+  const renderActiveContent = () => {
+    switch (activeTab) {
+      case 'calendar':
+        return (
+          <div className="mt-2">
+            <TimeSlotGrid
+              selectedDate={selectedDate}
+              selectedCabinet={selectedCabinet}
+              appointments={filteredAppointments}
+              cabinets={cabinets}
+              doctorShifts={doctorShifts}
+              doctors={doctors}
+              onSlotClick={handleSlotClick}
+              onAppointmentClick={handleAppointmentClick}
+              onAppointmentComplete={handleAppointmentComplete}
+              onAppointmentCancel={handleAppointmentCancelClick}
+              onEditPayment={handleEditPayment}
             />
-            <TabsList className="flex flex-1 h-auto gap-1 overflow-x-auto scrollbar-hide flex-nowrap md:flex-wrap">
-            <TabsTrigger value="calendar" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 shrink-0">
-              <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Calendar</span>
-            </TabsTrigger>
-            <TabsTrigger value="patients" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 shrink-0">
-              <Users className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Pacienți</span>
-            </TabsTrigger>
-            {!isReception && (
-              <TabsTrigger value="reports" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 shrink-0">
-                <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Rapoarte</span>
-              </TabsTrigger>
-            )}
-            {isAdmin && (
-              <TabsTrigger value="expenses" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 shrink-0">
-                <Wallet className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Cheltuieli</span>
-              </TabsTrigger>
-            )}
-            <TabsTrigger value="treatment-plan" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 shrink-0">
-              <ClipboardList className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Plan Tratament</span>
-            </TabsTrigger>
-            <TabsTrigger value="printabile" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 shrink-0">
-              <Printer className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Printabile</span>
-            </TabsTrigger>
-            <TabsTrigger value="stock" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 shrink-0">
-              <Package className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Stoc</span>
-            </TabsTrigger>
-            <TabsTrigger value="schedule" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 shrink-0">
-              <CalendarClock className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Program</span>
-            </TabsTrigger>
-            <TabsTrigger value="whatsapp" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 relative shrink-0">
-              <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">WhatsApp</span>
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="laborator" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 shrink-0">
-              <FlaskRound className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Laborator</span>
-            </TabsTrigger>
-            </TabsList>
           </div>
+        );
+      case 'patients':
+        return (
+          <Tabs defaultValue="patients-list" className="space-y-4">
+            <TabsList className="flex w-full h-auto gap-1">
+              <TabsTrigger value="patients-list" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                <List className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span>Listă Pacienți</span>
+              </TabsTrigger>
+              <TabsTrigger value="reminders" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                <Bell className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span>Rechemări</span>
+                {pendingReminders.length > 0 && (
+                  <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-medium text-white">
+                    {pendingReminders.length}
+                  </span>
+                )}
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Calendar controls - outside TabsContent for proper sticky */}
-          {activeTab === 'calendar' && (
-            <div className="sticky top-14 sm:top-16 z-30 bg-background py-2 border-b border-border -mx-1 px-1 sm:-mx-2 sm:px-2 lg:-mx-4 lg:px-4 space-y-2 md:space-y-0">
-              {/* Row 1: Date navigator + Doctor filter + action buttons */}
-              {/* Row 1: Date navigator + Doctor filter + Cabinet tabs + action buttons */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
-                <DoctorFilter
-                  doctors={doctors}
-                  selectedDoctorId={selectedDoctorFilter}
-                  onDoctorChange={setSelectedDoctorFilter}
-                />
-                <div className="hidden md:flex md:items-center md:gap-2">
-                  <div className="border-l border-border h-6 mx-1" />
-                  <CabinetTabs
-                    selectedCabinet={selectedCabinet}
-                    onSelectCabinet={setSelectedCabinet}
-                    cabinets={cabinets}
-                  />
-                </div>
-                <div className="flex gap-2 ml-auto">
-                  <AppointmentSearch
-                    appointments={legacyAppointments}
-                    onAppointmentSelect={(date, appointmentId) => {
-                      setSelectedDate(date);
-                      const apt = legacyAppointments.find(a => a.id === appointmentId);
-                      if (apt) {
-                        setSelectedCabinet(apt.cabinetId);
-                        if (apt.doctorId) {
-                          setSelectedDoctorFilter(apt.doctorId);
-                        }
-                      }
-                    }}
-                  />
-                  <AvailableSlotsSearch
-                    appointments={legacyAppointments}
-                    cabinets={cabinets}
-                    onSlotSelect={(date, time, cabinetId) => {
-                      setSelectedDate(date);
-                      setSelectedCabinet(cabinetId);
-                      handleSlotClick(time, cabinetId);
-                    }}
-                  />
-                  <Button className="gap-2" onClick={handleNewAppointment}>
-                    <Plus className="h-4 w-4" />
-                    <span className="hidden sm:inline">Programare nouă</span>
-                    <span className="sm:hidden">Nou</span>
-                  </Button>
-                </div>
-              </div>
-              {/* Row 2: Cabinet tabs - mobile only */}
-              <div className="flex items-center gap-2 mt-2 md:hidden">
-                <CabinetTabs
-                  selectedCabinet={selectedCabinet}
-                  onSelectCabinet={setSelectedCabinet}
-                  cabinets={cabinets}
-                />
-              </div>
-            </div>
-          )}
-
-          <TabsContent value="calendar" className="!mt-0">
-            {/* Time Grid */}
-            <div className="mt-2">
-              <TimeSlotGrid
-                selectedDate={selectedDate}
-                selectedCabinet={selectedCabinet}
-                appointments={filteredAppointments}
-                cabinets={cabinets}
-                doctorShifts={doctorShifts}
-                doctors={doctors}
-                onSlotClick={handleSlotClick}
-                onAppointmentClick={handleAppointmentClick}
-                onAppointmentComplete={handleAppointmentComplete}
-                onAppointmentCancel={handleAppointmentCancelClick}
-                onEditPayment={handleEditPayment}
+            <TabsContent value="patients-list">
+              <PatientsList
+                patients={patients}
+                loading={patientsLoading}
+                onEdit={handleEditPatient}
+                onDelete={deletePatient}
+                onAddNew={() => {
+                  setEditingPatient(undefined);
+                  setShowPatientForm(true);
+                }}
+                onViewDetails={(patient) => {
+                  pushNavState({ 
+                    tab: 'patients', 
+                    patientId: patient.id, 
+                    patientName: `${patient.first_name} ${patient.last_name}` 
+                  });
+                  setSelectedPatient(patient);
+                }}
+                onRefetch={refetchPatients}
               />
-            </div>
-          </TabsContent>
+            </TabsContent>
 
-          <TabsContent value="patients">
-            <Tabs defaultValue="patients-list" className="space-y-4">
-              <TabsList className="flex w-full h-auto gap-1">
-                <TabsTrigger value="patients-list" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-                  <List className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>Listă Pacienți</span>
-                </TabsTrigger>
-                <TabsTrigger value="reminders" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-                  <Bell className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>Rechemări</span>
-                  {pendingReminders.length > 0 && (
-                    <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-medium text-white">
-                      {pendingReminders.length}
-                    </span>
-                  )}
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="patients-list">
-                <PatientsList
-                  patients={patients}
-                  loading={patientsLoading}
-                  onEdit={handleEditPatient}
-                  onDelete={deletePatient}
-                  onAddNew={() => {
-                    setEditingPatient(undefined);
-                    setShowPatientForm(true);
-                  }}
-                  onViewDetails={(patient) => {
-                    // Push navigation state when opening patient details
-                    pushNavState({ 
-                      tab: 'patients', 
-                      patientId: patient.id, 
-                      patientName: `${patient.first_name} ${patient.last_name}` 
-                    });
-                    setSelectedPatient(patient);
-                  }}
-                  onRefetch={refetchPatients}
-                />
-              </TabsContent>
-
-              <TabsContent value="reminders">
-                <PatientRemindersPanel />
-              </TabsContent>
-
-            </Tabs>
-          </TabsContent>
-
-          <TabsContent value="reports" className="space-y-4">
+            <TabsContent value="reminders">
+              <PatientRemindersPanel />
+            </TabsContent>
+          </Tabs>
+        );
+      case 'reports':
+        return (
+          <div className="space-y-4">
             <TodaySummary selectedDate={selectedDate} appointments={legacyAppointments} />
             <ReportsDashboard
               appointments={appointments}
               loading={appointmentsLoading}
               onFetchRange={fetchAppointmentsRange}
             />
-          </TabsContent>
+          </div>
+        );
+      case 'treatment-plan':
+        return (
+          <TreatmentPlan
+            patients={patients}
+            treatments={treatments}
+            doctors={doctors}
+            initialPatientId={treatmentPlanPatientId}
+            initialPlan={editingTreatmentPlan}
+            onPlanSaved={() => {
+              setEditingTreatmentPlan(undefined);
+            }}
+          />
+        );
+      case 'printabile':
+        return <PrintablesSection patients={patients} doctors={doctors} />;
+      case 'expenses':
+        return isAdmin ? <MonthlyExpenses /> : null;
+      case 'stock':
+        return <StockManagement />;
+      case 'schedule':
+        return (
+          <DoctorScheduleManagement 
+            selectedDoctorId={doctorId || undefined}
+            isAdmin={isAdmin} 
+          />
+        );
+      case 'whatsapp':
+        return <WhatsAppInbox />;
+      case 'laborator':
+        return <LaboratoryTab patients={patients} doctors={doctors} />;
+      default:
+        return null;
+    }
+  };
 
-          <TabsContent value="treatment-plan">
-            <TreatmentPlan
-              patients={patients}
-              treatments={treatments}
-              doctors={doctors}
-              initialPatientId={treatmentPlanPatientId}
-              initialPlan={editingTreatmentPlan}
-              onPlanSaved={() => {
-                // Plan stays open, just clear the initial editing state
-                setEditingTreatmentPlan(undefined);
-              }}
-            />
-          </TabsContent>
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
 
-          <TabsContent value="printabile">
-            <PrintablesSection patients={patients} doctors={doctors} />
-          </TabsContent>
+      <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <div className="flex min-h-[calc(100svh-3.5rem)] sm:min-h-[calc(100svh-4rem)] w-full">
+          <AppSidebar
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            isAdmin={isAdmin}
+            isReception={isReception}
+            unreadCount={unreadCount}
+          />
 
-          {isAdmin && (
-            <TabsContent value="expenses">
-              <MonthlyExpenses />
-            </TabsContent>
-          )}
+          <main className="flex-1 min-w-0 w-full">
+            {/* Top bar with navigation + sidebar trigger + calendar controls */}
+            <div className="flex items-center gap-2 px-1 sm:px-2 lg:px-4 py-2 border-b border-border">
+              <SidebarTrigger />
+              <NavigationButtons
+                canGoBack={canGoBack}
+                canGoForward={canGoForward}
+                previousLabel={previousState?.patientName || previousState?.tab}
+                nextLabel={nextState?.patientName || nextState?.tab}
+                onBack={handleNavBack}
+                onForward={handleNavForward}
+              />
+            </div>
 
-          <TabsContent value="stock">
-            <StockManagement />
-          </TabsContent>
+            {/* Calendar controls - only shown on calendar tab */}
+            {activeTab === 'calendar' && (
+              <div className="sticky top-14 sm:top-16 z-30 bg-background py-2 border-b border-border px-1 sm:px-2 lg:px-4 space-y-2 md:space-y-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+                  <DoctorFilter
+                    doctors={doctors}
+                    selectedDoctorId={selectedDoctorFilter}
+                    onDoctorChange={setSelectedDoctorFilter}
+                  />
+                  <div className="hidden md:flex md:items-center md:gap-2">
+                    <div className="border-l border-border h-6 mx-1" />
+                    <CabinetTabs
+                      selectedCabinet={selectedCabinet}
+                      onSelectCabinet={setSelectedCabinet}
+                      cabinets={cabinets}
+                    />
+                  </div>
+                  <div className="flex gap-2 ml-auto">
+                    <AppointmentSearch
+                      appointments={legacyAppointments}
+                      onAppointmentSelect={(date, appointmentId) => {
+                        setSelectedDate(date);
+                        const apt = legacyAppointments.find(a => a.id === appointmentId);
+                        if (apt) {
+                          setSelectedCabinet(apt.cabinetId);
+                          if (apt.doctorId) {
+                            setSelectedDoctorFilter(apt.doctorId);
+                          }
+                        }
+                      }}
+                    />
+                    <AvailableSlotsSearch
+                      appointments={legacyAppointments}
+                      cabinets={cabinets}
+                      onSlotSelect={(date, time, cabinetId) => {
+                        setSelectedDate(date);
+                        setSelectedCabinet(cabinetId);
+                        handleSlotClick(time, cabinetId);
+                      }}
+                    />
+                    <Button className="gap-2" onClick={handleNewAppointment}>
+                      <Plus className="h-4 w-4" />
+                      <span className="hidden sm:inline">Programare nouă</span>
+                      <span className="sm:hidden">Nou</span>
+                    </Button>
+                  </div>
+                </div>
+                {/* Row 2: Cabinet tabs - mobile only */}
+                <div className="flex items-center gap-2 mt-2 md:hidden">
+                  <CabinetTabs
+                    selectedCabinet={selectedCabinet}
+                    onSelectCabinet={setSelectedCabinet}
+                    cabinets={cabinets}
+                  />
+                </div>
+              </div>
+            )}
 
-          <TabsContent value="schedule">
-            <DoctorScheduleManagement 
-              selectedDoctorId={doctorId || undefined}
-              isAdmin={isAdmin} 
-            />
-          </TabsContent>
-
-          <TabsContent value="whatsapp">
-            <WhatsAppInbox />
-          </TabsContent>
-
-          <TabsContent value="laborator">
-            <LaboratoryTab patients={patients} doctors={doctors} />
-          </TabsContent>
-        </Tabs>
-      </main>
+            {/* Content area */}
+            <div className="px-1 sm:px-2 lg:px-4 py-2 sm:py-4">
+              {renderActiveContent()}
+            </div>
+          </main>
+        </div>
+      </SidebarProvider>
 
       {/* Patient Form */}
       <PatientForm
@@ -878,15 +849,13 @@ const Index = () => {
         patient={selectedPatient}
         open={selectedPatient !== null}
         onClose={() => {
-          // Push current tab state (without patient) when closing patient details
           pushNavState({ tab: activeTab });
           setSelectedPatient(null);
-          setPatientDetailsInitialTab('info'); // Reset to default tab
+          setPatientDetailsInitialTab('info');
         }}
         initialTab={patientDetailsInitialTab}
         onEdit={handleEditPatient}
         onOpenTreatmentPlan={(patient) => {
-          // Push patient state to nav history before leaving
           pushNavState({ 
             tab: 'patients', 
             patientId: patient.id, 
@@ -899,11 +868,9 @@ const Index = () => {
           setSelectedPatient(null);
           setActiveTab('treatment-plan');
           
-          // Push the treatment plan state
           pushNavState({ tab: 'treatment-plan' });
         }}
         onEditTreatmentPlan={(patient, plan) => {
-          // Push patient state to nav history before leaving
           pushNavState({ 
             tab: 'patients', 
             patientId: patient.id, 
@@ -928,7 +895,6 @@ const Index = () => {
               laborator: item.laborator || 0,
               cas: item.cas || 0,
               discountPercent: item.discountPercent || 0,
-              // Include completion tracking fields
               completedAt: item.completedAt,
               paymentStatus: item.paymentStatus,
               paidAmount: item.paidAmount || 0,
@@ -938,7 +904,6 @@ const Index = () => {
           setSelectedPatient(null);
           setActiveTab('treatment-plan');
           
-          // Push the treatment plan state
           pushNavState({ tab: 'treatment-plan' });
         }}
         onCreateAppointment={(patient, treatmentName, interventions, doctorId) => {
@@ -955,7 +920,6 @@ const Index = () => {
             treatmentName: treatmentName || '',
             notes: treatmentName ? `Plan tratament: ${treatmentName}` : '',
           });
-          // Set existing interventions from treatment plan
           if (interventions && interventions.length > 0) {
             setExistingInterventions(interventions);
           }
