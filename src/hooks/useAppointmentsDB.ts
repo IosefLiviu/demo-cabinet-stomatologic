@@ -551,13 +551,33 @@ export function useAppointmentsDB() {
         paymentMethod = paymentMethod.replace('partial_', '');
       }
 
+      // Track debt payment: if paid_amount increased from a previous partial/unpaid state,
+      // record the additional amount as debt_amount with debt_paid_at = now
+      // so reports attribute it to the current month, not the appointment month
+      const previousPaid = appointment.paid_amount ?? 0;
+      const additionalPayment = paidAmount - previousPaid;
+      
+      const updateData: Record<string, any> = {
+        paid_amount: paidAmount,
+        is_paid: isPaid,
+        payment_method: paymentMethod,
+      };
+      
+      // If this is an additional payment on a previously completed appointment,
+      // set debt tracking fields so the report picks it up in the correct period
+      if (additionalPayment > 0 && appointment.status === 'completed' && previousPaid > 0) {
+        updateData.debt_amount = additionalPayment;
+        updateData.debt_paid_at = new Date().toISOString();
+      }
+      // If payment was reduced (correction), clear debt fields
+      if (additionalPayment < 0) {
+        updateData.debt_amount = null;
+        updateData.debt_paid_at = null;
+      }
+
       const { data, error } = await supabase
         .from('appointments')
-        .update({
-          paid_amount: paidAmount,
-          is_paid: isPaid,
-          payment_method: paymentMethod,
-        })
+        .update(updateData)
         .eq('id', id)
         .select(`
           *,
