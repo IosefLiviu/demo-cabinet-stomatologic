@@ -9,6 +9,7 @@ import {
   CalendarClock,
   MessageSquare,
   FlaskRound,
+  Bell,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -28,6 +29,7 @@ interface NavItem {
   adminOnly?: boolean;
   hideForReception?: boolean;
   badge?: number;
+  badgeType?: 'whatsapp' | 'reminders';
 }
 
 interface AppSidebarProps {
@@ -36,6 +38,7 @@ interface AppSidebarProps {
   isAdmin: boolean;
   isReception: boolean;
   unreadCount?: number;
+  pendingRemindersCount?: number;
 }
 
 const navItems: NavItem[] = [
@@ -47,11 +50,12 @@ const navItems: NavItem[] = [
   { id: 'printabile', label: 'Printabile', icon: Printer },
   { id: 'stock', label: 'Stoc', icon: Package },
   { id: 'schedule', label: 'Program', icon: CalendarClock },
-  { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare },
   { id: 'laborator', label: 'Laborator', icon: FlaskRound },
+  { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare, badgeType: 'whatsapp' },
+  { id: 'reminders', label: 'Rechemări', icon: Bell, badgeType: 'reminders' },
 ];
 
-export function AppSidebar({ activeTab, onTabChange, isAdmin, isReception, unreadCount = 0 }: AppSidebarProps) {
+export function AppSidebar({ activeTab, onTabChange, isAdmin, isReception, unreadCount = 0, pendingRemindersCount = 0 }: AppSidebarProps) {
   const { state, setOpenMobile } = useSidebar();
   const isCollapsed = state === 'collapsed';
 
@@ -75,7 +79,7 @@ export function AppSidebar({ activeTab, onTabChange, isAdmin, isReception, unrea
               {visibleItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
-                const badge = item.id === 'whatsapp' ? unreadCount : 0;
+                const badge = item.badgeType === 'whatsapp' ? unreadCount : item.badgeType === 'reminders' ? pendingRemindersCount : 0;
 
                 return (
                   <SidebarMenuItem key={item.id}>
