@@ -285,30 +285,30 @@ export function DoctorScheduleManagement({
       <div
         key={day.toISOString()}
         className={cn(
-          "border border-border/50 min-h-[100px] p-1.5 transition-colors",
-          isMonthView && "min-h-[80px]",
+      "border border-border/50 p-2 transition-colors",
+          isMonthView ? "min-h-[120px]" : "min-h-[160px]",
           !inCurrentMonth && "bg-muted/20",
           today && "bg-primary/5 ring-1 ring-primary/30 ring-inset",
         )}
       >
         <div className={cn(
-          "text-xs font-medium mb-1 flex items-center justify-between",
+          "text-sm font-medium mb-1.5 flex items-center justify-between",
           today ? "text-primary" : !inCurrentMonth ? "text-muted-foreground/50" : "text-muted-foreground"
         )}>
           <span className={cn(
             "inline-flex items-center justify-center",
-            today && "bg-primary text-primary-foreground rounded-full w-5 h-5 text-[10px]"
+            today && "bg-primary text-primary-foreground rounded-full w-6 h-6 text-xs"
           )}>
             {format(day, 'd')}
           </span>
           {!isMonthView && (
-            <span className="text-[10px] uppercase tracking-wider">
+            <span className="text-xs uppercase tracking-wider">
               {format(day, 'EEE', { locale: ro })}
             </span>
           )}
         </div>
         
-        <div className="space-y-0.5">
+        <div className="space-y-1">
           {dayShifts.map(shift => {
             const doctor = getDoctorById(shift.doctor_id);
             const timeOff = doctor ? getTimeOffForDay(day, doctor.id) : null;
@@ -324,13 +324,13 @@ export function DoctorScheduleManagement({
                   <TooltipTrigger asChild>
                     <div
                       className={cn(
-                        "rounded px-1.5 py-0.5 text-[11px] leading-tight cursor-default group relative",
+                        "rounded-md px-2 py-1.5 text-sm leading-snug cursor-default group relative",
                         "transition-all hover:ring-1 hover:ring-offset-1",
                         isMonthView ? "truncate" : ""
                       )}
                       style={{ 
                         backgroundColor: `${doctor?.color || '#888'}20`,
-                        borderLeft: `3px solid ${doctor?.color || '#888'}`,
+                        borderLeft: `4px solid ${doctor?.color || '#888'}`,
                         color: doctor?.color || '#888',
                       }}
                     >
@@ -338,13 +338,13 @@ export function DoctorScheduleManagement({
                         {doctor?.name?.replace('Dr. ', '')}
                       </div>
                       {!isMonthView && (
-                        <div className="text-muted-foreground">
+                        <div className="text-xs text-muted-foreground mt-0.5">
                           {shift.start_time.slice(0,5)} - {shift.end_time.slice(0,5)}
                           {cabinetName && <span className="ml-1 opacity-70">• {cabinetName}</span>}
                         </div>
                       )}
                       {isMonthView && (
-                        <div className="text-[10px] text-muted-foreground">
+                        <div className="text-xs text-muted-foreground">
                           {shift.start_time.slice(0,5)}-{shift.end_time.slice(0,5)}
                         </div>
                       )}
@@ -380,7 +380,7 @@ export function DoctorScheduleManagement({
             return (
               <div
                 key={`off-${doctor.id}`}
-                className="rounded px-1.5 py-0.5 text-[11px] leading-tight bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 truncate"
+                className="rounded-md px-2 py-1.5 text-sm leading-snug bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 truncate"
               >
                 <span className="font-semibold">{doctor.name?.replace('Dr. ', '')}</span>
                 <span className="ml-1 opacity-70">• Concediu</span>
@@ -494,12 +494,12 @@ export function DoctorScheduleManagement({
                 <div className="grid grid-cols-7 border-b bg-muted/30">
                   {weekDays.map(day => (
                     <div key={day.toISOString()} className={cn(
-                      "px-2 py-2 text-center text-xs font-medium border-r last:border-r-0",
+                      "px-3 py-3 text-center font-medium border-r last:border-r-0",
                       isToday(day) ? "text-primary bg-primary/5" : "text-muted-foreground"
                     )}>
-                      <div className="uppercase tracking-wider">{format(day, 'EEE', { locale: ro })}</div>
+                      <div className="uppercase tracking-wider text-xs">{format(day, 'EEE', { locale: ro })}</div>
                       <div className={cn(
-                        "text-lg font-bold mt-0.5",
+                        "text-2xl font-bold mt-0.5",
                         isToday(day) ? "text-primary" : "text-foreground"
                       )}>
                         {format(day, 'd')}
