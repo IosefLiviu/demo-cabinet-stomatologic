@@ -61,6 +61,7 @@ export function TimeSlotGrid({
   const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
   const gridRef = useRef<HTMLDivElement>(null);
   const [currentTimeTop, setCurrentTimeTop] = useState<number | null>(null);
+  const [currentTimeLabel, setCurrentTimeLabel] = useState(() => format(new Date(), 'HH:mm'));
 
   const cabinetsToShow = selectedCabinet
     ? cabinets.filter((c) => c.id === selectedCabinet)
@@ -134,7 +135,8 @@ export function TimeSlotGrid({
     };
 
     updatePosition();
-    const interval = setInterval(updatePosition, 60000); // update every minute
+    setCurrentTimeLabel(format(new Date(), 'HH:mm'));
+    const interval = setInterval(() => { updatePosition(); setCurrentTimeLabel(format(new Date(), 'HH:mm')); }, 60000);
     // Also update on resize
     window.addEventListener('resize', updatePosition);
 
@@ -231,7 +233,9 @@ export function TimeSlotGrid({
             style={{ top: currentTimeTop }}
           >
             <div className="relative flex items-center">
-              <div className="w-2.5 h-2.5 rounded-full bg-red-500 -ml-1 shrink-0" />
+              <div className="bg-red-500 text-white text-[10px] font-semibold leading-none px-1 py-0.5 rounded-sm shrink-0 -ml-0.5">
+                {currentTimeLabel}
+              </div>
               <div className="flex-1 h-[2px] bg-red-500" />
             </div>
           </div>
