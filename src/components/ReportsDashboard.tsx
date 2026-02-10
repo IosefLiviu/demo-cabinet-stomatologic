@@ -381,6 +381,8 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
             doctorStats[doctorName].totalWithNetLab += (periodPaidAmount + appointmentCas);
           } else if (method === 'unpaid' || !a.is_paid) {
             doctorStats[doctorName].unpaid += payableAmount;
+            // CAS is always attributed to the appointment month regardless of payment status
+            doctorStats[doctorName].totalWithNetLab += appointmentCas;
           } else if (a.is_paid) {
             doctorStats[doctorName].paidCash += payableAmount;
             doctorStats[doctorName].paid += payableAmount;
