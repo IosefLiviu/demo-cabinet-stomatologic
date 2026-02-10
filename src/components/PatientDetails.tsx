@@ -107,7 +107,7 @@ interface PatientDetailsProps {
 type PeriodFilter = 'all' | '30days' | '3months' | '1year';
 
 export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatmentPlan, onEditTreatmentPlan, onCreateAppointment, initialTab }: PatientDetailsProps) {
-  const [activeTab, setActiveTab] = useState(initialTab || 'info');
+  const [activeTab, setActiveTab] = useState(initialTab || 'record');
   const [treatmentHistory, setTreatmentHistory] = useState<TreatmentRecord[]>([]);
   const [dentalStatus, setDentalStatus] = useState<ToothData[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
@@ -161,7 +161,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
       fetchDentalStatus();
       loadTreatmentPlans();
       // Reset to initialTab when opening
-      setActiveTab(initialTab || 'info');
+      setActiveTab(initialTab || 'record');
     }
   }, [patient, open, initialTab]);
 
@@ -897,8 +897,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
         </SheetHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full grid grid-cols-5">
-            <TabsTrigger value="info">Informații</TabsTrigger>
+          <TabsList className="w-full grid grid-cols-4">
             <TabsTrigger value="record" className="gap-1">
               <FileText className="h-3 w-3" />
               Fișă
@@ -907,7 +906,6 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
               <Stethoscope className="h-3 w-3" />
               Status Dentar
             </TabsTrigger>
-            
             <TabsTrigger value="radiographs" className="gap-1">
               <FileImage className="h-3 w-3" />
               Radiografii
@@ -918,11 +916,14 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="info" className="mt-6 space-y-6">
-            {/* Contact */}
-            <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-muted-foreground uppercase">Contact</h4>
-              <div className="space-y-2">
+          {/* Patient Record Tab (includes patient info) */}
+          <TabsContent value="record" className="mt-6 space-y-6">
+            {/* Patient Information Section */}
+            <div className="rounded-xl border bg-card p-4 space-y-4">
+              <h4 className="text-sm font-semibold text-muted-foreground uppercase">Informații pacient</h4>
+              
+              {/* Contact */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-muted-foreground" />
                   <a href={`tel:${patient.phone}`} className="text-foreground hover:text-primary underline-offset-2 hover:underline">
@@ -940,105 +941,66 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                 {(patient.address || patient.city) && (
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>
-                      {[patient.address, patient.city].filter(Boolean).join(', ')}
-                    </span>
+                    <span>{[patient.address, patient.city].filter(Boolean).join(', ')}</span>
                   </div>
                 )}
-              </div>
-            </div>
-
-            {/* Medical Alerts */}
-            {((patient.allergies && patient.allergies.length > 0) ||
-              (patient.medical_conditions && patient.medical_conditions.length > 0)) && (
-              <div className="space-y-3 p-4 rounded-lg bg-destructive/5 border border-destructive/20">
-                <h4 className="text-sm font-semibold text-destructive flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4" />
-                  Alerte medicale
-                </h4>
-                
-                {patient.allergies && patient.allergies.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="text-xs text-muted-foreground">Alergii:</div>
-                    <div className="flex flex-wrap gap-2">
-                      {patient.allergies.map((allergy, i) => (
-                        <Badge key={i} variant="destructive">
-                          {allergy}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {patient.medical_conditions && patient.medical_conditions.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Heart className="h-3 w-3" />
-                      Afecțiuni:
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {patient.medical_conditions.map((condition, i) => (
-                        <Badge key={i} variant="secondary" className="bg-warning/20">
-                          {condition}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            {/* Medications */}
-            {patient.medications && patient.medications.length > 0 && (
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-muted-foreground uppercase flex items-center gap-2">
-                  <Pill className="h-4 w-4" />
-                  Medicamente curente
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {patient.medications.map((medication, i) => (
-                    <Badge key={i} variant="outline">
-                      {medication}
-                    </Badge>
-                  ))}
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Calendar className="h-3.5 w-3.5" />
+                  Înregistrat la {format(new Date(patient.created_at), 'd MMMM yyyy', { locale: ro })}
                 </div>
               </div>
-            )}
 
-            {/* Notes */}
-            {patient.notes && (
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-muted-foreground uppercase flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Observații
-                </h4>
-                <p className="text-sm text-foreground/80">{patient.notes}</p>
-              </div>
-            )}
-
-            {/* Emergency Contact */}
-            {patient.emergency_contact_name && (
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-muted-foreground uppercase">
-                  Contact de urgență
-                </h4>
-                <div className="text-sm">
-                  <div>{patient.emergency_contact_name}</div>
-                  {patient.emergency_contact_phone && (
-                    <div className="text-muted-foreground">{patient.emergency_contact_phone}</div>
+              {/* Medical Alerts */}
+              {((patient.allergies && patient.allergies.length > 0) ||
+                (patient.medical_conditions && patient.medical_conditions.length > 0)) && (
+                <div className="space-y-2 p-3 rounded-lg bg-destructive/5 border border-destructive/20">
+                  <h4 className="text-xs font-semibold text-destructive flex items-center gap-2">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    Alerte medicale
+                  </h4>
+                  {patient.allergies && patient.allergies.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {patient.allergies.map((allergy, i) => (
+                        <Badge key={i} variant="destructive" className="text-[10px]">{allergy}</Badge>
+                      ))}
+                    </div>
+                  )}
+                  {patient.medical_conditions && patient.medical_conditions.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {patient.medical_conditions.map((condition, i) => (
+                        <Badge key={i} variant="secondary" className="bg-warning/20 text-[10px]">{condition}</Badge>
+                      ))}
+                    </div>
                   )}
                 </div>
+              )}
+
+              {/* Medications & Notes inline */}
+              <div className="flex flex-wrap gap-3 text-sm">
+                {patient.medications && patient.medications.length > 0 && (
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <Pill className="h-3.5 w-3.5 text-muted-foreground" />
+                    {patient.medications.map((med, i) => (
+                      <Badge key={i} variant="outline" className="text-[10px]">{med}</Badge>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
 
-            {/* Registration date */}
-            <div className="pt-4 border-t text-xs text-muted-foreground flex items-center gap-2">
-              <Calendar className="h-3.5 w-3.5" />
-              Înregistrat la {format(new Date(patient.created_at), 'd MMMM yyyy', { locale: ro })}
+              {patient.notes && (
+                <p className="text-xs text-muted-foreground italic border-l-2 border-primary/20 pl-2">{patient.notes}</p>
+              )}
+
+              {/* Emergency Contact */}
+              {patient.emergency_contact_name && (
+                <div className="text-xs text-muted-foreground">
+                  <span className="font-medium">Contact urgență:</span> {patient.emergency_contact_name}
+                  {patient.emergency_contact_phone && ` — ${patient.emergency_contact_phone}`}
+                </div>
+              )}
             </div>
-          </TabsContent>
 
-          {/* Patient Record Tab */}
-          <TabsContent value="record" className="mt-6">
+            {/* Consolidated Record */}
             <PatientRecordTab
               patientId={patient.id}
               patientName={`${patient.first_name} ${patient.last_name}`}
