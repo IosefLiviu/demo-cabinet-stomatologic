@@ -56,7 +56,8 @@ function ToothJournalSection({ patientId, toothNumber }: { patientId: string; to
   useEffect(() => {
     const load = async () => {
       try {
-        const { data, error } = await supabase
+        // Load from appointment_treatments (completed appointments)
+        const { data: aptData } = await supabase
           .from('appointment_treatments')
           .select(`
             id,
@@ -75,15 +76,35 @@ function ToothJournalSection({ patientId, toothNumber }: { patientId: string; to
           .in('appointment.status', ['completed', 'finalizat'])
           .order('created_at', { ascending: false });
 
-        if (!error && data) {
-          setEntries((data || []).map((item: any) => ({
-            id: item.id,
-            date: item.appointment?.appointment_date || item.created_at,
-            treatment_name: item.treatment_name,
-            doctor_name: item.appointment?.doctor?.name || null,
-            cabinet_name: item.appointment?.cabinet?.name || null,
-          })));
-        }
+        // Load from tooth_interventions (manually added)
+        const { data: intData } = await supabase
+          .from('tooth_interventions')
+          .select('id, treatment_name, performed_at, notes, doctor:doctors(name)')
+          .eq('patient_id', patientId)
+          .eq('tooth_number', toothNumber)
+          .order('performed_at', { ascending: false });
+
+        const fromApt: ToothJournalEntry[] = (aptData || []).map((item: any) => ({
+          id: item.id,
+          date: item.appointment?.appointment_date || item.created_at,
+          treatment_name: item.treatment_name,
+          doctor_name: item.appointment?.doctor?.name || null,
+          cabinet_name: item.appointment?.cabinet?.name || null,
+        }));
+
+        const fromInt: ToothJournalEntry[] = (intData || []).map((item: any) => ({
+          id: item.id,
+          date: item.performed_at,
+          treatment_name: item.treatment_name,
+          doctor_name: item.doctor?.name || null,
+          cabinet_name: null,
+        }));
+
+        // Merge and deduplicate by id, sort by date desc
+        const merged = [...fromApt, ...fromInt];
+        const unique = merged.filter((e, i, arr) => arr.findIndex(x => x.id === e.id) === i);
+        unique.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setEntries(unique);
       } catch (err) {
         console.error('Error loading tooth journal:', err);
       }
