@@ -166,6 +166,8 @@ export function ToothDetailPanel({
             </button>
           </div>
         </div>
+
+        {/* Journal slot rendered via children */}
       </div>
 
       {/* Afecțiuni popup */}

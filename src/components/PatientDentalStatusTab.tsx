@@ -309,7 +309,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
         {/* Chart area */}
         <div
           className={cn(
-            "flex-1 p-4 sm:p-6 transition-all",
+            "flex-1 p-2 sm:p-3 transition-all",
             selectedTooth ? 'min-w-0' : 'w-full'
           )}
           style={{
@@ -363,15 +363,11 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             </div>
           </div>
 
-          {/* Jurnal per dinte - shown below chart when a tooth is selected */}
-          {selectedTooth && (
-            <ToothJournalSection patientId={patientId} toothNumber={selectedTooth} />
-          )}
         </div>
 
         {/* Side panel */}
         {selectedTooth && (
-          <div className="w-[350px] shrink-0">
+          <div className="w-[350px] shrink-0 flex flex-col overflow-hidden">
             <ToothDetailPanel
               patientId={patientId}
               toothNumber={selectedTooth}
@@ -388,6 +384,9 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
               onRemoveIntervention={removeIntervention}
               onClose={() => setSelectedTooth(null)}
             />
+            <div className="border-l px-3 pb-3">
+              <ToothJournalSection patientId={patientId} toothNumber={selectedTooth} />
+            </div>
           </div>
         )}
       </div>
