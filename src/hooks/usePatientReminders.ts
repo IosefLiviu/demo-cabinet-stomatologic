@@ -134,6 +134,11 @@ export function usePendingReminders() {
   const { data: reminders = [], isLoading } = useQuery({
     queryKey: ['patient-reminders', 'pending'],
     queryFn: async () => {
+      // Show reminders whose date is within the next 7 days or already overdue
+      const inOneWeek = new Date();
+      inOneWeek.setDate(inOneWeek.getDate() + 7);
+      const maxDate = inOneWeek.toISOString().split('T')[0];
+
       const { data, error } = await supabase
         .from('patient_reminders')
         .select(`
@@ -141,6 +146,7 @@ export function usePendingReminders() {
           patient:patients(id, first_name, last_name, phone)
         `)
         .eq('is_completed', false)
+        .lte('reminder_date', maxDate)
         .order('reminder_date', { ascending: true });
 
       if (error) throw error;
