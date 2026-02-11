@@ -209,6 +209,7 @@ function ToothJournalSection({ patientId, toothNumber, refreshKey }: { patientId
 export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange }: PatientDentalStatusTabProps) {
   const [hoveredTooth, setHoveredTooth] = useState<number | null>(null);
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<number[]>([]);
   const [journalKey, setJournalKey] = useState(0);
 
   // Data hooks
@@ -310,6 +311,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
     const notes = getToothNotes(toothNumber);
     const isHovered = hoveredTooth === toothNumber;
     const isSelected = selectedTooth === toothNumber;
+    const isGroupSelected = selectedGroup.includes(toothNumber);
     const hexColor = getStatusHexColor(status);
     const hasStatus = status !== 'Sănătos' && status !== 'healthy';
     const isMissing = status === 'missing' || status === 'Absent';
@@ -323,7 +325,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
           <span className={cn(
             "text-[10px] font-semibold mb-1 transition-all duration-300",
             hasStatus ? 'text-foreground' : 'text-muted-foreground',
-            (isHovered || isSelected) && 'text-primary scale-110'
+            (isHovered || isSelected || isGroupSelected) && 'text-primary scale-110'
           )}>
             {toothNumber}
           </span>
@@ -332,7 +334,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
         <div
           onMouseEnter={() => setHoveredTooth(toothNumber)}
           onMouseLeave={() => setHoveredTooth(null)}
-          onClick={() => setSelectedTooth(toothNumber)}
+          onClick={() => { setSelectedTooth(toothNumber); setSelectedGroup([]); }}
           className={cn(
             'relative flex items-center justify-center cursor-pointer',
             'transition-all duration-300 ease-out',
@@ -353,10 +355,10 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
           />
 
           {/* Selection ring */}
-          {isSelected && (
+          {(isSelected || isGroupSelected) && (
             <div
               className="absolute inset-[-3px] rounded-lg border-2 border-primary pointer-events-none"
-              style={{ boxShadow: '0 0 12px hsl(var(--primary) / 0.3)' }}
+              style={{ boxShadow: isSelected ? '0 0 12px hsl(var(--primary) / 0.3)' : '0 0 8px hsl(var(--primary) / 0.15)' }}
             />
           )}
 
@@ -388,7 +390,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
           <span className={cn(
             "text-[10px] font-semibold mt-0.5 transition-all duration-300",
             hasStatus ? 'text-foreground' : 'text-muted-foreground',
-            (isHovered || isSelected) && 'text-primary scale-110'
+            (isHovered || isSelected || isGroupSelected) && 'text-primary scale-110'
           )}>
             {toothNumber}
           </span>
@@ -491,58 +493,60 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
                   const xL_bot = cx - chordHalf(bandBot);
                   const xR_bot = cx + chordHalf(bandBot);
 
+                  const q1Teeth = [18,17,16,15,14,13,12,11];
+                  const q2Teeth = [21,22,23,24,25,26,27,28];
+                  const q3Teeth = [31,32,33,34,35,36,37,38];
+                  const q4Teeth = [48,47,46,45,44,43,42,41];
+
+                  const setGroup = (teeth: number[]) => {
+                    setSelectedTooth(null);
+                    setSelectedGroup(teeth);
+                  };
+
+                  const isGroupMatch = (teeth: number[]) => selectedGroup.length > 0 && teeth.every(t => selectedGroup.includes(t));
+
                   const zones = [
-                    // Maxilar strip (top arc to bandTop line)
                     {
                       key: 'maxilar',
-                      path: `M${xL_top},${bandTop} A${r},${r} 0 0,1 ${xR_top},${bandTop} L${xL_top},${bandTop}`,
-                      // Use arc path: go from left chord point, arc to right, then line back
                       pathFull: `M${xL_top},${bandTop} A${r},${r} 0 0,1 ${xR_top},${bandTop} Z`,
-                      labelX: 65, labelY: 19,
-                      label: 'MAXILAR', fontSize: 7,
-                      isActive: selectedTooth !== null && upperAll.includes(selectedTooth),
-                      onClick: () => setSelectedTooth(11),
+                      labelX: 65, labelY: 19, label: 'MAXILAR', fontSize: 7,
+                      isActive: isGroupMatch(upperAll),
+                      onClick: () => setGroup(upperAll),
                     },
-                    // Quadrant 1 (upper-left: x=left..65, y=bandTop..65)
                     {
                       key: 'q1',
                       pathFull: `M${xL_top},${bandTop} A${r},${r} 0 0,0 ${cx - r},${cy} L${cx},${cy} L${cx},${bandTop} Z`,
                       labelX: 38, labelY: 48, label: '1', fontSize: 18,
-                      isActive: selectedTooth !== null && [18,17,16,15,14,13,12,11].includes(selectedTooth),
-                      onClick: () => setSelectedTooth(11),
+                      isActive: isGroupMatch(q1Teeth),
+                      onClick: () => setGroup(q1Teeth),
                     },
-                    // Quadrant 2 (upper-right: x=65..right, y=bandTop..65)
                     {
                       key: 'q2',
                       pathFull: `M${cx},${bandTop} L${xR_top},${bandTop} A${r},${r} 0 0,1 ${cx + r},${cy} L${cx},${cy} Z`,
                       labelX: 92, labelY: 48, label: '2', fontSize: 18,
-                      isActive: selectedTooth !== null && [21,22,23,24,25,26,27,28].includes(selectedTooth),
-                      onClick: () => setSelectedTooth(21),
+                      isActive: isGroupMatch(q2Teeth),
+                      onClick: () => setGroup(q2Teeth),
                     },
-                    // Quadrant 3 (lower-right: x=65..right, y=65..bandBot)
                     {
                       key: 'q3',
                       pathFull: `M${cx},${cy} L${cx + r},${cy} A${r},${r} 0 0,1 ${xR_bot},${bandBot} L${cx},${bandBot} Z`,
                       labelX: 92, labelY: 84, label: '3', fontSize: 18,
-                      isActive: selectedTooth !== null && [31,32,33,34,35,36,37,38].includes(selectedTooth),
-                      onClick: () => setSelectedTooth(31),
+                      isActive: isGroupMatch(q3Teeth),
+                      onClick: () => setGroup(q3Teeth),
                     },
-                    // Quadrant 4 (lower-left: x=left..65, y=65..bandBot)
                     {
                       key: 'q4',
                       pathFull: `M${cx - r},${cy} L${cx},${cy} L${cx},${bandBot} L${xL_bot},${bandBot} A${r},${r} 0 0,1 ${cx - r},${cy} Z`,
                       labelX: 38, labelY: 84, label: '4', fontSize: 18,
-                      isActive: selectedTooth !== null && [48,47,46,45,44,43,42,41].includes(selectedTooth),
-                      onClick: () => setSelectedTooth(41),
+                      isActive: isGroupMatch(q4Teeth),
+                      onClick: () => setGroup(q4Teeth),
                     },
-                    // Mandibular strip (bandBot line to bottom arc)
                     {
                       key: 'mandibular',
                       pathFull: `M${xL_bot},${bandBot} L${xR_bot},${bandBot} A${r},${r} 0 0,1 ${xL_bot},${bandBot} Z`,
-                      labelX: 65, labelY: 112,
-                      label: 'MANDIBULAR', fontSize: 7,
-                      isActive: selectedTooth !== null && lowerAll.includes(selectedTooth),
-                      onClick: () => setSelectedTooth(41),
+                      labelX: 65, labelY: 112, label: 'MANDIBULAR', fontSize: 7,
+                      isActive: isGroupMatch(lowerAll),
+                      onClick: () => setGroup(lowerAll),
                     },
                   ];
 
