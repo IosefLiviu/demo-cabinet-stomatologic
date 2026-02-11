@@ -52,6 +52,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Patient } from '@/hooks/usePatients';
 import { supabase } from '@/integrations/supabase/client';
 import { MiniDentalChart, ToothData } from './MiniDentalChart';
@@ -110,6 +111,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
   const [activeTab, setActiveTab] = useState(initialTab || 'record');
   const [treatmentHistory, setTreatmentHistory] = useState<TreatmentRecord[]>([]);
   const [dentalStatus, setDentalStatus] = useState<ToothData[]>([]);
+  const [showDentalFullscreen, setShowDentalFullscreen] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all');
   
@@ -897,14 +899,10 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
         </SheetHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full grid grid-cols-4">
+          <TabsList className="w-full grid grid-cols-3">
             <TabsTrigger value="record" className="gap-1">
               <FileText className="h-3 w-3" />
               Fișă
-            </TabsTrigger>
-            <TabsTrigger value="dental" className="gap-1">
-              <Stethoscope className="h-3 w-3" />
-              Status Dentar
             </TabsTrigger>
             <TabsTrigger value="radiographs" className="gap-1">
               <FileImage className="h-3 w-3" />
@@ -915,6 +913,14 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
               Planuri
             </TabsTrigger>
           </TabsList>
+
+          {/* Full-screen dental status button */}
+          <div className="flex justify-end mt-2">
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowDentalFullscreen(true)}>
+              <Stethoscope className="h-4 w-4" />
+              Status Dentar
+            </Button>
+          </div>
 
           {/* Patient Record Tab (includes patient info) */}
           <TabsContent value="record" className="mt-6 space-y-6">
@@ -1007,14 +1013,24 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
             />
           </TabsContent>
 
-          {/* Dental Status Tab */}
-          <TabsContent value="dental" className="mt-6">
-            <PatientDentalStatusTab
-              patientId={patient.id}
-              dentalStatus={dentalStatus}
-              onStatusChange={setDentalStatus}
-            />
-          </TabsContent>
+          {/* Dental Status - Full Screen Dialog */}
+          {showDentalFullscreen && (
+            <Dialog open={showDentalFullscreen} onOpenChange={setShowDentalFullscreen}>
+              <DialogContent className="max-w-[98vw] w-full h-[95vh] max-h-[95vh] overflow-y-auto p-6">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Stethoscope className="h-5 w-5" />
+                    Status Dentar — {patient.first_name} {patient.last_name}
+                  </DialogTitle>
+                </DialogHeader>
+                <PatientDentalStatusTab
+                  patientId={patient.id}
+                  dentalStatus={dentalStatus}
+                  onStatusChange={setDentalStatus}
+                />
+              </DialogContent>
+            </Dialog>
+          )}
 
 
           {/* Radiographs Tab */}
