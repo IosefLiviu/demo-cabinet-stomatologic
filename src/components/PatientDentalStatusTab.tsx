@@ -335,7 +335,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
         <div
           onMouseEnter={() => setHoveredTooth(toothNumber)}
           onMouseLeave={() => setHoveredTooth(null)}
-          onClick={() => { setSelectedTooth(toothNumber); setSelectedGroup([]); }}
+          onClick={() => { setSelectedTooth(prev => prev === toothNumber ? null : toothNumber); setSelectedGroup([]); }}
           className={cn(
             'relative flex items-center justify-center cursor-pointer',
             'transition-all duration-300 ease-out',
