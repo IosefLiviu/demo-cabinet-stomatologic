@@ -722,170 +722,175 @@ export function AppointmentForm({
                   </PopoverContent>
                 </Popover>
               ) : (
-                <div className="flex gap-2">
-                  <div className="flex-1 p-2 sm:p-3 rounded-md border bg-muted/50">
-                    <div className="font-medium text-sm">{formData.patientName || 'Pacient nou'}</div>
-                    {formData.patientPhone && (
-                      <div className="text-xs text-muted-foreground">{formData.patientPhone}</div>
-                    )}
+                <div className="space-y-2">
+                  <div className="flex gap-2 items-center">
+                    <div className="flex-1 p-2 sm:p-3 rounded-md border bg-muted/50">
+                      <div className="font-medium text-sm">{formData.patientName || 'Pacient nou'}</div>
+                      {formData.patientPhone && (
+                        <div className="text-xs text-muted-foreground">{formData.patientPhone}</div>
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs sm:text-sm"
+                      onClick={() => {
+                        setFormData({ ...formData, patientId: '', patientName: '', patientPhone: '' });
+                        setIsNewPatient(false);
+                      }}
+                    >
+                      Schimbă
+                    </Button>
                   </div>
-                  {formData.patientId && onViewPatient && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="text-xs sm:text-sm gap-1"
-                      onClick={() => {
-                        const patient = patients.find(p => p.id === formData.patientId);
-                        if (patient) {
-                          onViewPatient(patient);
-                        } else if (formData.patientId) {
-                          // Fallback: create minimal patient object from form data
-                          const nameParts = (formData.patientName || '').split(' ');
-                          const fallbackPatient = {
-                            id: formData.patientId,
-                            first_name: nameParts[0] || '',
-                            last_name: nameParts.slice(1).join(' ') || '',
-                            phone: formData.patientPhone || '',
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString(),
-                          };
-                          onViewPatient(fallbackPatient as any);
-                        }
-                      }}
-                    >
-                      <FileText className="h-3.5 w-3.5" />
-                      Fișă
-                    </Button>
+                  {formData.patientId && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {onViewPatient && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-xs sm:text-sm gap-1"
+                          onClick={() => {
+                            const patient = patients.find(p => p.id === formData.patientId);
+                            if (patient) {
+                              onViewPatient(patient);
+                            } else if (formData.patientId) {
+                              const nameParts = (formData.patientName || '').split(' ');
+                              const fallbackPatient = {
+                                id: formData.patientId,
+                                first_name: nameParts[0] || '',
+                                last_name: nameParts.slice(1).join(' ') || '',
+                                phone: formData.patientPhone || '',
+                                created_at: new Date().toISOString(),
+                                updated_at: new Date().toISOString(),
+                              };
+                              onViewPatient(fallbackPatient as any);
+                            }
+                          }}
+                        >
+                          <FileText className="h-3.5 w-3.5" />
+                          Fișă
+                        </Button>
+                      )}
+                      {onViewDentalStatus && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-xs sm:text-sm gap-1"
+                          onClick={() => {
+                            const patient = patients.find(p => p.id === formData.patientId);
+                            if (patient) {
+                              onViewDentalStatus(patient);
+                            } else if (formData.patientId) {
+                              const nameParts = (formData.patientName || '').split(' ');
+                              const fallbackPatient = {
+                                id: formData.patientId,
+                                first_name: nameParts[0] || '',
+                                last_name: nameParts.slice(1).join(' ') || '',
+                                phone: formData.patientPhone || '',
+                                created_at: new Date().toISOString(),
+                                updated_at: new Date().toISOString(),
+                              };
+                              onViewDentalStatus(fallbackPatient as any);
+                            }
+                          }}
+                        >
+                          <Smile className="h-3.5 w-3.5" />
+                          Status Dentar
+                        </Button>
+                      )}
+                      {onViewRadiographs && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-xs sm:text-sm gap-1"
+                          onClick={() => {
+                            const patient = patients.find(p => p.id === formData.patientId);
+                            if (patient) {
+                              onViewRadiographs(patient);
+                            } else if (formData.patientId) {
+                              const nameParts = (formData.patientName || '').split(' ');
+                              const fallbackPatient = {
+                                id: formData.patientId,
+                                first_name: nameParts[0] || '',
+                                last_name: nameParts.slice(1).join(' ') || '',
+                                phone: formData.patientPhone || '',
+                                created_at: new Date().toISOString(),
+                                updated_at: new Date().toISOString(),
+                              };
+                              onViewRadiographs(fallbackPatient as any);
+                            }
+                          }}
+                        >
+                          <FileImage className="h-3.5 w-3.5" />
+                          Imagistică
+                        </Button>
+                      )}
+                      {onViewPrintables && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-xs sm:text-sm gap-1"
+                          onClick={() => {
+                            const patient = patients.find(p => p.id === formData.patientId);
+                            if (patient) onViewPrintables(patient);
+                          }}
+                        >
+                          <Printer className="h-3.5 w-3.5" />
+                          Printabile
+                        </Button>
+                      )}
+                      {onViewTreatmentPlan && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-xs sm:text-sm gap-1"
+                          onClick={() => {
+                            const patient = patients.find(p => p.id === formData.patientId);
+                            if (patient) onViewTreatmentPlan(patient);
+                          }}
+                        >
+                          <ClipboardList className="h-3.5 w-3.5" />
+                          Plan Tratament
+                        </Button>
+                      )}
+                      {onViewReminder && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 text-orange-500 hover:text-orange-600"
+                          title="Rechemare"
+                          onClick={() => {
+                            const patient = patients.find(p => p.id === formData.patientId);
+                            if (patient) onViewReminder(patient);
+                          }}
+                        >
+                          <Bell className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                      {onSendWhatsApp && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 text-green-600 hover:text-green-700"
+                          title="WhatsApp"
+                          onClick={() => {
+                            const patient = patients.find(p => p.id === formData.patientId);
+                            if (patient) onSendWhatsApp(patient);
+                          }}
+                        >
+                          <MessageSquare className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </div>
                   )}
-                  {formData.patientId && onViewDentalStatus && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="text-xs sm:text-sm gap-1"
-                      onClick={() => {
-                        const patient = patients.find(p => p.id === formData.patientId);
-                        if (patient) {
-                          onViewDentalStatus(patient);
-                        } else if (formData.patientId) {
-                          const nameParts = (formData.patientName || '').split(' ');
-                          const fallbackPatient = {
-                            id: formData.patientId,
-                            first_name: nameParts[0] || '',
-                            last_name: nameParts.slice(1).join(' ') || '',
-                            phone: formData.patientPhone || '',
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString(),
-                          };
-                          onViewDentalStatus(fallbackPatient as any);
-                        }
-                      }}
-                    >
-                      <Smile className="h-3.5 w-3.5" />
-                      Status Dentar
-                    </Button>
-                  )}
-                  {formData.patientId && onViewRadiographs && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="text-xs sm:text-sm gap-1"
-                      onClick={() => {
-                        const patient = patients.find(p => p.id === formData.patientId);
-                        if (patient) {
-                          onViewRadiographs(patient);
-                        } else if (formData.patientId) {
-                          const nameParts = (formData.patientName || '').split(' ');
-                          const fallbackPatient = {
-                            id: formData.patientId,
-                            first_name: nameParts[0] || '',
-                            last_name: nameParts.slice(1).join(' ') || '',
-                            phone: formData.patientPhone || '',
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString(),
-                          };
-                          onViewRadiographs(fallbackPatient as any);
-                        }
-                      }}
-                    >
-                      <FileImage className="h-3.5 w-3.5" />
-                      Imagistică
-                    </Button>
-                   )}
-                  {formData.patientId && onViewPrintables && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="text-xs sm:text-sm gap-1"
-                      onClick={() => {
-                        const patient = patients.find(p => p.id === formData.patientId);
-                        if (patient) onViewPrintables(patient);
-                      }}
-                    >
-                      <Printer className="h-3.5 w-3.5" />
-                      Printabile
-                    </Button>
-                  )}
-                  {formData.patientId && onViewTreatmentPlan && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="text-xs sm:text-sm gap-1"
-                      onClick={() => {
-                        const patient = patients.find(p => p.id === formData.patientId);
-                        if (patient) onViewTreatmentPlan(patient);
-                      }}
-                    >
-                      <ClipboardList className="h-3.5 w-3.5" />
-                      Plan Tratament
-                    </Button>
-                  )}
-                  {formData.patientId && onViewReminder && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8 text-orange-500 hover:text-orange-600"
-                      title="Rechemare"
-                      onClick={() => {
-                        const patient = patients.find(p => p.id === formData.patientId);
-                        if (patient) onViewReminder(patient);
-                      }}
-                    >
-                      <Bell className="h-3.5 w-3.5" />
-                    </Button>
-                  )}
-                  {formData.patientId && onSendWhatsApp && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8 text-green-600 hover:text-green-700"
-                      title="WhatsApp"
-                      onClick={() => {
-                        const patient = patients.find(p => p.id === formData.patientId);
-                        if (patient) onSendWhatsApp(patient);
-                      }}
-                    >
-                      <MessageSquare className="h-3.5 w-3.5" />
-                    </Button>
-                  )}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs sm:text-sm"
-                    onClick={() => {
-                      setFormData({ ...formData, patientId: '', patientName: '', patientPhone: '' });
-                      setIsNewPatient(false);
-                    }}
-                  >
-                    Schimbă
-                  </Button>
                 </div>
               )}
             </div>
