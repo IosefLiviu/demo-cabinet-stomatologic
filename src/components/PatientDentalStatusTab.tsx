@@ -321,7 +321,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
               <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase">
                 Maxilar Superior — Dinți Permanenți
               </div>
-              <div className="flex justify-center gap-0.5 sm:gap-1">
+              <div className="flex gap-0.5 sm:gap-1 flex-wrap" style={{ justifyContent: selectedTooth ? 'flex-start' : 'center' }}>
                 {upperTeeth.map(tooth => renderTooth(tooth, false, false))}
               </div>
             </div>
@@ -330,7 +330,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
               <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase opacity-70">
                 Dinți Temporari — Superior
               </div>
-              <div className="flex justify-center gap-0.5 sm:gap-1">
+              <div className="flex gap-0.5 sm:gap-1 flex-wrap" style={{ justifyContent: selectedTooth ? 'flex-start' : 'center' }}>
                 {upperDeciduousTeeth.map(tooth => renderTooth(tooth, true, false))}
               </div>
             </div>
@@ -345,7 +345,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             </div>
 
             <div className="space-y-2">
-              <div className="flex justify-center gap-0.5 sm:gap-1">
+              <div className="flex gap-0.5 sm:gap-1 flex-wrap" style={{ justifyContent: selectedTooth ? 'flex-start' : 'center' }}>
                 {lowerDeciduousTeeth.map(tooth => renderTooth(tooth, true, true))}
               </div>
               <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase opacity-70">
@@ -354,7 +354,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             </div>
 
             <div className="space-y-2 mt-4">
-              <div className="flex justify-center gap-0.5 sm:gap-1">
+              <div className="flex gap-0.5 sm:gap-1 flex-wrap" style={{ justifyContent: selectedTooth ? 'flex-start' : 'center' }}>
                 {lowerTeeth.map(tooth => renderTooth(tooth, false, true))}
               </div>
               <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase">
@@ -383,10 +383,9 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
               onAddIntervention={addIntervention}
               onRemoveIntervention={removeIntervention}
               onClose={() => setSelectedTooth(null)}
-            />
-            <div className="border-l px-3 pb-3">
+            >
               <ToothJournalSection patientId={patientId} toothNumber={selectedTooth} />
-            </div>
+            </ToothDetailPanel>
           </div>
         )}
       </div>
