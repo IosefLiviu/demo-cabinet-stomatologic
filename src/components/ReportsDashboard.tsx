@@ -407,9 +407,9 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       const totalWithNetLabMinusLab = stats.totalWithNetLab - stats.laborator;
       stats.totalWithNetLabAndUnpaid = totalWithNetLabMinusLab + stats.unpaid;
       
-      const isDumitruBacalim = stats.name.toLowerCase().includes('dumitru bacalim');
-      const doctorCommissionRate = isDumitruBacalim ? 0.5 : 0.4;
-      const clinicCommissionRate = isDumitruBacalim ? 0.5 : 0.6;
+      const has50Commission = stats.name.toLowerCase().includes('dumitru bacalim') || stats.name.toLowerCase().includes('sepand');
+      const doctorCommissionRate = has50Commission ? 0.5 : 0.4;
+      const clinicCommissionRate = has50Commission ? 0.5 : 0.6;
       
       stats.sixtPercentTotal = Math.round(totalWithNetLabMinusLab * clinicCommissionRate);
       stats.fortyPercentTotal = Math.round(totalWithNetLabMinusLab * doctorCommissionRate);
