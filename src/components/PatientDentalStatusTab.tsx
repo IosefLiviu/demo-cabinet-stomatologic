@@ -515,9 +515,37 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
                 <line x1="8" y1="65" x2="122" y2="65" stroke="#c4b898" strokeWidth="0.8" opacity="0.6" />
                 <line x1="65" y1="8" x2="65" y2="122" stroke="#c4b898" strokeWidth="0.8" opacity="0.6" />
 
-                {/* Labels */}
-                <text x="65" y="18" textAnchor="middle" fontSize="7" fontWeight="600" fill="#b8a680" opacity="0.8" letterSpacing="0.5">MAXILAR</text>
-                <text x="65" y="117" textAnchor="middle" fontSize="7" fontWeight="600" fill="#b8a680" opacity="0.8" letterSpacing="0.5">MANDIBULAR</text>
+                {/* Maxilar label - clickable */}
+                {(() => {
+                  const upperAll = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
+                  const isActiveMax = selectedTooth !== null && upperAll.includes(selectedTooth);
+                  return (
+                    <text
+                      x="65" y="18"
+                      textAnchor="middle" fontSize="7" fontWeight="600" letterSpacing="0.5"
+                      fill={isActiveMax ? 'hsl(var(--primary))' : '#b8a680'}
+                      opacity={isActiveMax ? 1 : 0.8}
+                      className="cursor-pointer"
+                      onClick={() => setSelectedTooth(11)}
+                    >MAXILAR</text>
+                  );
+                })()}
+
+                {/* Mandibular label - clickable */}
+                {(() => {
+                  const lowerAll = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+                  const isActiveMand = selectedTooth !== null && lowerAll.includes(selectedTooth);
+                  return (
+                    <text
+                      x="65" y="117"
+                      textAnchor="middle" fontSize="7" fontWeight="600" letterSpacing="0.5"
+                      fill={isActiveMand ? 'hsl(var(--primary))' : '#b8a680'}
+                      opacity={isActiveMand ? 1 : 0.8}
+                      className="cursor-pointer"
+                      onClick={() => setSelectedTooth(41)}
+                    >MANDIBULAR</text>
+                  );
+                })()}
               </svg>
             </div>
 
