@@ -877,113 +877,181 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-[95vw] xl:max-w-[1400px] overflow-y-auto">
-        <SheetHeader className="mb-6">
+      <SheetContent className="w-full sm:max-w-[95vw] xl:max-w-[1400px] overflow-y-auto p-0">
+        {/* Modern Header Bar */}
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-6 py-4">
           <div className="flex items-center justify-between">
-            <SheetTitle className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                <User className="h-6 w-6 text-primary" />
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20">
+                <User className="h-7 w-7 text-primary" />
               </div>
               <div>
-                <div className="text-xl">
+                <h2 className="text-xl font-bold text-foreground tracking-tight">
                   {patient.last_name} {patient.first_name}
+                </h2>
+                <div className="flex items-center gap-3 mt-0.5">
+                  {patient.date_of_birth && (
+                    <span className="text-sm text-muted-foreground">{calculateAge(patient.date_of_birth)} ani</span>
+                  )}
+                  {patient.gender && (
+                    <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                      {patient.gender === 'M' ? '♂ Masculin' : '♀ Feminin'}
+                    </span>
+                  )}
+                  {patient.registration_number && (
+                    <span className="text-xs text-muted-foreground font-mono">Nr. {patient.registration_number}</span>
+                  )}
                 </div>
-                {patient.date_of_birth && (
-                  <div className="text-sm text-muted-foreground font-normal">
-                    {calculateAge(patient.date_of_birth)} ani
-                  </div>
-                )}
               </div>
-            </SheetTitle>
-            <Button variant="outline" size="sm" onClick={() => onEdit(patient)}>
-              <Edit className="h-4 w-4 mr-2" />
-              Editează
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Quick Action Buttons */}
+              <Button variant="outline" size="sm" className="gap-2 hidden sm:flex" onClick={() => setShowDentalFullscreen(true)}>
+                <Stethoscope className="h-4 w-4" />
+                Status Dentar
+              </Button>
+              <Button variant="outline" size="sm" className="gap-2 hidden sm:flex" onClick={() => setShowRadiographsFullscreen(true)}>
+                <FileImage className="h-4 w-4" />
+                Radiografii
+              </Button>
+              <Button variant="outline" size="sm" className="gap-2 hidden sm:flex" onClick={() => setShowPlansFullscreen(true)}>
+                <ClipboardList className="h-4 w-4" />
+                Planuri
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => onEdit(patient)}>
+                <Edit className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Editează</span>
+              </Button>
+            </div>
+          </div>
+          {/* Mobile action buttons */}
+          <div className="flex sm:hidden gap-2 mt-3 overflow-x-auto pb-1">
+            <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={() => setShowDentalFullscreen(true)}>
+              <Stethoscope className="h-3.5 w-3.5" />
+              Status Dentar
+            </Button>
+            <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={() => setShowRadiographsFullscreen(true)}>
+              <FileImage className="h-3.5 w-3.5" />
+              Radiografii
+            </Button>
+            <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={() => setShowPlansFullscreen(true)}>
+              <ClipboardList className="h-3.5 w-3.5" />
+              Planuri
             </Button>
           </div>
-        </SheetHeader>
+        </div>
 
-        
-        <div className="w-full space-y-6 mt-6">
-          {/* Patient Information Section */}
-          <div className="rounded-xl border bg-card p-4 space-y-4">
-            <h4 className="text-sm font-semibold text-muted-foreground uppercase">Informații pacient</h4>
-            
-            {/* Contact */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <a href={`tel:${patient.phone}`} className="text-foreground hover:text-primary underline-offset-2 hover:underline">
-                  {patient.phone}
-                </a>
-              </div>
-              {patient.email && (
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <a href={`mailto:${patient.email}`} className="text-foreground hover:text-primary underline-offset-2 hover:underline">
-                    {patient.email}
+        <div className="px-6 py-6 space-y-6">
+          {/* Patient Info - Two Column Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Contact Info */}
+            <div className="rounded-2xl border bg-card/50 p-5 space-y-3">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Contact</h4>
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                    <Phone className="h-3.5 w-3.5 text-primary" />
+                  </div>
+                  <a href={`tel:${patient.phone}`} className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+                    {patient.phone}
                   </a>
                 </div>
-              )}
-              {(patient.address || patient.city) && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span>{[patient.address, patient.city].filter(Boolean).join(', ')}</span>
+                {patient.email && (
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                      <Mail className="h-3.5 w-3.5 text-primary" />
+                    </div>
+                    <a href={`mailto:${patient.email}`} className="text-sm text-foreground hover:text-primary transition-colors truncate">
+                      {patient.email}
+                    </a>
+                  </div>
+                )}
+                {(patient.address || patient.city) && (
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+                      <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                    </div>
+                    <span className="text-sm text-muted-foreground">{[patient.address, patient.city].filter(Boolean).join(', ')}</span>
+                  </div>
+                )}
+                {patient.cnp && (
+                  <div className="text-xs text-muted-foreground font-mono mt-1">CNP: {patient.cnp}</div>
+                )}
+                <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 pt-1">
+                  <Calendar className="h-3 w-3" />
+                  Înregistrat {format(new Date(patient.created_at), 'd MMM yyyy', { locale: ro })}
                 </div>
-              )}
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Calendar className="h-3.5 w-3.5" />
-                Înregistrat la {format(new Date(patient.created_at), 'd MMMM yyyy', { locale: ro })}
               </div>
             </div>
 
             {/* Medical Alerts */}
-            {((patient.allergies && patient.allergies.length > 0) ||
-              (patient.medical_conditions && patient.medical_conditions.length > 0)) && (
-              <div className="space-y-2 p-3 rounded-lg bg-destructive/5 border border-destructive/20">
-                <h4 className="text-xs font-semibold text-destructive flex items-center gap-2">
-                  <AlertTriangle className="h-3.5 w-3.5" />
-                  Alerte medicale
-                </h4>
-                {patient.allergies && patient.allergies.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {patient.allergies.map((allergy, i) => (
-                      <Badge key={i} variant="destructive" className="text-[10px]">{allergy}</Badge>
-                    ))}
-                  </div>
-                )}
-                {patient.medical_conditions && patient.medical_conditions.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {patient.medical_conditions.map((condition, i) => (
-                      <Badge key={i} variant="secondary" className="bg-warning/20 text-[10px]">{condition}</Badge>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Medications & Notes inline */}
-            <div className="flex flex-wrap gap-3 text-sm">
+            <div className="rounded-2xl border bg-card/50 p-5 space-y-3">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Informații medicale</h4>
+              {((patient.allergies && patient.allergies.length > 0) ||
+                (patient.medical_conditions && patient.medical_conditions.length > 0)) ? (
+                <div className="space-y-3">
+                  {patient.allergies && patient.allergies.length > 0 && (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-1.5 text-destructive">
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        <span className="text-[11px] font-semibold uppercase">Alergii</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {patient.allergies.map((allergy, i) => (
+                          <Badge key={i} variant="destructive" className="text-[10px] rounded-full">{allergy}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {patient.medical_conditions && patient.medical_conditions.length > 0 && (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-1.5 text-warning">
+                        <Heart className="h-3.5 w-3.5" />
+                        <span className="text-[11px] font-semibold uppercase">Condiții</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {patient.medical_conditions.map((condition, i) => (
+                          <Badge key={i} variant="secondary" className="text-[10px] rounded-full">{condition}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">Fără alerte medicale</p>
+              )}
               {patient.medications && patient.medications.length > 0 && (
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <Pill className="h-3.5 w-3.5 text-muted-foreground" />
-                  {patient.medications.map((med, i) => (
-                    <Badge key={i} variant="outline" className="text-[10px]">{med}</Badge>
-                  ))}
+                <div className="space-y-1.5 pt-1 border-t">
+                  <div className="flex items-center gap-1.5 text-muted-foreground pt-2">
+                    <Pill className="h-3.5 w-3.5" />
+                    <span className="text-[11px] font-semibold uppercase">Medicație</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {patient.medications.map((med, i) => (
+                      <Badge key={i} variant="outline" className="text-[10px] rounded-full">{med}</Badge>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
 
-            {patient.notes && (
-              <p className="text-xs text-muted-foreground italic border-l-2 border-primary/20 pl-2">{patient.notes}</p>
-            )}
-
-            {/* Emergency Contact */}
-            {patient.emergency_contact_name && (
-              <div className="text-xs text-muted-foreground">
-                <span className="font-medium">Contact urgență:</span> {patient.emergency_contact_name}
-                {patient.emergency_contact_phone && ` — ${patient.emergency_contact_phone}`}
-              </div>
-            )}
+            {/* Notes & Emergency */}
+            <div className="rounded-2xl border bg-card/50 p-5 space-y-3">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Observații</h4>
+              {patient.notes ? (
+                <p className="text-sm text-muted-foreground leading-relaxed">{patient.notes}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">Fără observații</p>
+              )}
+              {patient.emergency_contact_name && (
+                <div className="pt-2 border-t space-y-1">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase">Contact urgență</span>
+                  <p className="text-sm">{patient.emergency_contact_name}
+                    {patient.emergency_contact_phone && <span className="text-muted-foreground"> — {patient.emergency_contact_phone}</span>}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Consolidated Record */}
@@ -991,22 +1059,6 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
             patientId={patient.id}
             patientName={`${patient.first_name} ${patient.last_name}`}
           />
-
-          {/* Action buttons row */}
-          <div className="flex flex-wrap gap-2 justify-end">
-            <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowDentalFullscreen(true)}>
-              <Stethoscope className="h-4 w-4" />
-              Status Dentar
-            </Button>
-            <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowRadiographsFullscreen(true)}>
-              <FileImage className="h-4 w-4" />
-              Radiografii
-            </Button>
-            <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowPlansFullscreen(true)}>
-              <ClipboardList className="h-4 w-4" />
-              Planuri
-            </Button>
-          </div>
         </div>
 
           {/* Dental Status - Full Screen Dialog */}
