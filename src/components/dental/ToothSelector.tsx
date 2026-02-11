@@ -50,8 +50,8 @@ interface ToothSelectorProps {
   onToggleTooth: (tooth: number) => void;
   onArchSelection: (teeth: number[]) => void;
   onReset: () => void;
-  selectionMode: 'teeth' | 'arch';
-  onModeChange: (mode: 'teeth' | 'arch') => void;
+  selectionMode?: 'teeth' | 'arch';
+  onModeChange?: (mode: 'teeth' | 'arch') => void;
   isArchMode?: boolean;
   dentalStatus?: Record<number, { status: string; notes?: string }>;
 }
@@ -154,150 +154,45 @@ export function ToothSelector({
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-4">
         <p className="text-sm font-medium">Selectează dinții</p>
-        <div className="flex gap-1">
-          <Button
-            type="button"
-            variant={selectionMode === 'teeth' ? 'default' : 'outline'}
-            size="sm"
-            className="h-7 text-xs"
-            onClick={() => onModeChange('teeth')}
-          >
-            Dinți
-          </Button>
-          <Button
-            type="button"
-            variant={selectionMode === 'arch' ? 'default' : 'outline'}
-            size="sm"
-            className="h-7 text-xs"
-            onClick={() => onModeChange('arch')}
-          >
-            Maxilar
-          </Button>
-        </div>
       </div>
       
-      {selectionMode === 'teeth' ? (
-        <>
-          {/* Individual teeth selection with images */}
-          <div className="space-y-1">
-            <div className="text-[10px] text-muted-foreground text-center">Superior permanent</div>
-            <div className="flex justify-center">
-              {upperPermanentTeeth.map(tooth => renderToothButton(tooth))}
-            </div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-[10px] text-muted-foreground text-center">De lapte superior</div>
-            <div className="flex justify-center gap-0.5">
-              {upperDeciduousTeeth.map(tooth => renderToothButton(tooth, true))}
-            </div>
-          </div>
-          <div className="flex justify-center py-1">
-            <QuadrantCircle
-              selectedTeeth={selectedTeeth}
-              onZoneClick={(teeth) => onArchSelection(teeth)}
-              size={80}
-            />
-          </div>
-          <div className="space-y-1">
-            <div className="text-[10px] text-muted-foreground text-center">De lapte inferior</div>
-            <div className="flex justify-center gap-0.5">
-              {lowerDeciduousTeeth.map(tooth => renderToothButton(tooth, true))}
-            </div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-[10px] text-muted-foreground text-center">Inferior permanent</div>
-            <div className="flex justify-center">
-              {lowerPermanentTeeth.map(tooth => renderToothButton(tooth))}
-            </div>
-          </div>
-        </>
-      ) : (
-        /* Arch/Quadrant Selection Mode */
-        <div className="space-y-3">
-          {/* Arcade */}
-          <div className="space-y-2">
-            <div className="text-[10px] text-muted-foreground font-medium">Arcade</div>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant={upperArch.every(t => selectedTeeth.includes(t)) ? "default" : 
-                        upperArch.some(t => selectedTeeth.includes(t)) ? "secondary" : "outline"}
-                size="sm"
-                className="h-12 flex flex-col gap-0.5"
-                onClick={() => onArchSelection(upperArch)}
-              >
-                <span className="font-bold text-xs">Maxilar Sus</span>
-                <span className="text-[10px] opacity-70">{upperArch.filter(t => selectedTeeth.includes(t)).length}/16</span>
-              </Button>
-              <Button
-                variant={lowerArch.every(t => selectedTeeth.includes(t)) ? "default" : 
-                        lowerArch.some(t => selectedTeeth.includes(t)) ? "secondary" : "outline"}
-                size="sm"
-                className="h-12 flex flex-col gap-0.5"
-                onClick={() => onArchSelection(lowerArch)}
-              >
-                <span className="font-bold text-xs">Mandibular Jos</span>
-                <span className="text-[10px] opacity-70">{lowerArch.filter(t => selectedTeeth.includes(t)).length}/16</span>
-              </Button>
-            </div>
-          </div>
-          
-          <div className="border-t my-2" />
-          
-          {/* Cadrane */}
-          <div className="space-y-2">
-            <div className="text-[10px] text-muted-foreground font-medium">Cadrane</div>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant={quadrant1.every(t => selectedTeeth.includes(t)) ? "default" : 
-                        quadrant1.some(t => selectedTeeth.includes(t)) ? "secondary" : "outline"}
-                size="sm"
-                className="h-12 flex flex-col gap-0.5"
-                onClick={() => onArchSelection(quadrant1)}
-              >
-                <span className="font-bold text-xs">Cadran 1</span>
-                <span className="text-[10px] opacity-70">Superior dreapta ({quadrant1.filter(t => selectedTeeth.includes(t)).length}/8)</span>
-              </Button>
-              <Button
-                variant={quadrant2.every(t => selectedTeeth.includes(t)) ? "default" : 
-                        quadrant2.some(t => selectedTeeth.includes(t)) ? "secondary" : "outline"}
-                size="sm"
-                className="h-12 flex flex-col gap-0.5"
-                onClick={() => onArchSelection(quadrant2)}
-              >
-                <span className="font-bold text-xs">Cadran 2</span>
-                <span className="text-[10px] opacity-70">Superior stânga ({quadrant2.filter(t => selectedTeeth.includes(t)).length}/8)</span>
-              </Button>
-              <Button
-                variant={quadrant4.every(t => selectedTeeth.includes(t)) ? "default" : 
-                        quadrant4.some(t => selectedTeeth.includes(t)) ? "secondary" : "outline"}
-                size="sm"
-                className="h-12 flex flex-col gap-0.5"
-                onClick={() => onArchSelection(quadrant4)}
-              >
-                <span className="font-bold text-xs">Cadran 4</span>
-                <span className="text-[10px] opacity-70">Inferior dreapta ({quadrant4.filter(t => selectedTeeth.includes(t)).length}/8)</span>
-              </Button>
-              <Button
-                variant={quadrant3.every(t => selectedTeeth.includes(t)) ? "default" : 
-                        quadrant3.some(t => selectedTeeth.includes(t)) ? "secondary" : "outline"}
-                size="sm"
-                className="h-12 flex flex-col gap-0.5"
-                onClick={() => onArchSelection(quadrant3)}
-              >
-                <span className="font-bold text-xs">Cadran 3</span>
-                <span className="text-[10px] opacity-70">Inferior stânga ({quadrant3.filter(t => selectedTeeth.includes(t)).length}/8)</span>
-              </Button>
-            </div>
-          </div>
+      {/* Individual teeth selection */}
+      <div className="space-y-1">
+        <div className="text-[10px] text-muted-foreground text-center">Superior permanent</div>
+        <div className="flex justify-center">
+          {upperPermanentTeeth.map(tooth => renderToothButton(tooth))}
         </div>
-      )}
+      </div>
+      <div className="space-y-1">
+        <div className="text-[10px] text-muted-foreground text-center">De lapte superior</div>
+        <div className="flex justify-center gap-0.5">
+          {upperDeciduousTeeth.map(tooth => renderToothButton(tooth, true))}
+        </div>
+      </div>
+      <div className="flex justify-center py-1">
+        <QuadrantCircle
+          selectedTeeth={selectedTeeth}
+          onZoneClick={(teeth) => onArchSelection(teeth)}
+          size={80}
+        />
+      </div>
+      <div className="space-y-1">
+        <div className="text-[10px] text-muted-foreground text-center">De lapte inferior</div>
+        <div className="flex justify-center gap-0.5">
+          {lowerDeciduousTeeth.map(tooth => renderToothButton(tooth, true))}
+        </div>
+      </div>
+      <div className="space-y-1">
+        <div className="text-[10px] text-muted-foreground text-center">Inferior permanent</div>
+        <div className="flex justify-center">
+          {lowerPermanentTeeth.map(tooth => renderToothButton(tooth))}
+        </div>
+      </div>
       
       <div className="flex items-center justify-between pt-2 border-t">
         <p className="text-xs text-muted-foreground">
           Selectați: <span className="font-medium text-foreground">
-            {isArchMode || selectionMode === 'arch' 
-              ? `${countArchGroups(selectedTeeth)} ${countArchGroups(selectedTeeth) === 1 ? 'cadran/arcadă' : 'cadrane/arcade'}`
-              : `${selectedTeeth.length} dinți`}
+            {`${selectedTeeth.length} dinți`}
           </span>
         </p>
         {selectedTeeth.length > 0 && (
