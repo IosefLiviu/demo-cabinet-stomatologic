@@ -769,7 +769,7 @@ export function AppointmentForm({
                             }
                           }}
                         >
-                          <FileText className="h-3.5 w-3.5" />
+                          <FileText className="h-3.5 w-3.5 text-blue-600" />
                           Fișă
                         </Button>
                       )}
@@ -797,7 +797,7 @@ export function AppointmentForm({
                             }
                           }}
                         >
-                          <Smile className="h-3.5 w-3.5" />
+                          <Smile className="h-3.5 w-3.5 text-cyan-600" />
                           Status Dentar
                         </Button>
                       )}
@@ -825,7 +825,7 @@ export function AppointmentForm({
                             }
                           }}
                         >
-                          <FileImage className="h-3.5 w-3.5" />
+                          <FileImage className="h-3.5 w-3.5 text-purple-600" />
                           Imagistică
                         </Button>
                       )}
@@ -840,7 +840,7 @@ export function AppointmentForm({
                             if (patient) onViewPrintables(patient);
                           }}
                         >
-                          <Printer className="h-3.5 w-3.5" />
+                          <Printer className="h-3.5 w-3.5 text-amber-600" />
                           Printabile
                         </Button>
                       )}
@@ -855,7 +855,7 @@ export function AppointmentForm({
                             if (patient) onViewTreatmentPlan(patient);
                           }}
                         >
-                          <ClipboardList className="h-3.5 w-3.5" />
+                          <ClipboardList className="h-3.5 w-3.5 text-teal-600" />
                           Plan Tratament
                         </Button>
                       )}
