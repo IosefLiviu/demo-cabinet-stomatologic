@@ -446,21 +446,78 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
 
             {/* Quadrant circle diagram */}
             <div className="flex justify-center py-3">
-              <svg width="120" height="120" viewBox="0 0 120 120" className="select-none">
-                {/* Outer circle */}
-                <circle cx="60" cy="60" r="55" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="1.5" opacity="0.4" />
-                {/* Horizontal line */}
-                <line x1="5" y1="60" x2="115" y2="60" stroke="hsl(var(--muted-foreground))" strokeWidth="1" opacity="0.4" />
-                {/* Vertical line */}
-                <line x1="60" y1="5" x2="60" y2="115" stroke="hsl(var(--muted-foreground))" strokeWidth="1" opacity="0.4" />
-                {/* Labels: Maxilar / Mandibular */}
-                <text x="60" y="18" textAnchor="middle" fontSize="8" fontWeight="600" fill="hsl(var(--muted-foreground))" opacity="0.7">MAXILAR</text>
-                <text x="60" y="110" textAnchor="middle" fontSize="8" fontWeight="600" fill="hsl(var(--muted-foreground))" opacity="0.7">MANDIBULAR</text>
-                {/* Quadrant numbers */}
-                <text x="35" y="42" textAnchor="middle" fontSize="16" fontWeight="700" fill="hsl(var(--muted-foreground))" opacity="0.5">1</text>
-                <text x="85" y="42" textAnchor="middle" fontSize="16" fontWeight="700" fill="hsl(var(--muted-foreground))" opacity="0.5">2</text>
-                <text x="85" y="85" textAnchor="middle" fontSize="16" fontWeight="700" fill="hsl(var(--muted-foreground))" opacity="0.5">3</text>
-                <text x="35" y="85" textAnchor="middle" fontSize="16" fontWeight="700" fill="hsl(var(--muted-foreground))" opacity="0.5">4</text>
+              <svg width="130" height="130" viewBox="0 0 130 130" className="select-none">
+                <defs>
+                  <linearGradient id="qc-fill" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#f7f2e8" />
+                    <stop offset="25%" stopColor="#f0e9d8" />
+                    <stop offset="55%" stopColor="#e6ddca" />
+                    <stop offset="85%" stopColor="#d8ceb8" />
+                    <stop offset="100%" stopColor="#cfc4aa" />
+                  </linearGradient>
+                  <linearGradient id="qc-highlight" x1="0.2" y1="0" x2="0.8" y2="1">
+                    <stop offset="0%" stopColor="white" stopOpacity="0.35" />
+                    <stop offset="40%" stopColor="white" stopOpacity="0.1" />
+                    <stop offset="100%" stopColor="white" stopOpacity="0" />
+                  </linearGradient>
+                  <radialGradient id="qc-shadow" cx="0.5" cy="0.6" r="0.5">
+                    <stop offset="70%" stopColor="transparent" />
+                    <stop offset="100%" stopColor="#a0926e" stopOpacity="0.12" />
+                  </radialGradient>
+                  <clipPath id="q1-clip"><path d="M65,65 L65,8 A57,57 0 0,0 8,65 Z" /></clipPath>
+                  <clipPath id="q2-clip"><path d="M65,65 L122,65 A57,57 0 0,0 65,8 Z" /></clipPath>
+                  <clipPath id="q3-clip"><path d="M65,65 L65,122 A57,57 0 0,0 122,65 Z" /></clipPath>
+                  <clipPath id="q4-clip"><path d="M65,65 L8,65 A57,57 0 0,0 65,122 Z" /></clipPath>
+                </defs>
+
+                {/* Drop shadow */}
+                <circle cx="66.2" cy="66.5" r="56" fill="rgba(0,0,0,0.06)" />
+
+                {/* Main circle fill */}
+                <circle cx="65" cy="65" r="56" fill="url(#qc-fill)" stroke="#c4b898" strokeWidth="0.7" />
+                <circle cx="65" cy="65" r="56" fill="url(#qc-shadow)" />
+                <circle cx="65" cy="65" r="56" fill="url(#qc-highlight)" />
+
+                {/* Quadrant click areas */}
+                {[
+                  { id: 1, path: "M65,65 L65,8 A57,57 0 0,0 8,65 Z", labelX: 38, labelY: 42 },
+                  { id: 2, path: "M65,65 L122,65 A57,57 0 0,0 65,8 Z", labelX: 92, labelY: 42 },
+                  { id: 3, path: "M65,65 L65,122 A57,57 0 0,0 122,65 Z", labelX: 92, labelY: 92 },
+                  { id: 4, path: "M65,65 L8,65 A57,57 0 0,0 65,122 Z", labelX: 38, labelY: 92 },
+                ].map(q => {
+                  const quadrantTeeth = q.id === 1 ? [18,17,16,15,14,13,12,11]
+                    : q.id === 2 ? [21,22,23,24,25,26,27,28]
+                    : q.id === 3 ? [31,32,33,34,35,36,37,38]
+                    : [48,47,46,45,44,43,42,41];
+                  const isActive = selectedTooth !== null && quadrantTeeth.includes(selectedTooth);
+                  return (
+                    <g key={q.id} className="cursor-pointer" onClick={() => setSelectedTooth(quadrantTeeth[0])}>
+                      <path
+                        d={q.path}
+                        fill={isActive ? 'hsl(var(--primary) / 0.15)' : 'transparent'}
+                        className="transition-colors duration-200 hover:fill-[hsl(var(--primary)/0.1)]"
+                      />
+                      <text
+                        x={q.labelX} y={q.labelY}
+                        textAnchor="middle" dominantBaseline="central"
+                        fontSize="18" fontWeight="700"
+                        fill={isActive ? 'hsl(var(--primary))' : '#b8a680'}
+                        className="pointer-events-none transition-colors duration-200"
+                        opacity={isActive ? 1 : 0.6}
+                      >
+                        {q.id}
+                      </text>
+                    </g>
+                  );
+                })}
+
+                {/* Divider lines */}
+                <line x1="8" y1="65" x2="122" y2="65" stroke="#c4b898" strokeWidth="0.8" opacity="0.6" />
+                <line x1="65" y1="8" x2="65" y2="122" stroke="#c4b898" strokeWidth="0.8" opacity="0.6" />
+
+                {/* Labels */}
+                <text x="65" y="18" textAnchor="middle" fontSize="7" fontWeight="600" fill="#b8a680" opacity="0.8" letterSpacing="0.5">MAXILAR</text>
+                <text x="65" y="117" textAnchor="middle" fontSize="7" fontWeight="600" fill="#b8a680" opacity="0.8" letterSpacing="0.5">MANDIBULAR</text>
               </svg>
             </div>
 
