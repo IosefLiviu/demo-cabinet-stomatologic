@@ -1097,12 +1097,14 @@ export function StockManagement() {
                 type="number"
                 min={1}
                 value={movementForm.quantity}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const num = val === '' ? 0 : parseInt(val, 10);
                   setMovementForm({
                     ...movementForm,
-                    quantity: Number(e.target.value),
-                  })
-                }
+                    quantity: isNaN(num) ? 0 : num,
+                  });
+                }}
               />
             </div>
             
