@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { getToothImage } from './toothImages';
+import { SvgTooth, getToothDimensions } from './SvgTooth';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 // FDI notation - permanent teeth
@@ -25,6 +25,8 @@ interface MiniToothSelectorProps {
   className?: string;
 }
 
+const MINI_SCALE = 0.4;
+
 export function MiniToothSelector({
   selectedTeeth,
   onToothClick,
@@ -39,12 +41,15 @@ export function MiniToothSelector({
 
   const renderTooth = (toothNumber: number, isDeciduous: boolean = false, isLower: boolean = false) => {
     const isSelected = selectedTeeth.includes(toothNumber);
-    const toothImage = getToothImage(toothNumber);
     const patientStatus = getPatientToothStatus(toothNumber);
     const status = patientStatus?.status || 'Sănătos';
     const hexColor = getStatusHexColor?.(status) || null;
     const hasPatientStatus = patientStatus && status !== 'Sănătos';
     const isMissing = status === 'Absent' || status === 'missing';
+
+    const dims = getToothDimensions(toothNumber, isDeciduous);
+    const w = Math.round(dims.width * MINI_SCALE);
+    const h = Math.round(dims.height * MINI_SCALE);
 
     const button = (
       <button
@@ -52,9 +57,8 @@ export function MiniToothSelector({
         onClick={() => onToothClick(toothNumber)}
         onDoubleClick={() => onToothDoubleClick?.(toothNumber)}
         className={cn(
-          'relative flex flex-col items-center transition-all rounded overflow-hidden',
+          'relative flex flex-col items-center transition-all rounded',
           'hover:scale-110 cursor-pointer',
-          isDeciduous ? 'w-5' : 'w-6',
           isSelected && 'ring-2 ring-primary ring-offset-1',
           hasPatientStatus && !isSelected && 'ring-1'
         )}
@@ -66,62 +70,28 @@ export function MiniToothSelector({
               : undefined
         }
       >
-        {/* Tooth number - show above for upper teeth */}
         {!isLower && (
           <span className={cn(
-            "text-[8px] font-medium leading-none",
+            "text-[7px] font-medium leading-none",
             isSelected ? 'text-primary' : hasPatientStatus ? 'text-foreground' : 'text-muted-foreground'
           )}>
             {toothNumber}
           </span>
         )}
 
-        {/* Tooth image */}
-        <div className={cn(
-          'relative flex items-center justify-center',
-          isDeciduous ? 'w-4 h-5' : 'w-5 h-6'
-        )}>
-          {toothImage ? (
-            <img
-              src={toothImage}
-              alt={`${toothNumber}`}
-              className={cn(
-                'w-full h-full object-contain',
-                isLower && 'rotate-180',
-                isMissing && 'opacity-30 grayscale',
-                !isSelected && !hasPatientStatus && 'opacity-50'
-              )}
-            />
-          ) : (
-            <div className={cn(
-              'w-full h-full flex items-center justify-center text-[8px] font-medium',
-              isSelected ? 'bg-primary/20 text-primary' : 'bg-muted/50'
-            )}>
-              {toothNumber}
-            </div>
-          )}
+        <SvgTooth
+          toothNumber={toothNumber}
+          isLower={isLower}
+          isMissing={isMissing}
+          statusColor={hasPatientStatus ? hexColor : null}
+          isHovered={false}
+          width={w}
+          height={h}
+        />
 
-          {/* Selection overlay */}
-          {isSelected && (
-            <div 
-              className="absolute inset-0 rounded"
-              style={{ backgroundColor: hexColor ? `${hexColor}40` : 'hsl(var(--primary) / 0.3)' }}
-            />
-          )}
-
-          {/* Patient status overlay */}
-          {!isSelected && hasPatientStatus && hexColor && !isMissing && (
-            <div 
-              className="absolute inset-0 rounded"
-              style={{ backgroundColor: `${hexColor}25` }}
-            />
-          )}
-        </div>
-
-        {/* Tooth number - show below for lower teeth */}
         {isLower && (
           <span className={cn(
-            "text-[8px] font-medium leading-none",
+            "text-[7px] font-medium leading-none",
             isSelected ? 'text-primary' : hasPatientStatus ? 'text-foreground' : 'text-muted-foreground'
           )}>
             {toothNumber}
@@ -149,32 +119,21 @@ export function MiniToothSelector({
   return (
     <TooltipProvider delayDuration={100}>
       <div className={cn('space-y-0.5', className)}>
-        {/* Upper permanent */}
         <div className="flex justify-center gap-px">
           {upperTeeth.map(t => renderTooth(t, false, false))}
         </div>
-        
-        {/* Upper deciduous */}
         <div className="flex justify-center gap-px">
           {upperDeciduousTeeth.map(t => renderTooth(t, true, false))}
         </div>
-
-        {/* Divider */}
         <div className="flex justify-center py-0.5">
           <div className="w-full max-w-[200px] border-b border-muted-foreground/30" />
         </div>
-
-        {/* Lower deciduous */}
         <div className="flex justify-center gap-px">
           {lowerDeciduousTeeth.map(t => renderTooth(t, true, true))}
         </div>
-
-        {/* Lower permanent */}
         <div className="flex justify-center gap-px">
           {lowerTeeth.map(t => renderTooth(t, false, true))}
         </div>
-
-        {/* Selected teeth summary */}
         {selectedTeeth.length > 0 && (
           <div className="text-center text-[10px] text-muted-foreground pt-1">
             <span className="font-medium text-foreground">{selectedTeeth.length}</span> dinți selectați: {selectedTeeth.sort((a, b) => a - b).join(', ')}

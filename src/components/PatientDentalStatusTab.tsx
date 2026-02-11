@@ -51,7 +51,7 @@ interface ToothJournalEntry {
   type: 'treatment' | 'intervention' | 'condition';
 }
 
-function ToothJournalSection({ patientId, toothNumber }: { patientId: string; toothNumber: number }) {
+function ToothJournalSection({ patientId, toothNumber, refreshKey }: { patientId: string; toothNumber: number; refreshKey?: number }) {
   const [entries, setEntries] = useState<ToothJournalEntry[]>([]);
 
   useEffect(() => {
@@ -129,7 +129,7 @@ function ToothJournalSection({ patientId, toothNumber }: { patientId: string; to
       }
     };
     load();
-  }, [patientId, toothNumber]);
+  }, [patientId, toothNumber, refreshKey]);
 
   const journalByDate = entries.reduce((acc, entry) => {
     const dateKey = format(new Date(entry.date), 'dd.MM.yyyy');
@@ -195,6 +195,7 @@ function ToothJournalSection({ patientId, toothNumber }: { patientId: string; to
 export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange }: PatientDentalStatusTabProps) {
   const [hoveredTooth, setHoveredTooth] = useState<number | null>(null);
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
+  const [journalKey, setJournalKey] = useState(0);
 
   // Data hooks
   const { conditions: conditionsCatalog } = useDentalConditionsCatalog();
@@ -202,6 +203,32 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
   const { interventions: toothInterventions, addIntervention, removeIntervention } = useToothInterventions(patientId);
   const { doctors } = useDoctors();
   const { treatments } = useTreatments();
+
+  const refreshJournal = () => setJournalKey(k => k + 1);
+
+  const handleAddCondition = async (toothNumber: number, conditionId: string) => {
+    const ok = await addCondition(toothNumber, conditionId);
+    if (ok) refreshJournal();
+    return ok;
+  };
+
+  const handleRemoveCondition = async (id: string) => {
+    const ok = await removeCondition(id);
+    if (ok) refreshJournal();
+    return ok;
+  };
+
+  const handleAddIntervention = async (toothNumber: number, treatmentName: string, treatmentId?: string, doctorId?: string) => {
+    const ok = await addIntervention(toothNumber, treatmentName, treatmentId, doctorId);
+    if (ok) refreshJournal();
+    return ok;
+  };
+
+  const handleRemoveIntervention = async (id: string) => {
+    const ok = await removeIntervention(id);
+    if (ok) refreshJournal();
+    return ok;
+  };
 
   const getToothStatus = (toothNumber: number): string => {
     const tooth = dentalStatus.find((t) => t.tooth_number === toothNumber);
@@ -433,7 +460,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
 
           {/* Jurnal per dinte - shown below chart when a tooth is selected */}
           {selectedTooth && (
-            <ToothJournalSection patientId={patientId} toothNumber={selectedTooth} />
+            <ToothJournalSection patientId={patientId} toothNumber={selectedTooth} refreshKey={journalKey} />
           )}
         </div>
 
@@ -450,10 +477,10 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
               conditionsCatalog={conditionsCatalog}
               doctors={doctors}
               treatments={treatments}
-              onAddCondition={addCondition}
-              onRemoveCondition={removeCondition}
-              onAddIntervention={addIntervention}
-              onRemoveIntervention={removeIntervention}
+              onAddCondition={handleAddCondition}
+              onRemoveCondition={handleRemoveCondition}
+              onAddIntervention={handleAddIntervention}
+              onRemoveIntervention={handleRemoveIntervention}
               onClose={() => setSelectedTooth(null)}
             />
           </div>
