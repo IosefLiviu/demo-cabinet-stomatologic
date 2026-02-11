@@ -500,7 +500,12 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
 
                   const setGroup = (teeth: number[]) => {
                     setSelectedTooth(null);
-                    setSelectedGroup(teeth);
+                    // Toggle: if same group is already selected, deselect
+                    if (selectedGroup.length === teeth.length && teeth.every(t => selectedGroup.includes(t))) {
+                      setSelectedGroup([]);
+                    } else {
+                      setSelectedGroup(teeth);
+                    }
                   };
 
                   const isGroupMatch = (teeth: number[]) => selectedGroup.length > 0 && teeth.every(t => selectedGroup.includes(t));
