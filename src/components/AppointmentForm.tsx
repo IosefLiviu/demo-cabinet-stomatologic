@@ -500,7 +500,7 @@ export function AppointmentForm({
     setPatientPopoverOpen(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Check for overlapping appointments
@@ -552,6 +552,26 @@ export function AppointmentForm({
       })),
       planItemId: i.planItemId, // Include link to treatment plan item
     }));
+
+    // Save tooth interventions to dental journal for each selected tooth
+    if (formData.patientId) {
+      const toothInterventionRows = interventions.flatMap(i =>
+        (i.selectedTeeth || []).map(toothNumber => ({
+          patient_id: formData.patientId,
+          tooth_number: toothNumber,
+          treatment_name: i.treatmentName,
+          treatment_id: i.treatmentId || null,
+          doctor_id: formData.doctorId || null,
+        }))
+      );
+
+      if (toothInterventionRows.length > 0) {
+        const { error } = await supabase.from('tooth_interventions').insert(toothInterventionRows);
+        if (error) {
+          console.error('Error saving tooth interventions:', error);
+        }
+      }
+    }
 
     const firstTreatment = selectedTreatments[0];
     onSubmit({
