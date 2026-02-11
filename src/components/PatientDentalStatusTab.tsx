@@ -5,7 +5,7 @@ import { BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { TOOTH_STATUSES, getStatusHexColor as getStatusHexColorUtil } from '@/constants/toothStatuses';
-import { getToothImage } from './dental/toothImages';
+import { SvgTooth, getToothDimensions } from './dental/SvgTooth';
 import { ToothDetailPanel } from './dental/ToothDetailPanel';
 import { PatientDentalInfo } from './dental/PatientDentalInfo';
 import { useDentalConditionsCatalog, useToothConditions, useToothInterventions } from '@/hooks/useToothData';
@@ -222,12 +222,12 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
     const notes = getToothNotes(toothNumber);
     const isHovered = hoveredTooth === toothNumber;
     const isSelected = selectedTooth === toothNumber;
-    const toothImage = getToothImage(toothNumber);
     const hexColor = getStatusHexColor(status);
     const hasStatus = status !== 'Sănătos' && status !== 'healthy';
     const isMissing = status === 'missing' || status === 'Absent';
     const hasConditions = (conditionsCountByTooth[toothNumber] || 0) > 0;
     const hasInterventions = (interventionsCountByTooth[toothNumber] || 0) > 0;
+    const dims = getToothDimensions(toothNumber, isDeciduous);
 
     return (
       <div key={toothNumber} className="relative flex flex-col items-center group">
@@ -246,70 +246,40 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
           onMouseLeave={() => setHoveredTooth(null)}
           onClick={() => setSelectedTooth(toothNumber)}
           className={cn(
-            'relative flex items-center justify-center rounded-lg overflow-hidden',
+            'relative flex items-center justify-center cursor-pointer',
             'transition-all duration-300 ease-out',
-            'bg-muted/30 cursor-pointer p-1',
-            isHovered && 'ring-2 ring-offset-1 ring-primary z-10',
-            isSelected && 'ring-2 ring-offset-2 ring-primary z-10',
-            hasStatus && !isMissing && !isSelected && 'ring-2',
-            isDeciduous
-              ? 'w-9 h-11 sm:w-10 sm:h-12'
-              : 'w-10 h-14 sm:w-11 sm:h-16'
           )}
           style={{
             transform: isHovered ? 'scale(1.15) translateY(-4px)' : 'scale(1) translateY(0)',
-            boxShadow: isSelected
-              ? '0 0 0 2px hsl(var(--primary)), 0 8px 20px -4px hsl(var(--primary) / 0.3)'
-              : isHovered
-                ? hasStatus && hexColor
-                  ? `0 0 0 2px ${hexColor}, 0 8px 20px -4px ${hexColor}60`
-                  : '0 8px 20px -4px rgba(34,197,94,0.3)'
-                : hasStatus && hexColor
-                  ? `0 0 0 2px ${hexColor}`
-                  : 'none',
-            transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease-out',
+            transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
           }}
         >
-          {toothImage ? (
-            <img
-              src={toothImage}
-              alt={`Dinte ${toothNumber}`}
-              className={cn(
-                "w-full h-full object-contain transition-all duration-300",
-                isMissing && 'opacity-20 grayscale',
-                isLower && 'rotate-180',
-              )}
-              style={{
-                filter: isHovered && !isMissing
-                  ? 'brightness(1.1) drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
-                  : undefined,
-              }}
-            />
-          ) : (
-            <div className={cn(
-              "w-full h-full flex items-center justify-center",
-              "bg-gradient-to-b from-muted/40 to-muted/20 border-2 rounded-lg",
-              isDeciduous && 'border-dashed',
-            )}>
-              <span className="text-xs font-medium text-muted-foreground">{toothNumber}</span>
-            </div>
-          )}
+          <SvgTooth
+            toothNumber={toothNumber}
+            isLower={isLower}
+            isMissing={isMissing}
+            statusColor={hasStatus ? hexColor : null}
+            isHovered={isHovered}
+            width={dims.width}
+            height={dims.height}
+          />
 
-          {hasStatus && hexColor && !isMissing && (
+          {/* Selection ring */}
+          {isSelected && (
             <div
-              className="absolute inset-0 pointer-events-none rounded-lg transition-all duration-300"
-              style={{ backgroundColor: isHovered ? `${hexColor}50` : `${hexColor}30` }}
+              className="absolute inset-[-3px] rounded-lg border-2 border-primary pointer-events-none"
+              style={{ boxShadow: '0 0 12px hsl(var(--primary) / 0.3)' }}
             />
           )}
 
           {/* Notes indicator */}
           {notes && (
-            <div className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-primary border border-background shadow-sm" />
+            <div className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-primary border-2 border-background shadow-sm" />
           )}
 
           {/* Conditions/interventions indicator */}
           {(hasConditions || hasInterventions) && (
-            <div className="absolute bottom-0.5 left-0.5 w-2 h-2 rounded-full bg-warning border border-background shadow-sm" />
+            <div className="absolute bottom-0 left-0 w-2.5 h-2.5 rounded-full bg-warning border-2 border-background shadow-sm" />
           )}
         </div>
 
