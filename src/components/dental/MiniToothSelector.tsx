@@ -129,9 +129,17 @@ export function MiniToothSelector({
         <div className="flex justify-center py-0.5">
           <QuadrantCircle
             selectedTeeth={selectedTeeth}
-            onZoneClick={(teeth) => teeth.forEach(t => {
-              if (!selectedTeeth.includes(t)) onToothClick(t);
-            })}
+            onZoneClick={(teeth) => {
+              const allSelected = teeth.every(t => selectedTeeth.includes(t));
+              teeth.forEach(t => {
+                if (allSelected) {
+                  // Deselect all teeth in group by calling onToothClick (which toggles)
+                  if (selectedTeeth.includes(t)) onToothClick(t);
+                } else {
+                  if (!selectedTeeth.includes(t)) onToothClick(t);
+                }
+              });
+            }}
             size={70}
           />
         </div>
