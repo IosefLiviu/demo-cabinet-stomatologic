@@ -11,6 +11,7 @@ import { PatientDentalInfo } from './dental/PatientDentalInfo';
 import { useDentalConditionsCatalog, useToothConditions, useToothInterventions } from '@/hooks/useToothData';
 import { useDoctors } from '@/hooks/useDoctors';
 import { useTreatments } from '@/hooks/useTreatments';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export interface ToothData {
   tooth_number: number;
@@ -163,6 +164,43 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
 
   const getStatusHexColor = (statusName: string): string | null => getStatusHexColorUtil(statusName);
 
+  const toggleMissing = async (toothNumber: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const currentStatus = dentalStatus.find(t => t.tooth_number === toothNumber);
+    const isMissing = currentStatus?.status === 'missing';
+
+    try {
+      if (isMissing) {
+        // Remove the missing status (delete the row)
+        await supabase
+          .from('dental_status')
+          .delete()
+          .eq('patient_id', patientId)
+          .eq('tooth_number', toothNumber);
+      } else {
+        // Upsert as missing
+        await supabase
+          .from('dental_status')
+          .upsert({
+            patient_id: patientId,
+            tooth_number: toothNumber,
+            status: 'missing' as any,
+          }, { onConflict: 'patient_id,tooth_number' });
+      }
+      // Trigger refresh
+      onStatusChange?.(
+        isMissing
+          ? dentalStatus.filter(t => t.tooth_number !== toothNumber)
+          : [
+              ...dentalStatus.filter(t => t.tooth_number !== toothNumber),
+              { tooth_number: toothNumber, status: 'missing' },
+            ]
+      );
+    } catch (err) {
+      console.error('Error toggling missing:', err);
+    }
+  };
+
   const getToothNotes = (toothNumber: number): string | undefined => {
     const tooth = dentalStatus.find((t) => t.tooth_number === toothNumber);
     return tooth?.notes;
@@ -275,9 +313,22 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
           )}
         </div>
 
+        {/* Missing checkbox */}
+        <div
+          className="flex items-center justify-center mt-0.5"
+          onClick={(e) => toggleMissing(toothNumber, e)}
+          title={isMissing ? 'Marchează ca prezent' : 'Marchează ca lipsă'}
+        >
+          <Checkbox
+            checked={isMissing}
+            className="h-3 w-3 rounded-sm border-muted-foreground/50 data-[state=checked]:bg-muted-foreground data-[state=checked]:border-muted-foreground"
+            tabIndex={-1}
+          />
+        </div>
+
         {isLower && (
           <span className={cn(
-            "text-[10px] font-semibold mt-1 transition-all duration-300",
+            "text-[10px] font-semibold mt-0.5 transition-all duration-300",
             hasStatus ? 'text-foreground' : 'text-muted-foreground',
             (isHovered || isSelected) && 'text-primary scale-110'
           )}>
