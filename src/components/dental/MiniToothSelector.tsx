@@ -1,3 +1,4 @@
+import { useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { SvgTooth, getToothDimensions } from './SvgTooth';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -36,6 +37,30 @@ export function MiniToothSelector({
   getStatusHexColor,
   className,
 }: MiniToothSelectorProps) {
+  // Debounce clicks to prevent double-click from firing two toggles
+  const clickTimerRef = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
+  
+  const handleToothClickDebounced = useCallback((toothNumber: number) => {
+    // Clear any pending click for this tooth
+    if (clickTimerRef.current[toothNumber]) {
+      clearTimeout(clickTimerRef.current[toothNumber]);
+    }
+    // Delay the click slightly so double-click can cancel it
+    clickTimerRef.current[toothNumber] = setTimeout(() => {
+      onToothClick(toothNumber);
+      delete clickTimerRef.current[toothNumber];
+    }, 200);
+  }, [onToothClick]);
+
+  const handleToothDoubleClickDebounced = useCallback((toothNumber: number) => {
+    // Cancel the pending single click
+    if (clickTimerRef.current[toothNumber]) {
+      clearTimeout(clickTimerRef.current[toothNumber]);
+      delete clickTimerRef.current[toothNumber];
+    }
+    onToothDoubleClick?.(toothNumber);
+  }, [onToothDoubleClick]);
+
   const getPatientToothStatus = (toothNumber: number) => {
     return patientDentalStatus.find(t => t.tooth_number === toothNumber);
   };
@@ -55,8 +80,8 @@ export function MiniToothSelector({
     const button = (
       <button
         type="button"
-        onClick={() => onToothClick(toothNumber)}
-        onDoubleClick={() => onToothDoubleClick?.(toothNumber)}
+        onClick={() => handleToothClickDebounced(toothNumber)}
+        onDoubleClick={() => handleToothDoubleClickDebounced(toothNumber)}
         className={cn(
           'relative flex flex-col items-center transition-all rounded',
           'hover:scale-110 cursor-pointer',
