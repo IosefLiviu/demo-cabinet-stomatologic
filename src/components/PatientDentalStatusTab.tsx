@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { TOOTH_STATUSES, getStatusHexColor as getStatusHexColorUtil } from '@/constants/toothStatuses';
 import { SvgTooth, getToothDimensions } from './dental/SvgTooth';
+import { QuadrantCircle } from './dental/QuadrantCircle';
 import { ToothDetailPanel } from './dental/ToothDetailPanel';
 import { PatientDentalInfo } from './dental/PatientDentalInfo';
 import { useDentalConditionsCatalog, useToothConditions, useToothInterventions } from '@/hooks/useToothData';
@@ -448,154 +449,18 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
 
             {/* Quadrant circle diagram */}
             <div className="flex justify-center py-3">
-              <svg width="130" height="130" viewBox="0 0 130 130" className="select-none">
-                <defs>
-                  <linearGradient id="qc-fill" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#f7f2e8" />
-                    <stop offset="25%" stopColor="#f0e9d8" />
-                    <stop offset="55%" stopColor="#e6ddca" />
-                    <stop offset="85%" stopColor="#d8ceb8" />
-                    <stop offset="100%" stopColor="#cfc4aa" />
-                  </linearGradient>
-                  <linearGradient id="qc-highlight" x1="0.2" y1="0" x2="0.8" y2="1">
-                    <stop offset="0%" stopColor="white" stopOpacity="0.35" />
-                    <stop offset="40%" stopColor="white" stopOpacity="0.1" />
-                    <stop offset="100%" stopColor="white" stopOpacity="0" />
-                  </linearGradient>
-                  <radialGradient id="qc-shadow" cx="0.5" cy="0.6" r="0.5">
-                    <stop offset="70%" stopColor="transparent" />
-                    <stop offset="100%" stopColor="#a0926e" stopOpacity="0.12" />
-                  </radialGradient>
-                </defs>
-
-                {/* Drop shadow */}
-                <circle cx="66.2" cy="66.5" r="56" fill="rgba(0,0,0,0.06)" />
-
-                {/* Main circle fill */}
-                <circle cx="65" cy="65" r="56" fill="url(#qc-fill)" stroke="#c4b898" strokeWidth="0.7" />
-                <circle cx="65" cy="65" r="56" fill="url(#qc-shadow)" />
-                <circle cx="65" cy="65" r="56" fill="url(#qc-highlight)" />
-
-                {/* 6 clickable zones using clipPath */}
-                {(() => {
-                  // Circle: cx=65, cy=65, r=56 → top=9, bottom=121
-                  // Horizontal bands: top strip y=9..30, quadrants y=30..65 and y=65..100, bottom strip y=100..121
-                  const bandTop = 30;
-                  const bandBot = 100;
-                  const upperAll = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
-                  const lowerAll = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
-
-                  // Chord x at a given y: x = cx ± sqrt(r²-(y-cy)²)
-                  const cx = 65, cy = 65, r = 56;
-                  const chordHalf = (y: number) => Math.sqrt(r * r - (y - cy) * (y - cy));
-                  const xL_top = cx - chordHalf(bandTop);
-                  const xR_top = cx + chordHalf(bandTop);
-                  const xL_bot = cx - chordHalf(bandBot);
-                  const xR_bot = cx + chordHalf(bandBot);
-
-                  const q1Teeth = [18,17,16,15,14,13,12,11];
-                  const q2Teeth = [21,22,23,24,25,26,27,28];
-                  const q3Teeth = [31,32,33,34,35,36,37,38];
-                  const q4Teeth = [48,47,46,45,44,43,42,41];
-
-                  const setGroup = (teeth: number[]) => {
-                    setSelectedTooth(null);
-                    // Toggle: if same group is already selected, deselect
-                    if (selectedGroup.length === teeth.length && teeth.every(t => selectedGroup.includes(t))) {
-                      setSelectedGroup([]);
-                    } else {
-                      setSelectedGroup(teeth);
-                    }
-                  };
-
-                  const isGroupMatch = (teeth: number[]) => selectedGroup.length > 0 && teeth.every(t => selectedGroup.includes(t));
-
-                  const zones = [
-                    {
-                      key: 'maxilar',
-                      pathFull: `M${xL_top},${bandTop} A${r},${r} 0 0,1 ${xR_top},${bandTop} Z`,
-                      labelX: 65, labelY: 19, label: 'MAXILAR', fontSize: 7,
-                      isActive: isGroupMatch(upperAll),
-                      onClick: () => setGroup(upperAll),
-                    },
-                    {
-                      key: 'q1',
-                      pathFull: `M${xL_top},${bandTop} A${r},${r} 0 0,0 ${cx - r},${cy} L${cx},${cy} L${cx},${bandTop} Z`,
-                      labelX: 38, labelY: 48, label: '1', fontSize: 18,
-                      isActive: isGroupMatch(q1Teeth),
-                      onClick: () => setGroup(q1Teeth),
-                    },
-                    {
-                      key: 'q2',
-                      pathFull: `M${cx},${bandTop} L${xR_top},${bandTop} A${r},${r} 0 0,1 ${cx + r},${cy} L${cx},${cy} Z`,
-                      labelX: 92, labelY: 48, label: '2', fontSize: 18,
-                      isActive: isGroupMatch(q2Teeth),
-                      onClick: () => setGroup(q2Teeth),
-                    },
-                    {
-                      key: 'q3',
-                      pathFull: `M${cx},${cy} L${cx + r},${cy} A${r},${r} 0 0,1 ${xR_bot},${bandBot} L${cx},${bandBot} Z`,
-                      labelX: 92, labelY: 84, label: '3', fontSize: 18,
-                      isActive: isGroupMatch(q3Teeth),
-                      onClick: () => setGroup(q3Teeth),
-                    },
-                    {
-                      key: 'q4',
-                      pathFull: `M${cx - r},${cy} L${cx},${cy} L${cx},${bandBot} L${xL_bot},${bandBot} A${r},${r} 0 0,1 ${cx - r},${cy} Z`,
-                      labelX: 38, labelY: 84, label: '4', fontSize: 18,
-                      isActive: isGroupMatch(q4Teeth),
-                      onClick: () => setGroup(q4Teeth),
-                    },
-                    {
-                      key: 'mandibular',
-                      pathFull: `M${xL_bot},${bandBot} L${xR_bot},${bandBot} A${r},${r} 0 0,1 ${xL_bot},${bandBot} Z`,
-                      labelX: 65, labelY: 112, label: 'MANDIBULAR', fontSize: 7,
-                      isActive: isGroupMatch(lowerAll),
-                      onClick: () => setGroup(lowerAll),
-                    },
-                  ];
-
-                  return zones.map(z => (
-                    <g key={z.key} className="cursor-pointer" onClick={z.onClick}>
-                      <path
-                        d={z.pathFull}
-                        fill={z.isActive ? 'hsl(var(--primary) / 0.15)' : 'transparent'}
-                        className="transition-colors duration-200 hover:fill-[hsl(var(--primary)/0.1)]"
-                      />
-                      <text
-                        x={z.labelX} y={z.labelY}
-                        textAnchor="middle" dominantBaseline="central"
-                        fontSize={z.fontSize} fontWeight={z.fontSize > 10 ? '700' : '600'}
-                        letterSpacing={z.fontSize > 10 ? undefined : '0.5'}
-                        fill={z.isActive ? 'hsl(var(--primary))' : '#b8a680'}
-                        className="pointer-events-none transition-colors duration-200"
-                        opacity={z.isActive ? 1 : 0.6}
-                      >
-                        {z.label}
-                      </text>
-                    </g>
-                  ));
-                })()}
-
-                {/* Divider lines */}
-                {(() => {
-                  const cx = 65, cy = 65, r = 56;
-                  const chordHalf = (y: number) => Math.sqrt(r * r - (y - cy) * (y - cy));
-                  const bandTop = 30, bandBot = 100;
-                  return (
-                    <>
-                      {/* Vertical center line - only between band lines */}
-                      <line x1="65" y1={bandTop} x2="65" y2={bandBot} stroke="#b8a680" strokeWidth="2" opacity="0.7" />
-                      {/* Horizontal center line */}
-                      <line x1="9" y1="65" x2="121" y2="65" stroke="#b8a680" strokeWidth="2" opacity="0.7" />
-                      {/* Upper horizontal band line */}
-                      <line x1={cx - chordHalf(bandTop)} y1={bandTop} x2={cx + chordHalf(bandTop)} y2={bandTop} stroke="#b8a680" strokeWidth="1.5" opacity="0.5" />
-                      {/* Lower horizontal band line */}
-                      <line x1={cx - chordHalf(bandBot)} y1={bandBot} x2={cx + chordHalf(bandBot)} y2={bandBot} stroke="#b8a680" strokeWidth="1.5" opacity="0.5" />
-                    </>
-                  );
-                })()}
-              </svg>
+              <QuadrantCircle
+                selectedTeeth={selectedGroup}
+                onZoneClick={(teeth) => {
+                  setSelectedTooth(null);
+                  if (selectedGroup.length === teeth.length && teeth.every(t => selectedGroup.includes(t))) {
+                    setSelectedGroup([]);
+                  } else {
+                    setSelectedGroup(teeth);
+                  }
+                }}
+                size={130}
+              />
             </div>
 
             <div className="space-y-2">

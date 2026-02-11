@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { SvgTooth, getToothDimensions } from './SvgTooth';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { QuadrantCircle } from './QuadrantCircle';
 
 // FDI notation - permanent teeth
 const upperTeeth = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
@@ -126,7 +127,13 @@ export function MiniToothSelector({
           {upperDeciduousTeeth.map(t => renderTooth(t, true, false))}
         </div>
         <div className="flex justify-center py-0.5">
-          <div className="w-full max-w-[200px] border-b border-muted-foreground/30" />
+          <QuadrantCircle
+            selectedTeeth={selectedTeeth}
+            onZoneClick={(teeth) => teeth.forEach(t => {
+              if (!selectedTeeth.includes(t)) onToothClick(t);
+            })}
+            size={70}
+          />
         </div>
         <div className="flex justify-center gap-px">
           {lowerDeciduousTeeth.map(t => renderTooth(t, true, true))}
