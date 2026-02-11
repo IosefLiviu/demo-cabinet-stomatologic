@@ -806,6 +806,7 @@ const Index = () => {
           setEditingTreatmentPlan({
             id: plan.id,
             patientId: plan.patientId,
+            name: plan.name,
             doctorId: plan.doctorId,
             nextAppointmentDate: plan.nextAppointmentDate,
             nextAppointmentTime: plan.nextAppointmentTime,

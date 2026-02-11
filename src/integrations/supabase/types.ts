@@ -1388,6 +1388,7 @@ export type Database = {
           discount_percent: number | null
           doctor_id: string | null
           id: string
+          name: string | null
           next_appointment_date: string | null
           next_appointment_time: string | null
           notes: string | null
@@ -1399,6 +1400,7 @@ export type Database = {
           discount_percent?: number | null
           doctor_id?: string | null
           id?: string
+          name?: string | null
           next_appointment_date?: string | null
           next_appointment_time?: string | null
           notes?: string | null
@@ -1410,6 +1412,7 @@ export type Database = {
           discount_percent?: number | null
           doctor_id?: string | null
           id?: string
+          name?: string | null
           next_appointment_date?: string | null
           next_appointment_time?: string | null
           notes?: string | null
