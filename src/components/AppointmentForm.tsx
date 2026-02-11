@@ -638,12 +638,8 @@ export function AppointmentForm({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] max-w-[850px] h-[90vh] max-h-[90vh] overflow-hidden flex flex-col p-3 sm:p-6">
         <DialogHeader className="pb-2 sm:pb-4">
-          <DialogTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-            <span className="text-base sm:text-lg">{editingAppointment ? 'Editare programare' : 'Programare nouă'}</span>
-            <span className="text-xs sm:text-sm font-normal text-muted-foreground flex items-center gap-1.5">
-              <Calendar className="h-3.5 w-3.5" />
-              {format(selectedDate, 'dd MMMM yyyy', { locale: ro })}
-            </span>
+          <DialogTitle className="text-base sm:text-lg">
+            {editingAppointment ? 'Editare programare' : 'Programare nouă'}
           </DialogTitle>
         </DialogHeader>
         
