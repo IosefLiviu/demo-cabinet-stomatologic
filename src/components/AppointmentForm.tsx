@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { format, parse } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Search, Trash2, UserPlus, FileText, Smile, FileImage, ClipboardPlus, AlertTriangle, Calendar, RotateCcw, CalendarDays, Check, Printer, Bell, MessageSquare } from 'lucide-react';
+import { Search, Trash2, UserPlus, FileText, Smile, FileImage, ClipboardPlus, AlertTriangle, Calendar, RotateCcw, CalendarDays, Check, Printer, Bell, MessageSquare, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -102,6 +102,7 @@ interface AppointmentFormProps {
   onViewDentalStatus?: (patient: Patient) => void;
   onViewRadiographs?: (patient: Patient) => void;
   onViewPrintables?: (patient: Patient) => void;
+  onViewTreatmentPlan?: (patient: Patient) => void;
   onViewReminder?: (patient: Patient) => void;
   onSendWhatsApp?: (patient: Patient) => void;
   selectedDate: Date;
@@ -149,6 +150,7 @@ export function AppointmentForm({
   onViewDentalStatus,
   onViewRadiographs,
   onViewPrintables,
+  onViewTreatmentPlan,
   onViewReminder,
   onSendWhatsApp,
   selectedDate,
@@ -825,6 +827,21 @@ export function AppointmentForm({
                     >
                       <Printer className="h-3.5 w-3.5" />
                       Printabile
+                    </Button>
+                  )}
+                  {formData.patientId && onViewTreatmentPlan && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="text-xs sm:text-sm gap-1"
+                      onClick={() => {
+                        const patient = patients.find(p => p.id === formData.patientId);
+                        if (patient) onViewTreatmentPlan(patient);
+                      }}
+                    >
+                      <ClipboardList className="h-3.5 w-3.5" />
+                      Plan Tratament
                     </Button>
                   )}
                   {formData.patientId && onViewReminder && (

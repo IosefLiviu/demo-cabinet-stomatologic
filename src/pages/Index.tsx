@@ -899,6 +899,15 @@ const Index = () => {
           pushNavState({ tab: 'printabile' });
           setActiveTab('printabile');
         }}
+        onViewTreatmentPlan={(patient) => {
+          setShowAppointmentForm(false);
+          setTreatmentPlanPatientId(patient.id);
+          setEditingTreatmentPlan(undefined);
+          setTreatmentPlanSourcePatient(patient);
+          setSelectedPatient(null);
+          setActiveTab('treatment-plan');
+          pushNavState({ tab: 'treatment-plan' });
+        }}
         onViewReminder={(patient) => {
           setReminderDialogPatient(patient);
         }}
