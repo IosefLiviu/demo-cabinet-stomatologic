@@ -259,6 +259,33 @@ export type Database = {
         }
         Relationships: []
       }
+      dental_conditions: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
       dental_status: {
         Row: {
           id: string
@@ -844,12 +871,22 @@ export type Database = {
           cnp: string | null
           created_at: string
           date_of_birth: string | null
+          diag_chirurgical: string | null
+          diag_ocluzal: string | null
+          diag_odontal: string | null
+          diag_ortodontic: string | null
+          diag_parodontal: string | null
           email: string | null
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
           first_name: string
           gender: string | null
+          has_dental_appliance: boolean | null
           id: string
+          is_edentulous: boolean | null
+          is_finalized: boolean | null
+          is_implant_patient: boolean | null
+          is_periodontal_patient: boolean | null
           last_name: string
           medical_conditions: string[] | null
           medications: string[] | null
@@ -865,12 +902,22 @@ export type Database = {
           cnp?: string | null
           created_at?: string
           date_of_birth?: string | null
+          diag_chirurgical?: string | null
+          diag_ocluzal?: string | null
+          diag_odontal?: string | null
+          diag_ortodontic?: string | null
+          diag_parodontal?: string | null
           email?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           first_name: string
           gender?: string | null
+          has_dental_appliance?: boolean | null
           id?: string
+          is_edentulous?: boolean | null
+          is_finalized?: boolean | null
+          is_implant_patient?: boolean | null
+          is_periodontal_patient?: boolean | null
           last_name: string
           medical_conditions?: string[] | null
           medications?: string[] | null
@@ -886,12 +933,22 @@ export type Database = {
           cnp?: string | null
           created_at?: string
           date_of_birth?: string | null
+          diag_chirurgical?: string | null
+          diag_ocluzal?: string | null
+          diag_odontal?: string | null
+          diag_ortodontic?: string | null
+          diag_parodontal?: string | null
           email?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           first_name?: string
           gender?: string | null
+          has_dental_appliance?: boolean | null
           id?: string
+          is_edentulous?: boolean | null
+          is_finalized?: boolean | null
+          is_implant_patient?: boolean | null
+          is_periodontal_patient?: boolean | null
           last_name?: string
           medical_conditions?: string[] | null
           medications?: string[] | null
@@ -1123,6 +1180,109 @@ export type Database = {
             columns: ["source_cabinet_id"]
             isOneToOne: false
             referencedRelation: "cabinets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tooth_conditions: {
+        Row: {
+          condition_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          patient_id: string
+          tooth_number: number
+        }
+        Insert: {
+          condition_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          patient_id: string
+          tooth_number: number
+        }
+        Update: {
+          condition_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          tooth_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tooth_conditions_condition_id_fkey"
+            columns: ["condition_id"]
+            isOneToOne: false
+            referencedRelation: "dental_conditions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tooth_conditions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tooth_interventions: {
+        Row: {
+          created_at: string
+          doctor_id: string | null
+          id: string
+          notes: string | null
+          patient_id: string
+          performed_at: string
+          tooth_number: number
+          treatment_id: string | null
+          treatment_name: string
+        }
+        Insert: {
+          created_at?: string
+          doctor_id?: string | null
+          id?: string
+          notes?: string | null
+          patient_id: string
+          performed_at?: string
+          tooth_number: number
+          treatment_id?: string | null
+          treatment_name: string
+        }
+        Update: {
+          created_at?: string
+          doctor_id?: string | null
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          performed_at?: string
+          tooth_number?: number
+          treatment_id?: string | null
+          treatment_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tooth_interventions_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tooth_interventions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tooth_interventions_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
             referencedColumns: ["id"]
           },
         ]
