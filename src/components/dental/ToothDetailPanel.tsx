@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import { Plus, Trash2, X, Search } from 'lucide-react';
@@ -31,6 +31,7 @@ interface ToothDetailPanelProps {
   onAddIntervention: (toothNumber: number, treatmentName: string, treatmentId?: string, doctorId?: string) => Promise<boolean>;
   onRemoveIntervention: (id: string) => Promise<boolean>;
   onClose: () => void;
+  children?: ReactNode;
 }
 
 export function ToothDetailPanel({
@@ -48,6 +49,7 @@ export function ToothDetailPanel({
   onAddIntervention,
   onRemoveIntervention,
   onClose,
+  children,
 }: ToothDetailPanelProps) {
   const [showConditionsDialog, setShowConditionsDialog] = useState(false);
   const [showInterventionsDialog, setShowInterventionsDialog] = useState(false);
@@ -165,9 +167,10 @@ export function ToothDetailPanel({
               Adaugă intervenție
             </button>
           </div>
-        </div>
 
-        {/* Journal slot rendered via children */}
+          {/* Journal slot */}
+          {children}
+        </div>
       </div>
 
       {/* Afecțiuni popup */}
