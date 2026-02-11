@@ -89,6 +89,7 @@ const Index = () => {
   const [editingPatient, setEditingPatient] = useState<Patient | undefined>();
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [patientDetailsInitialTab, setPatientDetailsInitialTab] = useState<string>('info');
+  const [returnToAppointmentOnClose, setReturnToAppointmentOnClose] = useState(false);
   const [treatmentPlanPatientId, setTreatmentPlanPatientId] = useState<string | undefined>();
   const [editingTreatmentPlan, setEditingTreatmentPlan] = useState<any>(undefined);
   const [treatmentPlanSourcePatient, setTreatmentPlanSourcePatient] = useState<Patient | null>(null);
@@ -774,6 +775,10 @@ const Index = () => {
         patient={selectedPatient}
         open={selectedPatient !== null}
         onClose={() => {
+          if (returnToAppointmentOnClose) {
+            setReturnToAppointmentOnClose(false);
+            setShowAppointmentForm(true);
+          }
           pushNavState({ tab: activeTab });
           setSelectedPatient(null);
           setPatientDetailsInitialTab('info');
@@ -876,6 +881,7 @@ const Index = () => {
         }}
         onViewDentalStatus={(patient) => {
           setShowAppointmentForm(false);
+          setReturnToAppointmentOnClose(true);
           pushNavState({ 
             tab: 'patients', 
             patientId: patient.id, 
