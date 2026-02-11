@@ -1106,7 +1106,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                                     <ClipboardList className="h-4 w-4 text-primary" />
                                     <div className="text-left">
                                       <div className="font-medium text-sm">
-                                        {format(new Date(plan.createdAt), 'd MMMM yyyy', { locale: ro })}
+                                        {(plan as any).name || format(new Date(plan.createdAt), 'd MMMM yyyy', { locale: ro })}
                                       </div>
                                       <div className="text-xs text-muted-foreground">
                                         {plan.items.length} tratamente

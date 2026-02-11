@@ -26,6 +26,7 @@ export interface TreatmentPlanItem {
 export interface TreatmentPlan {
   id: string;
   patientId: string;
+  name?: string;
   doctorId?: string;
   nextAppointmentDate?: string;
   nextAppointmentTime?: string;
@@ -57,6 +58,7 @@ export function useTreatmentPlans() {
       return (plans || []).map(plan => ({
         id: plan.id,
         patientId: plan.patient_id,
+        name: (plan as any).name || undefined,
         doctorId: plan.doctor_id || undefined,
         nextAppointmentDate: plan.next_appointment_date || undefined,
         nextAppointmentTime: plan.next_appointment_time || undefined,
@@ -105,7 +107,8 @@ export function useTreatmentPlans() {
     nextAppointmentTime: string | undefined,
     items: TreatmentPlanItem[],
     existingPlanId?: string,
-    discountPercent?: number
+    discountPercent?: number,
+    planName?: string
   ): Promise<string | null> => {
     setLoading(true);
     try {
@@ -120,7 +123,8 @@ export function useTreatmentPlans() {
             next_appointment_date: nextAppointmentDate || null,
             next_appointment_time: nextAppointmentTime || null,
             discount_percent: discountPercent || 0,
-          })
+            name: planName || null,
+          } as any)
           .eq('id', existingPlanId);
 
         if (updateError) throw updateError;
@@ -142,7 +146,8 @@ export function useTreatmentPlans() {
             next_appointment_date: nextAppointmentDate || null,
             next_appointment_time: nextAppointmentTime || null,
             discount_percent: discountPercent || 0,
-          })
+            name: planName || null,
+          } as any)
           .select()
           .single();
 

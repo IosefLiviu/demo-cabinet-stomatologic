@@ -76,6 +76,7 @@ interface LocalTreatmentPlanItem {
 interface InitialPlanData {
   id: string;
   patientId: string;
+  name?: string;
   doctorId?: string;
   nextAppointmentDate?: string;
   nextAppointmentTime?: string;
@@ -140,6 +141,7 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
   const [treatmentDialogOpen, setTreatmentDialogOpen] = useState(false);
   const [patientSearch, setPatientSearch] = useState('');
   const [discountPercent, setDiscountPercent] = useState<number>(0);
+  const [planName, setPlanName] = useState<string>('');
   const [editingPlanId, setEditingPlanId] = useState<string | undefined>();
   // Selection mode per item: 'teeth' for individual, 'arch' for quadrant/arch selection
   const [selectionMode, setSelectionMode] = useState<Record<string, 'teeth' | 'arch'>>({});
@@ -192,6 +194,7 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
       setNextAppointmentDate(initialPlan.nextAppointmentDate || '');
       setNextAppointmentTime(initialPlan.nextAppointmentTime || '');
       setDiscountPercent(initialPlan.discountPercent || 0);
+      setPlanName(initialPlan.name || '');
       setEditingPlanId(initialPlan.id);
       
       // Load completed teeth and apply them to the plan items
@@ -369,6 +372,7 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
     setNextAppointmentTime('');
     setPlanItems([]);
     setDiscountPercent(0);
+    setPlanName('');
     setEditingPlanId(undefined);
   };
 
@@ -535,7 +539,8 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
       nextAppointmentTime || undefined,
       itemsToSave,
       editingPlanId,
-      discountPercent
+      discountPercent,
+      planName || undefined
     );
 
     if (savedPlanId) {
@@ -695,6 +700,16 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
                   </div>
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Plan Name */}
+            <div className="space-y-2">
+              <Label>Denumire plan</Label>
+              <Input
+                value={planName}
+                onChange={(e) => setPlanName(e.target.value)}
+                placeholder="ex: Plan protetică, Plan implant..."
+              />
             </div>
 
             {/* Doctor Selection */}

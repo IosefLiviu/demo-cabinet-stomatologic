@@ -1,0 +1,1 @@
+ALTER TABLE public.treatment_plans ADD COLUMN name text NULL DEFAULT NULL;
