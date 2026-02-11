@@ -134,11 +134,6 @@ export function usePendingReminders() {
   const { data: reminders = [], isLoading } = useQuery({
     queryKey: ['patient-reminders', 'pending'],
     queryFn: async () => {
-      // Show reminders whose date is within the next 7 days or already overdue
-      const inOneWeek = new Date();
-      inOneWeek.setDate(inOneWeek.getDate() + 7);
-      const maxDate = inOneWeek.toISOString().split('T')[0];
-
       const { data, error } = await supabase
         .from('patient_reminders')
         .select(`
@@ -146,7 +141,6 @@ export function usePendingReminders() {
           patient:patients(id, first_name, last_name, phone)
         `)
         .eq('is_completed', false)
-        .lte('reminder_date', maxDate)
         .order('reminder_date', { ascending: true });
 
       if (error) throw error;
@@ -155,4 +149,27 @@ export function usePendingReminders() {
   });
 
   return { reminders, isLoading };
+}
+
+/** Returns count of reminders due within 7 days or overdue (for the sidebar badge) */
+export function useUrgentRemindersCount() {
+  const { data: count = 0 } = useQuery({
+    queryKey: ['patient-reminders', 'urgent-count'],
+    queryFn: async () => {
+      const inOneWeek = new Date();
+      inOneWeek.setDate(inOneWeek.getDate() + 7);
+      const maxDate = inOneWeek.toISOString().split('T')[0];
+
+      const { count, error } = await supabase
+        .from('patient_reminders')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_completed', false)
+        .lte('reminder_date', maxDate);
+
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
+  return count;
 }

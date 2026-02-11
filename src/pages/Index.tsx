@@ -34,7 +34,7 @@ import { PatientReminderDialog } from '@/components/PatientReminderDialog';
 import { WhatsAppQuickSendDialog } from '@/components/WhatsAppQuickSendDialog';
 import { AppSidebar } from '@/components/AppSidebar';
 import { useWhatsAppMessages } from '@/hooks/useWhatsAppMessages';
-import { usePendingReminders } from '@/hooks/usePatientReminders';
+import { useUrgentRemindersCount } from '@/hooks/usePatientReminders';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
@@ -161,7 +161,7 @@ const Index = () => {
   const { shifts: doctorShifts } = useDoctorShifts(undefined, { start: dateStr, end: dateStr });
   const { isAdmin, doctorId } = useAuth();
   const { unreadCount } = useWhatsAppMessages();
-  const { reminders: pendingReminders } = usePendingReminders();
+  const urgentRemindersCount = useUrgentRemindersCount();
   
   // Reception user = not admin AND not a doctor
   const isReception = !isAdmin && !doctorId;
@@ -687,7 +687,7 @@ const Index = () => {
             isAdmin={isAdmin}
             isReception={isReception}
             unreadCount={unreadCount}
-            pendingRemindersCount={pendingReminders.length}
+            pendingRemindersCount={urgentRemindersCount}
           />
 
           <main className="flex-1 min-w-0 w-full">
