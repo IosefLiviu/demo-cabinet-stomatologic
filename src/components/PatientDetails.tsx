@@ -1011,7 +1011,12 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
 
           {/* Dental Status - Full Screen Dialog */}
           {showDentalFullscreen && (
-            <Dialog open={showDentalFullscreen} onOpenChange={setShowDentalFullscreen}>
+            <Dialog open={showDentalFullscreen} onOpenChange={(open) => {
+              setShowDentalFullscreen(open);
+              if (!open && initialTab === 'dental') {
+                onClose();
+              }
+            }}>
               <DialogContent className="max-w-[98vw] w-full h-[95vh] max-h-[95vh] overflow-y-auto p-6">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
