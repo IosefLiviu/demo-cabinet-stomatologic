@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { ChevronDown, History } from 'lucide-react';
+import { ChevronDown, History, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
@@ -62,6 +62,110 @@ const statusEnumToName: Record<string, string> = {
   'root_canal': 'OBT Canal',
   'extraction_needed': 'Rest Radicular',
 };
+
+interface ToothJournalEntry {
+  id: string;
+  date: string;
+  treatment_name: string;
+  doctor_name: string | null;
+  cabinet_name: string | null;
+}
+
+function ToothJournalSection({ patientId, toothNumber }: { patientId: string; toothNumber: number }) {
+  const [entries, setEntries] = useState<ToothJournalEntry[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        // Try appointment_treatments first
+        const { data, error } = await supabase
+          .from('appointment_treatments')
+          .select(`
+            id,
+            treatment_name,
+            tooth_numbers,
+            created_at,
+            appointment:appointments!inner(
+              appointment_date,
+              status,
+              doctor:doctors(name),
+              cabinet:cabinets(name)
+            )
+          `)
+          .eq('appointment.patient_id', patientId)
+          .contains('tooth_numbers', [toothNumber])
+          .in('appointment.status', ['completed', 'finalizat'])
+          .order('created_at', { ascending: false });
+
+        if (!error && data) {
+          setEntries((data || []).map((item: any) => ({
+            id: item.id,
+            date: item.appointment?.appointment_date || item.created_at,
+            treatment_name: item.treatment_name,
+            doctor_name: item.appointment?.doctor?.name || null,
+            cabinet_name: item.appointment?.cabinet?.name || null,
+          })));
+        }
+      } catch (err) {
+        console.error('Error loading tooth journal:', err);
+      }
+    };
+    load();
+  }, [patientId, toothNumber]);
+
+  const journalByDate = entries.reduce((acc, entry) => {
+    const dateKey = format(new Date(entry.date), 'dd.MM.yyyy');
+    if (!acc[dateKey]) acc[dateKey] = [];
+    acc[dateKey].push(entry);
+    return acc;
+  }, {} as Record<string, ToothJournalEntry[]>);
+
+  if (entries.length === 0) {
+    return (
+      <div className="mt-4 pt-3 border-t">
+        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
+          <BookOpen className="h-3.5 w-3.5" />
+          Jurnal — Dinte {toothNumber}
+        </h4>
+        <p className="text-xs text-muted-foreground">Nicio înregistrare</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 pt-3 border-t">
+      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
+        <BookOpen className="h-3.5 w-3.5" />
+        Jurnal — Dinte {toothNumber}
+      </h4>
+      <div className="border rounded-lg overflow-hidden">
+        <div className="grid grid-cols-[90px_1fr] bg-muted/70 text-xs font-semibold px-2 py-1.5 border-b">
+          <span>Dată</span>
+          <span>Detalii</span>
+        </div>
+        <div className="divide-y max-h-[250px] overflow-auto">
+          {Object.entries(journalByDate).map(([dateKey, items]) => (
+            <div key={dateKey} className="grid grid-cols-[90px_1fr]">
+              <div className="text-xs text-muted-foreground px-2 py-1.5 border-r">{dateKey}</div>
+              <div className="divide-y">
+                {items.map(entry => (
+                  <div key={entry.id} className="px-2 py-1.5 text-xs">
+                    {entry.doctor_name && (
+                      <span className="text-muted-foreground">
+                        {entry.cabinet_name && `${entry.cabinet_name}: `}{entry.doctor_name}
+                      </span>
+                    )}
+                    <div className="font-medium">{entry.treatment_name}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange }: PatientDentalStatusTabProps) {
   const [hoveredTooth, setHoveredTooth] = useState<number | null>(null);
@@ -363,6 +467,11 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
               </div>
             </div>
           </div>
+
+          {/* Jurnal per dinte - shown below chart when a tooth is selected */}
+          {selectedTooth && (
+            <ToothJournalSection patientId={patientId} toothNumber={selectedTooth} />
+          )}
         </div>
 
         {/* Side panel */}
