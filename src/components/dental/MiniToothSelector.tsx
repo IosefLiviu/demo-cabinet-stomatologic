@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { SvgTooth, getToothDimensions } from './SvgTooth';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -37,37 +37,11 @@ export function MiniToothSelector({
   getStatusHexColor,
   className,
 }: MiniToothSelectorProps) {
-  // Track whether we're handling a double-click to suppress the second single-click
-  const pendingClickRef = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
-  
-  // Cleanup timers on unmount
-  useEffect(() => {
-    return () => {
-      Object.values(pendingClickRef.current).forEach(clearTimeout);
-    };
-  }, []);
-
   const handleClick = useCallback((toothNumber: number) => {
-    // If there's already a pending click for this tooth, it means
-    // the user double-clicked — cancel the pending single-click
-    if (pendingClickRef.current[toothNumber]) {
-      clearTimeout(pendingClickRef.current[toothNumber]);
-      delete pendingClickRef.current[toothNumber];
-      return;
-    }
-    // Schedule the toggle with a short delay so double-click can cancel it
-    pendingClickRef.current[toothNumber] = setTimeout(() => {
-      delete pendingClickRef.current[toothNumber];
-      onToothClick(toothNumber);
-    }, 250);
+    onToothClick(toothNumber);
   }, [onToothClick]);
 
   const handleDoubleClick = useCallback((toothNumber: number) => {
-    // Cancel any pending single click
-    if (pendingClickRef.current[toothNumber]) {
-      clearTimeout(pendingClickRef.current[toothNumber]);
-      delete pendingClickRef.current[toothNumber];
-    }
     onToothDoubleClick?.(toothNumber);
   }, [onToothDoubleClick]);
 
