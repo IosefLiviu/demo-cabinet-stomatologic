@@ -134,6 +134,11 @@ export function usePendingReminders() {
   const { data: reminders = [], isLoading } = useQuery({
     queryKey: ['patient-reminders', 'pending'],
     queryFn: async () => {
+      // Include reminders up to 7 days in the future (early alarm)
+      const sevenDaysFromNow = new Date();
+      sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+      const cutoffDate = sevenDaysFromNow.toISOString().split('T')[0];
+
       const { data, error } = await supabase
         .from('patient_reminders')
         .select(`
@@ -141,6 +146,7 @@ export function usePendingReminders() {
           patient:patients(id, first_name, last_name, phone)
         `)
         .eq('is_completed', false)
+        .lte('reminder_date', cutoffDate)
         .order('reminder_date', { ascending: true });
 
       if (error) throw error;
