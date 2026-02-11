@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { SvgTooth, getToothDimensions } from './SvgTooth';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -37,26 +37,36 @@ export function MiniToothSelector({
   getStatusHexColor,
   className,
 }: MiniToothSelectorProps) {
-  // Debounce clicks to prevent double-click from firing two toggles
-  const clickTimerRef = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
+  // Track whether we're handling a double-click to suppress the second single-click
+  const pendingClickRef = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
   
-  const handleToothClickDebounced = useCallback((toothNumber: number) => {
-    // Clear any pending click for this tooth
-    if (clickTimerRef.current[toothNumber]) {
-      clearTimeout(clickTimerRef.current[toothNumber]);
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(pendingClickRef.current).forEach(clearTimeout);
+    };
+  }, []);
+
+  const handleClick = useCallback((toothNumber: number) => {
+    // If there's already a pending click for this tooth, it means
+    // the user double-clicked — cancel the pending single-click
+    if (pendingClickRef.current[toothNumber]) {
+      clearTimeout(pendingClickRef.current[toothNumber]);
+      delete pendingClickRef.current[toothNumber];
+      return;
     }
-    // Delay the click slightly so double-click can cancel it
-    clickTimerRef.current[toothNumber] = setTimeout(() => {
+    // Schedule the toggle with a short delay so double-click can cancel it
+    pendingClickRef.current[toothNumber] = setTimeout(() => {
+      delete pendingClickRef.current[toothNumber];
       onToothClick(toothNumber);
-      delete clickTimerRef.current[toothNumber];
-    }, 200);
+    }, 250);
   }, [onToothClick]);
 
-  const handleToothDoubleClickDebounced = useCallback((toothNumber: number) => {
-    // Cancel the pending single click
-    if (clickTimerRef.current[toothNumber]) {
-      clearTimeout(clickTimerRef.current[toothNumber]);
-      delete clickTimerRef.current[toothNumber];
+  const handleDoubleClick = useCallback((toothNumber: number) => {
+    // Cancel any pending single click
+    if (pendingClickRef.current[toothNumber]) {
+      clearTimeout(pendingClickRef.current[toothNumber]);
+      delete pendingClickRef.current[toothNumber];
     }
     onToothDoubleClick?.(toothNumber);
   }, [onToothDoubleClick]);
@@ -80,8 +90,8 @@ export function MiniToothSelector({
     const button = (
       <button
         type="button"
-        onClick={() => handleToothClickDebounced(toothNumber)}
-        onDoubleClick={() => handleToothDoubleClickDebounced(toothNumber)}
+        onClick={() => handleClick(toothNumber)}
+        onDoubleClick={() => handleDoubleClick(toothNumber)}
         className={cn(
           'relative flex flex-col items-center transition-all rounded',
           'hover:scale-110 cursor-pointer',
