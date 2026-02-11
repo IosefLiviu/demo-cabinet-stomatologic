@@ -327,13 +327,13 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
 
   const content = (
     <div className={cn(
-      "space-y-6",
+      "space-y-8",
       fullscreen && "h-full overflow-y-auto"
     )}>
       {/* Header with patient name and fullscreen toggle */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-foreground">{patientName}</h2>
+          <h2 className="text-lg font-bold text-foreground tracking-tight">{patientName}</h2>
           <p className="text-xs text-muted-foreground">Fișă pacient consolidată</p>
         </div>
         <Button
@@ -347,38 +347,49 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
         </Button>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="rounded-xl border bg-card p-3 space-y-1">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Stethoscope className="h-3.5 w-3.5" />
-            <span className="text-[11px] font-medium uppercase tracking-wide">Tratamente</span>
+      {/* Summary Cards - Modern design */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="rounded-2xl border bg-card/50 p-4 space-y-2 hover:shadow-sm transition-shadow">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
+              <Stethoscope className="h-4 w-4 text-primary" />
+            </div>
+            <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Tratamente</span>
           </div>
-          <p className="text-xl font-bold text-foreground">{totalTreatments}</p>
+          <p className="text-2xl font-bold text-foreground pl-10">{totalTreatments}</p>
         </div>
-        <div className="rounded-xl border bg-card p-3 space-y-1">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <FileText className="h-3.5 w-3.5" />
-            <span className="text-[11px] font-medium uppercase tracking-wide">Total</span>
+        <div className="rounded-2xl border bg-card/50 p-4 space-y-2 hover:shadow-sm transition-shadow">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
+              <FileText className="h-4 w-4 text-primary" />
+            </div>
+            <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Total</span>
           </div>
-          <p className="text-xl font-bold text-foreground">{totalSpent.toLocaleString()} <span className="text-sm font-normal text-muted-foreground">RON</span></p>
+          <p className="text-2xl font-bold text-foreground pl-10">{totalSpent.toLocaleString()} <span className="text-sm font-normal text-muted-foreground">RON</span></p>
         </div>
-        <div className="rounded-xl border bg-card p-3 space-y-1">
-          <div className="flex items-center gap-2 text-cyan-600">
-            <Badge variant="outline" className="h-4 w-4 p-0 flex items-center justify-center text-[8px] border-cyan-500 text-cyan-600">C</Badge>
-            <span className="text-[11px] font-medium uppercase tracking-wide">CAS</span>
+        <div className="rounded-2xl border bg-card/50 p-4 space-y-2 hover:shadow-sm transition-shadow">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-100 dark:bg-cyan-900/30">
+              <Badge variant="outline" className="h-4 w-4 p-0 flex items-center justify-center text-[8px] border-cyan-500 text-cyan-600">C</Badge>
+            </div>
+            <span className="text-[11px] font-medium uppercase tracking-wider text-cyan-600">CAS</span>
           </div>
-          <p className="text-xl font-bold text-cyan-600">{totalCas.toLocaleString()} <span className="text-sm font-normal opacity-70">RON</span></p>
+          <p className="text-2xl font-bold text-cyan-600 pl-10">{totalCas.toLocaleString()} <span className="text-sm font-normal opacity-70">RON</span></p>
         </div>
         <div className={cn(
-          "rounded-xl border p-3 space-y-1",
-          totalDebt > 0 ? "border-orange-300 dark:border-orange-700 bg-orange-50/50 dark:bg-orange-950/20" : "bg-card"
+          "rounded-2xl border p-4 space-y-2 hover:shadow-sm transition-shadow",
+          totalDebt > 0 ? "border-orange-200 dark:border-orange-800 bg-orange-50/30 dark:bg-orange-950/10" : "bg-card/50"
         )}>
-          <div className="flex items-center gap-2 text-orange-600">
-            <AlertCircle className="h-3.5 w-3.5" />
-            <span className="text-[11px] font-medium uppercase tracking-wide">Restanțe</span>
+          <div className="flex items-center gap-2">
+            <div className={cn(
+              "flex h-8 w-8 items-center justify-center rounded-xl",
+              totalDebt > 0 ? "bg-orange-100 dark:bg-orange-900/30" : "bg-muted"
+            )}>
+              <AlertCircle className={cn("h-4 w-4", totalDebt > 0 ? "text-orange-500" : "text-muted-foreground")} />
+            </div>
+            <span className={cn("text-[11px] font-medium uppercase tracking-wider", totalDebt > 0 ? "text-orange-600" : "text-muted-foreground")}>Restanțe</span>
           </div>
-          <p className={cn("text-xl font-bold", totalDebt > 0 ? "text-orange-600" : "text-muted-foreground")}>
+          <p className={cn("text-2xl font-bold pl-10", totalDebt > 0 ? "text-orange-600" : "text-muted-foreground")}>
             {totalDebt > 0 ? totalDebt.toLocaleString() : '0'} <span className="text-sm font-normal opacity-70">RON</span>
           </p>
         </div>
@@ -390,16 +401,21 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
         fullscreen ? "md:grid-cols-2" : "grid-cols-1"
       )}>
         {/* Left Column: Treatments */}
-        <section className="space-y-3">
-          <div className="flex items-center gap-2 pb-2 border-b">
-            <Stethoscope className="h-4 w-4 text-primary" />
+        <section className="space-y-4">
+          <div className="flex items-center gap-3 pb-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
+              <Stethoscope className="h-4 w-4 text-primary" />
+            </div>
             <h3 className="text-sm font-semibold text-foreground">Tratamente efectuate</h3>
-            <Badge variant="secondary" className="text-[10px] ml-auto">{treatments.length}</Badge>
+            <Badge variant="secondary" className="text-[10px] ml-auto rounded-full">{treatments.length}</Badge>
           </div>
           {treatments.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-6 text-center">Nu există tratamente înregistrate.</p>
+            <div className="text-center py-10 rounded-2xl border border-dashed">
+              <Stethoscope className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
+              <p className="text-sm text-muted-foreground">Nu există tratamente înregistrate.</p>
+            </div>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-2">
               {Object.entries(treatmentsByDate)
                 .sort(([a], [b]) => b.localeCompare(a))
                 .map(([dateKey, entries]) => {
@@ -408,27 +424,29 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
                   return (
                     <Collapsible key={dateKey} defaultOpen={false}>
                       <CollapsibleTrigger asChild>
-                        <button className="w-full flex items-center justify-between bg-muted/40 hover:bg-muted/70 rounded-lg px-3 py-2.5 transition-colors cursor-pointer group">
-                          <div className="flex items-center gap-2">
-                            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground transition-transform group-data-[state=open]:rotate-90" />
-                            <Calendar className="h-3.5 w-3.5 text-primary" />
-                            <span className="text-xs font-medium">
+                        <button className="w-full flex items-center justify-between rounded-xl px-4 py-3 bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer group border border-transparent hover:border-border">
+                          <div className="flex items-center gap-3">
+                            <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-90" />
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+                              <Calendar className="h-3.5 w-3.5 text-primary" />
+                            </div>
+                            <span className="text-sm font-medium">
                               {format(new Date(dateKey), 'd MMM yyyy', { locale: ro })}
                             </span>
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">{entries.length}</Badge>
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 rounded-full">{entries.length}</Badge>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-3">
                             {totalDateCas > 0 && (
                               <span className="text-[10px] text-cyan-600 font-medium">CAS {totalDateCas}</span>
                             )}
-                            <Badge className="bg-primary/10 text-primary hover:bg-primary/20 text-xs border-0">
+                            <Badge className="bg-primary/10 text-primary hover:bg-primary/20 text-xs border-0 rounded-full">
                               {totalPrice.toLocaleString()} RON
                             </Badge>
                           </div>
                         </button>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <div className="ml-6 mt-1 space-y-0.5 border-l-2 border-primary/20 pl-3 pb-2">
+                        <div className="ml-10 mt-2 space-y-1 border-l-2 border-primary/10 pl-4 pb-3">
                           {entries.map((entry) => {
                             const cleanedNotes = entry.appointment_notes
                               ? cleanDentalNotes(entry.appointment_notes)
@@ -437,8 +455,8 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
                                   .trim()
                               : '';
                             return (
-                              <div key={entry.id} className="py-2 hover:bg-muted/30 rounded px-2 -mx-2 transition-colors">
-                                <div className="flex items-start justify-between gap-2">
+                              <div key={entry.id} className="py-2.5 hover:bg-muted/20 rounded-lg px-3 -mx-3 transition-colors">
+                                <div className="flex items-start justify-between gap-3">
                                   <div className="space-y-0.5 min-w-0">
                                     <div className="text-sm font-medium text-foreground">{entry.treatment_name}</div>
                                     <div className="text-[11px] text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0.5">
@@ -477,29 +495,34 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
           )}
         </section>
 
-        <div className="space-y-6">
+        <div className="space-y-8">
 
           {/* Unpaid Appointments */}
-          <section className="space-y-3">
-            <div className="flex items-center gap-2 pb-2 border-b border-orange-200 dark:border-orange-800">
-              <AlertCircle className="h-4 w-4 text-orange-500" />
+          <section className="space-y-4">
+            <div className="flex items-center gap-3 pb-3">
+              <div className={cn(
+                "flex h-8 w-8 items-center justify-center rounded-xl",
+                unpaidAppointments.length > 0 ? "bg-orange-100 dark:bg-orange-900/30" : "bg-muted"
+              )}>
+                <AlertCircle className={cn("h-4 w-4", unpaidAppointments.length > 0 ? "text-orange-500" : "text-muted-foreground")} />
+              </div>
               <h3 className="text-sm font-semibold text-foreground">Restanțe de plată</h3>
               {unpaidAppointments.length > 0 && (
-                <Badge className="bg-orange-500 text-white text-[10px] ml-auto">{unpaidAppointments.length}</Badge>
+                <Badge className="bg-orange-500 text-white text-[10px] ml-auto rounded-full">{unpaidAppointments.length}</Badge>
               )}
             </div>
             {unpaidAppointments.length === 0 ? (
-              <div className="text-center py-6">
-                <div className="inline-flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-950/20 rounded-full px-4 py-2">
+              <div className="text-center py-8 rounded-2xl border border-dashed">
+                <div className="inline-flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-950/20 rounded-full px-5 py-2.5">
                   <span>✓</span> Fără restanțe
                 </div>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {unpaidAppointments.map((apt) => (
                   <div
                     key={apt.id}
-                    className="p-3 rounded-xl border border-orange-200 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-950/20 hover:border-orange-300 dark:hover:border-orange-700 transition-colors"
+                    className="p-4 rounded-2xl border border-orange-200 dark:border-orange-800 bg-orange-50/30 dark:bg-orange-950/10 hover:border-orange-300 dark:hover:border-orange-700 transition-all hover:shadow-sm"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="space-y-1 min-w-0">
@@ -539,7 +562,7 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
                   </div>
                 ))}
 
-                <div className="flex items-center justify-between bg-orange-100 dark:bg-orange-950/30 rounded-xl px-4 py-3 mt-2">
+                <div className="flex items-center justify-between bg-orange-100 dark:bg-orange-950/30 rounded-2xl px-5 py-3.5 mt-3">
                   <span className="font-medium text-sm text-orange-700 dark:text-orange-400">Total restanțe</span>
                   <Badge className="bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm px-3">
                     {totalDebt.toLocaleString()} RON
