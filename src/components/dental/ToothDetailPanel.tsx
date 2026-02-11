@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { format } from 'date-fns';
+import { format, isToday } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Plus, Trash2, X, Search } from 'lucide-react';
+import { Plus, Trash2, X, Search, Clock, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -57,6 +58,8 @@ export function ToothDetailPanel({
 
   const toothConditions = conditions.filter(c => c.tooth_number === toothNumber);
   const toothInterventions = interventions.filter(i => i.tooth_number === toothNumber);
+  const todayInterventions = toothInterventions.filter(i => isToday(new Date(i.performed_at)));
+  const historyInterventions = toothInterventions.filter(i => !isToday(new Date(i.performed_at)));
 
   const existingConditionIds = new Set(toothConditions.map(c => c.condition_id));
   const filteredCatalog = conditionsCatalog.filter(c =>
@@ -108,64 +111,129 @@ export function ToothDetailPanel({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto p-3 space-y-4">
-          {/* Afecțiuni section */}
-          <div>
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Afecțiuni</h4>
-            {toothConditions.length > 0 && (
-              <div className="space-y-1 mb-2">
-                {toothConditions.map(tc => (
-                  <div key={tc.id} className="flex items-center justify-between py-1.5 px-2 rounded bg-muted/50 text-xs">
-                    <div>
-                      <span className="font-medium">{tc.condition?.name}</span>
-                      <span className="text-muted-foreground ml-1">({tc.condition?.code})</span>
-                    </div>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onRemoveCondition(tc.id)}>
-                      <Trash2 className="h-3 w-3 text-destructive" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <button
-              onClick={() => { setConditionSearch(''); setShowConditionsDialog(true); }}
-              className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors py-1"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Adaugă afecțiune
-            </button>
-          </div>
+        <Tabs defaultValue="today" className="flex-1 flex flex-col overflow-hidden">
+          <TabsList className="mx-3 mt-2 grid grid-cols-2">
+            <TabsTrigger value="today" className="text-xs gap-1">
+              <Clock className="h-3 w-3" />
+              Azi
+              {todayInterventions.length > 0 && (
+                <Badge variant="secondary" className="h-4 px-1 text-[10px]">{todayInterventions.length}</Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="history" className="text-xs gap-1">
+              <History className="h-3 w-3" />
+              Istoric
+              {historyInterventions.length > 0 && (
+                <Badge variant="secondary" className="h-4 px-1 text-[10px]">{historyInterventions.length}</Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
 
-          {/* Intervenții section */}
-          <div>
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Intervenții</h4>
-            {toothInterventions.length > 0 && (
-              <div className="space-y-1 mb-2">
-                {toothInterventions.map(ti => (
-                  <div key={ti.id} className="py-1.5 px-2 rounded bg-muted/50 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">{ti.treatment_name}</span>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onRemoveIntervention(ti.id)}>
+          {/* Tab AZI */}
+          <TabsContent value="today" className="flex-1 overflow-auto p-3 space-y-4 mt-0">
+            {/* Afecțiuni */}
+            <div>
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Afecțiuni</h4>
+              {toothConditions.length > 0 && (
+                <div className="space-y-1 mb-2">
+                  {toothConditions.map(tc => (
+                    <div key={tc.id} className="flex items-center justify-between py-1.5 px-2 rounded bg-muted/50 text-xs">
+                      <div>
+                        <span className="font-medium">{tc.condition?.name}</span>
+                        <span className="text-muted-foreground ml-1">({tc.condition?.code})</span>
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onRemoveCondition(tc.id)}>
                         <Trash2 className="h-3 w-3 text-destructive" />
                       </Button>
                     </div>
-                    <div className="text-muted-foreground flex gap-2 mt-0.5">
-                      {ti.doctor?.name && <span>{ti.doctor.name}</span>}
-                      <span>{format(new Date(ti.performed_at), 'dd.MM.yyyy', { locale: ro })}</span>
+                  ))}
+                </div>
+              )}
+              <button
+                onClick={() => { setConditionSearch(''); setShowConditionsDialog(true); }}
+                className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors py-1"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Adaugă afecțiune
+              </button>
+            </div>
+
+            {/* Intervenții de azi */}
+            <div>
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Intervenții azi</h4>
+              {todayInterventions.length > 0 ? (
+                <div className="space-y-1 mb-2">
+                  {todayInterventions.map(ti => (
+                    <div key={ti.id} className="py-1.5 px-2 rounded bg-muted/50 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{ti.treatment_name}</span>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onRemoveIntervention(ti.id)}>
+                          <Trash2 className="h-3 w-3 text-destructive" />
+                        </Button>
+                      </div>
+                      <div className="text-muted-foreground flex gap-2 mt-0.5">
+                        {ti.doctor?.name && <span>{ti.doctor.name}</span>}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground mb-2">Nicio intervenție astăzi</p>
+              )}
+              <button
+                onClick={() => { setSelectedTreatment(''); setSelectedDoctor(''); setShowInterventionsDialog(true); }}
+                className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors py-1"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Adaugă intervenție
+              </button>
+            </div>
+          </TabsContent>
+
+          {/* Tab ISTORIC */}
+          <TabsContent value="history" className="flex-1 overflow-auto p-3 space-y-4 mt-0">
+            <div>
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                Istoric intervenții ({historyInterventions.length})
+              </h4>
+              {historyInterventions.length > 0 ? (
+                <div className="space-y-1">
+                  {historyInterventions.map(ti => (
+                    <div key={ti.id} className="py-1.5 px-2 rounded bg-muted/50 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{ti.treatment_name}</span>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onRemoveIntervention(ti.id)}>
+                          <Trash2 className="h-3 w-3 text-destructive" />
+                        </Button>
+                      </div>
+                      <div className="text-muted-foreground flex gap-2 mt-0.5">
+                        {ti.doctor?.name && <span>{ti.doctor.name}</span>}
+                        <span>{format(new Date(ti.performed_at), 'dd.MM.yyyy', { locale: ro })}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">Nicio intervenție anterioară</p>
+              )}
+            </div>
+
+            {/* Afecțiuni also visible in history for reference */}
+            {toothConditions.length > 0 && (
+              <div>
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Afecțiuni active</h4>
+                <div className="space-y-1">
+                  {toothConditions.map(tc => (
+                    <div key={tc.id} className="py-1.5 px-2 rounded bg-muted/50 text-xs">
+                      <span className="font-medium">{tc.condition?.name}</span>
+                      <span className="text-muted-foreground ml-1">({tc.condition?.code})</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
-            <button
-              onClick={() => { setSelectedTreatment(''); setSelectedDoctor(''); setShowInterventionsDialog(true); }}
-              className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors py-1"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Adaugă intervenție
-            </button>
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Afecțiuni popup */}
