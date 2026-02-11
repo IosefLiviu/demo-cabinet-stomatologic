@@ -367,7 +367,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
 
         {/* Side panel */}
         {selectedTooth ? (
-          <div className="w-[320px] shrink-0">
+          <div className="w-[350px] shrink-0">
             <ToothDetailPanel
               toothNumber={selectedTooth}
               toothStatus={selectedToothStatus}
@@ -386,7 +386,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
           </div>
         ) : (
           /* History panel when no tooth selected */
-          <div className="w-[320px] shrink-0 border-l bg-background p-3 overflow-auto max-h-[600px]">
+          <div className="w-[350px] shrink-0 border-l bg-background p-3 overflow-auto max-h-[600px]">
             <h3 className="text-sm font-medium flex items-center gap-2 mb-3">
               <History className="h-4 w-4" />
               Istoric modificări
