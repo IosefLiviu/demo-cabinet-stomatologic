@@ -575,8 +575,8 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
                   const bandTop = 30, bandBot = 100;
                   return (
                     <>
-                      {/* Vertical center line */}
-                      <line x1="65" y1="9" x2="65" y2="121" stroke="#b8a680" strokeWidth="2" opacity="0.7" />
+                      {/* Vertical center line - only between band lines */}
+                      <line x1="65" y1={bandTop} x2="65" y2={bandBot} stroke="#b8a680" strokeWidth="2" opacity="0.7" />
                       {/* Horizontal center line */}
                       <line x1="9" y1="65" x2="121" y2="65" stroke="#b8a680" strokeWidth="2" opacity="0.7" />
                       {/* Upper horizontal band line */}
