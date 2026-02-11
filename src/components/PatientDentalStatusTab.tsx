@@ -464,10 +464,6 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
                     <stop offset="70%" stopColor="transparent" />
                     <stop offset="100%" stopColor="#a0926e" stopOpacity="0.12" />
                   </radialGradient>
-                  <clipPath id="q1-clip"><path d="M65,65 L65,8 A57,57 0 0,0 8,65 Z" /></clipPath>
-                  <clipPath id="q2-clip"><path d="M65,65 L122,65 A57,57 0 0,0 65,8 Z" /></clipPath>
-                  <clipPath id="q3-clip"><path d="M65,65 L65,122 A57,57 0 0,0 122,65 Z" /></clipPath>
-                  <clipPath id="q4-clip"><path d="M65,65 L8,65 A57,57 0 0,0 65,122 Z" /></clipPath>
                 </defs>
 
                 {/* Drop shadow */}
@@ -478,72 +474,116 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
                 <circle cx="65" cy="65" r="56" fill="url(#qc-shadow)" />
                 <circle cx="65" cy="65" r="56" fill="url(#qc-highlight)" />
 
-                {/* Quadrant click areas */}
-                {[
-                  { id: 1, path: "M65,65 L65,8 A57,57 0 0,0 8,65 Z", labelX: 38, labelY: 42 },
-                  { id: 2, path: "M65,65 L122,65 A57,57 0 0,0 65,8 Z", labelX: 92, labelY: 42 },
-                  { id: 3, path: "M65,65 L65,122 A57,57 0 0,0 122,65 Z", labelX: 92, labelY: 92 },
-                  { id: 4, path: "M65,65 L8,65 A57,57 0 0,0 65,122 Z", labelX: 38, labelY: 92 },
-                ].map(q => {
-                  const quadrantTeeth = q.id === 1 ? [18,17,16,15,14,13,12,11]
-                    : q.id === 2 ? [21,22,23,24,25,26,27,28]
-                    : q.id === 3 ? [31,32,33,34,35,36,37,38]
-                    : [48,47,46,45,44,43,42,41];
-                  const isActive = selectedTooth !== null && quadrantTeeth.includes(selectedTooth);
-                  return (
-                    <g key={q.id} className="cursor-pointer" onClick={() => setSelectedTooth(quadrantTeeth[0])}>
+                {/* 6 clickable zones using clipPath */}
+                {(() => {
+                  // Circle: cx=65, cy=65, r=56 → top=9, bottom=121
+                  // Horizontal bands: top strip y=9..30, quadrants y=30..65 and y=65..100, bottom strip y=100..121
+                  const bandTop = 30;
+                  const bandBot = 100;
+                  const upperAll = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
+                  const lowerAll = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+
+                  // Chord x at a given y: x = cx ± sqrt(r²-(y-cy)²)
+                  const cx = 65, cy = 65, r = 56;
+                  const chordHalf = (y: number) => Math.sqrt(r * r - (y - cy) * (y - cy));
+                  const xL_top = cx - chordHalf(bandTop);
+                  const xR_top = cx + chordHalf(bandTop);
+                  const xL_bot = cx - chordHalf(bandBot);
+                  const xR_bot = cx + chordHalf(bandBot);
+
+                  const zones = [
+                    // Maxilar strip (top arc to bandTop line)
+                    {
+                      key: 'maxilar',
+                      path: `M${xL_top},${bandTop} A${r},${r} 0 0,1 ${xR_top},${bandTop} L${xL_top},${bandTop}`,
+                      // Use arc path: go from left chord point, arc to right, then line back
+                      pathFull: `M${xL_top},${bandTop} A${r},${r} 0 0,1 ${xR_top},${bandTop} Z`,
+                      labelX: 65, labelY: 19,
+                      label: 'MAXILAR', fontSize: 7,
+                      isActive: selectedTooth !== null && upperAll.includes(selectedTooth),
+                      onClick: () => setSelectedTooth(11),
+                    },
+                    // Quadrant 1 (upper-left: x=left..65, y=bandTop..65)
+                    {
+                      key: 'q1',
+                      pathFull: `M${xL_top},${bandTop} A${r},${r} 0 0,0 ${cx - r},${cy} L${cx},${cy} L${cx},${bandTop} Z`,
+                      labelX: 38, labelY: 48, label: '1', fontSize: 18,
+                      isActive: selectedTooth !== null && [18,17,16,15,14,13,12,11].includes(selectedTooth),
+                      onClick: () => setSelectedTooth(11),
+                    },
+                    // Quadrant 2 (upper-right: x=65..right, y=bandTop..65)
+                    {
+                      key: 'q2',
+                      pathFull: `M${cx},${bandTop} L${xR_top},${bandTop} A${r},${r} 0 0,1 ${cx + r},${cy} L${cx},${cy} Z`,
+                      labelX: 92, labelY: 48, label: '2', fontSize: 18,
+                      isActive: selectedTooth !== null && [21,22,23,24,25,26,27,28].includes(selectedTooth),
+                      onClick: () => setSelectedTooth(21),
+                    },
+                    // Quadrant 3 (lower-right: x=65..right, y=65..bandBot)
+                    {
+                      key: 'q3',
+                      pathFull: `M${cx},${cy} L${cx + r},${cy} A${r},${r} 0 0,1 ${xR_bot},${bandBot} L${cx},${bandBot} Z`,
+                      labelX: 92, labelY: 84, label: '3', fontSize: 18,
+                      isActive: selectedTooth !== null && [31,32,33,34,35,36,37,38].includes(selectedTooth),
+                      onClick: () => setSelectedTooth(31),
+                    },
+                    // Quadrant 4 (lower-left: x=left..65, y=65..bandBot)
+                    {
+                      key: 'q4',
+                      pathFull: `M${cx - r},${cy} L${cx},${cy} L${cx},${bandBot} L${xL_bot},${bandBot} A${r},${r} 0 0,1 ${cx - r},${cy} Z`,
+                      labelX: 38, labelY: 84, label: '4', fontSize: 18,
+                      isActive: selectedTooth !== null && [48,47,46,45,44,43,42,41].includes(selectedTooth),
+                      onClick: () => setSelectedTooth(41),
+                    },
+                    // Mandibular strip (bandBot line to bottom arc)
+                    {
+                      key: 'mandibular',
+                      pathFull: `M${xL_bot},${bandBot} L${xR_bot},${bandBot} A${r},${r} 0 0,1 ${xL_bot},${bandBot} Z`,
+                      labelX: 65, labelY: 112,
+                      label: 'MANDIBULAR', fontSize: 7,
+                      isActive: selectedTooth !== null && lowerAll.includes(selectedTooth),
+                      onClick: () => setSelectedTooth(41),
+                    },
+                  ];
+
+                  return zones.map(z => (
+                    <g key={z.key} className="cursor-pointer" onClick={z.onClick}>
                       <path
-                        d={q.path}
-                        fill={isActive ? 'hsl(var(--primary) / 0.15)' : 'transparent'}
+                        d={z.pathFull}
+                        fill={z.isActive ? 'hsl(var(--primary) / 0.15)' : 'transparent'}
                         className="transition-colors duration-200 hover:fill-[hsl(var(--primary)/0.1)]"
                       />
                       <text
-                        x={q.labelX} y={q.labelY}
+                        x={z.labelX} y={z.labelY}
                         textAnchor="middle" dominantBaseline="central"
-                        fontSize="18" fontWeight="700"
-                        fill={isActive ? 'hsl(var(--primary))' : '#b8a680'}
+                        fontSize={z.fontSize} fontWeight={z.fontSize > 10 ? '700' : '600'}
+                        letterSpacing={z.fontSize > 10 ? undefined : '0.5'}
+                        fill={z.isActive ? 'hsl(var(--primary))' : '#b8a680'}
                         className="pointer-events-none transition-colors duration-200"
-                        opacity={isActive ? 1 : 0.6}
+                        opacity={z.isActive ? 1 : 0.6}
                       >
-                        {q.id}
+                        {z.label}
                       </text>
                     </g>
-                  );
-                })}
-
-                {/* Divider lines - thick and visible */}
-                <line x1="9" y1="65" x2="121" y2="65" stroke="#b8a680" strokeWidth="2" opacity="0.7" />
-                <line x1="65" y1="9" x2="65" y2="121" stroke="#b8a680" strokeWidth="2" opacity="0.7" />
-
-                {/* Maxilar label - clickable */}
-                {(() => {
-                  const upperAll = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
-                  const isActiveMax = selectedTooth !== null && upperAll.includes(selectedTooth);
-                  return (
-                    <text
-                      x="65" y="18"
-                      textAnchor="middle" fontSize="7" fontWeight="600" letterSpacing="0.5"
-                      fill={isActiveMax ? 'hsl(var(--primary))' : '#b8a680'}
-                      opacity={isActiveMax ? 1 : 0.8}
-                      className="cursor-pointer"
-                      onClick={() => setSelectedTooth(11)}
-                    >MAXILAR</text>
-                  );
+                  ));
                 })()}
 
-                {/* Mandibular label - clickable */}
+                {/* Divider lines */}
                 {(() => {
-                  const lowerAll = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
-                  const isActiveMand = selectedTooth !== null && lowerAll.includes(selectedTooth);
+                  const cx = 65, cy = 65, r = 56;
+                  const chordHalf = (y: number) => Math.sqrt(r * r - (y - cy) * (y - cy));
+                  const bandTop = 30, bandBot = 100;
                   return (
-                    <text
-                      x="65" y="117"
-                      textAnchor="middle" fontSize="7" fontWeight="600" letterSpacing="0.5"
-                      fill={isActiveMand ? 'hsl(var(--primary))' : '#b8a680'}
-                      opacity={isActiveMand ? 1 : 0.8}
-                      className="cursor-pointer"
-                      onClick={() => setSelectedTooth(41)}
-                    >MANDIBULAR</text>
+                    <>
+                      {/* Vertical center line */}
+                      <line x1="65" y1="9" x2="65" y2="121" stroke="#b8a680" strokeWidth="2" opacity="0.7" />
+                      {/* Horizontal center line */}
+                      <line x1="9" y1="65" x2="121" y2="65" stroke="#b8a680" strokeWidth="2" opacity="0.7" />
+                      {/* Upper horizontal band line */}
+                      <line x1={cx - chordHalf(bandTop)} y1={bandTop} x2={cx + chordHalf(bandTop)} y2={bandTop} stroke="#b8a680" strokeWidth="1.5" opacity="0.5" />
+                      {/* Lower horizontal band line */}
+                      <line x1={cx - chordHalf(bandBot)} y1={bandBot} x2={cx + chordHalf(bandBot)} y2={bandBot} stroke="#b8a680" strokeWidth="1.5" opacity="0.5" />
+                    </>
                   );
                 })()}
               </svg>
