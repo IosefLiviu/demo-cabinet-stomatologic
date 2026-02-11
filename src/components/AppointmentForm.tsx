@@ -954,7 +954,7 @@ export function AppointmentForm({
                       <SelectValue placeholder="Selectează" />
                     </SelectTrigger>
                     <SelectContent className="bg-background border shadow-lg z-50">
-                      {doctors.map((doctor) => (
+                      {doctors.filter(d => d.specialization !== 'Asistentă').map((doctor) => (
                         <SelectItem key={doctor.id} value={doctor.id} className="text-sm">
                           <div className="flex items-center gap-2">
                             <div 
