@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { LogOut, Users, LogIn, Menu, User } from 'lucide-react';
+import { LogOut, Users, LogIn, Menu, User, Download } from 'lucide-react';
 import perfectSmileLogo from '@/assets/perfect-smile-logo.png';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -92,6 +92,10 @@ export function Header() {
                       Administrare
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuItem onClick={() => navigate('/install')}>
+                      <Download className="h-4 w-4 mr-2" />
+                      Instalează aplicația
+                    </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut className="h-4 w-4 mr-2" />
                     Deconectare
