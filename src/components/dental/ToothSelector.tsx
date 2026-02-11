@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { toothImages } from './toothImages';
+import { SvgTooth, getToothDimensions } from './SvgTooth';
 import { cn } from '@/lib/utils';
 import { cleanDentalNotes } from '@/lib/cleanDentalNotes';
 import { QuadrantCircle } from './QuadrantCircle';
@@ -80,13 +80,15 @@ export function ToothSelector({
 }: ToothSelectorProps) {
   const renderToothButton = (tooth: number, isDeciduous: boolean = false) => {
     const isSelected = selectedTeeth.includes(tooth);
-    const toothImage = toothImages[tooth];
     const status = dentalStatus[tooth];
     const statusName = status?.status || 'healthy';
     const statusDisplay = statusDisplayNames[statusName] || statusName;
     const statusColor = statusColors[statusName] || 'bg-muted';
     const cleanNotes = cleanDentalNotes(status?.notes);
     const isMissing = statusName === 'missing';
+    const isLower = Math.floor(tooth / 10) === 3 || Math.floor(tooth / 10) === 4 || Math.floor(tooth / 10) === 7 || Math.floor(tooth / 10) === 8;
+    const dims = getToothDimensions(tooth, isDeciduous);
+    const scale = isDeciduous ? 0.45 : 0.5;
     
     const toothContent = (
       <button
@@ -110,23 +112,14 @@ export function ToothSelector({
             statusColor
           )} />
         )}
-        {toothImage ? (
-          <img 
-            src={toothImage} 
-            alt={`Dinte ${tooth}`}
-            className={cn(
-              "h-8 w-auto object-contain transition-all",
-              isSelected && "drop-shadow-[0_0_4px_hsl(var(--primary))]"
-            )}
-          />
-        ) : (
-          <div className={cn(
-            "h-8 w-6 flex items-center justify-center text-xs font-medium rounded",
-            isSelected ? "bg-primary text-primary-foreground" : "bg-muted"
-          )}>
-            {tooth}
-          </div>
-        )}
+        <SvgTooth
+          toothNumber={tooth}
+          isLower={isLower}
+          isMissing={isMissing}
+          isHovered={isSelected}
+          width={Math.round(dims.width * scale)}
+          height={Math.round(dims.height * scale)}
+        />
         <span className={cn(
           "text-[9px] font-medium",
           isSelected ? "text-primary" : "text-muted-foreground"
