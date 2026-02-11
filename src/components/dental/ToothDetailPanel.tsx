@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { format, isToday } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Plus, Trash2, X, Search, Clock, History, Check, ChevronsUpDown } from 'lucide-react';
+import { Plus, Trash2, X, Search, Clock, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -9,8 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import {
   DentalCondition,
@@ -58,7 +56,7 @@ export function ToothDetailPanel({
   const [conditionSearch, setConditionSearch] = useState('');
   const [selectedTreatment, setSelectedTreatment] = useState('');
   const [selectedDoctor, setSelectedDoctor] = useState('');
-  const [treatmentOpen, setTreatmentOpen] = useState(false);
+  const [treatmentSearch, setTreatmentSearch] = useState('');
 
   const toothConditions = conditions.filter(c => c.tooth_number === toothNumber);
   const toothInterventions = interventions.filter(i => i.tooth_number === toothNumber);
@@ -279,50 +277,25 @@ export function ToothDetailPanel({
       </Dialog>
 
       {/* Intervenții popup */}
-      <Dialog open={showInterventionsDialog} onOpenChange={setShowInterventionsDialog}>
-        <DialogContent className="sm:max-w-[420px]">
+      <Dialog open={showInterventionsDialog} onOpenChange={(open) => {
+        setShowInterventionsDialog(open);
+        if (!open) setTreatmentSearch('');
+      }}>
+        <DialogContent className="sm:max-w-[500px] h-[70vh] flex flex-col overflow-hidden">
           <DialogHeader>
             <DialogTitle className="text-sm">Adaugă intervenție — Dinte {toothNumber}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 py-2">
-            <Popover open={treatmentOpen} onOpenChange={setTreatmentOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={treatmentOpen}
-                  className="w-full justify-between font-normal"
-                >
-                  {selectedTreatment
-                    ? treatments.find(t => t.id === selectedTreatment)?.name
-                    : 'Caută tratament...'}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                <Command>
-                  <CommandInput placeholder="Caută tratament..." />
-                  <CommandList>
-                    <CommandEmpty>Niciun tratament găsit.</CommandEmpty>
-                    <CommandGroup>
-                      {treatments.map(t => (
-                        <CommandItem
-                          key={t.id}
-                          value={t.name}
-                          onSelect={() => {
-                            setSelectedTreatment(t.id);
-                            setTreatmentOpen(false);
-                          }}
-                        >
-                          <Check className={cn("mr-2 h-4 w-4", selectedTreatment === t.id ? "opacity-100" : "opacity-0")} />
-                          {t.name}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+          <div className="space-y-3 flex flex-col flex-1 min-h-0">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Caută tratament..."
+                value={treatmentSearch}
+                onChange={e => setTreatmentSearch(e.target.value)}
+                className="pl-8"
+                autoFocus
+              />
+            </div>
             <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
               <SelectTrigger>
                 <SelectValue placeholder="Doctor (opțional)..." />
@@ -333,9 +306,72 @@ export function ToothDetailPanel({
                 ))}
               </SelectContent>
             </Select>
-            <Button className="w-full" onClick={handleAddIntervention} disabled={!selectedTreatment}>
-              <Plus className="h-4 w-4 mr-1.5" /> Adaugă intervenție
-            </Button>
+            <ScrollArea className="flex-1 min-h-0">
+              <div className="space-y-3 pb-2">
+                {(() => {
+                  const normalizeText = (text: string) =>
+                    text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                  const searchNorm = normalizeText(treatmentSearch);
+                  const filtered = treatments.filter(t =>
+                    normalizeText(t.name).includes(searchNorm) ||
+                    (t.category && normalizeText(t.category).includes(searchNorm))
+                  );
+                  const grouped = filtered.reduce((acc, t) => {
+                    const cat = t.category || 'Alte tratamente';
+                    if (!acc[cat]) acc[cat] = [];
+                    acc[cat].push(t);
+                    return acc;
+                  }, {} as Record<string, Treatment[]>);
+                  const cats = Object.keys(grouped).sort();
+
+                  if (filtered.length === 0) {
+                    return <p className="text-sm text-muted-foreground py-4 text-center">Niciun tratament găsit</p>;
+                  }
+
+                  return cats.map(cat => (
+                    <div key={cat} className="space-y-0.5">
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide sticky top-0 bg-background py-1 px-1">
+                        {cat}
+                      </h4>
+                      {grouped[cat].map(t => (
+                        <button
+                          key={t.id}
+                          onClick={() => {
+                            setSelectedTreatment(t.id);
+                            const treatment = t;
+                            if (treatment) {
+                              onAddIntervention(
+                                toothNumber,
+                                treatment.name,
+                                treatment.id,
+                                selectedDoctor || undefined,
+                              ).then(ok => {
+                                if (ok) {
+                                  setSelectedTreatment('');
+                                  setSelectedDoctor('');
+                                  setTreatmentSearch('');
+                                  setShowInterventionsDialog(false);
+                                }
+                              });
+                            }
+                          }}
+                          className={cn(
+                            'w-full text-left py-2 px-3 rounded-lg text-sm transition-colors',
+                            'hover:bg-accent hover:text-accent-foreground',
+                            'flex justify-between items-center gap-2'
+                          )}
+                        >
+                          <span className="truncate">{t.name}</span>
+                          <span className="text-xs text-muted-foreground shrink-0">
+                            {t.default_price?.toFixed(0) || '0'} lei
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ));
+                })()}
+              </div>
+            </ScrollArea>
           </div>
         </DialogContent>
       </Dialog>
