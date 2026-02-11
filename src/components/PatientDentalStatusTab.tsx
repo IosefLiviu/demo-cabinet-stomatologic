@@ -48,6 +48,7 @@ interface ToothJournalEntry {
   treatment_name: string;
   doctor_name: string | null;
   cabinet_name: string | null;
+  type: 'treatment' | 'intervention' | 'condition';
 }
 
 function ToothJournalSection({ patientId, toothNumber }: { patientId: string; toothNumber: number }) {
@@ -67,8 +68,7 @@ function ToothJournalSection({ patientId, toothNumber }: { patientId: string; to
             appointment:appointments!inner(
               appointment_date,
               status,
-              doctor:doctors(name),
-              cabinet:cabinets(name)
+              doctor:doctors(name)
             )
           `)
           .eq('appointment.patient_id', patientId)
@@ -84,12 +84,21 @@ function ToothJournalSection({ patientId, toothNumber }: { patientId: string; to
           .eq('tooth_number', toothNumber)
           .order('performed_at', { ascending: false });
 
+        // Load from tooth_conditions
+        const { data: condData } = await supabase
+          .from('tooth_conditions')
+          .select('id, created_at, notes, condition:dental_conditions(name, code)')
+          .eq('patient_id', patientId)
+          .eq('tooth_number', toothNumber)
+          .order('created_at', { ascending: false });
+
         const fromApt: ToothJournalEntry[] = (aptData || []).map((item: any) => ({
           id: item.id,
           date: item.appointment?.appointment_date || item.created_at,
           treatment_name: item.treatment_name,
           doctor_name: item.appointment?.doctor?.name || null,
-          cabinet_name: item.appointment?.cabinet?.name || null,
+          cabinet_name: null,
+          type: 'treatment' as const,
         }));
 
         const fromInt: ToothJournalEntry[] = (intData || []).map((item: any) => ({
@@ -98,10 +107,20 @@ function ToothJournalSection({ patientId, toothNumber }: { patientId: string; to
           treatment_name: item.treatment_name,
           doctor_name: item.doctor?.name || null,
           cabinet_name: null,
+          type: 'intervention' as const,
+        }));
+
+        const fromCond: ToothJournalEntry[] = (condData || []).map((item: any) => ({
+          id: item.id,
+          date: item.created_at,
+          treatment_name: `Afecțiune: ${item.condition?.name || 'N/A'} (${item.condition?.code || ''})`,
+          doctor_name: null,
+          cabinet_name: null,
+          type: 'condition' as const,
         }));
 
         // Merge and deduplicate by id, sort by date desc
-        const merged = [...fromApt, ...fromInt];
+        const merged = [...fromApt, ...fromInt, ...fromCond];
         const unique = merged.filter((e, i, arr) => arr.findIndex(x => x.id === e.id) === i);
         unique.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         setEntries(unique);
