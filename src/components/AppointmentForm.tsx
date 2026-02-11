@@ -1057,10 +1057,7 @@ export function AppointmentForm({
                               {' '}({totalItems} {totalItems === 1 ? 'intervenție' : 'intervenții'})
                             </span>
                             <span className="text-xs text-muted-foreground">
-                              {plan.name ? format(new Date(plan.createdAt), 'dd.MM.yyyy') + ' · ' : ''}Total: {totalPrice.toLocaleString('ro-RO')} lei
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              Total: {totalPrice.toLocaleString('ro-RO')} lei
+                              {plan.name ? format(new Date(plan.createdAt), 'dd.MM.yyyy') + ' · ' : ''}{totalPrice.toLocaleString('ro-RO')} lei
                             </span>
                           </div>
                         </SelectItem>
