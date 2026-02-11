@@ -119,9 +119,23 @@ function ToothJournalSection({ patientId, toothNumber, refreshKey }: { patientId
           type: 'condition' as const,
         }));
 
-        // Merge and deduplicate by id, sort by date desc
+        // Merge and deduplicate by id AND by treatment_name+date (cross-table duplicates)
         const merged = [...fromApt, ...fromInt, ...fromCond];
-        const unique = merged.filter((e, i, arr) => arr.findIndex(x => x.id === e.id) === i);
+        const unique = merged.filter((e, i, arr) => {
+          // First: remove same-id duplicates
+          if (arr.findIndex(x => x.id === e.id) !== i) return false;
+          // Second: remove cross-table duplicates (same treatment_name on same date)
+          if (e.type !== 'condition') {
+            const dateKey = new Date(e.date).toDateString();
+            const firstIdx = arr.findIndex(x => 
+              x.type !== 'condition' && 
+              x.treatment_name === e.treatment_name && 
+              new Date(x.date).toDateString() === dateKey
+            );
+            if (firstIdx !== i) return false;
+          }
+          return true;
+        });
         unique.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         setEntries(unique);
       } catch (err) {
