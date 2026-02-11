@@ -135,8 +135,6 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
   const printRef = useRef<HTMLDivElement>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string>(initialPatientId || '');
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
-  const [nextAppointmentDate, setNextAppointmentDate] = useState<string>('');
-  const [nextAppointmentTime, setNextAppointmentTime] = useState<string>('');
   const [planItems, setPlanItems] = useState<LocalTreatmentPlanItem[]>([]);
   const [treatmentDialogOpen, setTreatmentDialogOpen] = useState(false);
   const [patientSearch, setPatientSearch] = useState('');
@@ -191,8 +189,6 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
     if (initialPlan) {
       setSelectedPatientId(initialPlan.patientId);
       setSelectedDoctorId(initialPlan.doctorId || '');
-      setNextAppointmentDate(initialPlan.nextAppointmentDate || '');
-      setNextAppointmentTime(initialPlan.nextAppointmentTime || '');
       setDiscountPercent(initialPlan.discountPercent || 0);
       setPlanName(initialPlan.name || '');
       setEditingPlanId(initialPlan.id);
@@ -368,8 +364,6 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
 
   const resetForm = () => {
     setSelectedDoctorId('');
-    setNextAppointmentDate('');
-    setNextAppointmentTime('');
     setPlanItems([]);
     setDiscountPercent(0);
     setPlanName('');
@@ -535,8 +529,8 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
     const savedPlanId = await saveTreatmentPlan(
       selectedPatientId,
       selectedDoctorId || undefined,
-      nextAppointmentDate || undefined,
-      nextAppointmentTime || undefined,
+      undefined,
+      undefined,
       itemsToSave,
       editingPlanId,
       discountPercent,
@@ -729,22 +723,6 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
               </Select>
             </div>
 
-            {/* Next Appointment */}
-            <div className="space-y-2">
-              <Label>Următoarea programare</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <Input
-                  type="date"
-                  value={nextAppointmentDate}
-                  onChange={(e) => setNextAppointmentDate(e.target.value)}
-                />
-                <Input
-                  type="time"
-                  value={nextAppointmentTime}
-                  onChange={(e) => setNextAppointmentTime(e.target.value)}
-                />
-              </div>
-            </div>
           </div>
 
           {/* Add Treatment Button */}
@@ -1012,11 +990,6 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
             {patientAge !== null && <p style={{ marginLeft: '60px' }}>Vârsta: {patientAge} ani</p>}
           </div>
 
-          {nextAppointmentDate && (
-            <div className="section">
-              <p><strong>Următoarea programare pe</strong> {format(new Date(nextAppointmentDate), 'dd.MM.yyyy', { locale: ro })} la ora {nextAppointmentTime || '00:00'}</p>
-            </div>
-          )}
 
           <div className="section">
             <p className="section-title">Diagnostic</p>

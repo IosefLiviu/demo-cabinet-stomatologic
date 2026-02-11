@@ -312,7 +312,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
           <div class="section">
             <p><strong>Pacient:</strong> ${escapeHtml(patient?.first_name)} ${escapeHtml(patient?.last_name)}</p>
             <p><strong>Data:</strong> ${format(new Date(plan.createdAt), 'dd.MM.yyyy', { locale: ro })}</p>
-            ${plan.nextAppointmentDate ? `<p><strong>Următoarea programare:</strong> ${format(new Date(plan.nextAppointmentDate), 'dd.MM.yyyy', { locale: ro })} ${escapeHtml(plan.nextAppointmentTime) || ''}</p>` : ''}
+            
           </div>
           
           <div class="section">
@@ -1124,13 +1124,6 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
 
                               <CollapsibleContent>
                                 <div className="p-4 border-t space-y-3">
-                                  {plan.nextAppointmentDate && (
-                                    <div className="text-sm text-muted-foreground">
-                                      <Calendar className="h-3 w-3 inline mr-1" />
-                                      Următoarea programare: {format(new Date(plan.nextAppointmentDate), 'd MMMM yyyy', { locale: ro })}
-                                      {plan.nextAppointmentTime && ` la ${plan.nextAppointmentTime}`}
-                                    </div>
-                                  )}
 
                                   <div className="border rounded-lg overflow-hidden">
                                     <table className="w-full text-sm">
