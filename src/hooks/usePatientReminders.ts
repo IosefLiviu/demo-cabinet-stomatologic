@@ -7,6 +7,8 @@ export interface PatientReminder {
   patient_id: string;
   reminder_date: string;
   note: string | null;
+  recall_type: string[];
+  doctor_id: string | null;
   is_completed: boolean;
   completed_at: string | null;
   completed_by: string | null;
@@ -20,6 +22,10 @@ export interface PatientReminder {
     last_name: string;
     phone: string;
   };
+  doctor?: {
+    id: string;
+    name: string;
+  };
 }
 
 export function usePatientReminders(patientId?: string) {
@@ -32,7 +38,8 @@ export function usePatientReminders(patientId?: string) {
         .from('patient_reminders')
         .select(`
           *,
-          patient:patients(id, first_name, last_name, phone)
+          patient:patients(id, first_name, last_name, phone),
+          doctor:doctors(id, name)
         `)
         .order('reminder_date', { ascending: true });
 
@@ -48,13 +55,15 @@ export function usePatientReminders(patientId?: string) {
   });
 
   const createReminder = useMutation({
-    mutationFn: async (data: { patient_id: string; reminder_date: string; note?: string }) => {
+    mutationFn: async (data: { patient_id: string; reminder_date: string; note?: string; recall_type?: string[]; doctor_id?: string }) => {
       const { error } = await supabase
         .from('patient_reminders')
         .insert({
           patient_id: data.patient_id,
           reminder_date: data.reminder_date,
           note: data.note || null,
+          recall_type: data.recall_type || [],
+          doctor_id: data.doctor_id || null,
         });
 
       if (error) throw error;
@@ -70,11 +79,13 @@ export function usePatientReminders(patientId?: string) {
   });
 
   const updateReminder = useMutation({
-    mutationFn: async (data: { id: string; reminder_date?: string; note?: string; is_completed?: boolean }) => {
+    mutationFn: async (data: { id: string; reminder_date?: string; note?: string; is_completed?: boolean; recall_type?: string[]; doctor_id?: string | null }) => {
       const updateData: Record<string, unknown> = {};
       
       if (data.reminder_date !== undefined) updateData.reminder_date = data.reminder_date;
       if (data.note !== undefined) updateData.note = data.note;
+      if (data.recall_type !== undefined) updateData.recall_type = data.recall_type;
+      if (data.doctor_id !== undefined) updateData.doctor_id = data.doctor_id;
       if (data.is_completed !== undefined) {
         updateData.is_completed = data.is_completed;
         if (data.is_completed) {
@@ -138,7 +149,8 @@ export function usePendingReminders() {
         .from('patient_reminders')
         .select(`
           *,
-          patient:patients(id, first_name, last_name, phone)
+          patient:patients(id, first_name, last_name, phone),
+          doctor:doctors(id, name)
         `)
         .eq('is_completed', false)
         .order('reminder_date', { ascending: true });
