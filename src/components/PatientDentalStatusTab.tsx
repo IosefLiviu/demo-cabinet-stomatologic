@@ -444,13 +444,24 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
               </div>
             </div>
 
-            <div className="flex justify-center py-4">
-              <div
-                className="w-full max-w-3xl h-px"
-                style={{
-                  background: 'linear-gradient(90deg, transparent 0%, hsl(var(--muted-foreground)/0.3) 20%, hsl(var(--muted-foreground)/0.5) 50%, hsl(var(--muted-foreground)/0.3) 80%, transparent 100%)',
-                }}
-              />
+            {/* Quadrant circle diagram */}
+            <div className="flex justify-center py-3">
+              <svg width="120" height="120" viewBox="0 0 120 120" className="select-none">
+                {/* Outer circle */}
+                <circle cx="60" cy="60" r="55" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="1.5" opacity="0.4" />
+                {/* Horizontal line */}
+                <line x1="5" y1="60" x2="115" y2="60" stroke="hsl(var(--muted-foreground))" strokeWidth="1" opacity="0.4" />
+                {/* Vertical line */}
+                <line x1="60" y1="5" x2="60" y2="115" stroke="hsl(var(--muted-foreground))" strokeWidth="1" opacity="0.4" />
+                {/* Labels: Maxilar / Mandibular */}
+                <text x="60" y="18" textAnchor="middle" fontSize="8" fontWeight="600" fill="hsl(var(--muted-foreground))" opacity="0.7">MAXILAR</text>
+                <text x="60" y="110" textAnchor="middle" fontSize="8" fontWeight="600" fill="hsl(var(--muted-foreground))" opacity="0.7">MANDIBULAR</text>
+                {/* Quadrant numbers */}
+                <text x="35" y="42" textAnchor="middle" fontSize="16" fontWeight="700" fill="hsl(var(--muted-foreground))" opacity="0.5">1</text>
+                <text x="85" y="42" textAnchor="middle" fontSize="16" fontWeight="700" fill="hsl(var(--muted-foreground))" opacity="0.5">2</text>
+                <text x="85" y="85" textAnchor="middle" fontSize="16" fontWeight="700" fill="hsl(var(--muted-foreground))" opacity="0.5">3</text>
+                <text x="35" y="85" textAnchor="middle" fontSize="16" fontWeight="700" fill="hsl(var(--muted-foreground))" opacity="0.5">4</text>
+              </svg>
             </div>
 
             <div className="space-y-2">
