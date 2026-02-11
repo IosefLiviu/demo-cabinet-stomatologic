@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Plus, Trash2, X, Search } from 'lucide-react';
+import { Plus, Trash2, X, Search, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 import {
   DentalCondition,
   ToothCondition,
@@ -17,8 +18,17 @@ import {
 import { Doctor } from '@/hooks/useDoctors';
 import { Treatment } from '@/hooks/useTreatments';
 
+interface ToothJournalEntry {
+  id: string;
+  date: string;
+  treatment_name: string;
+  doctor_name: string | null;
+  cabinet_name: string | null;
+}
+
 interface ToothDetailPanelProps {
   toothNumber: number;
+  patientId: string;
   toothStatus: string;
   statusColor: string | null;
   conditions: ToothCondition[];
@@ -35,6 +45,7 @@ interface ToothDetailPanelProps {
 
 export function ToothDetailPanel({
   toothNumber,
+  patientId,
   toothStatus,
   statusColor,
   conditions,
@@ -53,6 +64,7 @@ export function ToothDetailPanel({
   const [conditionSearch, setConditionSearch] = useState('');
   const [selectedTreatment, setSelectedTreatment] = useState('');
   const [selectedDoctor, setSelectedDoctor] = useState('');
+  const [journalEntries, setJournalEntries] = useState<ToothJournalEntry[]>([]);
 
   const toothConditions = conditions.filter(c => c.tooth_number === toothNumber);
   const toothInterventions = interventions.filter(i => i.tooth_number === toothNumber);
@@ -63,11 +75,79 @@ export function ToothDetailPanel({
     (conditionSearch === '' || c.name.toLowerCase().includes(conditionSearch.toLowerCase()) || c.code.toLowerCase().includes(conditionSearch.toLowerCase()))
   );
 
+  // Load journal entries from appointment_treatments for this tooth
+  useEffect(() => {
+    const loadJournal = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('appointment_treatments')
+          .select(`
+            id,
+            treatment_name,
+            tooth_numbers,
+            created_at,
+            appointment:appointments!inner(
+              appointment_date,
+              status,
+              doctor:doctors(name),
+              cabinet:cabinets(name)
+            )
+          `)
+          .eq('appointment.patient_id', patientId)
+          .contains('tooth_numbers', [toothNumber])
+          .in('appointment.status', ['completed', 'finalizat'])
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        const entries: ToothJournalEntry[] = (data || []).map((item: any) => ({
+          id: item.id,
+          date: item.appointment?.appointment_date || item.created_at,
+          treatment_name: item.treatment_name,
+          doctor_name: item.appointment?.doctor?.name || null,
+          cabinet_name: item.appointment?.cabinet?.name || null,
+        }));
+
+        setJournalEntries(entries);
+      } catch (err) {
+        console.error('Error loading tooth journal:', err);
+        // Fallback: try treatment_records
+        try {
+          const { data, error } = await supabase
+            .from('treatment_records')
+            .select('id, treatment_name, performed_at, tooth_numbers')
+            .eq('patient_id', patientId)
+            .contains('tooth_numbers', [toothNumber])
+            .order('performed_at', { ascending: false });
+
+          if (!error && data) {
+            setJournalEntries(data.map(r => ({
+              id: r.id,
+              date: r.performed_at,
+              treatment_name: r.treatment_name,
+              doctor_name: null,
+              cabinet_name: null,
+            })));
+          }
+        } catch {
+          // ignore
+        }
+      }
+    };
+
+    loadJournal();
+  }, [patientId, toothNumber]);
+
+  // Group journal entries by date
+  const journalByDate = journalEntries.reduce((acc, entry) => {
+    const dateKey = format(new Date(entry.date), 'dd.MM.yyyy');
+    if (!acc[dateKey]) acc[dateKey] = [];
+    acc[dateKey].push(entry);
+    return acc;
+  }, {} as Record<string, ToothJournalEntry[]>);
+
   const handleAddCondition = async (conditionId: string) => {
-    const ok = await onAddCondition(toothNumber, conditionId);
-    if (ok) {
-      // Keep dialog open for adding more
-    }
+    await onAddCondition(toothNumber, conditionId);
   };
 
   const handleAddIntervention = async () => {
@@ -109,7 +189,7 @@ export function ToothDetailPanel({
           </Button>
         </div>
 
-        {/* Content: tree-like view */}
+        {/* Content */}
         <div className="flex-1 overflow-auto p-3 space-y-4">
           {/* Afecțiuni section */}
           <div>
@@ -166,6 +246,48 @@ export function ToothDetailPanel({
               <Plus className="h-3.5 w-3.5" />
               Adaugă intervenție
             </button>
+          </div>
+
+          {/* Jurnal section */}
+          <div>
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
+              <BookOpen className="h-3.5 w-3.5" />
+              Jurnal
+            </h4>
+            {journalEntries.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-2">Nicio înregistrare</p>
+            ) : (
+              <div className="border rounded-lg overflow-hidden">
+                {/* Table header */}
+                <div className="grid grid-cols-[80px_1fr] bg-muted/70 text-xs font-semibold px-2 py-1.5 border-b">
+                  <span>Dată</span>
+                  <span>Detalii</span>
+                </div>
+                {/* Table rows grouped by date */}
+                <div className="divide-y">
+                  {Object.entries(journalByDate).map(([dateKey, entries]) => (
+                    <div key={dateKey} className="grid grid-cols-[80px_1fr]">
+                      <div className="text-xs text-muted-foreground px-2 py-1.5 border-r">
+                        {dateKey}
+                      </div>
+                      <div className="divide-y">
+                        {entries.map(entry => (
+                          <div key={entry.id} className="px-2 py-1.5 text-xs">
+                            {entry.doctor_name && (
+                              <span className="text-muted-foreground">
+                                {entry.cabinet_name && `${entry.cabinet_name}: `}
+                                {entry.doctor_name}
+                              </span>
+                            )}
+                            <div className="font-medium">{entry.treatment_name}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -369,6 +369,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
         {selectedTooth ? (
           <div className="w-[350px] shrink-0">
             <ToothDetailPanel
+              patientId={patientId}
               toothNumber={selectedTooth}
               toothStatus={selectedToothStatus}
               statusColor={selectedToothColor}
