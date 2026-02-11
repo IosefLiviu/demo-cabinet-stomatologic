@@ -511,9 +511,9 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
                   );
                 })}
 
-                {/* Divider lines */}
-                <line x1="8" y1="65" x2="122" y2="65" stroke="#c4b898" strokeWidth="0.8" opacity="0.6" />
-                <line x1="65" y1="8" x2="65" y2="122" stroke="#c4b898" strokeWidth="0.8" opacity="0.6" />
+                {/* Divider lines - thick and visible */}
+                <line x1="9" y1="65" x2="121" y2="65" stroke="#b8a680" strokeWidth="2" opacity="0.7" />
+                <line x1="65" y1="9" x2="65" y2="121" stroke="#b8a680" strokeWidth="2" opacity="0.7" />
 
                 {/* Maxilar label - clickable */}
                 {(() => {
