@@ -167,13 +167,20 @@ function ToothJournalSection({ patientId, toothNumber }: { patientId: string; to
               <div className="text-xs text-muted-foreground px-2 py-1.5 border-r">{dateKey}</div>
               <div className="divide-y">
                 {items.map(entry => (
-                  <div key={entry.id} className={cn("px-2 py-1.5 text-xs", entry.type === 'condition' && "text-red-600")}>
+                  <div key={entry.id} className="px-2 py-1.5 text-xs">
                     {entry.doctor_name && (
-                      <span className={entry.type === 'condition' ? "text-red-400" : "text-muted-foreground"}>
+                      <span className="text-muted-foreground">
                         {entry.cabinet_name && `${entry.cabinet_name}: `}{entry.doctor_name}
                       </span>
                     )}
-                    <div className={cn("font-medium", entry.type === 'condition' && "text-red-600")}>{entry.treatment_name}</div>
+                    {entry.type === 'condition' ? (
+                      <div className="font-medium">
+                        <span>Afecțiune: </span>
+                        <span className="text-red-600">{entry.treatment_name.replace('Afecțiune: ', '')}</span>
+                      </div>
+                    ) : (
+                      <div className="font-medium">{entry.treatment_name}</div>
+                    )}
                   </div>
                 ))}
               </div>
