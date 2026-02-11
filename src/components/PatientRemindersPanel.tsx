@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { format, isToday, isPast, isTomorrow, differenceInDays } from 'date-fns';
+import { format, isToday, isPast, isTomorrow } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import {
   Bell,
@@ -46,11 +46,6 @@ export function PatientRemindersPanel() {
 
   const todayReminders = reminders.filter((r) => isToday(new Date(r.reminder_date)));
   const overdueReminders = reminders.filter((r) => isPast(new Date(r.reminder_date)) && !isToday(new Date(r.reminder_date)));
-  const soonReminders = reminders.filter((r) => {
-    const date = new Date(r.reminder_date);
-    const days = differenceInDays(date, new Date());
-    return days >= 1 && days <= 7 && !isToday(date);
-  });
   const upcomingReminders = reminders.filter((r) => !isPast(new Date(r.reminder_date)) && !isToday(new Date(r.reminder_date)));
 
   const handleMarkComplete = (id: string) => {
@@ -87,16 +82,6 @@ export function PatientRemindersPanel() {
         <Badge variant="secondary" className="gap-1">
           <Calendar className="h-3 w-3" />
           Mâine
-        </Badge>
-      );
-    }
-
-    const days = differenceInDays(date, new Date());
-    if (days > 0 && days <= 7) {
-      return (
-        <Badge className="gap-1 bg-yellow-500 text-white">
-          <Bell className="h-3 w-3" />
-          Peste {days} zile
         </Badge>
       );
     }
@@ -258,12 +243,6 @@ export function PatientRemindersPanel() {
                   <Badge variant="secondary" className="ml-1">{upcomingReminders.length}</Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="soon" className="gap-2">
-                Curând (7 zile)
-                {soonReminders.length > 0 && (
-                  <Badge className="ml-1 bg-yellow-500 text-white">{soonReminders.length}</Badge>
-                )}
-              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="all">
@@ -277,9 +256,6 @@ export function PatientRemindersPanel() {
             </TabsContent>
             <TabsContent value="upcoming">
               <ReminderTable items={upcomingReminders} />
-            </TabsContent>
-            <TabsContent value="soon">
-              <ReminderTable items={soonReminders} />
             </TabsContent>
           </Tabs>
         </CardContent>
