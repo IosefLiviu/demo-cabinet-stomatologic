@@ -914,13 +914,8 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
             </TabsTrigger>
           </TabsList>
 
-          {/* Full-screen dental status button */}
-          <div className="flex justify-end mt-2">
-            <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowDentalFullscreen(true)}>
-              <Stethoscope className="h-4 w-4" />
-              Status Dentar
-            </Button>
-          </div>
+
+
 
           {/* Patient Record Tab (includes patient info) */}
           <TabsContent value="record" className="mt-6 space-y-6">
@@ -1011,6 +1006,14 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
               patientId={patient.id}
               patientName={`${patient.first_name} ${patient.last_name}`}
             />
+
+            {/* Status Dentar button inside Fișă */}
+            <div className="flex justify-end">
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowDentalFullscreen(true)}>
+                <Stethoscope className="h-4 w-4" />
+                Status Dentar
+              </Button>
+            </div>
           </TabsContent>
 
           {/* Dental Status - Full Screen Dialog */}
