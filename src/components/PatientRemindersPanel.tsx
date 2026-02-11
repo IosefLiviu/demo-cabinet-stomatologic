@@ -89,12 +89,20 @@ export function PatientRemindersPanel() {
     return null;
   };
 
+  const recallTypeLabels: Record<string, string> = {
+    control: 'Control',
+    profilaxie: 'Profilaxie',
+    control_aparat: 'Control aparat',
+  };
+
   const ReminderTable = ({ items }: { items: PatientReminder[] }) => (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead>Pacient</TableHead>
           <TableHead>Telefon</TableHead>
+          <TableHead>Tip</TableHead>
+          <TableHead>La cine</TableHead>
           <TableHead>Data</TableHead>
           <TableHead>Notă</TableHead>
           <TableHead className="text-right">Acțiuni</TableHead>
@@ -103,7 +111,7 @@ export function PatientRemindersPanel() {
       <TableBody>
         {items.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+            <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
               Nu există remindere în această categorie
             </TableCell>
           </TableRow>
@@ -126,6 +134,23 @@ export function PatientRemindersPanel() {
                   <Phone className="h-4 w-4" />
                   {reminder.patient?.phone}
                 </a>
+              </TableCell>
+              <TableCell>
+                <div className="flex flex-wrap gap-1">
+                  {(reminder.recall_type || []).map((type) => (
+                    <Badge key={type} variant="outline" className="text-xs">
+                      {recallTypeLabels[type] || type}
+                    </Badge>
+                  ))}
+                  {(!reminder.recall_type || reminder.recall_type.length === 0) && (
+                    <span className="text-muted-foreground text-sm">-</span>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell>
+                <span className="text-sm">
+                  {reminder.doctor?.name || '-'}
+                </span>
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">

@@ -782,10 +782,12 @@ export type Database = {
           completed_by: string | null
           created_at: string
           created_by: string | null
+          doctor_id: string | null
           id: string
           is_completed: boolean
           note: string | null
           patient_id: string
+          recall_type: string[] | null
           reminder_date: string
           updated_at: string
         }
@@ -794,10 +796,12 @@ export type Database = {
           completed_by?: string | null
           created_at?: string
           created_by?: string | null
+          doctor_id?: string | null
           id?: string
           is_completed?: boolean
           note?: string | null
           patient_id: string
+          recall_type?: string[] | null
           reminder_date: string
           updated_at?: string
         }
@@ -806,14 +810,23 @@ export type Database = {
           completed_by?: string | null
           created_at?: string
           created_by?: string | null
+          doctor_id?: string | null
           id?: string
           is_completed?: boolean
           note?: string | null
           patient_id?: string
+          recall_type?: string[] | null
           reminder_date?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "patient_reminders_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "patient_reminders_patient_id_fkey"
             columns: ["patient_id"]
