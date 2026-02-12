@@ -145,33 +145,47 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
   const [selectionMode, setSelectionMode] = useState<Record<string, 'teeth' | 'arch'>>({});
   // Patient dental status for tooltips
   const [patientDentalStatus, setPatientDentalStatus] = useState<Record<number, { status: string; notes?: string }>>({});
+  // Patient condition codes per tooth for overlays
+  const [patientConditionCodes, setPatientConditionCodes] = useState<Record<number, string[]>>({});
 
-  // Load patient dental status when patient changes
+  // Load patient dental status and condition codes when patient changes
   useEffect(() => {
     const loadDentalStatus = async () => {
       if (!selectedPatientId) {
         setPatientDentalStatus({});
+        setPatientConditionCodes({});
         return;
       }
 
-      const { data, error } = await supabase
-        .from('dental_status')
-        .select('tooth_number, status, notes')
-        .eq('patient_id', selectedPatientId);
+      const [statusRes, conditionsRes] = await Promise.all([
+        supabase
+          .from('dental_status')
+          .select('tooth_number, status, notes')
+          .eq('patient_id', selectedPatientId),
+        supabase
+          .from('tooth_conditions')
+          .select('tooth_number, condition:dental_conditions(code)')
+          .eq('patient_id', selectedPatientId),
+      ]);
 
-      if (error) {
-        console.error('Error loading dental status:', error);
-        return;
-      }
+      if (statusRes.error) console.error('Error loading dental status:', statusRes.error);
+      if (conditionsRes.error) console.error('Error loading tooth conditions:', conditionsRes.error);
 
       const statusMap: Record<number, { status: string; notes?: string }> = {};
-      (data || []).forEach((item: any) => {
+      (statusRes.data || []).forEach((item: any) => {
         statusMap[item.tooth_number] = {
           status: item.status,
           notes: item.notes,
         };
       });
       setPatientDentalStatus(statusMap);
+
+      const codesMap: Record<number, string[]> = {};
+      (conditionsRes.data || []).forEach((item: any) => {
+        if (!codesMap[item.tooth_number]) codesMap[item.tooth_number] = [];
+        if (item.condition?.code) codesMap[item.tooth_number].push(item.condition.code);
+      });
+      setPatientConditionCodes(codesMap);
     };
 
     loadDentalStatus();
@@ -787,11 +801,12 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
                               selectedTeeth={item.toothNumbers}
                               onToggleTooth={(tooth) => handleToggleTooth(item.id, tooth)}
                               onArchSelection={(teeth) => handleArchSelection(item.id, teeth)}
-                              onReset={() => handleUpdateItem(item.id, 'toothNumbers', [])}
-                              selectionMode={getSelectionMode(item.id)}
+                              onReset={() => setPlanItems(planItems.map(pi => pi.id === item.id ? { ...pi, toothNumbers: [] } : pi))}
+                              selectionMode={selectionMode[item.id] || 'teeth'}
                               onModeChange={(mode) => setSelectionMode(prev => ({ ...prev, [item.id]: mode }))}
                               isArchMode={item.isArchMode}
                               dentalStatus={patientDentalStatus}
+                              conditionCodes={patientConditionCodes}
                             />
                           </PopoverContent>
                         </Popover>

@@ -4,6 +4,7 @@ import { SvgTooth, getToothDimensions } from './SvgTooth';
 import { cn } from '@/lib/utils';
 import { cleanDentalNotes } from '@/lib/cleanDentalNotes';
 import { QuadrantCircle } from './QuadrantCircle';
+import { getToothOverlays } from './toothConditionOverlays';
 
 // FDI notation - permanent teeth
 const upperPermanentTeeth = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
@@ -54,6 +55,7 @@ interface ToothSelectorProps {
   onModeChange?: (mode: 'teeth' | 'arch') => void;
   isArchMode?: boolean;
   dentalStatus?: Record<number, { status: string; notes?: string }>;
+  conditionCodes?: Record<number, string[]>;
 }
 
 // Helper to count arch groups
@@ -77,6 +79,7 @@ export function ToothSelector({
   onModeChange,
   isArchMode,
   dentalStatus = {},
+  conditionCodes = {},
 }: ToothSelectorProps) {
   const renderToothButton = (tooth: number, isDeciduous: boolean = false) => {
     const isSelected = selectedTeeth.includes(tooth);
@@ -85,7 +88,9 @@ export function ToothSelector({
     const statusDisplay = statusDisplayNames[statusName] || statusName;
     const statusColor = statusColors[statusName] || 'bg-muted';
     const cleanNotes = cleanDentalNotes(status?.notes);
-    const isMissing = statusName === 'missing';
+    const codes = conditionCodes[tooth] || [];
+    const { overlays: toothOverlays, isAbsent: conditionAbsent } = getToothOverlays(codes, tooth);
+    const isMissing = statusName === 'missing' || conditionAbsent;
     const isLower = Math.floor(tooth / 10) === 3 || Math.floor(tooth / 10) === 4 || Math.floor(tooth / 10) === 7 || Math.floor(tooth / 10) === 8;
     const dims = getToothDimensions(tooth, isDeciduous);
     const scale = isDeciduous ? 0.45 : 0.5;
@@ -105,13 +110,6 @@ export function ToothSelector({
           isMissing && "opacity-40 grayscale"
         )}
       >
-        {/* Status indicator dot */}
-        {status && statusName !== 'healthy' && (
-          <div className={cn(
-            "absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-background",
-            statusColor
-          )} />
-        )}
         <SvgTooth
           toothNumber={tooth}
           isLower={isLower}
@@ -119,6 +117,7 @@ export function ToothSelector({
           isHovered={isSelected}
           width={Math.round(dims.width * scale)}
           height={Math.round(dims.height * scale)}
+          overlays={toothOverlays.length > 0 ? toothOverlays : undefined}
         />
         <span className={cn(
           "text-[9px] font-medium",
