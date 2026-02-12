@@ -134,13 +134,19 @@ export function TimeSlotGrid({
       }
     };
 
-    updatePosition();
-    setCurrentTimeLabel(format(new Date(), 'HH:mm'));
+    // Delay initial position to ensure grid is fully rendered
+    const raf = requestAnimationFrame(() => {
+      setTimeout(() => {
+        updatePosition();
+        setCurrentTimeLabel(format(new Date(), 'HH:mm'));
+      }, 100);
+    });
     const interval = setInterval(() => { updatePosition(); setCurrentTimeLabel(format(new Date(), 'HH:mm')); }, 60000);
     // Also update on resize
     window.addEventListener('resize', updatePosition);
 
     return () => {
+      cancelAnimationFrame(raf);
       clearInterval(interval);
       window.removeEventListener('resize', updatePosition);
     };
