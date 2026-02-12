@@ -1,8 +1,10 @@
-import { useCallback } from 'react';
+import { useCallback, useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { SvgTooth, getToothDimensions } from './SvgTooth';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { QuadrantCircle } from './QuadrantCircle';
+import { TOOTH_STATUSES } from '@/constants/toothStatuses';
+import { Search, X } from 'lucide-react';
 
 // FDI notation - permanent teeth
 const upperTeeth = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
@@ -22,6 +24,7 @@ interface MiniToothSelectorProps {
   selectedTeeth: number[];
   onToothClick: (toothNumber: number) => void;
   onToothDoubleClick?: (toothNumber: number) => void;
+  onConditionSelect?: (toothNumber: number, conditionDbValue: string) => void;
   patientDentalStatus?: PatientToothStatus[];
   getStatusHexColor?: (status: string) => string | null;
   className?: string;
@@ -33,17 +36,62 @@ export function MiniToothSelector({
   selectedTeeth,
   onToothClick,
   onToothDoubleClick,
+  onConditionSelect,
   patientDentalStatus = [],
   getStatusHexColor,
   className,
 }: MiniToothSelectorProps) {
+  const [popoverTooth, setPopoverTooth] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
   const handleClick = useCallback((toothNumber: number) => {
-    onToothClick(toothNumber);
-  }, [onToothClick]);
+    if (onConditionSelect) {
+      setPopoverTooth(prev => prev === toothNumber ? null : toothNumber);
+      setSearchQuery('');
+    } else {
+      onToothClick(toothNumber);
+    }
+  }, [onToothClick, onConditionSelect]);
 
   const handleDoubleClick = useCallback((toothNumber: number) => {
     onToothDoubleClick?.(toothNumber);
   }, [onToothDoubleClick]);
+
+  const handleConditionSelect = useCallback((conditionDbValue: string) => {
+    if (popoverTooth !== null && onConditionSelect) {
+      onConditionSelect(popoverTooth, conditionDbValue);
+      // Also toggle tooth selection
+      onToothClick(popoverTooth);
+      setPopoverTooth(null);
+      setSearchQuery('');
+    }
+  }, [popoverTooth, onConditionSelect, onToothClick]);
+
+  // Close popover on outside click
+  useEffect(() => {
+    if (popoverTooth === null) return;
+    const handler = (e: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setPopoverTooth(null);
+        setSearchQuery('');
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [popoverTooth]);
+
+  // Focus search input when popover opens
+  useEffect(() => {
+    if (popoverTooth !== null) {
+      setTimeout(() => searchInputRef.current?.focus(), 50);
+    }
+  }, [popoverTooth]);
+
+  const filteredStatuses = TOOTH_STATUSES.filter(s =>
+    s.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const getPatientToothStatus = (toothNumber: number) => {
     return patientDentalStatus.find(t => t.tooth_number === toothNumber);
@@ -56,6 +104,7 @@ export function MiniToothSelector({
     const hexColor = getStatusHexColor?.(status) || null;
     const hasPatientStatus = patientStatus && status !== 'Sănătos';
     const isMissing = status === 'Absent' || status === 'missing';
+    const isPopoverOpen = popoverTooth === toothNumber;
 
     const dims = getToothDimensions(toothNumber, isDeciduous);
     const w = Math.round(dims.width * MINI_SCALE);
@@ -70,7 +119,8 @@ export function MiniToothSelector({
           'relative flex flex-col items-center transition-all rounded',
           'hover:scale-110 cursor-pointer',
           isSelected && 'ring-2 ring-primary ring-offset-1',
-          hasPatientStatus && !isSelected && 'ring-1'
+          isPopoverOpen && 'ring-2 ring-blue-500 ring-offset-1 scale-110',
+          hasPatientStatus && !isSelected && !isPopoverOpen && 'ring-1'
         )}
         style={
           isSelected && hexColor
@@ -110,20 +160,72 @@ export function MiniToothSelector({
       </button>
     );
 
-    if (hasPatientStatus || isSelected) {
-      return (
-        <Tooltip key={toothNumber}>
-          <TooltipTrigger asChild>{button}</TooltipTrigger>
-          <TooltipContent side={isLower ? 'bottom' : 'top'} className="text-xs">
-            <span className="font-medium">{toothNumber}</span>
-            {hasPatientStatus && <span className="ml-1">- {status}</span>}
-            {isSelected && <span className="ml-1 text-primary">(selectat)</span>}
-          </TooltipContent>
-        </Tooltip>
-      );
-    }
+    const wrappedButton = (
+      <span key={toothNumber} className="relative">
+        {hasPatientStatus || isSelected ? (
+          <Tooltip>
+            <TooltipTrigger asChild>{button}</TooltipTrigger>
+            <TooltipContent side={isLower ? 'bottom' : 'top'} className="text-xs">
+              <span className="font-medium">{toothNumber}</span>
+              {hasPatientStatus && <span className="ml-1">- {status}</span>}
+              {isSelected && <span className="ml-1 text-primary">(selectat)</span>}
+            </TooltipContent>
+          </Tooltip>
+        ) : button}
 
-    return <span key={toothNumber}>{button}</span>;
+        {/* Condition popover */}
+        {isPopoverOpen && (
+          <div
+            ref={popoverRef}
+            className={cn(
+              "absolute z-[100] w-44 rounded-md border bg-popover shadow-lg",
+              isLower ? 'bottom-full mb-1' : 'top-full mt-1',
+              "left-1/2 -translate-x-1/2"
+            )}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center border-b px-2 py-1.5 gap-1.5">
+              <Search className="h-3 w-3 text-muted-foreground shrink-0" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Caută afecțiune..."
+                className="flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
+              />
+              {searchQuery && (
+                <button type="button" onClick={() => setSearchQuery('')} className="text-muted-foreground hover:text-foreground">
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+            <div className="max-h-36 overflow-y-auto p-1">
+              {filteredStatuses.length === 0 ? (
+                <div className="text-xs text-muted-foreground text-center py-2">Nicio afecțiune</div>
+              ) : (
+                filteredStatuses.map(s => (
+                  <button
+                    key={s.dbValue}
+                    type="button"
+                    onClick={() => handleConditionSelect(s.dbValue)}
+                    className="flex items-center gap-2 w-full px-2 py-1.5 rounded-sm text-xs hover:bg-accent hover:text-accent-foreground transition-colors text-left"
+                  >
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0 border border-background"
+                      style={{ backgroundColor: s.color }}
+                    />
+                    <span>{s.name}</span>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+      </span>
+    );
+
+    return wrappedButton;
   };
 
   return (
@@ -142,7 +244,6 @@ export function MiniToothSelector({
               const allSelected = teeth.every(t => selectedTeeth.includes(t));
               teeth.forEach(t => {
                 if (allSelected) {
-                  // Deselect all teeth in group by calling onToothClick (which toggles)
                   if (selectedTeeth.includes(t)) onToothClick(t);
                 } else {
                   if (!selectedTeeth.includes(t)) onToothClick(t);
