@@ -240,11 +240,11 @@ export function ToothDetailPanel({
 
       {/* Afecțiuni popup */}
       <Dialog open={showConditionsDialog} onOpenChange={setShowConditionsDialog}>
-        <DialogContent className="sm:max-w-[420px] max-h-[80vh] flex flex-col overflow-hidden">
+        <DialogContent className="sm:max-w-[420px]">
           <DialogHeader>
             <DialogTitle className="text-sm">Adaugă afecțiune — Dinte {toothNumber}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 flex flex-col flex-1 min-h-0">
+          <div className="space-y-3">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -255,23 +255,21 @@ export function ToothDetailPanel({
                 autoFocus
               />
             </div>
-            <ScrollArea className="flex-1 min-h-0">
-              <div className="space-y-0.5">
-                {filteredCatalog.map(cond => (
-                  <button
-                    key={cond.id}
-                    onClick={() => handleAddCondition(cond.id)}
-                    className="w-full flex items-center justify-between py-2 px-3 rounded-lg hover:bg-muted/70 text-sm transition-colors text-left"
-                  >
-                    <span>{cond.name}</span>
-                    <span className="text-muted-foreground text-xs">{cond.code}</span>
-                  </button>
-                ))}
-                {filteredCatalog.length === 0 && (
-                  <p className="text-sm text-muted-foreground py-4 text-center">Nicio afecțiune disponibilă</p>
-                )}
-              </div>
-            </ScrollArea>
+            <div className="overflow-y-auto max-h-[350px] space-y-0.5">
+              {filteredCatalog.map(cond => (
+                <button
+                  key={cond.id}
+                  onClick={() => handleAddCondition(cond.id)}
+                  className="w-full flex items-center justify-between py-2 px-3 rounded-lg hover:bg-muted/70 text-sm transition-colors text-left"
+                >
+                  <span>{cond.name}</span>
+                  <span className="text-muted-foreground text-xs">{cond.code}</span>
+                </button>
+              ))}
+              {filteredCatalog.length === 0 && (
+                <p className="text-sm text-muted-foreground py-4 text-center">Nicio afecțiune disponibilă</p>
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>
