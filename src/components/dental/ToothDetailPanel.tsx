@@ -240,11 +240,11 @@ export function ToothDetailPanel({
 
       {/* Afecțiuni popup */}
       <Dialog open={showConditionsDialog} onOpenChange={setShowConditionsDialog}>
-        <DialogContent className="sm:max-w-[420px]">
+        <DialogContent className="sm:max-w-[420px] max-h-[80vh] flex flex-col overflow-hidden">
           <DialogHeader>
             <DialogTitle className="text-sm">Adaugă afecțiune — Dinte {toothNumber}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3">
+          <div className="space-y-3 flex flex-col flex-1 min-h-0">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -255,7 +255,7 @@ export function ToothDetailPanel({
                 autoFocus
               />
             </div>
-            <ScrollArea className="max-h-[60vh]">
+            <ScrollArea className="flex-1 min-h-0">
               <div className="space-y-0.5">
                 {filteredCatalog.map(cond => (
                   <button
