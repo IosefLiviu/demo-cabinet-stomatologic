@@ -5,6 +5,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { QuadrantCircle } from './QuadrantCircle';
 import { Search, X } from 'lucide-react';
 import { useDentalConditionsCatalog, DentalCondition } from '@/hooks/useToothData';
+import { getToothOverlays } from './toothConditionOverlays';
 
 // FDI notation - permanent teeth
 const upperTeeth = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
@@ -16,27 +17,17 @@ const lowerDeciduousTeeth = [85, 84, 83, 82, 81, 71, 72, 73, 74, 75];
 
 // Color mapping for condition codes by category
 const CONDITION_COLORS: Record<string, string> = {
-  // Caries - red/orange
   ca: '#DC2626', ci: '#EF4444', cm: '#DC2626', cmo: '#DC2626', cmod: '#B91C1C',
   co: '#DC2626', cod: '#DC2626', cp: '#DC2626', cc: '#DC2626', cv: '#DC2626',
   crd: '#F97316', crm: '#F97316',
-  // Secondary caries - dark red
   csd: '#991B1B', csm: '#991B1B', cso: '#991B1B', csmo: '#991B1B', csod: '#991B1B',
-  // Fillings - blue
   oc: '#3B82F6', oa: '#6366F1', obc: '#2563EB',
-  // Crowns - amber
   ccr: '#F59E0B', cmc: '#D97706', cpv: '#FBBF24', cor: '#F59E0B',
-  // Endodontics - green
   te: '#10B981', tei: '#F97316', dd: '#6B7280', dev: '#6B7280',
-  // Missing/Absent - gray
   aa: '#6B7280', ep: '#9CA3AF', et: '#6B7280',
-  // Implant - purple
   imp: '#8B5CF6', impl: '#8B5CF6',
-  // Prosthetics - teal
   pv: '#14B8A6', pm: '#0D9488', pf: '#0F766E', pc: '#14B8A6', pmc: '#0D9488',
-  // Rest radicular - orange
   rr: '#F97316',
-  // Others
   bi: '#8B0000', di: '#6366F1', incl: '#6366F1',
   urg: '#EF4444', dur: '#EF4444',
   fract: '#DC2626', mob: '#F97316',
@@ -58,6 +49,8 @@ interface MiniToothSelectorProps {
   onToothDoubleClick?: (toothNumber: number) => void;
   onConditionSelect?: (toothNumber: number, conditionId: string, conditionCode: string) => void;
   patientDentalStatus?: PatientToothStatus[];
+  /** Map of tooth_number -> array of condition codes for overlay rendering */
+  toothConditionCodes?: Record<number, string[]>;
   getStatusHexColor?: (status: string) => string | null;
   className?: string;
 }
@@ -70,6 +63,7 @@ export function MiniToothSelector({
   onToothDoubleClick,
   onConditionSelect,
   patientDentalStatus = [],
+  toothConditionCodes = {},
   getStatusHexColor,
   className,
 }: MiniToothSelectorProps) {
@@ -136,8 +130,13 @@ export function MiniToothSelector({
     const status = patientStatus?.status || 'Sănătos';
     const hexColor = getStatusHexColor?.(status) || null;
     const hasPatientStatus = patientStatus && status !== 'Sănătos';
-    const isMissing = status === 'Absent' || status === 'missing';
     const isPopoverOpen = popoverTooth === toothNumber;
+
+    // Get condition overlays for this tooth
+    const codes = toothConditionCodes[toothNumber] || [];
+    const { overlays: toothOverlays, isAbsent: conditionAbsent } = getToothOverlays(codes, toothNumber);
+    const isMissing = status === 'Absent' || status === 'missing' || conditionAbsent;
+    const hasConditions = codes.length > 0;
 
     const dims = getToothDimensions(toothNumber, isDeciduous);
     const w = Math.round(dims.width * MINI_SCALE);
@@ -180,6 +179,7 @@ export function MiniToothSelector({
           isHovered={false}
           width={w}
           height={h}
+          overlays={toothOverlays.length > 0 ? toothOverlays : undefined}
         />
 
         {isLower && (
@@ -195,12 +195,13 @@ export function MiniToothSelector({
 
     const wrappedButton = (
       <span key={toothNumber} className="relative">
-        {hasPatientStatus || isSelected ? (
+        {hasPatientStatus || isSelected || hasConditions ? (
           <Tooltip>
             <TooltipTrigger asChild>{button}</TooltipTrigger>
             <TooltipContent side={isLower ? 'bottom' : 'top'} className="text-xs">
               <span className="font-medium">{toothNumber}</span>
               {hasPatientStatus && <span className="ml-1">- {status}</span>}
+              {hasConditions && <span className="ml-1 text-muted-foreground">({codes.length} afecțiuni)</span>}
               {isSelected && <span className="ml-1 text-primary">(selectat)</span>}
             </TooltipContent>
           </Tooltip>

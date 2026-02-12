@@ -140,17 +140,21 @@ export function InterventionSelector({
   const [selectionMode, setSelectionMode] = useState<Record<string, 'teeth' | 'arch'>>({});
   // Patient dental status loaded from database
   const [patientDentalStatus, setPatientDentalStatus] = useState<PatientToothStatus[]>([]);
+  // Tooth condition codes for overlay rendering
+  const [toothConditionCodes, setToothConditionCodes] = useState<Record<number, string[]>>({});
   
   const activeStatuses = TOOTH_STATUSES;
 
-  // Load patient dental status when patientId changes
+  // Load patient dental status and tooth conditions when patientId changes
   useEffect(() => {
-    const loadPatientDentalStatus = async () => {
+    const loadPatientData = async () => {
       if (!patientId) {
         setPatientDentalStatus([]);
+        setToothConditionCodes({});
         return;
       }
 
+      // Load dental_status
       const { data, error } = await supabase
         .from('dental_status')
         .select('tooth_number, status, notes')
@@ -158,20 +162,37 @@ export function InterventionSelector({
 
       if (error) {
         console.error('Error loading patient dental status:', error);
-        return;
+      } else {
+        const convertedData = (data || []).map(d => ({
+          tooth_number: d.tooth_number,
+          status: statusEnumToName[d.status] || d.status,
+          notes: d.notes || undefined,
+        }));
+        setPatientDentalStatus(convertedData);
       }
 
-      // Convert DB enum status to display names
-      const convertedData = (data || []).map(d => ({
-        tooth_number: d.tooth_number,
-        status: statusEnumToName[d.status] || d.status,
-        notes: d.notes || undefined,
-      }));
+      // Load tooth_conditions with condition codes
+      const { data: condData, error: condError } = await supabase
+        .from('tooth_conditions')
+        .select('tooth_number, condition:dental_conditions(code)')
+        .eq('patient_id', patientId);
 
-      setPatientDentalStatus(convertedData);
+      if (condError) {
+        console.error('Error loading tooth conditions:', condError);
+      } else {
+        const codeMap: Record<number, string[]> = {};
+        (condData || []).forEach((tc: any) => {
+          const code = tc.condition?.code;
+          if (code) {
+            if (!codeMap[tc.tooth_number]) codeMap[tc.tooth_number] = [];
+            codeMap[tc.tooth_number].push(code);
+          }
+        });
+        setToothConditionCodes(codeMap);
+      }
     };
 
-    loadPatientDentalStatus();
+    loadPatientData();
   }, [patientId]);
 
   // Get patient's saved dental status for a tooth
@@ -816,7 +837,25 @@ export function InterventionSelector({
                             new_status: conditionCode,
                             notes: `Afecțiune adăugată din programare`,
                           });
+
+                          // Refresh tooth condition codes to update overlays
+                          const { data: condData } = await supabase
+                            .from('tooth_conditions')
+                            .select('tooth_number, condition:dental_conditions(code)')
+                            .eq('patient_id', patientId);
+                          if (condData) {
+                            const codeMap: Record<number, string[]> = {};
+                            (condData as any[]).forEach((tc) => {
+                              const code = tc.condition?.code;
+                              if (code) {
+                                if (!codeMap[tc.tooth_number]) codeMap[tc.tooth_number] = [];
+                                codeMap[tc.tooth_number].push(code);
+                              }
+                            });
+                            setToothConditionCodes(codeMap);
+                          }
                         }}
+                        toothConditionCodes={toothConditionCodes}
                         patientDentalStatus={patientDentalStatus}
                         getStatusHexColor={getStatusHexColor}
                       />
