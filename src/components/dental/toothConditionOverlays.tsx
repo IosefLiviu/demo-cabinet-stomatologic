@@ -424,6 +424,35 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
       </g>
     ),
   },
+
+  // Pivot-RCR - dark metallic post in the root canal
+  rcr: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <rect x="17" y="8" width="6" height="36" rx="2" fill="#6B7280" opacity="0.7" />
+        <rect x="15" y="40" width="10" height="6" rx="1.5" fill="#9CA3AF" opacity="0.6" />
+      </g>
+    ),
+  },
+
+  // Proteză existentă - pink gum-colored band at the cervical/gum area
+  prot: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <path d="M8,44 Q20,38 32,44 L32,52 Q20,46 8,52 Z" fill="#F9A8D4" opacity="0.55" />
+      </g>
+    ),
+  },
+
+  // Pulpită - yellow/amber glow inside the crown (inflamed pulp)
+  pp: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <ellipse cx="20" cy="58" rx="5" ry="8" fill="#FBBF24" opacity="0.5" />
+        <ellipse cx="20" cy="58" rx="3" ry="5" fill="#F59E0B" opacity="0.4" />
+      </g>
+    ),
+  },
 };
 
 /**
