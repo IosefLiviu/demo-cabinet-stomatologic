@@ -134,19 +134,36 @@ export function TimeSlotGrid({
       }
     };
 
-    // Delay initial position to ensure grid is fully rendered
+    // Retry multiple times to ensure grid is fully rendered (helps on slower PCs)
+    let retryCount = 0;
+    const maxRetries = 10;
+    let retryTimeoutId: ReturnType<typeof setTimeout>;
+    let positionFound = false;
+    
+    const tryUpdate = () => {
+      updatePosition();
+      setCurrentTimeLabel(format(new Date(), 'HH:mm'));
+      retryCount++;
+      // Check if grid cells exist to determine if position was found
+      const grid = gridRef.current;
+      if (grid) {
+        const timeCells = grid.querySelectorAll('[data-time-slot]');
+        if (timeCells.length > 0) positionFound = true;
+      }
+      if (!positionFound && retryCount < maxRetries) {
+        retryTimeoutId = setTimeout(tryUpdate, 300);
+      }
+    };
+    
     const raf = requestAnimationFrame(() => {
-      setTimeout(() => {
-        updatePosition();
-        setCurrentTimeLabel(format(new Date(), 'HH:mm'));
-      }, 100);
+      setTimeout(tryUpdate, 150);
     });
     const interval = setInterval(() => { updatePosition(); setCurrentTimeLabel(format(new Date(), 'HH:mm')); }, 60000);
-    // Also update on resize
     window.addEventListener('resize', updatePosition);
 
     return () => {
       cancelAnimationFrame(raf);
+      clearTimeout(retryTimeoutId);
       clearInterval(interval);
       window.removeEventListener('resize', updatePosition);
     };
