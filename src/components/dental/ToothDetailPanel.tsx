@@ -255,7 +255,7 @@ export function ToothDetailPanel({
                 autoFocus
               />
             </div>
-            <ScrollArea className="max-h-[350px]">
+            <ScrollArea className="max-h-[60vh]">
               <div className="space-y-0.5">
                 {filteredCatalog.map(cond => (
                   <button
