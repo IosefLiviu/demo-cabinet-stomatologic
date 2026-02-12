@@ -8,10 +8,18 @@
 interface OverlayDef {
   /** Render the SVG overlay elements */
   render: (id: string) => React.ReactNode;
+  /** If true, the tooth should render as absent (dashed outline only) */
+  isAbsent?: boolean;
 }
 
 // Condition overlays keyed by condition code
 export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
+  // Absent - tooth appears as empty dashed outline
+  aa: {
+    isAbsent: true,
+    render: () => null,
+  },
+
   // Breșă închisă - X pattern across the crown
   bi: {
     render: (id) => (
@@ -232,15 +240,20 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
 };
 
 /**
- * Returns overlay elements for all conditions on a specific tooth.
- * conditionCodes: array of condition codes active on this tooth
+ * Returns overlay elements and absent flag for all conditions on a specific tooth.
  */
-export function getToothOverlays(conditionCodes: string[], toothNumber: number): React.ReactNode[] {
-  return conditionCodes
+export function getToothOverlays(conditionCodes: string[], toothNumber: number): { overlays: React.ReactNode[]; isAbsent: boolean } {
+  let isAbsent = false;
+  const overlays = conditionCodes
     .map((code) => {
       const overlay = CONDITION_OVERLAYS[code];
       if (!overlay) return null;
+      if (overlay.isAbsent) {
+        isAbsent = true;
+        return null;
+      }
       return overlay.render(`${toothNumber}-${code}`);
     })
     .filter(Boolean) as React.ReactNode[];
+  return { overlays, isAbsent };
 }
