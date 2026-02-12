@@ -29,13 +29,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
+    let mounted = true;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        if (!mounted) return;
+
+        // Ignore token refresh events that don't change the user
+        // This prevents unnecessary re-renders and state updates
+        if (event === 'TOKEN_REFRESHED' && session?.user) {
+          setSession(session);
+          return;
+        }
+
+        // For SIGNED_OUT, only process if it's a real logout (not a failed refresh)
+        if (event === 'SIGNED_OUT') {
+          // Double-check: if we had a user, verify the session is truly gone
+          // before logging out (protects against rate-limit induced logouts)
+          if (user) {
+            supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+              if (!mounted) return;
+              if (!currentSession) {
+                // Truly signed out
+                setSession(null);
+                setUser(null);
+                setIsAdmin(false);
+                setDoctorId(null);
+                setMustChangePassword(false);
+                setDisplayName(null);
+              } else {
+                // False alarm - session still valid, restore it
+                setSession(currentSession);
+              }
+            });
+            return;
+          }
+          setSession(null);
+          setUser(null);
+          setIsAdmin(false);
+          setDoctorId(null);
+          setMustChangePassword(false);
+          setDisplayName(null);
+          return;
+        }
+
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
           setTimeout(() => {
+            if (!mounted) return;
             checkAdminRole(session.user.id);
             checkDoctorAssociation(session.user.id);
             checkMustChangePassword(session.user.id);
@@ -51,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
       setSession(session);
       setUser(session?.user ?? null);
 
@@ -63,7 +107,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const checkAdminRole = async (userId: string) => {
