@@ -44,7 +44,7 @@ import { useTreatments } from '@/hooks/useTreatments';
 import { useCabinets } from '@/hooks/useCabinets';
 import { useDoctors } from '@/hooks/useDoctors';
 import { useDoctorShifts, DoctorShift } from '@/hooks/useDoctorShifts';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { TIME_SLOTS, Appointment } from '@/types/appointment';
 
 interface NavigationState {

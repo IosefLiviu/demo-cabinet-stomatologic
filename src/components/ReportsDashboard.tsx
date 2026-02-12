@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 import { AppointmentDB } from '@/hooks/useAppointmentsDB';
 import { Tooltip } from 'recharts';
 import { useDoctors } from '@/hooks/useDoctors';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import * as XLSX from 'xlsx';
 
 interface ReportsDashboardProps {

@@ -10,53 +10,61 @@ import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import Install from "./pages/Install";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import { useAuth } from "@/hooks/useAuth";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 
 const queryClient = new QueryClient();
 
-const App = () => {
+function AppContent() {
   const { user, mustChangePassword, clearMustChangePassword } = useAuth();
 
+  return (
+    <>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        {user && (
+          <ChangePasswordDialog
+            open={mustChangePassword}
+            userId={user.id}
+            onPasswordChanged={clearMustChangePassword}
+          />
+        )}
+
+        <Routes>
+          <Route path="/auth" element={<Auth />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Index />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute requireAdmin>
+                <Admin />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/install" element={<Install />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </>
+  );
+}
+
+const App = () => {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            {/* Force password change dialog (global) */}
-            {user && (
-              <ChangePasswordDialog
-                open={mustChangePassword}
-                userId={user.id}
-                onPasswordChanged={clearMustChangePassword}
-              />
-            )}
-
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <Index />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <Admin />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/install" element={<Install />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </ThemeProvider>
