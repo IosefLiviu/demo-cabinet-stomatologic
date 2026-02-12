@@ -287,18 +287,18 @@ export function SvgTooth({
 // Get appropriate dimensions based on tooth type
 export function getToothDimensions(toothNumber: number, isDeciduous: boolean = false) {
   if (isDeciduous) {
-    return { width: 52, height: 72 };
+    return { width: 62, height: 86 };
   }
   const pos = toothNumber % 10;
   switch (pos) {
-    case 1: return { width: 56, height: 96 };
-    case 2: return { width: 50, height: 88 };
-    case 3: return { width: 54, height: 100 };
-    case 4: return { width: 54, height: 86 };
-    case 5: return { width: 50, height: 82 };
-    case 6: return { width: 68, height: 96 };
-    case 7: return { width: 64, height: 92 };
-    case 8: return { width: 56, height: 82 };
-    default: return { width: 54, height: 86 };
+    case 1: return { width: 72, height: 120 };
+    case 2: return { width: 64, height: 110 };
+    case 3: return { width: 68, height: 126 };
+    case 4: return { width: 68, height: 108 };
+    case 5: return { width: 64, height: 104 };
+    case 6: return { width: 86, height: 120 };
+    case 7: return { width: 82, height: 116 };
+    case 8: return { width: 72, height: 104 };
+    default: return { width: 68, height: 108 };
   }
 }
