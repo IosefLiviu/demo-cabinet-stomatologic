@@ -30,123 +30,119 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
     ),
   },
 
-  // Carie avansată - red fill at the occlusal (top of crown) area
+  // Carie avansată - large red area covering crown tip
   ca: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <ellipse cx="20" cy="72" rx="8" ry="5" fill="#DC2626" opacity="0.7" />
+        <path d="M14,62 Q14,74 20,76 Q26,74 26,62 Z" fill="#DC2626" opacity="0.75" />
       </g>
     ),
   },
 
-  // Carie de colet - small red rectangle at the cervical zone
+  // Carie de colet - red rectangle at the cervical zone (neck of tooth)
   cc: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="15" y="47" width="10" height="6" rx="1" fill="#DC2626" opacity="0.75" />
+        <rect x="14" y="46" width="12" height="6" rx="1.5" fill="#DC2626" opacity="0.75" />
       </g>
     ),
   },
 
-  // Carie incipientă - small dot on occlusal surface
+  // Carie incipientă - red area at crown base (similar to avansată but smaller)
   ci: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <circle cx="20" cy="68" r="3" fill="#EF4444" opacity="0.6" />
+        <path d="M15,66 Q15,76 20,76 Q25,76 25,66 Z" fill="#DC2626" opacity="0.65" />
       </g>
     ),
   },
 
-  // Carie mezială - red mark on mesial (left) side
+  // Carie mezială - red patch on mesial (left) side of crown
   cm: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="10" y="55" width="5" height="12" rx="2" fill="#DC2626" opacity="0.7" />
+        <rect x="10" y="54" width="7" height="10" rx="1.5" fill="#DC2626" opacity="0.75" />
       </g>
     ),
   },
 
-  // Carie ocluzală - red on the occlusal surface
+  // Carie ocluzală - large red block on occlusal (bottom) surface
   co: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <ellipse cx="20" cy="66" rx="6" ry="4" fill="#DC2626" opacity="0.65" />
+        <rect x="13" y="62" width="14" height="12" rx="2" fill="#DC2626" opacity="0.7" />
       </g>
     ),
   },
 
-  // Carie mezio-ocluzală - mesial + occlusal
+  // Carie mezio-ocluzală - mesial side + occlusal bottom
   cmo: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="10" y="55" width="5" height="12" rx="2" fill="#DC2626" opacity="0.7" />
-        <ellipse cx="20" cy="66" rx="6" ry="4" fill="#DC2626" opacity="0.65" />
+        <path d="M10,54 L17,54 L17,62 L27,62 L27,74 L13,74 L13,62 L10,62 Z" fill="#DC2626" opacity="0.7" rx="1" />
       </g>
     ),
   },
 
-  // Carie mezio-ocluzo-distală - mesial + occlusal + distal
+  // Carie mezio-ocluzo-distală - U-shape wrapping mesial + occlusal + distal
   cmod: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="10" y="55" width="5" height="12" rx="2" fill="#DC2626" opacity="0.7" />
-        <ellipse cx="20" cy="66" rx="6" ry="4" fill="#DC2626" opacity="0.65" />
-        <rect x="25" y="55" width="5" height="12" rx="2" fill="#DC2626" opacity="0.7" />
+        <path d="M10,54 L17,54 L17,62 L23,62 L23,54 L30,54 L30,62 L27,62 L27,74 L13,74 L13,62 L10,62 Z" fill="#DC2626" opacity="0.7" />
       </g>
     ),
   },
 
-  // Carie ocluzo-distală - occlusal + distal
+  // Carie ocluzo-distală - occlusal + distal (right) side
   cod: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <ellipse cx="20" cy="66" rx="6" ry="4" fill="#DC2626" opacity="0.65" />
-        <rect x="25" y="55" width="5" height="12" rx="2" fill="#DC2626" opacity="0.7" />
+        <path d="M13,62 L27,62 L30,62 L30,54 L23,54 L23,62 L27,74 L13,74 Z" fill="#DC2626" opacity="0.7" />
       </g>
     ),
   },
 
-  // Carie palatinală - mark on palatal (lingual) side
+  // Carie palatinală - small red patch on the palatal surface (upper part of crown)
   cp: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <ellipse cx="20" cy="60" rx="5" ry="6" fill="#DC2626" opacity="0.5" />
+        <rect x="10" y="50" width="6" height="6" rx="1.5" fill="#DC2626" opacity="0.7" />
       </g>
     ),
   },
 
-  // Carie vestibulară - mark on vestibular (buccal) side
+  // Carie vestibulară - red on vestibular (front) surface
   cv: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <ellipse cx="20" cy="62" rx="7" ry="5" fill="#DC2626" opacity="0.55" />
+        <ellipse cx="20" cy="60" rx="7" ry="6" fill="#DC2626" opacity="0.55" />
       </g>
     ),
   },
 
-  // Carie radiculară distală
+  // Carie radiculară distală - red patch on distal (right) root area
   crd: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="23" y="20" width="5" height="10" rx="2" fill="#DC2626" opacity="0.6" />
+        <rect x="22" y="22" width="6" height="10" rx="1.5" fill="#DC2626" opacity="0.65" />
       </g>
     ),
   },
 
-  // Carie radiculară mezială
+  // Carie radiculară mezială - red patch on mesial (left) root area
   crm: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="12" y="20" width="5" height="10" rx="2" fill="#DC2626" opacity="0.6" />
+        <rect x="12" y="22" width="6" height="10" rx="1.5" fill="#DC2626" opacity="0.65" />
       </g>
     ),
   },
 
-  // Carie secundară distală
+  // Carie secundară distală - orange patch on distal side (indicates secondary/recurrent)
   csd: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="25" y="55" width="5" height="12" rx="2" fill="#F97316" opacity="0.7" />
+        <rect x="23" y="54" width="7" height="10" rx="1.5" fill="#F97316" opacity="0.7" />
       </g>
     ),
   },
@@ -155,7 +151,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   csm: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="10" y="55" width="5" height="12" rx="2" fill="#F97316" opacity="0.7" />
+        <rect x="10" y="54" width="7" height="10" rx="1.5" fill="#F97316" opacity="0.7" />
       </g>
     ),
   },
@@ -164,8 +160,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   csmo: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="10" y="55" width="5" height="12" rx="2" fill="#F97316" opacity="0.7" />
-        <ellipse cx="20" cy="66" rx="6" ry="4" fill="#F97316" opacity="0.6" />
+        <path d="M10,54 L17,54 L17,62 L27,62 L27,74 L13,74 L13,62 L10,62 Z" fill="#F97316" opacity="0.6" />
       </g>
     ),
   },
@@ -174,7 +169,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   cso: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <ellipse cx="20" cy="66" rx="6" ry="4" fill="#F97316" opacity="0.6" />
+        <rect x="13" y="62" width="14" height="12" rx="2" fill="#F97316" opacity="0.6" />
       </g>
     ),
   },
@@ -183,18 +178,17 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   csod: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <ellipse cx="20" cy="66" rx="6" ry="4" fill="#F97316" opacity="0.6" />
-        <rect x="25" y="55" width="5" height="12" rx="2" fill="#F97316" opacity="0.7" />
+        <path d="M13,62 L27,62 L30,62 L30,54 L23,54 L23,62 L27,74 L13,74 Z" fill="#F97316" opacity="0.6" />
       </g>
     ),
   },
 
-  // Recidivă carie distală
+  // Recidivă carie distală - dark red with stripe accent
   rcd: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="25" y="55" width="5" height="12" rx="2" fill="#B91C1C" opacity="0.7" />
-        <line x1="25" y1="55" x2="30" y2="67" stroke="#7F1D1D" strokeWidth="0.8" opacity="0.5" />
+        <rect x="23" y="54" width="7" height="10" rx="1.5" fill="#B91C1C" opacity="0.7" />
+        <line x1="24" y1="56" x2="28" y2="62" stroke="#7F1D1D" strokeWidth="0.8" opacity="0.4" />
       </g>
     ),
   },
@@ -203,8 +197,8 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   rcm: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="10" y="55" width="5" height="12" rx="2" fill="#B91C1C" opacity="0.7" />
-        <line x1="10" y1="55" x2="15" y2="67" stroke="#7F1D1D" strokeWidth="0.8" opacity="0.5" />
+        <rect x="10" y="54" width="7" height="10" rx="1.5" fill="#B91C1C" opacity="0.7" />
+        <line x1="12" y1="56" x2="16" y2="62" stroke="#7F1D1D" strokeWidth="0.8" opacity="0.4" />
       </g>
     ),
   },
@@ -213,8 +207,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   rcmo: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="10" y="55" width="5" height="12" rx="2" fill="#B91C1C" opacity="0.7" />
-        <ellipse cx="20" cy="66" rx="6" ry="4" fill="#B91C1C" opacity="0.6" />
+        <path d="M10,54 L17,54 L17,62 L27,62 L27,74 L13,74 L13,62 L10,62 Z" fill="#B91C1C" opacity="0.65" />
       </g>
     ),
   },
@@ -223,7 +216,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   rco: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <ellipse cx="20" cy="66" rx="6" ry="4" fill="#B91C1C" opacity="0.6" />
+        <rect x="13" y="62" width="14" height="12" rx="2" fill="#B91C1C" opacity="0.65" />
       </g>
     ),
   },
@@ -232,8 +225,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   rcod: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <ellipse cx="20" cy="66" rx="6" ry="4" fill="#B91C1C" opacity="0.6" />
-        <rect x="25" y="55" width="5" height="12" rx="2" fill="#B91C1C" opacity="0.7" />
+        <path d="M13,62 L27,62 L30,62 L30,54 L23,54 L23,62 L27,74 L13,74 Z" fill="#B91C1C" opacity="0.65" />
       </g>
     ),
   },
