@@ -124,8 +124,14 @@ export function SvgTooth({
             opacity={0.35}
           />
           {/* Small X in the middle to indicate absence */}
-          <line x1="16" y1="36" x2="24" y2="44" stroke="#b0a89a" strokeWidth="0.8" opacity="0.3" />
-          <line x1="24" y1="36" x2="16" y2="44" stroke="#b0a89a" strokeWidth="0.8" opacity="0.3" />
+          {(!overlays || overlays.length === 0) && (
+            <>
+              <line x1="16" y1="36" x2="24" y2="44" stroke="#b0a89a" strokeWidth="0.8" opacity="0.3" />
+              <line x1="24" y1="36" x2="16" y2="44" stroke="#b0a89a" strokeWidth="0.8" opacity="0.3" />
+            </>
+          )}
+          {/* Condition overlays (e.g. implant) */}
+          {overlays && overlays}
         </g>
       ) : (
         <>
