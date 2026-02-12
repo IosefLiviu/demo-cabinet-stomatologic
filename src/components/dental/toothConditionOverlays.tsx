@@ -112,10 +112,11 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   },
 
   // Carie vestibulară - red on vestibular (front) surface
+  // Carie vestibulară - red square on the front surface of crown
   cv: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <ellipse cx="20" cy="60" rx="7" ry="6" fill="#DC2626" opacity="0.55" />
+        <rect x="15" y="56" width="10" height="8" rx="1.5" fill="#DC2626" opacity="0.7" />
       </g>
     ),
   },
@@ -138,47 +139,54 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
     ),
   },
 
-  // Carie secundară distală - orange patch on distal side (indicates secondary/recurrent)
+  // Carie secundară distală - bicolor: blue (filling) + red (caries) on distal side
   csd: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="23" y="54" width="7" height="10" rx="1.5" fill="#F97316" opacity="0.7" />
+        <rect x="23" y="54" width="7" height="5" rx="1" fill="#3B82F6" opacity="0.65" />
+        <rect x="23" y="59" width="7" height="5" rx="1" fill="#DC2626" opacity="0.7" />
       </g>
     ),
   },
 
-  // Carie secundară mezială
+  // Carie secundară mezială - bicolor on mesial side
   csm: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="10" y="54" width="7" height="10" rx="1.5" fill="#F97316" opacity="0.7" />
+        <rect x="10" y="54" width="7" height="5" rx="1" fill="#DC2626" opacity="0.7" />
+        <rect x="10" y="59" width="7" height="5" rx="1" fill="#3B82F6" opacity="0.65" />
       </g>
     ),
   },
 
-  // Carie secundară mezio-ocluzală
+  // Carie secundară mezio-ocluzală - bicolor L-shape
   csmo: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M10,54 L17,54 L17,62 L27,62 L27,74 L13,74 L13,62 L10,62 Z" fill="#F97316" opacity="0.6" />
+        <rect x="10" y="54" width="7" height="5" rx="1" fill="#DC2626" opacity="0.7" />
+        <rect x="10" y="59" width="7" height="5" rx="1" fill="#3B82F6" opacity="0.6" />
+        <rect x="13" y="64" width="14" height="4" rx="1" fill="#3B82F6" opacity="0.55" />
       </g>
     ),
   },
 
-  // Carie secundară ocluzală
+  // Carie secundară ocluzală - bicolor horizontal bar
   cso: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="13" y="62" width="14" height="12" rx="2" fill="#F97316" opacity="0.6" />
+        <rect x="13" y="62" width="14" height="5" rx="1" fill="#DC2626" opacity="0.7" />
+        <rect x="13" y="67" width="14" height="5" rx="1" fill="#3B82F6" opacity="0.6" />
       </g>
     ),
   },
 
-  // Carie secundară ocluzo-distală
+  // Carie secundară ocluzo-distală - bicolor on occlusal + distal
   csod: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M13,62 L27,62 L30,62 L30,54 L23,54 L23,62 L27,74 L13,74 Z" fill="#F97316" opacity="0.6" />
+        <rect x="13" y="62" width="14" height="5" rx="1" fill="#3B82F6" opacity="0.55" />
+        <rect x="23" y="54" width="7" height="5" rx="1" fill="#DC2626" opacity="0.7" />
+        <rect x="23" y="59" width="7" height="5" rx="1" fill="#3B82F6" opacity="0.6" />
       </g>
     ),
   },
@@ -226,6 +234,16 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
     render: (id) => (
       <g key={`ov-${id}`}>
         <path d="M13,62 L27,62 L30,62 L30,54 L23,54 L23,62 L27,74 L13,74 Z" fill="#B91C1C" opacity="0.65" />
+      </g>
+    ),
+  },
+
+  // CHIST - yellowish/olive blob at the root apex
+  chist: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <ellipse cx="20" cy="8" rx="7" ry="6" fill="#A3A23A" opacity="0.65" />
+        <ellipse cx="20" cy="8" rx="4" ry="3.5" fill="#C4C34A" opacity="0.4" />
       </g>
     ),
   },
