@@ -108,113 +108,122 @@ export function SvgTooth({
       height={height}
       className={className}
       style={{
-        opacity: isMissing ? 0.15 : 1,
-        filter: isMissing ? 'grayscale(1)' : isHovered ? 'brightness(1.05) drop-shadow(0 2px 6px rgba(0,0,0,0.15))' : undefined,
-        transition: 'opacity 0.3s, filter 0.3s',
+        filter: !isMissing && isHovered ? 'brightness(1.05) drop-shadow(0 2px 6px rgba(0,0,0,0.15))' : undefined,
+        transition: 'filter 0.3s',
       }}
     >
-      <defs>
-        {/* Main body gradient - warm ivory 3D */}
-        <linearGradient id={`g-${id}`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#f7f2e8" />
-          <stop offset="25%" stopColor="#f0e9d8" />
-          <stop offset="55%" stopColor="#e6ddca" />
-          <stop offset="85%" stopColor="#d8ceb8" />
-          <stop offset="100%" stopColor="#cfc4aa" />
-        </linearGradient>
-
-        {/* Specular highlight */}
-        <linearGradient id={`h-${id}`} x1="0.2" y1="0" x2="0.8" y2="1">
-          <stop offset="0%" stopColor="white" stopOpacity="0.4" />
-          <stop offset="40%" stopColor="white" stopOpacity="0.15" />
-          <stop offset="100%" stopColor="white" stopOpacity="0" />
-        </linearGradient>
-
-        {/* Root shadow gradient */}
-        <linearGradient id={`rs-${id}`} x1="0.5" y1="0" x2="0.5" y2="1">
-          <stop offset="0%" stopColor="#b8a88a" stopOpacity="0.3" />
-          <stop offset="60%" stopColor="#b8a88a" stopOpacity="0" />
-        </linearGradient>
-
-        {/* Edge shadow for depth */}
-        <radialGradient id={`es-${id}`} cx="0.5" cy="0.6" r="0.5">
-          <stop offset="70%" stopColor="transparent" />
-          <stop offset="100%" stopColor="#a0926e" stopOpacity="0.15" />
-        </radialGradient>
-      </defs>
-
-      <g transform={groupTransform}>
-        {/* Drop shadow */}
-        <path
-          d={shape.outline}
-          fill="rgba(0,0,0,0.06)"
-          transform="translate(1.2, 1.5)"
-        />
-
-        {/* Main tooth fill */}
-        <path
-          d={shape.outline}
-          fill={`url(#g-${id})`}
-          stroke="#c4b898"
-          strokeWidth="0.7"
-          strokeLinejoin="round"
-        />
-
-        {/* Root darkening */}
-        <path
-          d={shape.outline}
-          fill={`url(#rs-${id})`}
-        />
-
-        {/* Edge depth */}
-        <path
-          d={shape.outline}
-          fill={`url(#es-${id})`}
-        />
-
-        {/* Specular highlight */}
-        <path
-          d={shape.outline}
-          fill={`url(#h-${id})`}
-        />
-
-        {/* Cervical line */}
-        {shape.cervical && (
-          <path
-            d={shape.cervical}
-            fill="none"
-            stroke="#c4b898"
-            strokeWidth="0.5"
-            strokeLinecap="round"
-            opacity={0.5}
-          />
-        )}
-
-        {/* Anatomical details (fissures) */}
-        {shape.details?.map((detail, i) => (
-          <path
-            key={i}
-            d={detail}
-            fill="none"
-            stroke="#b8a680"
-            strokeWidth="0.6"
-            strokeLinecap="round"
-            opacity={0.45}
-          />
-        ))}
-
-        {/* Status color overlay */}
-        {statusColor && !isMissing && (
+      {isMissing ? (
+        /* Absent tooth: dashed outline only */
+        <g transform={groupTransform}>
           <path
             d={shape.outline}
-            fill={statusColor}
-            opacity={isHovered ? 0.4 : 0.25}
+            fill="none"
+            stroke="#b0a89a"
+            strokeWidth="0.8"
+            strokeDasharray="3 2"
+            opacity={0.35}
           />
-        )}
+          {/* Small X in the middle to indicate absence */}
+          <line x1="16" y1="36" x2="24" y2="44" stroke="#b0a89a" strokeWidth="0.8" opacity="0.3" />
+          <line x1="24" y1="36" x2="16" y2="44" stroke="#b0a89a" strokeWidth="0.8" opacity="0.3" />
+        </g>
+      ) : (
+        <>
+          <defs>
+            {/* Main body gradient - warm ivory 3D */}
+            <linearGradient id={`g-${id}`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#f7f2e8" />
+              <stop offset="25%" stopColor="#f0e9d8" />
+              <stop offset="55%" stopColor="#e6ddca" />
+              <stop offset="85%" stopColor="#d8ceb8" />
+              <stop offset="100%" stopColor="#cfc4aa" />
+            </linearGradient>
 
-        {/* Condition overlays */}
-        {overlays && !isMissing && overlays}
-      </g>
+            {/* Specular highlight */}
+            <linearGradient id={`h-${id}`} x1="0.2" y1="0" x2="0.8" y2="1">
+              <stop offset="0%" stopColor="white" stopOpacity="0.4" />
+              <stop offset="40%" stopColor="white" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="white" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Root shadow gradient */}
+            <linearGradient id={`rs-${id}`} x1="0.5" y1="0" x2="0.5" y2="1">
+              <stop offset="0%" stopColor="#b8a88a" stopOpacity="0.3" />
+              <stop offset="60%" stopColor="#b8a88a" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Edge shadow for depth */}
+            <radialGradient id={`es-${id}`} cx="0.5" cy="0.6" r="0.5">
+              <stop offset="70%" stopColor="transparent" />
+              <stop offset="100%" stopColor="#a0926e" stopOpacity="0.15" />
+            </radialGradient>
+          </defs>
+
+          <g transform={groupTransform}>
+            {/* Drop shadow */}
+            <path
+              d={shape.outline}
+              fill="rgba(0,0,0,0.06)"
+              transform="translate(1.2, 1.5)"
+            />
+
+            {/* Main tooth fill */}
+            <path
+              d={shape.outline}
+              fill={`url(#g-${id})`}
+              stroke="#c4b898"
+              strokeWidth="0.7"
+              strokeLinejoin="round"
+            />
+
+            {/* Root darkening */}
+            <path d={shape.outline} fill={`url(#rs-${id})`} />
+
+            {/* Edge depth */}
+            <path d={shape.outline} fill={`url(#es-${id})`} />
+
+            {/* Specular highlight */}
+            <path d={shape.outline} fill={`url(#h-${id})`} />
+
+            {/* Cervical line */}
+            {shape.cervical && (
+              <path
+                d={shape.cervical}
+                fill="none"
+                stroke="#c4b898"
+                strokeWidth="0.5"
+                strokeLinecap="round"
+                opacity={0.5}
+              />
+            )}
+
+            {/* Anatomical details (fissures) */}
+            {shape.details?.map((detail, i) => (
+              <path
+                key={i}
+                d={detail}
+                fill="none"
+                stroke="#b8a680"
+                strokeWidth="0.6"
+                strokeLinecap="round"
+                opacity={0.45}
+              />
+            ))}
+
+            {/* Status color overlay */}
+            {statusColor && (
+              <path
+                d={shape.outline}
+                fill={statusColor}
+                opacity={isHovered ? 0.4 : 0.25}
+              />
+            )}
+
+            {/* Condition overlays */}
+            {overlays && overlays}
+          </g>
+        </>
+      )}
     </svg>
   );
 }
