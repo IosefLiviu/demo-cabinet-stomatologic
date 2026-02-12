@@ -323,11 +323,11 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
     const isGroupSelected = selectedGroup.includes(toothNumber);
     const hexColor = getStatusHexColor(status);
     const hasStatus = status !== 'Sănătos' && status !== 'healthy';
-    const isMissing = status === 'missing' || status === 'Absent';
     const hasConditions = (conditionsCountByTooth[toothNumber] || 0) > 0;
     const hasInterventions = (interventionsCountByTooth[toothNumber] || 0) > 0;
     const dims = getToothDimensions(toothNumber, isDeciduous);
-    const toothOverlays = getToothOverlays(conditionCodesByTooth[toothNumber] || [], toothNumber);
+    const { overlays: toothOverlays, isAbsent: conditionAbsent } = getToothOverlays(conditionCodesByTooth[toothNumber] || [], toothNumber);
+    const isMissing = status === 'missing' || status === 'Absent' || conditionAbsent;
 
     return (
       <div key={toothNumber} className="relative flex flex-col items-center group">
