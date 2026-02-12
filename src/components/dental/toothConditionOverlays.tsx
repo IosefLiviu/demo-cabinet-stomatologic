@@ -453,6 +453,26 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
       </g>
     ),
   },
+
+  // Punte existentă - amber/gold band across the crown (bridge abutment)
+  punte: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <path d="M8,48 L32,48 L32,62 Q20,66 8,62 Z" fill="#D97706" opacity="0.45" />
+        <line x1="8" y1="48" x2="32" y2="48" stroke="#B45309" strokeWidth="1" opacity="0.5" />
+      </g>
+    ),
+  },
+
+  // Rest radicular - grey darkened root stump (only root remains)
+  rr: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <path d="M17,4 Q16,20 15,38 L25,38 Q24,20 23,4 Z" fill="#6B7280" opacity="0.6" />
+        <path d="M15,38 L25,38 L27,46 L13,46 Z" fill="#4B5563" opacity="0.5" />
+      </g>
+    ),
+  },
 };
 
 /**
