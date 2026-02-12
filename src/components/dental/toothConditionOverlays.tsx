@@ -473,6 +473,130 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
       </g>
     ),
   },
+
+  // Semi erupt - faded/transparent lower half (partially erupted)
+  se: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <rect x="6" y="56" width="28" height="24" fill="white" opacity="0.65" />
+      </g>
+    ),
+  },
+
+  // Tratament endodontic - green line through the root canal
+  te: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <path d="M18,8 Q18,24 17,42 L23,42 Q22,24 22,8 Z" fill="#22C55E" opacity="0.55" />
+        <circle cx="20" cy="8" r="2" fill="#16A34A" opacity="0.5" />
+      </g>
+    ),
+  },
+
+  // Tratament endodontic incomplet - partial green line (shorter)
+  tei: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <path d="M18,20 Q18,30 17,42 L23,42 Q22,30 22,20 Z" fill="#22C55E" opacity="0.45" />
+        <line x1="16" y1="20" x2="24" y2="20" stroke="#F97316" strokeWidth="1.5" opacity="0.6" />
+      </g>
+    ),
+  },
+
+  // Tartru - brownish band at the cervical zone
+  tart: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <path d="M10,46 Q20,42 30,46 L30,50 Q20,46 10,50 Z" fill="#92400E" opacity="0.45" />
+      </g>
+    ),
+  },
+
+  // Urgență - red exclamation mark
+  urg: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <rect x="18" y="20" width="4" height="24" rx="2" fill="#EF4444" opacity="0.75" />
+        <circle cx="20" cy="52" r="2.5" fill="#EF4444" opacity="0.75" />
+      </g>
+    ),
+  },
+
+  // Vinir ceramic - thin blue layer on vestibular surface
+  vc: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <path d="M12,48 Q12,60 14,70 Q20,76 26,70 Q28,60 28,48 Q20,44 12,48 Z" fill="#93C5FD" opacity="0.4" />
+      </g>
+    ),
+  },
+
+  // Vinir compozit - thin amber layer on vestibular surface
+  vco: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <path d="M12,48 Q12,60 14,70 Q20,76 26,70 Q28,60 28,48 Q20,44 12,48 Z" fill="#FCD34D" opacity="0.4" />
+      </g>
+    ),
+  },
+
+  // Coroană ceramică - white/ceramic cap
+  ccr: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <path d="M12,48 Q12,44 20,42 Q28,44 28,48 L28,62 Q28,74 20,76 Q12,74 12,62 Z" fill="#F0F0F0" opacity="0.5" />
+        <path d="M12,48 Q20,44 28,48" fill="none" stroke="#D1D5DB" strokeWidth="0.8" opacity="0.6" />
+      </g>
+    ),
+  },
+
+  // Coroană metalo-ceramică - grey metallic cap
+  cmc: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <path d="M12,48 Q12,44 20,42 Q28,44 28,48 L28,62 Q28,74 20,76 Q12,74 12,62 Z" fill="#9CA3AF" opacity="0.4" />
+        <path d="M12,48 Q20,44 28,48" fill="none" stroke="#6B7280" strokeWidth="0.8" opacity="0.6" />
+      </g>
+    ),
+  },
+
+  // Coroană provizorie - light amber temporary cap
+  cpv: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <path d="M12,48 Q12,44 20,42 Q28,44 28,48 L28,62 Q28,74 20,76 Q12,74 12,62 Z" fill="#FBBF24" opacity="0.35" strokeDasharray="2 1" stroke="#D97706" strokeWidth="0.5" />
+      </g>
+    ),
+  },
+
+  // Dinte inclus - faded entire tooth with downward arrow
+  di: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <rect x="6" y="0" width="28" height="80" fill="white" opacity="0.5" />
+        <path d="M16,60 L20,70 L24,60" fill="none" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+      </g>
+    ),
+  },
+
+  // Complet erupt - subtle green checkmark
+  er: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <path d="M14,58 L18,64 L26,52" fill="none" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
+      </g>
+    ),
+  },
+
+  // Extruzie - upward arrow
+  ext: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <line x1="20" y1="70" x2="20" y2="20" stroke="#7C3AED" strokeWidth="2" opacity="0.5" />
+        <path d="M15,26 L20,16 L25,26" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
+      </g>
+    ),
+  },
 };
 
 /**
