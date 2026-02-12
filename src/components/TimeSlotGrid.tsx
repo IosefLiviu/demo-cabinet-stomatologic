@@ -432,21 +432,21 @@ export function TimeSlotGrid({
                               <CheckCircle2 className="h-2.5 w-2.5 text-white" />
                             </div>
                           )}
-                          <div className="flex items-center gap-1 min-w-0 flex-1">
-                            {appointmentStarting.status !== 'completed' && (
-                              <User className="h-3 w-3 flex-shrink-0 text-foreground/70" />
-                            )}
-                            <span className={cn(
-                              "text-xs font-bold text-foreground whitespace-nowrap leading-tight flex-shrink-0",
-                              appointmentStarting.status === 'cancelled' && "line-through"
-                            )}>
-                              {appointmentStarting.patientName}
-                            </span>
-                            <span className="text-xs font-bold text-foreground/80 truncate hidden sm:inline">
-                              • {appointmentStarting.treatment}
-                            </span>
-                           {/* Notes shown only on continuation row below to avoid duplication */}
-                          </div>
+                            <div className="flex items-center gap-1 min-w-0 flex-1 overflow-hidden">
+                             {appointmentStarting.status !== 'completed' && (
+                               <User className="h-3 w-3 flex-shrink-0 text-foreground/70" />
+                             )}
+                             <span className={cn(
+                               "text-xs font-bold text-foreground whitespace-nowrap leading-tight",
+                               appointmentStarting.status === 'cancelled' && "line-through"
+                             )}>
+                               {appointmentStarting.patientName}
+                             </span>
+                             <span className="text-xs font-bold text-foreground/80 truncate hidden sm:inline min-w-0">
+                               • {appointmentStarting.treatment}
+                             </span>
+                            {/* Notes shown only on continuation row below to avoid duplication */}
+                           </div>
                           {appointmentStarting.doctorName && (
                             <span 
                               className="text-[9px] font-medium truncate px-1 py-0.5 rounded ml-1 hidden md:inline"
