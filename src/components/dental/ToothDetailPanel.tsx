@@ -97,15 +97,6 @@ export function ToothDetailPanel({
         <div className="flex items-center justify-between p-3 border-b">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-sm">Dinte {toothNumber}</span>
-            {statusColor && (
-              <Badge
-                variant="outline"
-                className="text-xs"
-                style={{ backgroundColor: `${statusColor}20`, borderColor: statusColor, color: statusColor }}
-              >
-                {toothStatus}
-              </Badge>
-            )}
           </div>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
             <X className="h-4 w-4" />
