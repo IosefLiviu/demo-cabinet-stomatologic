@@ -124,67 +124,59 @@ export function ToothDetailPanel({
 
           {/* Tab AZI */}
           <TabsContent value="today" className="flex-1 overflow-auto p-3 space-y-4 mt-0">
-            {/* Afecțiuni */}
-            <div>
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Afecțiuni</h4>
-              {toothConditions.length > 0 && (
-                <div className="space-y-1 mb-2">
-                  {toothConditions.map(tc => (
-                    <div key={tc.id} className="flex items-center justify-between py-1.5 px-2 rounded bg-muted/50 text-xs">
-                      <div>
-                        <span className="font-medium">{tc.condition?.name}</span>
-                        <span className="text-muted-foreground ml-1">({tc.condition?.code})</span>
-                      </div>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onRemoveCondition(tc.id)}>
+            {/* Afecțiuni existente */}
+            {toothConditions.length > 0 && (
+              <div className="space-y-1">
+                {toothConditions.map(tc => (
+                  <div key={tc.id} className="flex items-center justify-between py-1.5 px-2 rounded bg-muted/50 text-xs">
+                    <div>
+                      <span className="font-medium">{tc.condition?.name}</span>
+                      <span className="text-muted-foreground ml-1">({tc.condition?.code})</span>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onRemoveCondition(tc.id)}>
+                      <Trash2 className="h-3 w-3 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => { setConditionSearch(''); setShowConditionsDialog(true); }}
+              className="flex items-center gap-2 text-xs text-foreground hover:text-foreground/80 transition-colors py-1"
+            >
+              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-green-500 text-white">
+                <Plus className="h-3 w-3" />
+              </span>
+              Adaugă afecțiune
+            </button>
+
+            {/* Intervenții existente azi */}
+            {todayInterventions.length > 0 && (
+              <div className="space-y-1">
+                {todayInterventions.map(ti => (
+                  <div key={ti.id} className="py-1.5 px-2 rounded bg-muted/50 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{ti.treatment_name}</span>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onRemoveIntervention(ti.id)}>
                         <Trash2 className="h-3 w-3 text-destructive" />
                       </Button>
                     </div>
-                  ))}
-                </div>
-              )}
-              <button
-                onClick={() => { setConditionSearch(''); setShowConditionsDialog(true); }}
-                className="flex items-center gap-2 text-xs text-foreground hover:text-foreground/80 transition-colors py-1"
-              >
-                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-green-500 text-white">
-                  <Plus className="h-3 w-3" />
-                </span>
-                Adaugă afecțiune
-              </button>
-            </div>
-
-            {/* Intervenții de azi */}
-            <div>
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Intervenții azi</h4>
-              {todayInterventions.length > 0 ? (
-                <div className="space-y-1 mb-2">
-                  {todayInterventions.map(ti => (
-                    <div key={ti.id} className="py-1.5 px-2 rounded bg-muted/50 text-xs">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">{ti.treatment_name}</span>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onRemoveIntervention(ti.id)}>
-                          <Trash2 className="h-3 w-3 text-destructive" />
-                        </Button>
-                      </div>
-                      <div className="text-muted-foreground flex gap-2 mt-0.5">
-                        {ti.doctor?.name && <span>{ti.doctor.name}</span>}
-                      </div>
+                    <div className="text-muted-foreground flex gap-2 mt-0.5">
+                      {ti.doctor?.name && <span>{ti.doctor.name}</span>}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground mb-2">Nicio intervenție astăzi</p>
-              )}
-              <button
-                onClick={() => { setSelectedTreatment(''); setSelectedDoctor(''); setShowInterventionsDialog(true); }}
-                className="flex items-center gap-2 text-xs text-foreground hover:text-foreground/80 transition-colors py-1"
-              >
-                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-green-500 text-white">
-                  <Plus className="h-3 w-3" />
-                </span>
-                Adaugă intervenție
-              </button>
-            </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => { setSelectedTreatment(''); setSelectedDoctor(''); setShowInterventionsDialog(true); }}
+              className="flex items-center gap-2 text-xs text-foreground hover:text-foreground/80 transition-colors py-1"
+            >
+              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-green-500 text-white">
+                <Plus className="h-3 w-3" />
+              </span>
+              Adaugă intervenție
+            </button>
           </TabsContent>
 
           {/* Tab ISTORIC */}
