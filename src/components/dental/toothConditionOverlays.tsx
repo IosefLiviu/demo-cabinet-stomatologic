@@ -318,6 +318,112 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
       </g>
     ),
   },
+
+  // Marmorație - pinkish/salmon wash over the whole tooth (enamel defect)
+  mm: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <path d="M20,4 C17,4 14,14 13,26 C12,34 11,42 10,50 C9,58 9,64 10,68 C11,72 14,76 20,76 C26,76 29,72 30,68 C31,64 31,58 30,50 C29,42 28,34 27,26 C26,14 23,4 20,4Z" fill="#F87171" opacity="0.3" />
+        <ellipse cx="17" cy="55" rx="3" ry="5" fill="#FBBF24" opacity="0.2" />
+        <ellipse cx="24" cy="62" rx="2.5" ry="4" fill="#FBBF24" opacity="0.2" />
+      </g>
+    ),
+  },
+
+  // Migrat - red horizontal arrow across the crown
+  migr: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <line x1="8" y1="58" x2="32" y2="58" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
+        <path d="M28,54 L34,58 L28,62" fill="none" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
+      </g>
+    ),
+  },
+
+  // Mobilitate - red vertical double arrow
+  mob: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <line x1="20" y1="14" x2="20" y2="68" stroke="#DC2626" strokeWidth="2" opacity="0.6" />
+        <path d="M16,18 L20,10 L24,18" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
+        <path d="M16,64 L20,72 L24,64" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
+      </g>
+    ),
+  },
+
+  // Mobilitate Grad I - smaller red vertical double arrow (less severe)
+  m1: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <line x1="20" y1="26" x2="20" y2="58" stroke="#DC2626" strokeWidth="1.5" opacity="0.5" />
+        <path d="M17,30 L20,24 L23,30" fill="none" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
+        <path d="M17,54 L20,60 L23,54" fill="none" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
+      </g>
+    ),
+  },
+
+  // Obturație de canal - green fill along the root canal
+  odc: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <path d="M18,8 Q18,24 17,38 L23,38 Q22,24 22,8 Z" fill="#22C55E" opacity="0.55" />
+      </g>
+    ),
+  },
+
+  // Obturație externă distală - blue square on distal (right) side of crown
+  oed: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <rect x="23" y="54" width="7" height="10" rx="1.5" fill="#3B82F6" opacity="0.65" />
+      </g>
+    ),
+  },
+
+  // Obturație externă mezială - blue square on mesial (left) side of crown
+  oem: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <rect x="10" y="54" width="7" height="10" rx="1.5" fill="#3B82F6" opacity="0.65" />
+      </g>
+    ),
+  },
+
+  // Obturație externă mezio-ocluzală - blue L-shape mesial + occlusal
+  oemo: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <path d="M10,54 L17,54 L17,62 L27,62 L27,74 L13,74 L13,62 L10,62 Z" fill="#3B82F6" opacity="0.6" />
+      </g>
+    ),
+  },
+
+  // Obturație externă mezio-ocluzo-distală - blue U-shape
+  oemod: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <path d="M10,54 L17,54 L17,62 L23,62 L23,54 L30,54 L30,62 L27,62 L27,74 L13,74 L13,62 L10,62 Z" fill="#3B82F6" opacity="0.6" />
+      </g>
+    ),
+  },
+
+  // Obturație externă ocluzală - blue block on occlusal surface
+  oeo: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <rect x="13" y="62" width="14" height="12" rx="2" fill="#3B82F6" opacity="0.6" />
+      </g>
+    ),
+  },
+
+  // Obturație externă ocluzo-distală - blue on occlusal + distal
+  oeod: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <path d="M13,62 L27,62 L30,62 L30,54 L23,54 L23,62 L27,74 L13,74 Z" fill="#3B82F6" opacity="0.6" />
+      </g>
+    ),
+  },
 };
 
 /**
