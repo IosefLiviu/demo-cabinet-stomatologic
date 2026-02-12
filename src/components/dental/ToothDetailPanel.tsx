@@ -144,9 +144,11 @@ export function ToothDetailPanel({
               )}
               <button
                 onClick={() => { setConditionSearch(''); setShowConditionsDialog(true); }}
-                className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors py-1"
+                className="flex items-center gap-2 text-xs text-foreground hover:text-foreground/80 transition-colors py-1"
               >
-                <Plus className="h-3.5 w-3.5" />
+                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-green-500 text-white">
+                  <Plus className="h-3 w-3" />
+                </span>
                 Adaugă afecțiune
               </button>
             </div>
@@ -175,9 +177,11 @@ export function ToothDetailPanel({
               )}
               <button
                 onClick={() => { setSelectedTreatment(''); setSelectedDoctor(''); setShowInterventionsDialog(true); }}
-                className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors py-1"
+                className="flex items-center gap-2 text-xs text-foreground hover:text-foreground/80 transition-colors py-1"
               >
-                <Plus className="h-3.5 w-3.5" />
+                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-green-500 text-white">
+                  <Plus className="h-3 w-3" />
+                </span>
                 Adaugă intervenție
               </button>
             </div>
