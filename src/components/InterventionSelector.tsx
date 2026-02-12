@@ -790,7 +790,8 @@ export function InterventionSelector({
                         selectedTeeth={intervention.selectedTeeth}
                         onToothClick={(toothNumber) => handleQuickToggleTooth(intervention.id, toothNumber)}
                         onToothDoubleClick={(toothNumber) => openToothDialog(intervention.id, toothNumber)}
-                        onConditionSelect={patientId ? async (toothNumber, conditionDbValue) => {
+                        onConditionSelect={async (toothNumber, conditionDbValue) => {
+                          if (!patientId) return;
                           // Get current status for history
                           const currentStatus = patientDentalStatus.find(s => s.tooth_number === toothNumber);
                           const oldStatusEnum = currentStatus ? Object.entries(statusEnumToName).find(([, v]) => v === currentStatus.status)?.[0] : null;
@@ -831,7 +832,7 @@ export function InterventionSelector({
                               notes: d.notes || undefined,
                             })));
                           }
-                        } : undefined}
+                        }}
                         patientDentalStatus={patientDentalStatus}
                         getStatusHexColor={getStatusHexColor}
                       />
