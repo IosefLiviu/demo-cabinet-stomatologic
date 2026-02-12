@@ -373,15 +373,6 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             />
           )}
 
-          {/* Notes indicator */}
-          {notes && (
-            <div className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-primary border-2 border-background shadow-sm" />
-          )}
-
-          {/* Conditions/interventions indicator */}
-          {(hasConditions || hasInterventions) && (
-            <div className="absolute bottom-0 left-0 w-2.5 h-2.5 rounded-full bg-warning border-2 border-background shadow-sm" />
-          )}
         </div>
 
 
