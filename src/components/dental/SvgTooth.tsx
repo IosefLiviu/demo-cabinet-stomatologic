@@ -120,7 +120,7 @@ export function SvgTooth({
 
   // Build transform: flip for lower teeth, mirror for right-side quadrants
   const transforms: string[] = [];
-  // Lower teeth: no vertical flip — roots face the bite line (anatomical convention)
+  if (isLower) transforms.push('scaleY(-1)');
   if (mirror) transforms.push('scaleX(-1)');
   const groupTransform = transforms.length > 0
     ? `translate(20,40) ${transforms.join(' ')} translate(-20,-40)`
