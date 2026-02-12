@@ -360,8 +360,8 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             isMissing={isMissing}
             statusColor={hasStatus ? hexColor : null}
             isHovered={isHovered}
-            width={dims.width}
-            height={dims.height}
+            width={Math.round(dims.width * 1.25)}
+            height={Math.round(dims.height * 1.25)}
             overlays={toothOverlays}
           />
 
