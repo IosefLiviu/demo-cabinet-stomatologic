@@ -384,18 +384,6 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
           )}
         </div>
 
-        {/* Missing checkbox */}
-        <div
-          className="flex items-center justify-center mt-0.5"
-          onClick={(e) => toggleMissing(toothNumber, e)}
-          title={isMissing ? 'Marchează ca prezent' : 'Marchează ca lipsă'}
-        >
-          <Checkbox
-            checked={isMissing}
-            className="h-3 w-3 rounded-sm border-muted-foreground/50 data-[state=checked]:bg-muted-foreground data-[state=checked]:border-muted-foreground"
-            tabIndex={-1}
-          />
-        </div>
 
         {isLower && (
           <span className={cn(
