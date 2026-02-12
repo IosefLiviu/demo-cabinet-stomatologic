@@ -34,7 +34,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useDoctors, Doctor } from '@/hooks/useDoctors';
 import { useDoctorTimeOff, DoctorTimeOff } from '@/hooks/useDoctorTimeOff';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 
 const TIME_OFF_TYPES = [
   { value: 'vacation', label: 'Concediu de odihnă', icon: Palmtree },

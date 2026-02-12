@@ -1,0 +1,186 @@
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+interface AuthContextType {
+  user: User | null;
+  session: Session | null;
+  loading: boolean;
+  isAdmin: boolean;
+  doctorId: string | null;
+  displayName: string | null;
+  mustChangePassword: boolean;
+  clearMustChangePassword: () => void;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signOut: () => Promise<{ error: any }>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [doctorId, setDoctorId] = useState<string | null>(null);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
+  const [displayName, setDisplayName] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          setTimeout(() => {
+            checkAdminRole(session.user.id);
+            checkDoctorAssociation(session.user.id);
+            checkMustChangePassword(session.user.id);
+            fetchDisplayName(session.user.id);
+          }, 0);
+        } else {
+          setIsAdmin(false);
+          setDoctorId(null);
+          setMustChangePassword(false);
+          setDisplayName(null);
+        }
+      }
+    );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+        checkAdminRole(session.user.id);
+        checkDoctorAssociation(session.user.id);
+        checkMustChangePassword(session.user.id);
+        fetchDisplayName(session.user.id);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const checkAdminRole = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('role', 'admin')
+        .maybeSingle();
+      if (error) throw error;
+      setIsAdmin(!!data);
+    } catch (error) {
+      console.error('Error checking admin role:', error);
+      setIsAdmin(false);
+    }
+  };
+
+  const checkDoctorAssociation = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('doctors')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (error) throw error;
+      setDoctorId(data?.id || null);
+    } catch (error) {
+      console.error('Error checking doctor association:', error);
+      setDoctorId(null);
+    }
+  };
+
+  const checkMustChangePassword = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('must_change_password')
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (error) throw error;
+      setMustChangePassword(data?.must_change_password !== false);
+    } catch (error) {
+      console.error('Error checking password change requirement:', error);
+      setMustChangePassword(false);
+    }
+  };
+
+  const fetchDisplayName = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name, username')
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (error) throw error;
+      setDisplayName(data?.full_name || data?.username || null);
+    } catch (error) {
+      console.error('Error fetching display name:', error);
+      setDisplayName(null);
+    }
+  };
+
+  const clearMustChangePassword = () => {
+    setMustChangePassword(false);
+  };
+
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      toast({
+        title: 'Eroare la autentificare',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return { error };
+    }
+    toast({
+      title: 'Bine ai venit!',
+      description: 'Te-ai autentificat cu succes.',
+    });
+    return { error: null };
+  };
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: 'Eroare',
+        description: 'Nu s-a putut face deconectarea.',
+        variant: 'destructive',
+      });
+      return { error };
+    }
+    setUser(null);
+    setSession(null);
+    setIsAdmin(false);
+    setDoctorId(null);
+    setMustChangePassword(false);
+    setDisplayName(null);
+    return { error: null };
+  };
+
+  return (
+    <AuthContext.Provider value={{
+      user, session, loading, isAdmin, doctorId, displayName,
+      mustChangePassword, clearMustChangePassword, signIn, signOut,
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}

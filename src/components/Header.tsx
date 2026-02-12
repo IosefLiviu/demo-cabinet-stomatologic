@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { LogOut, Users, LogIn, Menu, User, Download } from 'lucide-react';
 import perfectSmileLogo from '@/assets/perfect-smile-logo.png';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { CasBudgetDisplay } from './CasBudgetDisplay';
 import { ThemeToggle } from './ThemeToggle';
 import {

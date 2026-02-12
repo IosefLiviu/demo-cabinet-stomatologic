@@ -63,7 +63,7 @@ import { useDoctors, Doctor } from '@/hooks/useDoctors';
 import { useCabinets } from '@/hooks/useCabinets';
 import { useDoctorShifts, CreateShiftData } from '@/hooks/useDoctorShifts';
 import { useDoctorTimeOff, CreateTimeOffData, DoctorTimeOff } from '@/hooks/useDoctorTimeOff';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { TIME_SLOTS } from '@/types/appointment';
 import { toast } from 'sonner';
 
