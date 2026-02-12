@@ -124,9 +124,17 @@ export function ToothDetailPanel({
 
           {/* Tab AZI */}
           <TabsContent value="today" className="flex-1 overflow-auto p-3 space-y-4 mt-0">
-            {/* Afecțiuni existente */}
+            <button
+              onClick={() => { setConditionSearch(''); setShowConditionsDialog(true); }}
+              className="flex items-center gap-2 text-xs text-foreground hover:text-foreground/80 transition-colors py-1"
+            >
+              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-green-500 text-white">
+                <Plus className="h-3 w-3" />
+              </span>
+              Adaugă afecțiune
+            </button>
             {toothConditions.length > 0 && (
-              <div className="space-y-1">
+              <div className="space-y-1 -mt-2">
                 {toothConditions.map(tc => (
                   <div key={tc.id} className="flex items-center justify-between py-1.5 px-2 rounded bg-muted/50 text-xs">
                     <div>
@@ -140,19 +148,18 @@ export function ToothDetailPanel({
                 ))}
               </div>
             )}
+
             <button
-              onClick={() => { setConditionSearch(''); setShowConditionsDialog(true); }}
+              onClick={() => { setSelectedTreatment(''); setSelectedDoctor(''); setShowInterventionsDialog(true); }}
               className="flex items-center gap-2 text-xs text-foreground hover:text-foreground/80 transition-colors py-1"
             >
               <span className="flex items-center justify-center w-5 h-5 rounded-full bg-green-500 text-white">
                 <Plus className="h-3 w-3" />
               </span>
-              Adaugă afecțiune
+              Adaugă intervenție
             </button>
-
-            {/* Intervenții existente azi */}
             {todayInterventions.length > 0 && (
-              <div className="space-y-1">
+              <div className="space-y-1 -mt-2">
                 {todayInterventions.map(ti => (
                   <div key={ti.id} className="py-1.5 px-2 rounded bg-muted/50 text-xs">
                     <div className="flex items-center justify-between">
@@ -168,15 +175,6 @@ export function ToothDetailPanel({
                 ))}
               </div>
             )}
-            <button
-              onClick={() => { setSelectedTreatment(''); setSelectedDoctor(''); setShowInterventionsDialog(true); }}
-              className="flex items-center gap-2 text-xs text-foreground hover:text-foreground/80 transition-colors py-1"
-            >
-              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-green-500 text-white">
-                <Plus className="h-3 w-3" />
-              </span>
-              Adaugă intervenție
-            </button>
           </TabsContent>
 
           {/* Tab ISTORIC */}
