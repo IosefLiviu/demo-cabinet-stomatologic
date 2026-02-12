@@ -3,8 +3,8 @@ import { cn } from '@/lib/utils';
 import { SvgTooth, getToothDimensions } from './SvgTooth';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { QuadrantCircle } from './QuadrantCircle';
-import { TOOTH_STATUSES } from '@/constants/toothStatuses';
 import { Search, X } from 'lucide-react';
+import { useDentalConditionsCatalog, DentalCondition } from '@/hooks/useToothData';
 
 // FDI notation - permanent teeth
 const upperTeeth = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
@@ -13,6 +13,38 @@ const lowerTeeth = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 
 // FDI notation - deciduous (baby) teeth
 const upperDeciduousTeeth = [55, 54, 53, 52, 51, 61, 62, 63, 64, 65];
 const lowerDeciduousTeeth = [85, 84, 83, 82, 81, 71, 72, 73, 74, 75];
+
+// Color mapping for condition codes by category
+const CONDITION_COLORS: Record<string, string> = {
+  // Caries - red/orange
+  ca: '#DC2626', ci: '#EF4444', cm: '#DC2626', cmo: '#DC2626', cmod: '#B91C1C',
+  co: '#DC2626', cod: '#DC2626', cp: '#DC2626', cc: '#DC2626', cv: '#DC2626',
+  crd: '#F97316', crm: '#F97316',
+  // Secondary caries - dark red
+  csd: '#991B1B', csm: '#991B1B', cso: '#991B1B', csmo: '#991B1B', csod: '#991B1B',
+  // Fillings - blue
+  oc: '#3B82F6', oa: '#6366F1', obc: '#2563EB',
+  // Crowns - amber
+  ccr: '#F59E0B', cmc: '#D97706', cpv: '#FBBF24', cor: '#F59E0B',
+  // Endodontics - green
+  te: '#10B981', tei: '#F97316', dd: '#6B7280', dev: '#6B7280',
+  // Missing/Absent - gray
+  aa: '#6B7280', ep: '#9CA3AF', et: '#6B7280',
+  // Implant - purple
+  imp: '#8B5CF6', impl: '#8B5CF6',
+  // Prosthetics - teal
+  pv: '#14B8A6', pm: '#0D9488', pf: '#0F766E', pc: '#14B8A6', pmc: '#0D9488',
+  // Rest radicular - orange
+  rr: '#F97316',
+  // Others
+  bi: '#8B0000', di: '#6366F1', incl: '#6366F1',
+  urg: '#EF4444', dur: '#EF4444',
+  fract: '#DC2626', mob: '#F97316',
+  gg: '#EC4899', lc: '#A855F7', mm: '#D946EF',
+  chist: '#BEF264',
+  vc: '#60A5FA', vco: '#93C5FD',
+  migr: '#F59E0B', er: '#10B981',
+};
 
 interface PatientToothStatus {
   tooth_number: number;
@@ -24,7 +56,7 @@ interface MiniToothSelectorProps {
   selectedTeeth: number[];
   onToothClick: (toothNumber: number) => void;
   onToothDoubleClick?: (toothNumber: number) => void;
-  onConditionSelect?: (toothNumber: number, conditionDbValue: string) => void;
+  onConditionSelect?: (toothNumber: number, conditionId: string, conditionCode: string) => void;
   patientDentalStatus?: PatientToothStatus[];
   getStatusHexColor?: (status: string) => string | null;
   className?: string;
@@ -45,6 +77,7 @@ export function MiniToothSelector({
   const [searchQuery, setSearchQuery] = useState('');
   const popoverRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const { conditions } = useDentalConditionsCatalog();
 
   const handleClick = useCallback((toothNumber: number) => {
     if (onConditionSelect) {
@@ -59,10 +92,9 @@ export function MiniToothSelector({
     onToothDoubleClick?.(toothNumber);
   }, [onToothDoubleClick]);
 
-  const handleConditionSelect = useCallback((conditionDbValue: string) => {
+  const handleConditionSelect = useCallback((condition: DentalCondition) => {
     if (popoverTooth !== null && onConditionSelect) {
-      onConditionSelect(popoverTooth, conditionDbValue);
-      // Also toggle tooth selection
+      onConditionSelect(popoverTooth, condition.id, condition.code);
       onToothClick(popoverTooth);
       setPopoverTooth(null);
       setSearchQuery('');
@@ -89,8 +121,9 @@ export function MiniToothSelector({
     }
   }, [popoverTooth]);
 
-  const filteredStatuses = TOOTH_STATUSES.filter(s =>
-    s.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredConditions = conditions.filter(c =>
+    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    c.code.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const getPatientToothStatus = (toothNumber: number) => {
@@ -119,7 +152,7 @@ export function MiniToothSelector({
           'relative flex flex-col items-center transition-all rounded',
           'hover:scale-110 cursor-pointer',
           isSelected && 'ring-2 ring-primary ring-offset-1',
-          isPopoverOpen && 'ring-2 ring-blue-500 ring-offset-1 scale-110',
+          isPopoverOpen && 'ring-2 ring-primary ring-offset-1 scale-110',
           hasPatientStatus && !isSelected && !isPopoverOpen && 'ring-1'
         )}
         style={
@@ -178,7 +211,7 @@ export function MiniToothSelector({
           <div
             ref={popoverRef}
             className={cn(
-              "absolute z-[100] w-44 rounded-md border bg-popover shadow-lg",
+              "absolute z-[100] w-52 rounded-md border bg-popover shadow-lg",
               isLower ? 'bottom-full mb-1' : 'top-full mt-1',
               "left-1/2 -translate-x-1/2"
             )}
@@ -200,22 +233,23 @@ export function MiniToothSelector({
                 </button>
               )}
             </div>
-            <div className="max-h-36 overflow-y-auto p-1">
-              {filteredStatuses.length === 0 ? (
+            <div className="max-h-48 overflow-y-auto p-1">
+              {filteredConditions.length === 0 ? (
                 <div className="text-xs text-muted-foreground text-center py-2">Nicio afecțiune</div>
               ) : (
-                filteredStatuses.map(s => (
+                filteredConditions.map(c => (
                   <button
-                    key={s.dbValue}
+                    key={c.id}
                     type="button"
-                    onClick={() => handleConditionSelect(s.dbValue)}
+                    onClick={() => handleConditionSelect(c)}
                     className="flex items-center gap-2 w-full px-2 py-1.5 rounded-sm text-xs hover:bg-accent hover:text-accent-foreground transition-colors text-left"
                   >
                     <span
-                      className="w-2.5 h-2.5 rounded-full shrink-0 border border-background"
-                      style={{ backgroundColor: s.color }}
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: CONDITION_COLORS[c.code] || '#6B7280' }}
                     />
-                    <span>{s.name}</span>
+                    <span className="truncate">{c.name}</span>
+                    <span className="ml-auto text-[10px] text-muted-foreground">{c.code}</span>
                   </button>
                 ))
               )}
