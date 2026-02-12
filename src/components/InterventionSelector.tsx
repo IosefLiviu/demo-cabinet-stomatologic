@@ -790,6 +790,48 @@ export function InterventionSelector({
                         selectedTeeth={intervention.selectedTeeth}
                         onToothClick={(toothNumber) => handleQuickToggleTooth(intervention.id, toothNumber)}
                         onToothDoubleClick={(toothNumber) => openToothDialog(intervention.id, toothNumber)}
+                        onConditionSelect={patientId ? async (toothNumber, conditionDbValue) => {
+                          // Get current status for history
+                          const currentStatus = patientDentalStatus.find(s => s.tooth_number === toothNumber);
+                          const oldStatusEnum = currentStatus ? Object.entries(statusEnumToName).find(([, v]) => v === currentStatus.status)?.[0] : null;
+                          
+                          // Upsert dental_status
+                          const { error: statusError } = await supabase
+                            .from('dental_status')
+                            .upsert({
+                              patient_id: patientId,
+                              tooth_number: toothNumber,
+                              status: conditionDbValue as any,
+                              notes: currentStatus?.notes || null,
+                            }, { onConflict: 'patient_id,tooth_number' });
+                          
+                          if (statusError) {
+                            console.error('Error updating dental status:', statusError);
+                            return;
+                          }
+
+                          // Log to dental_status_history
+                          await supabase.from('dental_status_history').insert({
+                            patient_id: patientId,
+                            tooth_number: toothNumber,
+                            old_status: oldStatusEnum || null,
+                            new_status: conditionDbValue,
+                            notes: `Modificat din mini dental chart: ${statusEnumToName[conditionDbValue] || conditionDbValue}`,
+                          });
+
+                          // Refresh patient dental status
+                          const { data } = await supabase
+                            .from('dental_status')
+                            .select('tooth_number, status, notes')
+                            .eq('patient_id', patientId);
+                          if (data) {
+                            setPatientDentalStatus(data.map(d => ({
+                              tooth_number: d.tooth_number,
+                              status: statusEnumToName[d.status] || d.status,
+                              notes: d.notes || undefined,
+                            })));
+                          }
+                        } : undefined}
                         patientDentalStatus={patientDentalStatus}
                         getStatusHexColor={getStatusHexColor}
                       />
