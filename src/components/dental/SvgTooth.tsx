@@ -2,36 +2,61 @@ import { cn } from '@/lib/utils';
 
 // Tooth outline paths - viewBox: 0 0 40 80
 // Upper teeth: root at top (y≈0-40), crown at bottom (y≈40-78)
-const TOOTH_SHAPES: Record<string, { outline: string; details?: string[]; cervical?: string }> = {
+const TOOTH_SHAPES: Record<string, { outline: string; details?: string[]; cervical?: string; rootLines?: string[] }> = {
   centralIncisor: {
-    outline: "M20,4 C17,4 14,14 13,26 C12,34 11,42 10,50 C9,58 9,64 10,68 C11,72 14,76 20,76 C26,76 29,72 30,68 C31,64 31,58 30,50 C29,42 28,34 27,26 C26,14 23,4 20,4Z",
-    cervical: "M10,50 Q20,46 30,50",
+    outline: "M20,2 C18,2 15,8 14,18 C13,28 12,36 11,44 C10,50 9,56 9,62 C9,66 11,72 15,75 Q20,78 25,75 C29,72 31,66 31,62 C31,56 30,50 29,44 C28,36 27,28 26,18 C25,8 22,2 20,2Z",
+    cervical: "M11,46 Q20,42 29,46",
+    rootLines: [
+      "M16,10 Q18,20 17,34",
+      "M24,10 Q22,20 23,34",
+    ],
   },
   lateralIncisor: {
-    outline: "M20,5 C18,5 16,14 15,24 C14,32 13,40 13,48 C12,54 12,60 13,66 C14,70 16,74 20,74 C24,74 26,70 27,66 C28,60 28,54 27,48 C27,40 26,32 25,24 C24,14 22,5 20,5Z",
-    cervical: "M13,48 Q20,44 27,48",
+    outline: "M20,3 C18,3 16,10 15,18 C14,28 13,36 13,44 C12,50 12,56 12,62 C13,66 15,72 18,74 Q20,76 22,74 C25,72 27,66 28,62 C28,56 28,50 27,44 C27,36 26,28 25,18 C24,10 22,3 20,3Z",
+    cervical: "M13,44 Q20,40 27,44",
+    rootLines: [
+      "M17,8 Q18,22 17,36",
+      "M23,8 Q22,22 23,36",
+    ],
   },
   canine: {
-    outline: "M20,3 C18,3 15,12 14,24 C13,34 12,42 11,50 C10,56 10,62 12,68 C14,72 17,76 20,78 C23,76 26,72 28,68 C30,62 30,56 29,50 C28,42 27,34 26,24 C25,12 22,3 20,3Z",
-    cervical: "M11,50 Q20,46 29,50",
+    outline: "M20,2 C18,2 15,8 14,20 C13,30 12,38 11,46 C10,52 10,58 11,64 C13,70 16,74 20,78 C24,74 27,70 29,64 C30,58 30,52 29,46 C28,38 27,30 26,20 C25,8 22,2 20,2Z",
+    cervical: "M11,46 Q20,42 29,46",
+    rootLines: [
+      "M17,6 Q18,22 17,38",
+      "M23,6 Q22,22 23,38",
+    ],
   },
   premolar: {
-    outline: "M20,6 C18,6 15,14 14,24 C13,32 12,40 11,48 C10,54 10,60 11,64 C12,68 14,72 17,75 L20,72 L23,75 C26,72 28,68 29,64 C30,60 30,54 29,48 C28,40 27,32 26,24 C25,14 22,6 20,6Z",
-    cervical: "M11,48 Q20,44 29,48",
-    details: ["M14,60 Q20,54 26,60"],
+    outline: "M20,4 C18,4 15,10 14,20 C13,28 12,36 11,44 C10,50 10,56 11,62 C12,66 14,70 17,74 L20,72 L23,74 C26,70 28,66 29,62 C30,56 30,50 29,44 C28,36 27,28 26,20 C25,10 22,4 20,4Z",
+    cervical: "M11,44 Q20,40 29,44",
+    details: ["M14,58 Q20,52 26,58"],
+    rootLines: [
+      "M17,8 Q18,22 17,36",
+      "M23,8 Q22,22 23,36",
+    ],
   },
   molar: {
-    outline: "M13,3 C11,3 9,10 8,20 L7,30 C7,36 9,40 13,42 C12,48 11,54 11,60 C11,66 13,72 17,75 L20,76 L23,75 C27,72 29,66 29,60 C29,54 28,48 27,42 C31,40 33,36 33,30 L32,20 C31,10 29,3 27,3 C25,3 23,8 20,14 C17,8 15,3 13,3Z",
-    cervical: "M11,42 Q20,38 29,42",
+    outline: "M13,2 C11,2 9,8 8,16 L7,28 C7,34 9,38 13,40 C12,46 11,52 11,58 C11,64 13,70 17,74 L20,76 L23,74 C27,70 29,64 29,58 C29,52 28,46 27,40 C31,38 33,34 33,28 L32,16 C31,8 29,2 27,2 C25,2 23,6 20,12 C17,6 15,2 13,2Z",
+    cervical: "M11,40 Q20,36 29,40",
     details: [
-      "M14,58 Q17,52 20,56 Q23,52 26,58",
-      "M16,62 Q20,58 24,62",
+      "M14,56 Q17,50 20,54 Q23,50 26,56",
+      "M16,60 Q20,56 24,60",
+    ],
+    rootLines: [
+      "M11,6 Q12,18 11,30",
+      "M20,14 Q20,22 20,32",
+      "M29,6 Q28,18 29,30",
     ],
   },
   wisdom: {
-    outline: "M15,5 C13,5 11,12 10,20 L10,30 C10,36 11,40 14,42 C13,48 12,54 12,60 C12,66 14,70 17,73 L20,74 L23,73 C26,70 28,66 28,60 C28,54 27,48 26,42 C29,40 30,36 30,30 L30,20 C30,12 27,5 25,5 C23,5 22,8 20,12 C18,8 17,5 15,5Z",
-    cervical: "M12,42 Q20,38 28,42",
-    details: ["M15,58 Q20,52 25,58"],
+    outline: "M15,4 C13,4 11,10 10,18 L10,28 C10,34 11,38 14,40 C13,46 12,52 12,58 C12,64 14,68 17,72 L20,74 L23,72 C26,68 28,64 28,58 C28,52 27,46 26,40 C29,38 30,34 30,28 L30,18 C30,10 27,4 25,4 C23,4 22,6 20,10 C18,6 17,4 15,4Z",
+    cervical: "M12,40 Q20,36 28,40",
+    details: ["M15,56 Q20,50 25,56"],
+    rootLines: [
+      "M14,8 Q14,18 14,30",
+      "M26,8 Q26,18 26,30",
+    ],
   },
 };
 
@@ -137,31 +162,40 @@ export function SvgTooth({
         <>
           <defs>
             {/* Main body gradient - warm ivory 3D */}
-            <linearGradient id={`g-${id}`} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#f7f2e8" />
-              <stop offset="25%" stopColor="#f0e9d8" />
-              <stop offset="55%" stopColor="#e6ddca" />
-              <stop offset="85%" stopColor="#d8ceb8" />
-              <stop offset="100%" stopColor="#cfc4aa" />
+            <linearGradient id={`g-${id}`} x1="0.15" y1="0" x2="0.85" y2="1">
+              <stop offset="0%" stopColor="#faf6ee" />
+              <stop offset="20%" stopColor="#f3ecda" />
+              <stop offset="45%" stopColor="#ebe2cc" />
+              <stop offset="70%" stopColor="#ddd3b8" />
+              <stop offset="90%" stopColor="#d2c7a8" />
+              <stop offset="100%" stopColor="#c9bd9c" />
             </linearGradient>
 
-            {/* Specular highlight */}
-            <linearGradient id={`h-${id}`} x1="0.2" y1="0" x2="0.8" y2="1">
-              <stop offset="0%" stopColor="white" stopOpacity="0.4" />
-              <stop offset="40%" stopColor="white" stopOpacity="0.15" />
+            {/* Crown enamel - brighter white on the crown portion */}
+            <linearGradient id={`ce-${id}`} x1="0.5" y1="0.5" x2="0.5" y2="1">
+              <stop offset="0%" stopColor="white" stopOpacity="0" />
+              <stop offset="30%" stopColor="white" stopOpacity="0.15" />
+              <stop offset="70%" stopColor="white" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="white" stopOpacity="0.1" />
+            </linearGradient>
+
+            {/* Specular highlight - left edge shine */}
+            <linearGradient id={`h-${id}`} x1="0" y1="0.3" x2="1" y2="0.7">
+              <stop offset="0%" stopColor="white" stopOpacity="0.45" />
+              <stop offset="30%" stopColor="white" stopOpacity="0.12" />
               <stop offset="100%" stopColor="white" stopOpacity="0" />
             </linearGradient>
 
-            {/* Root shadow gradient */}
-            <linearGradient id={`rs-${id}`} x1="0.5" y1="0" x2="0.5" y2="1">
-              <stop offset="0%" stopColor="#b8a88a" stopOpacity="0.3" />
-              <stop offset="60%" stopColor="#b8a88a" stopOpacity="0" />
+            {/* Root shadow gradient - darker toward apex */}
+            <linearGradient id={`rs-${id}`} x1="0.5" y1="0" x2="0.5" y2="0.6">
+              <stop offset="0%" stopColor="#a89878" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#a89878" stopOpacity="0" />
             </linearGradient>
 
             {/* Edge shadow for depth */}
-            <radialGradient id={`es-${id}`} cx="0.5" cy="0.6" r="0.5">
-              <stop offset="70%" stopColor="transparent" />
-              <stop offset="100%" stopColor="#a0926e" stopOpacity="0.15" />
+            <radialGradient id={`es-${id}`} cx="0.5" cy="0.55" r="0.5">
+              <stop offset="65%" stopColor="transparent" />
+              <stop offset="100%" stopColor="#8a7c5e" stopOpacity="0.12" />
             </radialGradient>
           </defs>
 
@@ -169,16 +203,16 @@ export function SvgTooth({
             {/* Drop shadow */}
             <path
               d={shape.outline}
-              fill="rgba(0,0,0,0.06)"
-              transform="translate(1.2, 1.5)"
+              fill="rgba(0,0,0,0.05)"
+              transform="translate(1, 1.2)"
             />
 
             {/* Main tooth fill */}
             <path
               d={shape.outline}
               fill={`url(#g-${id})`}
-              stroke="#c4b898"
-              strokeWidth="0.7"
+              stroke="#bfb494"
+              strokeWidth="0.6"
               strokeLinejoin="round"
             />
 
@@ -188,18 +222,34 @@ export function SvgTooth({
             {/* Edge depth */}
             <path d={shape.outline} fill={`url(#es-${id})`} />
 
+            {/* Crown enamel brightness */}
+            <path d={shape.outline} fill={`url(#ce-${id})`} />
+
             {/* Specular highlight */}
             <path d={shape.outline} fill={`url(#h-${id})`} />
+
+            {/* Root canal lines (subtle internal anatomy) */}
+            {shape.rootLines?.map((line, i) => (
+              <path
+                key={`rl-${i}`}
+                d={line}
+                fill="none"
+                stroke="#c4b898"
+                strokeWidth="0.35"
+                strokeLinecap="round"
+                opacity={0.3}
+              />
+            ))}
 
             {/* Cervical line */}
             {shape.cervical && (
               <path
                 d={shape.cervical}
                 fill="none"
-                stroke="#c4b898"
-                strokeWidth="0.5"
+                stroke="#bfb494"
+                strokeWidth="0.6"
                 strokeLinecap="round"
-                opacity={0.5}
+                opacity={0.55}
               />
             )}
 
@@ -209,10 +259,10 @@ export function SvgTooth({
                 key={i}
                 d={detail}
                 fill="none"
-                stroke="#b8a680"
-                strokeWidth="0.6"
+                stroke="#b0a070"
+                strokeWidth="0.5"
                 strokeLinecap="round"
-                opacity={0.45}
+                opacity={0.4}
               />
             ))}
 
@@ -237,18 +287,18 @@ export function SvgTooth({
 // Get appropriate dimensions based on tooth type
 export function getToothDimensions(toothNumber: number, isDeciduous: boolean = false) {
   if (isDeciduous) {
-    return { width: 52, height: 72 };
+    return { width: 46, height: 64 };
   }
   const pos = toothNumber % 10;
   switch (pos) {
-    case 1: return { width: 66, height: 104 };
-    case 2: return { width: 58, height: 96 };
-    case 3: return { width: 62, height: 110 };
-    case 4: return { width: 62, height: 94 };
-    case 5: return { width: 58, height: 90 };
-    case 6: return { width: 76, height: 104 };
-    case 7: return { width: 72, height: 100 };
-    case 8: return { width: 64, height: 90 };
-    default: return { width: 62, height: 94 };
+    case 1: return { width: 44, height: 76 };
+    case 2: return { width: 40, height: 70 };
+    case 3: return { width: 42, height: 80 };
+    case 4: return { width: 42, height: 70 };
+    case 5: return { width: 40, height: 68 };
+    case 6: return { width: 52, height: 78 };
+    case 7: return { width: 50, height: 74 };
+    case 8: return { width: 44, height: 68 };
+    default: return { width: 42, height: 70 };
   }
 }
