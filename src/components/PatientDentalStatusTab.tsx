@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { TOOTH_STATUSES, getStatusHexColor as getStatusHexColorUtil } from '@/constants/toothStatuses';
 import { SvgTooth, getToothDimensions } from './dental/SvgTooth';
+import { getToothOverlays } from './dental/toothConditionOverlays';
 import { QuadrantCircle } from './dental/QuadrantCircle';
 import { ToothDetailPanel } from './dental/ToothDetailPanel';
 import { PatientDentalInfo } from './dental/PatientDentalInfo';
@@ -302,6 +303,13 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
     return acc;
   }, {} as Record<number, number>);
 
+  // Build condition codes per tooth for overlays
+  const conditionCodesByTooth = toothConditions.reduce((acc, c) => {
+    if (!acc[c.tooth_number]) acc[c.tooth_number] = [];
+    if (c.condition?.code) acc[c.tooth_number].push(c.condition.code);
+    return acc;
+  }, {} as Record<number, string[]>);
+
   const interventionsCountByTooth = toothInterventions.reduce((acc, i) => {
     acc[i.tooth_number] = (acc[i.tooth_number] || 0) + 1;
     return acc;
@@ -319,6 +327,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
     const hasConditions = (conditionsCountByTooth[toothNumber] || 0) > 0;
     const hasInterventions = (interventionsCountByTooth[toothNumber] || 0) > 0;
     const dims = getToothDimensions(toothNumber, isDeciduous);
+    const toothOverlays = getToothOverlays(conditionCodesByTooth[toothNumber] || [], toothNumber);
 
     return (
       <div key={toothNumber} className="relative flex flex-col items-center group">
@@ -353,6 +362,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             isHovered={isHovered}
             width={dims.width}
             height={dims.height}
+            overlays={toothOverlays}
           />
 
           {/* Selection ring */}

@@ -74,6 +74,8 @@ interface SvgToothProps {
   className?: string;
   width?: number;
   height?: number;
+  /** Extra SVG elements rendered inside the tooth group (e.g. condition overlays) */
+  overlays?: React.ReactNode[];
 }
 
 export function SvgTooth({
@@ -85,6 +87,7 @@ export function SvgTooth({
   className,
   width = 36,
   height = 52,
+  overlays,
 }: SvgToothProps) {
   const shape = getToothShape(toothNumber);
   const mirror = shouldMirror(toothNumber);
@@ -208,6 +211,9 @@ export function SvgTooth({
             opacity={isHovered ? 0.4 : 0.25}
           />
         )}
+
+        {/* Condition overlays */}
+        {overlays && !isMissing && overlays}
       </g>
     </svg>
   );
