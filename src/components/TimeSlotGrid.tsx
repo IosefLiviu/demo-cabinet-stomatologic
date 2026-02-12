@@ -355,7 +355,7 @@ export function TimeSlotGrid({
                           appointmentCovering.status === 'cancelled'
                             ? "bg-red-100 dark:bg-red-950/30 border-red-300 dark:border-red-800 opacity-60"
                             : "",
-                          isFirstContinuation && "flex items-center px-1 gap-1"
+                          isFirstContinuation && "flex items-center px-1 gap-1 overflow-hidden"
                         )}
                         style={
                           appointmentCovering.status !== 'cancelled' && 
@@ -378,7 +378,7 @@ export function TimeSlotGrid({
                         {isFirstContinuation && appointmentCovering.notes && (() => {
                           const cleaned = cleanDentalNotes(appointmentCovering.notes).replace(/\[Plată:.*?\]/g, '').replace(/\[Restanță:.*?\]/g, '').trim();
                           return cleaned ? (
-                            <span className="text-[11px] font-semibold text-foreground/80 truncate leading-tight italic">
+                            <span className="text-[11px] font-semibold text-foreground/80 truncate leading-tight italic max-w-full overflow-hidden block">
                               {cleaned}
                             </span>
                           ) : null;
