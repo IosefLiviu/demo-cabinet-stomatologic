@@ -247,6 +247,77 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
       </g>
     ),
   },
+
+  // Coroană existentă - gold/amber cap over the crown portion
+  cor: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <path d="M12,48 Q12,44 20,42 Q28,44 28,48 L28,62 Q28,74 20,76 Q12,74 12,62 Z" fill="#D4A017" opacity="0.45" />
+        <path d="M14,48 Q14,46 20,44 Q26,46 26,48 L26,52" fill="none" stroke="#B8860B" strokeWidth="0.8" opacity="0.5" />
+      </g>
+    ),
+  },
+
+  // Devital - grey/pale wash over the entire tooth
+  dev: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <path d="M20,4 C17,4 14,14 13,26 C12,34 11,42 10,50 C9,58 9,64 10,68 C11,72 14,76 20,76 C26,76 29,72 30,68 C31,64 31,58 30,50 C29,42 28,34 27,26 C26,14 23,4 20,4Z" fill="#9CA3AF" opacity="0.4" />
+      </g>
+    ),
+  },
+
+  // Durere - red pulsing dot at the crown tip
+  dur: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <ellipse cx="20" cy="72" rx="5" ry="4" fill="#EF4444" opacity="0.7" />
+        <ellipse cx="20" cy="72" rx="3" ry="2.5" fill="#FCA5A5" opacity="0.6" />
+      </g>
+    ),
+  },
+
+  // Fractură - large X across the tooth body
+  fract: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <line x1="10" y1="20" x2="30" y2="70" stroke="#991B1B" strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
+        <line x1="30" y1="20" x2="10" y2="70" stroke="#991B1B" strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
+      </g>
+    ),
+  },
+
+  // Gingivită - red band along the gum line (cervical area)
+  gg: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <path d="M8,46 Q20,40 32,46 L32,50 Q20,44 8,50 Z" fill="#EF4444" opacity="0.55" />
+      </g>
+    ),
+  },
+
+  // Implant existent - green screw shape replacing the root
+  impl: {
+    isAbsent: true,
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <rect x="16" y="6" width="8" height="38" rx="3" fill="#22C55E" opacity="0.7" />
+        {[12, 18, 24, 30].map((y) => (
+          <line key={y} x1="16" y1={y} x2="24" y2={y} stroke="#166534" strokeWidth="1" opacity="0.5" />
+        ))}
+        <rect x="14" y="4" width="12" height="4" rx="1.5" fill="#16A34A" opacity="0.6" />
+      </g>
+    ),
+  },
+
+  // Leziune cuneiformă - red triangle/wedge at the cervical zone
+  lc: {
+    render: (id) => (
+      <g key={`ov-${id}`}>
+        <path d="M12,48 L20,54 L12,54 Z" fill="#DC2626" opacity="0.7" />
+      </g>
+    ),
+  },
 };
 
 /**
@@ -260,9 +331,9 @@ export function getToothOverlays(conditionCodes: string[], toothNumber: number):
       if (!overlay) return null;
       if (overlay.isAbsent) {
         isAbsent = true;
-        return null;
       }
-      return overlay.render(`${toothNumber}-${code}`);
+      const rendered = overlay.render(`${toothNumber}-${code}`);
+      return rendered;
     })
     .filter(Boolean) as React.ReactNode[];
   return { overlays, isAbsent };
