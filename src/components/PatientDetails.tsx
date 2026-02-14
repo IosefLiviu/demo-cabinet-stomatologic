@@ -6,6 +6,7 @@ import {
   Mail,
   MapPin,
   Calendar,
+  ArrowLeft,
   AlertTriangle,
   Pill,
   Heart,
@@ -881,7 +882,10 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
         {/* Modern Header Bar */}
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-3 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+              <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                <Button variant="ghost" size="icon" className="sm:hidden shrink-0 h-8 w-8" onClick={onClose}>
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
               <div className="flex h-10 w-10 sm:h-14 sm:w-14 items-center justify-center rounded-xl sm:rounded-2xl bg-primary/10 border border-primary/20 shrink-0">
                 <User className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
               </div>
@@ -1069,11 +1073,11 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                 onClose();
               }
             }}>
-              <DialogContent className="max-w-[98vw] w-full h-[95vh] max-h-[95vh] overflow-y-auto p-3 sm:p-6">
-                <DialogHeader>
+              <DialogContent className="max-w-[98vw] w-full h-[95vh] max-h-[95vh] overflow-y-auto p-2 sm:p-6">
+                <DialogHeader className="flex flex-row items-center justify-between">
                   <DialogTitle className="flex items-center gap-2">
                     <Stethoscope className="h-5 w-5" />
-                    Status Dentar — {patient.first_name} {patient.last_name}
+                    <span className="truncate">Status Dentar — {patient.first_name} {patient.last_name}</span>
                   </DialogTitle>
                 </DialogHeader>
                 <PatientDentalStatusTab
@@ -1088,11 +1092,11 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
           {/* Radiographs - Full Screen Dialog */}
           {showRadiographsFullscreen && (
             <Dialog open={showRadiographsFullscreen} onOpenChange={setShowRadiographsFullscreen}>
-              <DialogContent className="max-w-[98vw] w-full h-[95vh] max-h-[95vh] overflow-y-auto p-3 sm:p-6">
-                <DialogHeader>
+              <DialogContent className="max-w-[98vw] w-full h-[95vh] max-h-[95vh] overflow-y-auto p-2 sm:p-6">
+                <DialogHeader className="flex flex-row items-center justify-between">
                   <DialogTitle className="flex items-center gap-2">
                     <FileImage className="h-5 w-5" />
-                    Radiografii — {patient.first_name} {patient.last_name}
+                    <span className="truncate">Radiografii — {patient.first_name} {patient.last_name}</span>
                   </DialogTitle>
                 </DialogHeader>
                 <PatientRadiographs 
@@ -1106,8 +1110,8 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
           {/* Treatment Plans - Full Screen Dialog */}
           {showPlansFullscreen && (
             <Dialog open={showPlansFullscreen} onOpenChange={setShowPlansFullscreen}>
-              <DialogContent className="max-w-[98vw] w-full h-[95vh] max-h-[95vh] overflow-y-auto p-3 sm:p-6">
-                <DialogHeader>
+              <DialogContent className="max-w-[98vw] w-full h-[95vh] max-h-[95vh] overflow-y-auto p-2 sm:p-6">
+                <DialogHeader className="flex flex-row items-center justify-between">
                   <DialogTitle className="flex items-center gap-2">
                     <ClipboardList className="h-5 w-5" />
                     Planuri de tratament — {patient.first_name} {patient.last_name}

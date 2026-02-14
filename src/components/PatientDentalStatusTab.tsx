@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import { BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { TOOTH_STATUSES, getStatusHexColor as getStatusHexColorUtil } from '@/constants/toothStatuses';
 import { SvgTooth, getToothDimensions } from './dental/SvgTooth';
@@ -213,6 +214,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<number[]>([]);
   const [journalKey, setJournalKey] = useState(0);
+  const isMobile = useIsMobile();
 
   // Data hooks
   const { conditions: conditionsCatalog } = useDentalConditionsCatalog();
@@ -360,8 +362,8 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             isMissing={isMissing}
             statusColor={hasStatus ? hexColor : null}
             isHovered={isHovered}
-            width={Math.round(dims.width * 1.25)}
-            height={Math.round(dims.height * 1.25)}
+            width={Math.round(dims.width * (isMobile ? 0.85 : 1.25))}
+            height={Math.round(dims.height * (isMobile ? 0.85 : 1.25))}
             overlays={toothOverlays}
           />
 
@@ -406,7 +408,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
   return (
     <div className="space-y-4">
       {/* Main layout: chart + side panel */}
-      <div className="flex gap-0 rounded-2xl overflow-hidden border">
+      <div className="flex flex-col sm:flex-row gap-0 rounded-2xl overflow-hidden border">
         {/* Chart area */}
         <div
           className={cn(
@@ -479,7 +481,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
 
         {/* Side panel */}
         {selectedTooth && (
-          <div className="w-[350px] shrink-0">
+          <div className="w-full sm:w-[350px] shrink-0">
             <ToothDetailPanel
               patientId={patientId}
               toothNumber={selectedTooth}
