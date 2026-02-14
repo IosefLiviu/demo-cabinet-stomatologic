@@ -20,6 +20,8 @@ import { Treatment } from '@/hooks/useTreatments';
 
 interface ToothDetailPanelProps {
   toothNumber: number;
+  /** Additional selected teeth for bulk operations */
+  selectedTeeth?: number[];
   patientId: string;
   toothStatus: string;
   statusColor: string | null;
@@ -37,6 +39,7 @@ interface ToothDetailPanelProps {
 
 export function ToothDetailPanel({
   toothNumber,
+  selectedTeeth = [],
   patientId,
   toothStatus,
   statusColor,
@@ -51,6 +54,11 @@ export function ToothDetailPanel({
   onRemoveIntervention,
   onClose,
 }: ToothDetailPanelProps) {
+  // All teeth to operate on (primary + additional selected)
+  const allTeeth = useMemo(() => {
+    const set = new Set([toothNumber, ...selectedTeeth]);
+    return Array.from(set).sort((a, b) => a - b);
+  }, [toothNumber, selectedTeeth]);
   const [showConditionsDialog, setShowConditionsDialog] = useState(false);
   const [showInterventionsDialog, setShowInterventionsDialog] = useState(false);
   const [conditionSearch, setConditionSearch] = useState('');
@@ -70,20 +78,18 @@ export function ToothDetailPanel({
   );
 
   const handleAddCondition = async (conditionId: string) => {
-    await onAddCondition(toothNumber, conditionId);
+    const results = await Promise.all(allTeeth.map(t => onAddCondition(t, conditionId)));
+    return results.every(Boolean);
   };
 
   const handleAddIntervention = async () => {
     if (!selectedTreatment) return;
     const treatment = treatments.find(t => t.id === selectedTreatment);
     if (!treatment) return;
-    const ok = await onAddIntervention(
-      toothNumber,
-      treatment.name,
-      treatment.id,
-      selectedDoctor || undefined,
+    const results = await Promise.all(
+      allTeeth.map(t => onAddIntervention(t, treatment.name, treatment.id, selectedDoctor || undefined))
     );
-    if (ok) {
+    if (results.every(Boolean)) {
       setSelectedTreatment('');
       setSelectedDoctor('');
       setShowInterventionsDialog(false);
@@ -95,8 +101,15 @@ export function ToothDetailPanel({
       <div className="h-full flex flex-col border-l bg-background">
         {/* Header */}
         <div className="flex items-center justify-between p-3 border-b">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-sm">Dinte {toothNumber}</span>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="font-semibold text-sm truncate">
+              {allTeeth.length > 1 
+                ? `Dinți: ${allTeeth.join(', ')}` 
+                : `Dinte ${toothNumber}`}
+            </span>
+            {allTeeth.length > 1 && (
+              <Badge variant="secondary" className="text-[10px] shrink-0">{allTeeth.length}</Badge>
+            )}
           </div>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -227,7 +240,9 @@ export function ToothDetailPanel({
       <Dialog open={showConditionsDialog} onOpenChange={setShowConditionsDialog}>
         <DialogContent className="sm:max-w-[420px]">
           <DialogHeader>
-            <DialogTitle className="text-sm">Adaugă afecțiune — Dinte {toothNumber}</DialogTitle>
+            <DialogTitle className="text-sm">
+              Adaugă afecțiune — {allTeeth.length > 1 ? `Dinți: ${allTeeth.join(', ')}` : `Dinte ${toothNumber}`}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div className="relative">
@@ -266,7 +281,9 @@ export function ToothDetailPanel({
       }}>
         <DialogContent className="sm:max-w-[500px] h-[70vh] flex flex-col overflow-hidden">
           <DialogHeader>
-            <DialogTitle className="text-sm">Adaugă intervenție — Dinte {toothNumber}</DialogTitle>
+            <DialogTitle className="text-sm">
+              Adaugă intervenție — {allTeeth.length > 1 ? `Dinți: ${allTeeth.join(', ')}` : `Dinte ${toothNumber}`}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 flex flex-col flex-1 min-h-0">
             <div className="relative">
@@ -323,13 +340,15 @@ export function ToothDetailPanel({
                             setSelectedTreatment(t.id);
                             const treatment = t;
                             if (treatment) {
-                              onAddIntervention(
-                                toothNumber,
-                                treatment.name,
-                                treatment.id,
-                                selectedDoctor || undefined,
-                              ).then(ok => {
-                                if (ok) {
+                              Promise.all(
+                                allTeeth.map(tooth => onAddIntervention(
+                                  tooth,
+                                  treatment.name,
+                                  treatment.id,
+                                  selectedDoctor || undefined,
+                                ))
+                              ).then(results => {
+                                if (results.every(Boolean)) {
                                   setSelectedTreatment('');
                                   setSelectedDoctor('');
                                   setTreatmentSearch('');
