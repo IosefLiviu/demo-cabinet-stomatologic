@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import {
@@ -21,6 +21,7 @@ import {
   TrendingDown,
   Move,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -59,6 +60,7 @@ import {
   StorageStats,
 } from '@/hooks/usePatientRadiographs';
 import { formatBytes } from '@/lib/imageCompression';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PatientRadiographsProps {
   patientId: string;
@@ -94,6 +96,13 @@ export function PatientRadiographs({ patientId, patientName }: PatientRadiograph
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const imageContainerRef = useRef<HTMLDivElement>(null);
+
+  // Swipe navigation state
+  const [swipeStartX, setSwipeStartX] = useState<number | null>(null);
+  const isMobile = useIsMobile();
+
+  // Pinch-to-zoom state
+  const lastPinchDistance = useRef<number | null>(null);
 
   // Upload form state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -218,27 +227,69 @@ export function PatientRadiographs({ patientId, patientName }: PatientRadiograph
   }, []);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (zoomLevel > 1 && e.touches.length === 1) {
-      setIsDragging(true);
-      setDragStart({ 
-        x: e.touches[0].clientX - panPosition.x, 
-        y: e.touches[0].clientY - panPosition.y 
-      });
+    if (e.touches.length === 2) {
+      // Pinch-to-zoom: record initial distance
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lastPinchDistance.current = Math.hypot(dx, dy);
+    } else if (e.touches.length === 1) {
+      if (zoomLevel > 1) {
+        setIsDragging(true);
+        setDragStart({
+          x: e.touches[0].clientX - panPosition.x,
+          y: e.touches[0].clientY - panPosition.y
+        });
+      } else {
+        // Track swipe start for navigation
+        setSwipeStartX(e.touches[0].clientX);
+      }
     }
   }, [zoomLevel, panPosition]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (isDragging && zoomLevel > 1 && e.touches.length === 1) {
+    if (e.touches.length === 2 && lastPinchDistance.current !== null) {
+      // Pinch-to-zoom
+      e.preventDefault();
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const newDistance = Math.hypot(dx, dy);
+      const scale = newDistance / lastPinchDistance.current;
+
+      if (scale > 1.03) {
+        handleZoomIn();
+        lastPinchDistance.current = newDistance;
+      } else if (scale < 0.97) {
+        handleZoomOut();
+        lastPinchDistance.current = newDistance;
+      }
+    } else if (isDragging && zoomLevel > 1 && e.touches.length === 1) {
       setPanPosition({
         x: e.touches[0].clientX - dragStart.x,
         y: e.touches[0].clientY - dragStart.y,
       });
     }
-  }, [isDragging, zoomLevel, dragStart]);
+  }, [isDragging, zoomLevel, dragStart, handleZoomIn, handleZoomOut]);
 
-  const handleTouchEnd = useCallback(() => {
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    lastPinchDistance.current = null;
     setIsDragging(false);
-  }, []);
+
+    // Swipe navigation (only when not zoomed)
+    if (swipeStartX !== null && zoomLevel === 1 && e.changedTouches.length === 1) {
+      const swipeEndX = e.changedTouches[0].clientX;
+      const swipeDelta = swipeEndX - swipeStartX;
+      const SWIPE_THRESHOLD = 60;
+
+      if (Math.abs(swipeDelta) > SWIPE_THRESHOLD && radiographs.length > 1) {
+        if (swipeDelta > 0) {
+          navigateViewer('prev');
+        } else {
+          navigateViewer('next');
+        }
+      }
+    }
+    setSwipeStartX(null);
+  }, [swipeStartX, zoomLevel, radiographs.length, navigateViewer]);
 
   const toggleCompareSelection = (radiograph: PatientRadiograph) => {
     setSelectedForCompare((prev) => {
@@ -632,7 +683,10 @@ export function PatientRadiographs({ patientId, patientName }: PatientRadiograph
         setViewerOpen(open);
         if (!open) resetZoom();
       }}>
-        <DialogContent className="max-w-5xl max-h-[90vh] p-0 overflow-hidden">
+        <DialogContent className={cn(
+          "max-h-[90vh] p-0 overflow-hidden",
+          isMobile ? "max-w-[100vw] w-full h-[100dvh] max-h-[100dvh] rounded-none" : "max-w-5xl"
+        )}>
           <div className="relative">
             {/* Zoom Controls */}
             <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 bg-black/70 rounded-full px-2 py-1">
@@ -703,11 +757,14 @@ export function PatientRadiographs({ patientId, patientName }: PatientRadiograph
 
             {/* Image with zoom/pan */}
             {selectedRadiograph?.url && (
-              <div 
+              <div
                 ref={imageContainerRef}
-                className={`bg-black flex items-center justify-center min-h-[400px] max-h-[70vh] overflow-hidden ${
-                  zoomLevel > 1 ? 'cursor-grab' : 'cursor-zoom-in'
-                } ${isDragging ? 'cursor-grabbing' : ''}`}
+                className={cn(
+                  "bg-black flex items-center justify-center overflow-hidden",
+                  isMobile ? "min-h-[50dvh] max-h-[70dvh]" : "min-h-[400px] max-h-[70vh]",
+                  zoomLevel > 1 ? 'cursor-grab' : 'cursor-zoom-in',
+                  isDragging && 'cursor-grabbing'
+                )}
                 onWheel={handleWheel}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
@@ -717,61 +774,72 @@ export function PatientRadiographs({ patientId, patientName }: PatientRadiograph
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
                 onClick={() => {
-                  if (zoomLevel === 1) handleZoomIn();
+                  if (zoomLevel === 1 && !isMobile) handleZoomIn();
                 }}
               >
                 <img
                   src={selectedRadiograph.url}
                   alt={selectedRadiograph.file_name}
-                  className="max-w-full max-h-[70vh] object-contain select-none"
+                  className={cn(
+                    "max-w-full object-contain select-none",
+                    isMobile ? "max-h-[70dvh]" : "max-h-[70vh]"
+                  )}
                   style={{
                     transform: `scale(${zoomLevel}) translate(${panPosition.x / zoomLevel}px, ${panPosition.y / zoomLevel}px)`,
                     transition: isDragging ? 'none' : 'transform 0.2s ease-out',
+                    touchAction: zoomLevel > 1 ? 'none' : 'pan-y',
                   }}
                   draggable={false}
                 />
               </div>
             )}
 
-            {/* Zoom hint */}
-            {zoomLevel > 1 && (
+            {/* Zoom/swipe hint */}
+            {zoomLevel > 1 ? (
               <div className="absolute bottom-24 left-1/2 -translate-x-1/2 bg-black/60 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5">
                 <Move className="h-3 w-3" />
-                Trage pentru a mișca
+                {isMobile ? 'Trage pentru a mișca • Ciupește pentru zoom' : 'Trage pentru a mișca'}
               </div>
-            )}
+            ) : isMobile && radiographs.length > 1 ? (
+              <div className="absolute bottom-24 left-1/2 -translate-x-1/2 bg-black/60 text-white text-xs px-3 py-1.5 rounded-full">
+                ← Glisează pentru navigare →
+              </div>
+            ) : null}
 
             {/* Info bar */}
             {selectedRadiograph && (
-              <div className="p-4 bg-card border-t flex items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
+              <div className={cn(
+                "p-3 sm:p-4 bg-card border-t gap-3 sm:gap-4",
+                isMobile ? "space-y-2" : "flex items-center justify-between"
+              )}>
+                <div className="space-y-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {selectedRadiograph.radiograph_type && (
-                      <Badge>
+                      <Badge className="text-xs">
                         {RADIOGRAPH_TYPE_LABELS[selectedRadiograph.radiograph_type as RadiographType]}
                       </Badge>
                     )}
                     {selectedRadiograph.taken_at && (
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-xs sm:text-sm text-muted-foreground">
                         {format(new Date(selectedRadiograph.taken_at), 'd MMMM yyyy', { locale: ro })}
                       </span>
                     )}
                   </div>
                   {selectedRadiograph.description && (
-                    <p className="text-sm">{selectedRadiograph.description}</p>
+                    <p className="text-xs sm:text-sm truncate">{selectedRadiograph.description}</p>
                   )}
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
                     {selectedRadiograph.file_name} • {formatFileSize(selectedRadiograph.file_size)}
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 shrink-0">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => downloadRadiograph(selectedRadiograph)}
                   >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download
+                    <Download className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Download</span>
                   </Button>
                   <Button
                     variant="destructive"
@@ -782,8 +850,8 @@ export function PatientRadiographs({ patientId, patientName }: PatientRadiograph
                       setViewerOpen(false);
                     }}
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Șterge
+                    <Trash2 className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Șterge</span>
                   </Button>
                 </div>
               </div>
@@ -806,10 +874,13 @@ export function PatientRadiographs({ patientId, patientName }: PatientRadiograph
           exitCompareMode();
         }
       }}>
-        <DialogContent className="max-w-6xl max-h-[90vh] p-0 overflow-hidden">
-          <div className="p-4 border-b flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2">
-              <Columns2 className="h-5 w-5" />
+        <DialogContent className={cn(
+          "max-h-[90vh] p-0 overflow-hidden",
+          isMobile ? "max-w-[100vw] w-full" : "max-w-6xl"
+        )}>
+          <div className="p-3 sm:p-4 border-b flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2 text-sm sm:text-base">
+              <Columns2 className="h-4 w-4 sm:h-5 sm:w-5" />
               Comparație radiografii
             </DialogTitle>
             <Button
@@ -823,40 +894,49 @@ export function PatientRadiographs({ patientId, patientName }: PatientRadiograph
               <X className="h-5 w-5" />
             </Button>
           </div>
-          
-          <div className="grid grid-cols-2 divide-x">
+
+          <div className={cn(
+            "divide-x",
+            isMobile ? "flex flex-col divide-x-0 divide-y overflow-y-auto max-h-[80dvh]" : "grid grid-cols-2"
+          )}>
             {selectedForCompare.map((radiograph, index) => (
               <div key={radiograph.id} className="flex flex-col">
                 {/* Header */}
-                <div className="p-3 bg-muted/50 border-b">
+                <div className="p-2 sm:p-3 bg-muted/50 border-b">
                   <div className="flex items-center gap-2 mb-1">
-                    <Badge variant={index === 0 ? 'default' : 'secondary'}>
+                    <Badge variant={index === 0 ? 'default' : 'secondary'} className="text-xs">
                       {index === 0 ? 'Înainte' : 'După'}
                     </Badge>
                     {radiograph.radiograph_type && (
-                      <Badge variant="outline">
+                      <Badge variant="outline" className="text-xs">
                         {RADIOGRAPH_TYPE_LABELS[radiograph.radiograph_type as RadiographType]}
                       </Badge>
                     )}
                   </div>
                   {radiograph.taken_at && (
-                    <div className="text-sm text-muted-foreground flex items-center gap-1">
+                    <div className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
                       {format(new Date(radiograph.taken_at), 'd MMMM yyyy', { locale: ro })}
                     </div>
                   )}
                   {radiograph.description && (
-                    <p className="text-xs text-muted-foreground mt-1">{radiograph.description}</p>
+                    <p className="text-xs text-muted-foreground mt-1 truncate">{radiograph.description}</p>
                   )}
                 </div>
-                
+
                 {/* Image */}
-                <div className="flex-1 bg-black flex items-center justify-center min-h-[400px] max-h-[60vh]">
+                <div className={cn(
+                  "flex-1 bg-black flex items-center justify-center",
+                  isMobile ? "min-h-[200px] max-h-[35dvh]" : "min-h-[400px] max-h-[60vh]"
+                )}>
                   {radiograph.url ? (
                     <img
                       src={radiograph.url}
                       alt={radiograph.file_name}
-                      className="max-w-full max-h-[60vh] object-contain"
+                      className={cn(
+                        "max-w-full object-contain",
+                        isMobile ? "max-h-[35dvh]" : "max-h-[60vh]"
+                      )}
                     />
                   ) : (
                     <Image className="h-12 w-12 text-muted-foreground" />

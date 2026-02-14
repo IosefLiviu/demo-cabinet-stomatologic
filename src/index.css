@@ -149,3 +149,67 @@ All colors MUST be HSL.
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Mobile-specific enhancements */
+@media (max-width: 767px) {
+  /* Prevent iOS zoom on input focus */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="date"],
+  input[type="search"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Safe area padding for PWA standalone mode */
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Smoother scrolling on mobile */
+  .overflow-x-auto,
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Prevent text selection on interactive elements during touch */
+  button, [role="button"] {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+/* Mobile horizontal scroll indicator */
+.mobile-scroll-hint {
+  position: relative;
+}
+.mobile-scroll-hint::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 24px;
+  background: linear-gradient(to right, transparent, hsl(var(--background) / 0.8));
+  pointer-events: none;
+  z-index: 5;
+}
+@media (min-width: 768px) {
+  .mobile-scroll-hint::after {
+    display: none;
+  }
+}
+
+/* Touch-friendly minimum sizing for mobile interactive elements */
+@media (max-width: 767px) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
