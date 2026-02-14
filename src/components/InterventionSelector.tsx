@@ -613,7 +613,7 @@ export function InterventionSelector({
         {/* Tooth number - show above for upper teeth */}
         {!isLower && (
           <span className={cn(
-            "text-[10px] font-medium mb-0.5",
+            "text-[8px] sm:text-[10px] font-medium mb-0.5",
             isSelected ? 'text-foreground' : hasPatientStatus ? 'text-foreground' : 'text-muted-foreground'
           )}>
             {toothNumber}
@@ -631,9 +631,9 @@ export function InterventionSelector({
             isHovered && 'ring-2 ring-offset-1 ring-primary',
             isSelected && 'ring-2',
             hasPatientStatus && !isSelected && 'ring-1',
-            isDeciduous 
-              ? 'w-7 h-9 sm:w-8 sm:h-10' 
-              : 'w-8 h-11 sm:w-9 sm:h-13'
+            isDeciduous
+              ? 'w-5 h-7 sm:w-8 sm:h-10'
+              : 'w-6 h-8 sm:w-9 sm:h-13'
           )}
           style={
             isSelected && hexColor 
@@ -683,7 +683,7 @@ export function InterventionSelector({
         {/* Tooth number - show below for lower teeth */}
         {isLower && (
           <span className={cn(
-            "text-[10px] font-medium mt-0.5",
+            "text-[8px] sm:text-[10px] font-medium mt-0.5",
             isSelected ? 'text-foreground' : hasPatientStatus ? 'text-foreground' : 'text-muted-foreground'
           )}>
             {toothNumber}

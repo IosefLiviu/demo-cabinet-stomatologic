@@ -6,6 +6,7 @@ import { QuadrantCircle } from './QuadrantCircle';
 import { Search, X } from 'lucide-react';
 import { useDentalConditionsCatalog, DentalCondition } from '@/hooks/useToothData';
 import { getToothOverlays } from './toothConditionOverlays';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // FDI notation - permanent teeth
 const upperTeeth = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
@@ -55,7 +56,8 @@ interface MiniToothSelectorProps {
   className?: string;
 }
 
-const MINI_SCALE = 0.4;
+const MINI_SCALE = 0.28;
+const MINI_SCALE_SM = 0.4;
 
 export function MiniToothSelector({
   selectedTeeth,
@@ -72,6 +74,8 @@ export function MiniToothSelector({
   const popoverRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { conditions } = useDentalConditionsCatalog();
+  const isMobile = useIsMobile();
+  const scale = isMobile ? MINI_SCALE : MINI_SCALE_SM;
 
   const handleClick = useCallback((toothNumber: number) => {
     if (onConditionSelect) {
@@ -139,8 +143,8 @@ export function MiniToothSelector({
     const hasConditions = codes.length > 0;
 
     const dims = getToothDimensions(toothNumber, isDeciduous);
-    const w = Math.round(dims.width * MINI_SCALE);
-    const h = Math.round(dims.height * MINI_SCALE);
+    const w = Math.round(dims.width * scale);
+    const h = Math.round(dims.height * scale);
 
     const button = (
       <button
@@ -285,7 +289,7 @@ export function MiniToothSelector({
                 }
               });
             }}
-            size={70}
+            size={isMobile ? 50 : 70}
           />
         </div>
         <div className="flex justify-center gap-px">

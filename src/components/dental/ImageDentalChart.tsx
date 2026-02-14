@@ -122,7 +122,7 @@ export function ImageDentalChart({ dentalStatus, onToothClick, readonly = false 
         {/* Tooth number - show above for upper teeth, below for lower teeth */}
         {!isLower && (
           <span className={cn(
-            "text-[10px] font-medium mb-0.5",
+            "text-[8px] sm:text-[10px] font-medium mb-0.5",
             status !== 'healthy' ? 'text-foreground' : 'text-muted-foreground'
           )}>
             {toothNumber}
@@ -144,9 +144,9 @@ export function ImageDentalChart({ dentalStatus, onToothClick, readonly = false 
             status !== 'healthy' && statusBorderColors[status],
             hasNotes && 'ring-1 ring-primary/50',
             // Size based on tooth type
-            isDeciduous 
-              ? 'w-8 h-10 sm:w-9 sm:h-11' 
-              : 'w-9 h-12 sm:w-10 sm:h-14'
+            isDeciduous
+              ? 'w-5 h-7 sm:w-9 sm:h-11'
+              : 'w-6 h-8 sm:w-10 sm:h-14'
           )}
         >
           {/* Tooth image */}
@@ -181,7 +181,7 @@ export function ImageDentalChart({ dentalStatus, onToothClick, readonly = false 
         {/* Tooth number - show below for lower teeth */}
         {isLower && (
           <span className={cn(
-            "text-[10px] font-medium mt-0.5",
+            "text-[8px] sm:text-[10px] font-medium mt-0.5",
             status !== 'healthy' ? 'text-foreground' : 'text-muted-foreground'
           )}>
             {toothNumber}
@@ -229,7 +229,7 @@ export function ImageDentalChart({ dentalStatus, onToothClick, readonly = false 
         </div>
 
         {/* Dental Chart */}
-        <div className="space-y-2 bg-muted/20 rounded-lg p-4">
+        <div className="space-y-2 bg-muted/20 rounded-lg p-2 sm:p-4">
           {/* Upper jaw - permanent teeth */}
           <div className="space-y-1">
             <div className="text-xs text-muted-foreground text-center mb-1">

@@ -114,9 +114,9 @@ export function DentalChart({ dentalStatus, onToothClick, readonly = false }: De
             isHovered && 'ring-2 ring-primary ring-offset-2',
             hasNotes && 'ring-1 ring-primary/50',
             // Deciduous teeth: circular shape with dashed border
-            isDeciduous 
-              ? 'w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 text-xs border-dashed' 
-              : 'w-8 h-10 sm:w-10 sm:h-12 rounded-lg border-2 text-xs'
+            isDeciduous
+              ? 'w-6 h-6 sm:w-9 sm:h-9 rounded-full border-2 text-[10px] sm:text-xs border-dashed'
+              : 'w-6 h-8 sm:w-10 sm:h-12 rounded-lg border-2 text-[10px] sm:text-xs'
           )}
         >
           {toothNumber}
@@ -158,7 +158,7 @@ export function DentalChart({ dentalStatus, onToothClick, readonly = false }: De
             <div className="text-xs text-muted-foreground text-center mb-2">
               Maxilar superior (dinți permanenți)
             </div>
-            <div className="flex justify-center gap-1">
+            <div className="flex justify-center gap-0.5 sm:gap-1 overflow-x-auto">
               {upperTeeth.map((tooth) => renderTooth(tooth, false))}
             </div>
           </div>
@@ -168,7 +168,7 @@ export function DentalChart({ dentalStatus, onToothClick, readonly = false }: De
             <div className="text-xs text-muted-foreground text-center mb-2">
               Dinți temporari (de lapte) - superior
             </div>
-            <div className="flex justify-center gap-1">
+            <div className="flex justify-center gap-0.5 sm:gap-1">
               {upperDeciduousTeeth.map((tooth) => renderTooth(tooth, true))}
             </div>
           </div>
@@ -180,7 +180,7 @@ export function DentalChart({ dentalStatus, onToothClick, readonly = false }: De
 
           {/* Lower jaw - deciduous teeth */}
           <div className="space-y-1">
-            <div className="flex justify-center gap-1">
+            <div className="flex justify-center gap-0.5 sm:gap-1">
               {lowerDeciduousTeeth.map((tooth) => renderTooth(tooth, true))}
             </div>
             <div className="text-xs text-muted-foreground text-center mt-2">
@@ -190,7 +190,7 @@ export function DentalChart({ dentalStatus, onToothClick, readonly = false }: De
 
           {/* Lower jaw - permanent teeth */}
           <div className="space-y-1">
-            <div className="flex justify-center gap-1">
+            <div className="flex justify-center gap-0.5 sm:gap-1 overflow-x-auto">
               {lowerTeeth.map((tooth) => renderTooth(tooth, false))}
             </div>
             <div className="text-xs text-muted-foreground text-center mt-2">
