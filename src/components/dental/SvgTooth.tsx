@@ -2,9 +2,9 @@ import { cn } from '@/lib/utils';
 
 // ─── Realistic anatomical tooth shapes ───────────────────────────────────────
 // viewBox: 0 0 40 80
-// Upper teeth: root at top (y≈0-35), cervical line (~y38-42), crown at bottom (y≈42-78)
-// Multi-rooted teeth have furcation notches in outline and a furcationArea path
-// for gum-coloured depth shading between separated roots.
+// Upper teeth: root at top (y≈0-38), cervical line (~y38-42), crown at bottom (y≈42-78)
+// Multi-rooted teeth have VISIBLE furcation notches – the outline path traces
+// around each root separately with a V-notch between them.
 
 const TOOTH_SHAPES: Record<string, {
   outline: string;
@@ -13,142 +13,143 @@ const TOOTH_SHAPES: Record<string, {
   details?: string[];
   cusps?: string[];
   innerHighlight?: string;
-  shadowEdge?: string;
-  /** Crown-only path for enamel cap gradient (brighter white on crown surface only) */
+  /** Crown-only path for enamel cap gradient */
   crownArea?: string;
-  /** Gum-coloured fill between separated roots for depth perception */
+  /** Gum-coloured fill between separated roots */
   furcationArea?: string;
 }> = {
   // ── Central Incisor: broad spatulate crown, single conical root ──
   centralIncisor: {
-    outline: "M20,1 C18.5,1 16.5,4 15.5,10 C14.5,16 14,22 13.5,28 C13,33 12.5,37 12,41 C11.5,45 11,48 10.5,52 C10,56 9.8,60 10,64 C10.3,68 11.5,71 14,74 C16,76 18,77.5 20,78 C22,77.5 24,76 26,74 C28.5,71 29.7,68 30,64 C30.2,60 30,56 29.5,52 C29,48 28.5,45 28,41 C27.5,37 27,33 26.5,28 C26,22 25.5,16 24.5,10 C23.5,4 21.5,1 20,1Z",
-    crownArea: "M12,41 C11.5,45 11,48 10.5,52 C10,56 9.8,60 10,64 C10.3,68 11.5,71 14,74 C16,76 18,77.5 20,78 C22,77.5 24,76 26,74 C28.5,71 29.7,68 30,64 C30.2,60 30,56 29.5,52 C29,48 28.5,45 28,41 Q24,39 20,38 Q16,39 12,41Z",
-    innerHighlight: "M20,6 C19,6 17.5,10 16.5,18 C15.5,26 15,34 14.5,40 C14,44 13.5,48 13,53 C12.8,57 13,62 14,66 C15.5,70 17.5,73 20,74 C22.5,73 24.5,70 26,66 C27,62 27.2,57 27,53 C26.5,48 26,44 25.5,40 C25,34 24.5,26 23.5,18 C22.5,10 21,6 20,6Z",
-    cervical: "M12,41 Q16,38 20,37 Q24,38 28,41",
+    outline: "M20,2 C18,2 16,6 15,12 C14,20 13.5,28 13,34 C12.5,38 12,41 11.5,45 C11,49 10.5,54 10.5,59 C10.8,64 12,68 14.5,72 C16.5,75 18.5,77 20,78 C21.5,77 23.5,75 25.5,72 C28,68 29.2,64 29.5,59 C29.5,54 29,49 28.5,45 C28,41 27.5,38 27,34 C26.5,28 26,20 25,12 C24,6 22,2 20,2Z",
+    crownArea: "M12,42 C11.5,46 11,50 10.8,55 C10.8,60 11.5,65 13.5,70 C15.5,74 18,77 20,78 C22,77 24.5,74 26.5,70 C28.5,65 29.2,60 29.2,55 C29,50 28.5,46 28,42 Q24,39 20,38 Q16,39 12,42Z",
+    innerHighlight: "M20,6 C19,6 17.5,10 16.5,18 C16,24 15.5,30 15,36 C14.5,40 14,44 13.5,49 C13.2,54 13.5,60 15,65 C16.5,70 18.5,74 20,75 C21.5,74 23.5,70 25,65 C26.5,60 26.8,54 26.5,49 C26,44 25.5,40 25,36 C24.5,30 24,24 23.5,18 C22.5,10 21,6 20,6Z",
+    cervical: "M12.5,42 Q16,39 20,38 Q24,39 27.5,42",
     rootLines: [
-      "M17,5 Q18,15 17.5,32",
-      "M23,5 Q22,15 22.5,32",
+      "M18,6 Q19,16 18.5,34",
+      "M22,6 Q21,16 21.5,34",
     ],
     cusps: [
-      "M13,64 Q16,58 20,56 Q24,58 27,64",
+      "M13,62 Q16.5,56 20,54 Q23.5,56 27,62",
     ],
   },
 
   // ── Lateral Incisor: narrower crown, single root ──
   lateralIncisor: {
-    outline: "M20,3 C18.5,3 17,6 16,12 C15,18 14.5,24 14,30 C13.5,35 13,39 12.8,43 C12.5,47 12.3,51 12.5,55 C12.7,59 13,63 14.5,67 C16,70 17.5,73 20,74 C22.5,73 24,70 25.5,67 C27,63 27.3,59 27.5,55 C27.7,51 27.5,47 27.2,43 C27,39 26.5,35 26,30 C25.5,24 25,18 24,12 C23,6 21.5,3 20,3Z",
-    crownArea: "M12.8,43 C12.5,47 12.3,51 12.5,55 C12.7,59 13,63 14.5,67 C16,70 17.5,73 20,74 C22.5,73 24,70 25.5,67 C27,63 27.3,59 27.5,55 C27.7,51 27.5,47 27.2,43 Q23.5,40 20,39 Q16.5,40 12.8,43Z",
-    innerHighlight: "M20,7 C19,7 17.8,10 17,16 C16,23 15.5,29 15.2,34 C15,38 14.8,42 14.8,46 C14.8,50 15,55 16,60 C17,65 18.5,69 20,70 C21.5,69 23,65 24,60 C25,55 25.2,50 25.2,46 C25.2,42 25,38 24.8,34 C24.5,29 24,23 23,16 C22.2,10 21,7 20,7Z",
-    cervical: "M13,43 Q16.5,40 20,39 Q23.5,40 27,43",
+    outline: "M20,3 C18.5,3 17,7 16,13 C15,20 14.5,27 14,33 C13.5,37 13.2,41 13,44 C12.8,48 12.5,52 12.8,57 C13,62 14,66 16,70 C17.5,73 19,75 20,75.5 C21,75 22.5,73 24,70 C26,66 27,62 27.2,57 C27.5,52 27.2,48 27,44 C26.8,41 26.5,37 26,33 C25.5,27 25,20 24,13 C23,7 21.5,3 20,3Z",
+    crownArea: "M13,44 C12.8,48 12.5,52 12.8,57 C13,62 14,66 16,70 C17.5,73 19,75 20,75.5 C21,75 22.5,73 24,70 C26,66 27,62 27.2,57 C27.5,52 27.2,48 27,44 Q23.5,41 20,40 Q16.5,41 13,44Z",
+    innerHighlight: "M20,7 C19,7 17.8,11 17,17 C16.2,24 15.5,30 15.2,35 C15,39 14.8,43 14.8,47 C14.8,52 15.2,57 16.5,62 C17.5,66 19,70 20,71 C21,70 22.5,66 23.5,62 C24.8,57 25.2,52 25.2,47 C25.2,43 25,39 24.8,35 C24.5,30 23.8,24 23,17 C22.2,11 21,7 20,7Z",
+    cervical: "M13,44 Q16.5,41 20,40 Q23.5,41 27,44",
     rootLines: [
-      "M17.5,6 Q18,18 17.8,36",
-      "M22.5,6 Q22,18 22.2,36",
+      "M18,7 Q18.5,18 18.2,36",
+      "M22,7 Q21.5,18 21.8,36",
     ],
     cusps: [
-      "M14,62 Q17,57 20,55 Q23,57 26,62",
+      "M14.5,62 Q17,57 20,55 Q23,57 25.5,62",
     ],
   },
 
   // ── Canine: pointed crown with prominent cusp, long single root ──
   canine: {
-    outline: "M20,1 C18.5,1 16,4 15,10 C14,17 13.2,24 12.5,30 C12,35 11.5,39 11,43 C10.5,47 10.2,51 10.5,55 C10.8,59 11.5,63 13.5,67 C15.5,71 17.5,74 20,78 C22.5,74 24.5,71 26.5,67 C28.5,63 29.2,59 29.5,55 C29.8,51 29.5,47 29,43 C28.5,39 28,35 27.5,30 C26.8,24 26,17 25,10 C24,4 21.5,1 20,1Z",
-    crownArea: "M11,43 C10.5,47 10.2,51 10.5,55 C10.8,59 11.5,63 13.5,67 C15.5,71 17.5,74 20,78 C22.5,74 24.5,71 26.5,67 C28.5,63 29.2,59 29.5,55 C29.8,51 29.5,47 29,43 Q24.5,39 20,38 Q15.5,39 11,43Z",
-    innerHighlight: "M20,5 C19,5 17,8 16,15 C15,22 14.2,29 13.8,34 C13.3,39 13,43 12.8,47 C12.6,51 13,56 14.5,61 C16,65 18,70 20,73 C22,70 24,65 25.5,61 C27,56 27.4,51 27.2,47 C27,43 26.7,39 26.2,34 C25.8,29 25,22 24,15 C23,8 21,5 20,5Z",
-    cervical: "M11,43 Q15.5,39 20,38 Q24.5,39 29,43",
+    outline: "M20,1 C18,1 16,5 15,12 C14,20 13.2,27 12.5,33 C12,37 11.5,41 11,44 C10.5,48 10.2,52 10.5,57 C10.8,62 12,66 14.5,70 C16.5,73 18.5,76 20,78 C21.5,76 23.5,73 25.5,70 C28,66 29.2,62 29.5,57 C29.8,52 29.5,48 29,44 C28.5,41 28,37 27.5,33 C26.8,27 26,20 25,12 C24,5 22,1 20,1Z",
+    crownArea: "M11,44 C10.5,48 10.2,52 10.5,57 C10.8,62 12,66 14.5,70 C16.5,73 18.5,76 20,78 C21.5,76 23.5,73 25.5,70 C28,66 29.2,62 29.5,57 C29.8,52 29.5,48 29,44 Q24.5,41 20,40 Q15.5,41 11,44Z",
+    innerHighlight: "M20,5 C19,5 17,9 16,16 C15,23 14.2,30 13.8,35 C13.5,39 13,43 12.8,47 C12.6,52 13,57 14.5,62 C16,66 18,72 20,74 C22,72 24,66 25.5,62 C27,57 27.4,52 27.2,47 C27,43 26.5,39 26.2,35 C25.8,30 25,23 24,16 C23,9 21,5 20,5Z",
+    cervical: "M11,44 Q15.5,41 20,40 Q24.5,41 29,44",
     rootLines: [
-      "M17,4 Q18,18 17.5,36",
-      "M23,4 Q22,18 22.5,36",
+      "M17.5,4 Q18.5,18 18,36",
+      "M22.5,4 Q21.5,18 22,36",
     ],
     cusps: [
       "M13,62 Q16.5,56 20,52 Q23.5,56 27,62",
     ],
   },
 
-  // ── First Premolar: bicuspid crown, bifurcated root with visible furcation ──
+  // ── First Premolar: bicuspid crown, bifurcated root with VISIBLE furcation notch ──
   firstPremolar: {
-    outline: "M20,4 C17.5,4 15.5,7 14.5,13 C13.5,19 13,25 13,30 C13,34 13.5,37 16,40 L14,40 C13,40 12,42 11.5,45 C11,48 10.8,52 11,56 C11.2,60 12,64 14,68 C15.5,71 17.5,73 20,74 C22.5,73 24.5,71 26,68 C28,64 28.8,60 29,56 C29.2,52 29,48 28.5,45 C28,42 27,40 26,40 L24,40 C26.5,37 27,34 27,30 C27,25 26.5,19 25.5,13 C24.5,7 22.5,4 20,4Z",
-    crownArea: "M14,40 C13,40 12,42 11.5,45 C11,48 10.8,52 11,56 C11.2,60 12,64 14,68 C15.5,71 17.5,73 20,74 C22.5,73 24.5,71 26,68 C28,64 28.8,60 29,56 C29.2,52 29,48 28.5,45 C28,42 27,40 26,40 Q23,38 20,37 Q17,38 14,40Z",
-    furcationArea: "M16,40 C17,36 18.5,34 20,34 C21.5,34 23,36 24,40 Q22,38 20,37 Q18,38 16,40Z",
-    innerHighlight: "M20,8 C18.5,8 17,12 16,18 C15,24 14.5,30 14.8,35 C15,38 16,39 17,40 Q18.5,38 20,37 Q21.5,38 23,40 C24,39 25,38 25.2,35 C25.5,30 25,24 24,18 C23,12 21.5,8 20,8Z",
-    cervical: "M14,40 Q17,37 20,36 Q23,37 26,40",
+    // Two roots clearly separated with V-notch at ~y28
+    outline: "M15,4 C13.5,4 12,8 11.5,14 C11,20 11,25 11.5,28 L11.5,28 C12,32 12.5,36 13,39 Q16.5,37 20,36 Q23.5,37 27,39 C27.5,36 28,32 28.5,28 L28.5,28 C29,25 29,20 28.5,14 C28,8 26.5,4 25,4 C23.5,4 22,8 20,16 C18,8 16.5,4 15,4Z M13,39 C12.5,43 12,47 11.8,51 C11.5,56 12,61 13.5,65 C15,68 17.5,71 20,72 C22.5,71 25,68 26.5,65 C28,61 28.5,56 28.2,51 C28,47 27.5,43 27,39 Q23.5,37 20,36 Q16.5,37 13,39Z",
+    crownArea: "M13,39 C12.5,43 12,47 11.8,51 C11.5,56 12,61 13.5,65 C15,68 17.5,71 20,72 C22.5,71 25,68 26.5,65 C28,61 28.5,56 28.2,51 C28,47 27.5,43 27,39 Q23.5,37 20,36 Q16.5,37 13,39Z",
+    furcationArea: "M11.5,28 C13,24 16,20 20,16 C24,20 27,24 28.5,28 C28,32 27.5,36 27,39 Q23.5,37 20,36 Q16.5,37 13,39 C12.5,36 12,32 11.5,28Z",
+    innerHighlight: "M16,8 C15,12 14,18 13.5,23 C13,26 13,29 13.5,33 C14,36 15,38 17,39 Q18.5,37.5 20,37 Q21.5,37.5 23,39 C25,38 26,36 26.5,33 C27,29 27,26 26.5,23 C26,18 25,12 24,8 C22.8,8 21.5,12 20,18 C18.5,12 17.2,8 16,8Z",
+    cervical: "M13,39 Q16.5,37 20,36 Q23.5,37 27,39",
     rootLines: [
-      "M15.5,8 Q16,18 15.5,32",
-      "M24.5,8 Q24,18 24.5,32",
+      "M14,8 Q14.5,16 14,28",
+      "M26,8 Q25.5,16 26,28",
     ],
-    details: ["M14.5,58 Q17,53 20,52 Q23,53 25.5,58"],
+    details: ["M15,56 Q17.5,52 20,51 Q22.5,52 25,56"],
     cusps: [
-      "M14,60 L17,54 L20,56 L23,54 L26,60",
+      "M14.5,58 L17,53 L20,55 L23,53 L25.5,58",
     ],
   },
 
   // ── Second Premolar: bicuspid crown, single root ──
   secondPremolar: {
-    outline: "M20,4 C18,4 16,8 15,14 C14,20 13.5,26 13,32 C12.5,36 12,40 11.5,44 C11,48 10.8,52 11,56 C11.2,60 12,64 14,68 C15.5,71 17.5,73 20,74 C22.5,73 24.5,71 26,68 C28,64 28.8,60 29,56 C29.2,52 29,48 28.5,44 C28,40 27.5,36 27,32 C26.5,26 26,20 25,14 C24,8 22,4 20,4Z",
-    crownArea: "M11.5,44 C11,48 10.8,52 11,56 C11.2,60 12,64 14,68 C15.5,71 17.5,73 20,74 C22.5,73 24.5,71 26,68 C28,64 28.8,60 29,56 C29.2,52 29,48 28.5,44 Q24,40 20,39 Q16,40 11.5,44Z",
-    innerHighlight: "M20,8 C18.5,8 17,12 16,18 C15,24 14.5,30 14.2,35 C14,39 13.8,43 13.5,47 C13.3,51 13.5,55 14.5,60 C15.5,64 17.5,68 20,70 C22.5,68 24.5,64 25.5,60 C26.5,55 26.7,51 26.5,47 C26.2,43 26,39 25.8,35 C25.5,30 25,24 24,18 C23,12 21.5,8 20,8Z",
-    cervical: "M12,44 Q16,40 20,39 Q24,40 28,44",
-    details: ["M14.5,58 Q17,53 20,52 Q23,53 25.5,58"],
+    outline: "M20,4 C18,4 16,8 15,15 C14,22 13.5,28 13,34 C12.5,38 12.2,41 12,44 C11.8,48 11.5,52 11.8,57 C12,62 13,66 15,69 C16.5,72 18.5,74 20,74.5 C21.5,74 23.5,72 25,69 C27,66 28,62 28.2,57 C28.5,52 28.2,48 28,44 C27.8,41 27.5,38 27,34 C26.5,28 26,22 25,15 C24,8 22,4 20,4Z",
+    crownArea: "M12,44 C11.8,48 11.5,52 11.8,57 C12,62 13,66 15,69 C16.5,72 18.5,74 20,74.5 C21.5,74 23.5,72 25,69 C27,66 28,62 28.2,57 C28.5,52 28.2,48 28,44 Q24,41 20,40 Q16,41 12,44Z",
+    innerHighlight: "M20,8 C18.5,8 17,12 16,19 C15,25 14.5,31 14.2,36 C14,40 13.8,43 13.8,47 C13.8,52 14.2,57 15.5,62 C16.5,66 18.5,70 20,71 C21.5,70 23.5,66 24.5,62 C25.8,57 26.2,52 26.2,47 C26.2,43 26,40 25.8,36 C25.5,31 25,25 24,19 C23,12 21.5,8 20,8Z",
+    cervical: "M12,44 Q16,41 20,40 Q24,41 28,44",
+    details: ["M15,58 Q17.5,53 20,52 Q22.5,53 25,58"],
     rootLines: [
-      "M16,8 Q17,20 16.5,36",
-      "M24,8 Q23,20 23.5,36",
+      "M17,8 Q17.5,20 17,36",
+      "M23,8 Q22.5,20 23,36",
     ],
     cusps: [
-      "M14,60 L17,55 L20,57 L23,55 L26,60",
+      "M14.5,60 L17,55 L20,57 L23,55 L25.5,60",
     ],
   },
 
-  // ── First Molar: wide crown, two clearly separated roots with deep furcation V-notch ──
+  // ── First Molar: wide crown, TWO clearly separated roots with deep furcation V-notch ──
   firstMolar: {
-    outline: "M14,2 C12,2 10,6 9,12 C8,18 7.5,24 7.5,30 C8,34 9.5,37 12,39 L12,39 C11,40 10,42 9.5,46 C9,50 9,54 9.5,58 C10,62 11.5,66 14,70 C16,73 18,75 20,76 C22,75 24,73 26,70 C28.5,66 30,62 30.5,58 C31,54 31,50 30.5,46 C30,42 29,40 28,39 L28,39 C30.5,37 32,34 32.5,30 C32.5,24 32,18 31,12 C30,6 28,2 26,2 C24.5,2 22.5,5 20,10 C17.5,5 15.5,2 14,2Z",
-    crownArea: "M12,39 C11,40 10,42 9.5,46 C9,50 9,54 9.5,58 C10,62 11.5,66 14,70 C16,73 18,75 20,76 C22,75 24,73 26,70 C28.5,66 30,62 30.5,58 C31,54 31,50 30.5,46 C30,42 29,40 28,39 Q24,36 20,35 Q16,36 12,39Z",
-    furcationArea: "M12,39 C14,34 17,30 20,28 C23,30 26,34 28,39 Q24,36 20,35 Q16,36 12,39Z",
-    innerHighlight: "M14.5,6 C13,6 11.5,10 10.5,16 C9.5,22 9.2,28 9.8,33 C10.5,36 11.5,38 13,39 Q16.5,36 20,35 Q23.5,36 27,39 C28.5,38 29.5,36 30.2,33 C30.8,28 30.5,22 29.5,16 C28.5,10 27,6 25.5,6 C24,6 22.5,8 20,12 C17.5,8 16,6 14.5,6Z",
-    cervical: "M12,39 Q16,36 20,35 Q24,36 28,39",
+    // Root paths split at ~y22 with a deep V-notch, then join at cervical ~y39
+    outline: "M13,2 C11,2 9,7 8,14 C7.5,20 7.5,25 9,30 C10,33 11,36 12.5,38 Q16,36 20,35 Q24,36 27.5,38 C29,36 30,33 31,30 C32.5,25 32.5,20 32,14 C31,7 29,2 27,2 C25,2 23,7 20,16 C17,7 15,2 13,2Z M12.5,38 C12,41 11.5,44 11,48 C10.5,53 10.5,58 11,62 C11.5,66 13,69 15.5,72 C17.5,74 19,75 20,75.5 C21,75 22.5,74 24.5,72 C27,69 28.5,66 29,62 C29.5,58 29.5,53 29,48 C28.5,44 28,41 27.5,38 Q24,36 20,35 Q16,36 12.5,38Z",
+    crownArea: "M12.5,38 C12,41 11.5,44 11,48 C10.5,53 10.5,58 11,62 C11.5,66 13,69 15.5,72 C17.5,74 19,75 20,75.5 C21,75 22.5,74 24.5,72 C27,69 28.5,66 29,62 C29.5,58 29.5,53 29,48 C28.5,44 28,41 27.5,38 Q24,36 20,35 Q16,36 12.5,38Z",
+    furcationArea: "M9,30 C11,26 15,20 20,16 C25,20 29,26 31,30 C30,33 29,36 27.5,38 Q24,36 20,35 Q16,36 12.5,38 C11,36 10,33 9,30Z",
+    innerHighlight: "M14,6 C12.5,6 11,11 10,17 C9.5,22 9.5,27 10.5,31 C11.5,34 12.5,37 14,38 Q17,36 20,35.5 Q23,36 26,38 C27.5,37 28.5,34 29.5,31 C30.5,27 30.5,22 30,17 C29,11 27.5,6 26,6 C24.5,6 23,9 20,14 C17,9 15.5,6 14,6Z",
+    cervical: "M12.5,38 Q16,36 20,35 Q24,36 27.5,38",
     details: [
-      "M13,58 Q16,53 20,56 Q24,53 27,58",
-      "M15,62 Q20,58 25,62",
+      "M14,56 Q17,51 20,54 Q23,51 26,56",
+      "M16,60 Q20,56 24,60",
     ],
     rootLines: [
-      "M12,5 Q13,16 12,30",
-      "M20,12 Q20,20 20,30",
-      "M28,5 Q27,16 28,30",
+      "M11,6 Q11.5,14 11,28",
+      "M20,16 Q20,22 20,32",
+      "M29,6 Q28.5,14 29,28",
     ],
     cusps: [
-      "M12,60 L15,54 L18,56 L20,53 L22,56 L25,54 L28,60",
+      "M14,60 L16.5,54 L19,56 L20,53 L21,56 L23.5,54 L26,60",
     ],
   },
 
-  // ── Second Molar: slightly smaller than first molar, two roots with furcation ──
+  // ── Second Molar: similar to first molar but slightly smaller ──
   secondMolar: {
-    outline: "M15,3 C13,3 11,7 10,13 C9,19 8.5,25 8.5,30 C9,34 10,37 12.5,39 L12.5,39 C11.5,40 10.5,43 10,47 C9.5,51 9.5,55 10,59 C10.5,63 12,66 14.5,69 C16.5,72 18.5,74 20,74.5 C21.5,74 23.5,72 25.5,69 C28,66 29.5,63 30,59 C30.5,55 30.5,51 30,47 C29.5,43 28.5,40 27.5,39 L27.5,39 C30,37 31,34 31.5,30 C31.5,25 31,19 30,13 C29,7 27,3 25,3 C23.5,3 22,5.5 20,9 C18,5.5 16.5,3 15,3Z",
-    crownArea: "M12.5,39 C11.5,40 10.5,43 10,47 C9.5,51 9.5,55 10,59 C10.5,63 12,66 14.5,69 C16.5,72 18.5,74 20,74.5 C21.5,74 23.5,72 25.5,69 C28,66 29.5,63 30,59 C30.5,55 30.5,51 30,47 C29.5,43 28.5,40 27.5,39 Q24,36.5 20,35.5 Q16,36.5 12.5,39Z",
-    furcationArea: "M12.5,39 C14,34.5 17,31 20,29 C23,31 26,34.5 27.5,39 Q24,36.5 20,35.5 Q16,36.5 12.5,39Z",
-    innerHighlight: "M15.5,7 C14,7 12.5,11 11.5,17 C10.5,23 10.2,28 10.5,33 C11,36 12,38 13.5,39 Q17,36.5 20,35.5 Q23,36.5 26.5,39 C28,38 29,36 29.5,33 C29.8,28 29.5,23 28.5,17 C27.5,11 26,7 24.5,7 C23.2,7 22,9 20,12 C18,9 16.8,7 15.5,7Z",
-    cervical: "M12.5,39 Q16,36.5 20,35.5 Q24,36.5 27.5,39",
-    details: ["M13.5,57 Q17,52 20,55 Q23,52 26.5,57"],
+    outline: "M14,3 C12,3 10.5,8 9.5,15 C9,21 9,26 10,30 C11,33 12,36 13,38 Q16.5,36 20,35 Q23.5,36 27,38 C28,36 29,33 30,30 C31,26 31,21 30.5,15 C29.5,8 28,3 26,3 C24.5,3 22.5,7 20,14 C17.5,7 15.5,3 14,3Z M13,38 C12.5,41 12,44 11.5,48 C11,53 11,57 11.5,61 C12,65 13.5,68 15.5,71 C17.5,73 19,74 20,74.5 C21,74 22.5,73 24.5,71 C26.5,68 28,65 28.5,61 C29,57 29,53 28.5,48 C28,44 27.5,41 27,38 Q23.5,36 20,35 Q16.5,36 13,38Z",
+    crownArea: "M13,38 C12.5,41 12,44 11.5,48 C11,53 11,57 11.5,61 C12,65 13.5,68 15.5,71 C17.5,73 19,74 20,74.5 C21,74 22.5,73 24.5,71 C26.5,68 28,65 28.5,61 C29,57 29,53 28.5,48 C28,44 27.5,41 27,38 Q23.5,36 20,35 Q16.5,36 13,38Z",
+    furcationArea: "M10,30 C12,26 15.5,20 20,14 C24.5,20 28,26 30,30 C29,33 28,36 27,38 Q23.5,36 20,35 Q16.5,36 13,38 C12,36 11,33 10,30Z",
+    innerHighlight: "M15,7 C13.5,7 12,12 11,18 C10.5,23 10.5,27 11.5,31 C12,34 13,37 14,38 Q17,36.5 20,35.5 Q23,36.5 26,38 C27,37 28,34 28.5,31 C29.5,27 29.5,23 29,18 C28,12 26.5,7 25,7 C24,7 22.5,10 20,15 C17.5,10 16,7 15,7Z",
+    cervical: "M13,38 Q16.5,36 20,35 Q23.5,36 27,38",
+    details: ["M14,56 Q17.5,52 20,54 Q22.5,52 26,56"],
     rootLines: [
-      "M13,6 Q13.5,17 13,30",
-      "M27,6 Q26.5,17 27,30",
+      "M12,7 Q12.5,16 12,28",
+      "M28,7 Q27.5,16 28,28",
     ],
     cusps: [
-      "M13,59 L16,54 L18.5,56 L20,53 L21.5,56 L24,54 L27,59",
+      "M14,58 L16.5,53 L19,55 L20,52 L21,55 L23.5,53 L26,58",
     ],
   },
 
   // ── Wisdom (Third Molar): short, partially fused roots with shallow furcation ──
   wisdom: {
-    outline: "M15.5,6 C14,6 12,10 11,16 C10,22 10,27 10.2,31 C10.5,34.5 11.5,37 14,39 L14,39 C13,40 12,43 11.5,47 C11,51 11,55 11.5,59 C12,63 13.5,66 15.5,69 C17,71 18.5,72.5 20,73 C21.5,72.5 23,71 24.5,69 C26.5,66 28,63 28.5,59 C29,55 29,51 28.5,47 C28,43 27,40 26,39 L26,39 C28.5,37 29.5,34.5 29.8,31 C30,27 30,22 29,16 C28,10 26,6 24.5,6 C23.2,6 22,8 20,11 C18,8 16.8,6 15.5,6Z",
-    crownArea: "M14,39 C13,40 12,43 11.5,47 C11,51 11,55 11.5,59 C12,63 13.5,66 15.5,69 C17,71 18.5,72.5 20,73 C21.5,72.5 23,71 24.5,69 C26.5,66 28,63 28.5,59 C29,55 29,51 28.5,47 C28,43 27,40 26,39 Q23,37 20,36 Q17,37 14,39Z",
-    furcationArea: "M14,39 C15.5,36 17.5,34 20,33 C22.5,34 24.5,36 26,39 Q23,37 20,36 Q17,37 14,39Z",
-    innerHighlight: "M16,10 C14.8,10 13,14 12.2,20 C11.5,25 11.5,29 12,33 C12.5,35.5 13.5,37 15,38 Q17.5,37 20,36 Q22.5,37 25,38 C26.5,37 27.5,35.5 28,33 C28.5,29 28.5,25 27.8,20 C27,14 25.2,10 24,10 C23,10 22,12 20,14 C18,12 17,10 16,10Z",
-    cervical: "M14,39 Q17,37 20,36 Q23,37 26,39",
-    details: ["M14.5,57 Q17,52 20,55 Q23,52 25.5,57"],
+    outline: "M15,8 C13.5,8 12,12 11.5,17 C11,22 11,26 11.5,30 C12,33 12.5,35 14,37 Q17,35 20,34 Q23,35 26,37 C27.5,35 28,33 28.5,30 C29,26 29,22 28.5,17 C28,12 26.5,8 25,8 C23.5,8 22,11 20,15 C18,11 16.5,8 15,8Z M14,37 C13.5,40 13,43 12.5,47 C12,51 12,55 12.5,59 C13,62 14.5,65 16.5,68 C18,70 19.5,71 20,71.5 C20.5,71 22,70 23.5,68 C25.5,65 27,62 27.5,59 C28,55 28,51 27.5,47 C27,43 26.5,40 26,37 Q23,35 20,34 Q17,35 14,37Z",
+    crownArea: "M14,37 C13.5,40 13,43 12.5,47 C12,51 12,55 12.5,59 C13,62 14.5,65 16.5,68 C18,70 19.5,71 20,71.5 C20.5,71 22,70 23.5,68 C25.5,65 27,62 27.5,59 C28,55 28,51 27.5,47 C27,43 26.5,40 26,37 Q23,35 20,34 Q17,35 14,37Z",
+    furcationArea: "M11.5,30 C13,27 16,22 20,15 C24,22 27,27 28.5,30 C28,33 27.5,35 26,37 Q23,35 20,34 Q17,35 14,37 C12.5,35 12,33 11.5,30Z",
+    innerHighlight: "M16,12 C15,14 14,18 13.5,23 C13,26 13,29 13.5,32 C14,34 14.5,36 15.5,37 Q17.5,35.5 20,35 Q22.5,35.5 24.5,37 C25.5,36 26,34 26.5,32 C27,29 27,26 26.5,23 C26,18 25,14 24,12 C23,12 22,13 20,16 C18,13 17,12 16,12Z",
+    cervical: "M14,37 Q17,35 20,34 Q23,35 26,37",
+    details: ["M15,55 Q17.5,51 20,53 Q22.5,51 25,55"],
     rootLines: [
-      "M14,10 Q14.5,20 14,32",
-      "M26,10 Q25.5,20 26,32",
+      "M14,12 Q14.5,20 14,30",
+      "M26,12 Q25.5,20 26,30",
     ],
     cusps: [
-      "M14,59 L17,54 L20,56 L23,54 L26,59",
+      "M15,57 L17.5,53 L20,55 L22.5,53 L25,57",
     ],
   },
 };
@@ -240,6 +241,7 @@ export function SvgTooth({
             strokeWidth="0.8"
             strokeDasharray="3 2"
             opacity={0.35}
+            fillRule="evenodd"
           />
           {(!overlays || overlays.length === 0) && (
             <>
@@ -252,78 +254,76 @@ export function SvgTooth({
       ) : (
         <>
           <defs>
-            {/* Main body gradient - ivory/bone with root-specific darkening */}
+            {/* Main body gradient - root portion darker/more yellow */}
             <linearGradient id={`g-${id}`} x1="0.1" y1="0" x2="0.9" y2="1">
-              <stop offset="0%" stopColor="#e8dfc8" />
-              <stop offset="20%" stopColor="#e2d8b8" />
-              <stop offset="40%" stopColor="#ddd3b0" />
-              <stop offset="55%" stopColor="#d8ccaa" />
-              <stop offset="75%" stopColor="#d4c9a4" />
-              <stop offset="90%" stopColor="#c8bb94" />
-              <stop offset="100%" stopColor="#bfb088" />
+              <stop offset="0%" stopColor="#ddd5b8" />
+              <stop offset="25%" stopColor="#e0d8bc" />
+              <stop offset="45%" stopColor="#e5ddc4" />
+              <stop offset="60%" stopColor="#e8e0c8" />
+              <stop offset="80%" stopColor="#ebe5d0" />
+              <stop offset="100%" stopColor="#ede7d4" />
             </linearGradient>
 
             {/* Enamel cap - bright white sheen on CROWN only */}
             {shape.crownArea && (
-              <linearGradient id={`ce-${id}`} x1="0.5" y1="0.4" x2="0.5" y2="1">
-                <stop offset="0%" stopColor="white" stopOpacity="0.05" />
-                <stop offset="15%" stopColor="white" stopOpacity="0.18" />
-                <stop offset="40%" stopColor="white" stopOpacity="0.28" />
-                <stop offset="65%" stopColor="white" stopOpacity="0.2" />
-                <stop offset="85%" stopColor="white" stopOpacity="0.12" />
-                <stop offset="100%" stopColor="white" stopOpacity="0.06" />
+              <linearGradient id={`ce-${id}`} x1="0.5" y1="0.35" x2="0.5" y2="1">
+                <stop offset="0%" stopColor="white" stopOpacity="0.04" />
+                <stop offset="15%" stopColor="white" stopOpacity="0.16" />
+                <stop offset="35%" stopColor="white" stopOpacity="0.26" />
+                <stop offset="55%" stopColor="white" stopOpacity="0.22" />
+                <stop offset="75%" stopColor="white" stopOpacity="0.14" />
+                <stop offset="100%" stopColor="white" stopOpacity="0.08" />
               </linearGradient>
             )}
 
             {/* Left specular highlight */}
-            <linearGradient id={`h-${id}`} x1="0" y1="0.2" x2="0.6" y2="0.8">
-              <stop offset="0%" stopColor="white" stopOpacity="0.45" />
-              <stop offset="20%" stopColor="white" stopOpacity="0.18" />
-              <stop offset="50%" stopColor="white" stopOpacity="0.04" />
+            <linearGradient id={`h-${id}`} x1="0" y1="0.2" x2="0.65" y2="0.8">
+              <stop offset="0%" stopColor="white" stopOpacity="0.42" />
+              <stop offset="18%" stopColor="white" stopOpacity="0.16" />
+              <stop offset="45%" stopColor="white" stopOpacity="0.04" />
               <stop offset="100%" stopColor="white" stopOpacity="0" />
             </linearGradient>
 
             {/* Right edge shadow */}
             <linearGradient id={`rs2-${id}`} x1="1" y1="0.3" x2="0.3" y2="0.7">
-              <stop offset="0%" stopColor="#8a7c5e" stopOpacity="0.22" />
-              <stop offset="40%" stopColor="#8a7c5e" stopOpacity="0.07" />
+              <stop offset="0%" stopColor="#8a7c5e" stopOpacity="0.2" />
+              <stop offset="35%" stopColor="#8a7c5e" stopOpacity="0.06" />
               <stop offset="100%" stopColor="#8a7c5e" stopOpacity="0" />
             </linearGradient>
 
-            {/* Root darkening toward apex - roots appear darker/more yellow than crown */}
-            <linearGradient id={`rs-${id}`} x1="0.5" y1="0" x2="0.5" y2="0.55">
-              <stop offset="0%" stopColor="#9a8860" stopOpacity="0.35" />
-              <stop offset="50%" stopColor="#a09070" stopOpacity="0.12" />
+            {/* Root darkening toward apex */}
+            <linearGradient id={`rs-${id}`} x1="0.5" y1="0" x2="0.5" y2="0.5">
+              <stop offset="0%" stopColor="#9a8860" stopOpacity="0.3" />
+              <stop offset="40%" stopColor="#a09070" stopOpacity="0.12" />
               <stop offset="100%" stopColor="#a09070" stopOpacity="0" />
             </linearGradient>
 
             {/* Furcation depth shadow - gum-coloured radial gradient */}
             {shape.furcationArea && (
-              <radialGradient id={`fur-${id}`} cx="0.5" cy="0.7" r="0.5">
-                <stop offset="0%" stopColor="#c4908a" stopOpacity="0.5" />
-                <stop offset="40%" stopColor="#d4a098" stopOpacity="0.3" />
-                <stop offset="80%" stopColor="#e0bab2" stopOpacity="0.1" />
-                <stop offset="100%" stopColor="#e0bab2" stopOpacity="0" />
+              <radialGradient id={`fur-${id}`} cx="0.5" cy="0.6" r="0.5">
+                <stop offset="0%" stopColor="#c89888" stopOpacity="0.55" />
+                <stop offset="35%" stopColor="#d4a898" stopOpacity="0.35" />
+                <stop offset="70%" stopColor="#e0bab0" stopOpacity="0.12" />
+                <stop offset="100%" stopColor="#e0bab0" stopOpacity="0" />
               </radialGradient>
             )}
 
-            {/* Ambient occlusion - edge depth for 3D roundness */}
+            {/* Ambient occlusion */}
             <radialGradient id={`ao-${id}`} cx="0.5" cy="0.52" r="0.48">
               <stop offset="55%" stopColor="transparent" />
-              <stop offset="82%" stopColor="#7a6c50" stopOpacity="0.09" />
-              <stop offset="100%" stopColor="#7a6c50" stopOpacity="0.2" />
+              <stop offset="82%" stopColor="#7a6c50" stopOpacity="0.08" />
+              <stop offset="100%" stopColor="#7a6c50" stopOpacity="0.18" />
             </radialGradient>
 
-            {/* Inner body highlight for 3D volume */}
+            {/* Inner body highlight */}
             <radialGradient id={`ih-${id}`} cx="0.42" cy="0.55" r="0.35" fx="0.38" fy="0.5">
-              <stop offset="0%" stopColor="white" stopOpacity="0.2" />
-              <stop offset="50%" stopColor="white" stopOpacity="0.06" />
+              <stop offset="0%" stopColor="white" stopOpacity="0.18" />
+              <stop offset="50%" stopColor="white" stopOpacity="0.05" />
               <stop offset="100%" stopColor="white" stopOpacity="0" />
             </radialGradient>
 
-            {/* Clip for inner highlight */}
             <clipPath id={`clip-${id}`}>
-              <path d={shape.outline} />
+              <path d={shape.outline} fillRule="evenodd" />
             </clipPath>
           </defs>
 
@@ -331,7 +331,8 @@ export function SvgTooth({
             {/* Soft drop shadow */}
             <path
               d={shape.outline}
-              fill="rgba(0,0,0,0.06)"
+              fill="rgba(0,0,0,0.05)"
+              fillRule="evenodd"
               transform="translate(0.8, 1.5)"
             />
 
@@ -339,24 +340,25 @@ export function SvgTooth({
             <path
               d={shape.outline}
               fill={`url(#g-${id})`}
-              stroke="#b0a278"
+              fillRule="evenodd"
+              stroke="#b5a878"
               strokeWidth="0.5"
               strokeLinejoin="round"
             />
 
-            {/* Root darkening - roots are darker/more yellow */}
-            <path d={shape.outline} fill={`url(#rs-${id})`} />
+            {/* Root darkening */}
+            <path d={shape.outline} fill={`url(#rs-${id})`} fillRule="evenodd" />
 
-            {/* Furcation depth shadow between separated roots */}
+            {/* Furcation depth shadow */}
             {shape.furcationArea && (
               <path d={shape.furcationArea} fill={`url(#fur-${id})`} />
             )}
 
             {/* Right edge shadow */}
-            <path d={shape.outline} fill={`url(#rs2-${id})`} />
+            <path d={shape.outline} fill={`url(#rs2-${id})`} fillRule="evenodd" />
 
-            {/* Ambient occlusion (edge depth) */}
-            <path d={shape.outline} fill={`url(#ao-${id})`} />
+            {/* Ambient occlusion */}
+            <path d={shape.outline} fill={`url(#ao-${id})`} fillRule="evenodd" />
 
             {/* Inner volume highlight */}
             {shape.innerHighlight && (
@@ -365,40 +367,40 @@ export function SvgTooth({
               </g>
             )}
 
-            {/* Enamel cap - bright sheen on crown portion ONLY */}
+            {/* Enamel cap on crown ONLY */}
             {shape.crownArea && (
               <path d={shape.crownArea} fill={`url(#ce-${id})`} />
             )}
 
             {/* Left specular highlight */}
-            <path d={shape.outline} fill={`url(#h-${id})`} />
+            <path d={shape.outline} fill={`url(#h-${id})`} fillRule="evenodd" />
 
-            {/* Root canal lines (subtle internal anatomy) */}
+            {/* Root canal lines */}
             {shape.rootLines?.map((line, i) => (
               <path
                 key={`rl-${i}`}
                 d={line}
                 fill="none"
-                stroke="#b8a880"
+                stroke="#c0b088"
                 strokeWidth="0.35"
                 strokeLinecap="round"
-                opacity={0.22}
+                opacity={0.2}
               />
             ))}
 
-            {/* Cervical line - anatomical neck between root and crown */}
+            {/* Cervical line */}
             {shape.cervical && (
               <path
                 d={shape.cervical}
                 fill="none"
                 stroke="#a89870"
-                strokeWidth="0.8"
+                strokeWidth="0.75"
                 strokeLinecap="round"
-                opacity={0.55}
+                opacity={0.5}
               />
             )}
 
-            {/* Cusp ridges on crown */}
+            {/* Cusp ridges */}
             {shape.cusps?.map((cusp, i) => (
               <path
                 key={`cusp-${i}`}
@@ -408,11 +410,11 @@ export function SvgTooth({
                 strokeWidth="0.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                opacity={0.4}
+                opacity={0.38}
               />
             ))}
 
-            {/* Anatomical details (fissures/grooves) */}
+            {/* Fissures/grooves */}
             {shape.details?.map((detail, i) => (
               <path
                 key={i}
@@ -421,7 +423,7 @@ export function SvgTooth({
                 stroke="#a08858"
                 strokeWidth="0.5"
                 strokeLinecap="round"
-                opacity={0.4}
+                opacity={0.38}
               />
             ))}
 
@@ -430,6 +432,7 @@ export function SvgTooth({
               <path
                 d={shape.outline}
                 fill={statusColor}
+                fillRule="evenodd"
                 opacity={isHovered ? 0.4 : 0.25}
               />
             )}
@@ -443,7 +446,6 @@ export function SvgTooth({
   );
 }
 
-// Get appropriate dimensions based on tooth type
 export function getToothDimensions(toothNumber: number, isDeciduous: boolean = false) {
   if (isDeciduous) {
     return { width: 62, height: 86 };
