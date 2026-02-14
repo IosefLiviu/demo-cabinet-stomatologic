@@ -346,7 +346,23 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
         <div
           onMouseEnter={() => setHoveredTooth(toothNumber)}
           onMouseLeave={() => setHoveredTooth(null)}
-          onClick={() => { setSelectedTooth(prev => prev === toothNumber ? null : toothNumber); setSelectedGroup([]); }}
+          onClick={() => {
+            // Multi-select: toggle tooth in selectedGroup
+            setSelectedGroup(prev => {
+              if (prev.includes(toothNumber)) {
+                const next = prev.filter(t => t !== toothNumber);
+                // If removing the primary selectedTooth, pick next one or null
+                if (selectedTooth === toothNumber) {
+                  setSelectedTooth(next.length > 0 ? next[0] : null);
+                }
+                return next;
+              } else {
+                // Add to group and make it the primary selected
+                setSelectedTooth(toothNumber);
+                return [...prev, toothNumber];
+              }
+            });
+          }}
           className={cn(
             'relative flex items-center justify-center cursor-pointer',
             'transition-all duration-300 ease-out',
@@ -443,11 +459,12 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
               <QuadrantCircle
                 selectedTeeth={selectedGroup}
                 onZoneClick={(teeth) => {
-                  setSelectedTooth(null);
                   if (selectedGroup.length === teeth.length && teeth.every(t => selectedGroup.includes(t))) {
                     setSelectedGroup([]);
+                    setSelectedTooth(null);
                   } else {
                     setSelectedGroup(teeth);
+                    setSelectedTooth(teeth[0]);
                   }
                 }}
                 size={130}
@@ -473,6 +490,20 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             </div>
           </div>
 
+          {/* Selection indicator */}
+          {selectedGroup.length > 1 && (
+            <div className="text-center text-xs text-muted-foreground pt-2">
+              <span className="font-medium text-foreground">{selectedGroup.length}</span> dinți selectați: {selectedGroup.sort((a, b) => a - b).join(', ')}
+              <button
+                type="button"
+                onClick={() => { setSelectedGroup([]); setSelectedTooth(null); }}
+                className="ml-2 text-primary hover:underline"
+              >
+                Deselectează tot
+              </button>
+            </div>
+          )}
+
           {/* Jurnal per dinte - shown below chart when a tooth is selected */}
           {selectedTooth && (
             <ToothJournalSection patientId={patientId} toothNumber={selectedTooth} refreshKey={journalKey} />
@@ -485,6 +516,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             <ToothDetailPanel
               patientId={patientId}
               toothNumber={selectedTooth}
+              selectedTeeth={selectedGroup}
               toothStatus={selectedToothStatus}
               statusColor={selectedToothColor}
               conditions={toothConditions}
@@ -496,7 +528,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
               onRemoveCondition={handleRemoveCondition}
               onAddIntervention={handleAddIntervention}
               onRemoveIntervention={handleRemoveIntervention}
-              onClose={() => setSelectedTooth(null)}
+              onClose={() => { setSelectedTooth(null); setSelectedGroup([]); }}
             />
           </div>
         )}
