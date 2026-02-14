@@ -805,56 +805,11 @@ export function InterventionSelector({
                 <div className="p-3 space-y-4 border-t">
                   {/* Mini Dental Chart for tooth selection */}
                   <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">Selectează dinții (click = toggle, dublu-click = detalii)</Label>
+                    <Label className="text-xs text-muted-foreground">Selectează dinții</Label>
                     <div className="bg-muted/30 rounded-lg p-2">
                       <MiniToothSelector
                         selectedTeeth={intervention.selectedTeeth}
                         onToothClick={(toothNumber) => handleQuickToggleTooth(intervention.id, toothNumber)}
-                        onToothDoubleClick={(toothNumber) => openToothDialog(intervention.id, toothNumber)}
-                        onConditionSelect={async (toothNumber, conditionId, conditionCode) => {
-                          if (!patientId) return;
-                          
-                          // Insert into tooth_conditions table
-                          const { error } = await supabase.from('tooth_conditions').insert({
-                            patient_id: patientId,
-                            tooth_number: toothNumber,
-                            condition_id: conditionId,
-                          });
-                          
-                          if (error) {
-                            if (error.code === '23505') {
-                              console.log('Condition already exists on this tooth');
-                            } else {
-                              console.error('Error adding tooth condition:', error);
-                            }
-                            return;
-                          }
-
-                          // Also log to dental_status_history for tracking
-                          await supabase.from('dental_status_history').insert({
-                            patient_id: patientId,
-                            tooth_number: toothNumber,
-                            new_status: conditionCode,
-                            notes: `Afecțiune adăugată din programare`,
-                          });
-
-                          // Refresh tooth condition codes to update overlays
-                          const { data: condData } = await supabase
-                            .from('tooth_conditions')
-                            .select('tooth_number, condition:dental_conditions(code)')
-                            .eq('patient_id', patientId);
-                          if (condData) {
-                            const codeMap: Record<number, string[]> = {};
-                            (condData as any[]).forEach((tc) => {
-                              const code = tc.condition?.code;
-                              if (code) {
-                                if (!codeMap[tc.tooth_number]) codeMap[tc.tooth_number] = [];
-                                codeMap[tc.tooth_number].push(code);
-                              }
-                            });
-                            setToothConditionCodes(codeMap);
-                          }
-                        }}
                         toothConditionCodes={toothConditionCodes}
                         patientDentalStatus={patientDentalStatus}
                         getStatusHexColor={getStatusHexColor}
