@@ -7,6 +7,7 @@ import { Cabinet } from '@/hooks/useCabinets';
 import { DoctorShift } from '@/hooks/useDoctorShifts';
 import { Doctor } from '@/hooks/useDoctors';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Tooltip,
   TooltipContent,
@@ -62,6 +63,7 @@ export function TimeSlotGrid({
   const gridRef = useRef<HTMLDivElement>(null);
   const [currentTimeTop, setCurrentTimeTop] = useState<number | null>(null);
   const [currentTimeLabel, setCurrentTimeLabel] = useState(() => format(new Date(), 'HH:mm'));
+  const isMobile = useIsMobile();
 
   const cabinetsToShow = selectedCabinet
     ? cabinets.filter((c) => c.id === selectedCabinet)
@@ -231,7 +233,7 @@ export function TimeSlotGrid({
   return (
     <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
       {/* Outer scroll container for horizontal scroll on mobile */}
-      <div className="overflow-x-auto relative" ref={gridRef}>
+      <div className={cn("overflow-x-auto relative", isMobile && "mobile-scroll-hint")} ref={gridRef}>
         {/* Current time indicator */}
         {isToday && currentTimeTop !== null && (
           <div
@@ -288,14 +290,14 @@ export function TimeSlotGrid({
                 <>
                   <div 
                     key={`doctors-time-${time}`}
-                    className="h-[24px] flex items-center justify-center text-[10px] font-medium text-muted-foreground border-r border-b border-border bg-muted/30"
+                    className={cn("flex items-center justify-center text-[10px] font-medium text-muted-foreground border-r border-b border-border bg-muted/30", isMobile ? "h-[28px]" : "h-[24px]")}
                   >
                     {time}
                   </div>
                   {cabinetsToShow.map((cabinet) => (
                     <div
                       key={`doctors-${time}-${cabinet.id}`}
-                      className="h-[24px] flex items-center gap-1 px-2 border-r border-b border-border last:border-r-0 bg-primary/5"
+                      className={cn("flex items-center gap-1 px-2 border-r border-b border-border last:border-r-0 bg-primary/5", isMobile ? "h-[28px]" : "h-[24px]")}
                     >
                       <Users className="h-3 w-3 text-primary/60 flex-shrink-0" />
                       <span className="text-[10px] font-medium text-foreground truncate">
@@ -310,7 +312,7 @@ export function TimeSlotGrid({
               <div 
                 key={`time-${time}`}
                 data-time-slot={time}
-                className="h-[26px] flex items-center justify-center text-[9px] font-medium text-muted-foreground border-r border-b border-border bg-muted/30"
+                className={cn("flex items-center justify-center text-[9px] font-medium text-muted-foreground border-r border-b border-border bg-muted/30", isMobile ? "h-[32px]" : "h-[26px]")}
               >
                 {time.endsWith(':00') ? time : ''}
               </div>
@@ -348,7 +350,8 @@ export function TimeSlotGrid({
                     <div
                       key={`${time}-${cabinet.id}`}
                       className={cn(
-                        "border-r last:border-r-0 h-[26px] min-w-0 overflow-hidden px-0.5",
+                        "border-r last:border-r-0 min-w-0 overflow-hidden px-0.5",
+                        isMobile ? "h-[32px]" : "h-[26px]",
                         isLastContinuationSlot && "border-b border-border"
                       )}
                     >
@@ -399,7 +402,8 @@ export function TimeSlotGrid({
                   <div
                     key={`${time}-${cabinet.id}`}
                     className={cn(
-                      "border-r last:border-r-0 h-[26px] min-w-0 overflow-hidden",
+                      "border-r last:border-r-0 min-w-0 overflow-hidden",
+                      isMobile ? "h-[32px]" : "h-[26px]",
                       "px-0.5",
                       // Add bottom border unless this is the start of a multi-slot appointment
                       !(appointmentStarting && isMultiSlot) && "border-b border-border",
@@ -448,7 +452,7 @@ export function TimeSlotGrid({
                              )}>
                                {appointmentStarting.patientName}
                              </span>
-                             <span className="text-xs font-bold text-foreground/80 truncate hidden sm:inline min-w-0">
+                             <span className="text-[10px] sm:text-xs font-bold text-foreground/80 truncate min-w-0">
                                • {appointmentStarting.treatment}
                              </span>
                             {/* Notes shown only on continuation row below to avoid duplication */}
@@ -466,7 +470,7 @@ export function TimeSlotGrid({
                           )}
                         </button>
                         {appointmentStarting.status !== 'completed' && appointmentStarting.status !== 'cancelled' && (
-                          <div className="flex gap-0.5 flex-shrink-0">
+                          <div className="flex gap-0.5 sm:gap-0.5 flex-shrink-0">
                             {onAppointmentComplete && (
                               <TooltipProvider>
                                 <Tooltip>
@@ -476,9 +480,12 @@ export function TimeSlotGrid({
                                         e.stopPropagation();
                                         onAppointmentComplete(appointmentStarting.id);
                                       }}
-                                      className="p-0.5 rounded hover:bg-green-200 dark:hover:bg-green-800 transition-colors"
+                                      className={cn(
+                                        "rounded hover:bg-green-200 dark:hover:bg-green-800 transition-colors",
+                                        isMobile ? "p-1.5" : "p-0.5"
+                                      )}
                                     >
-                                      <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600" />
+                                      <CheckCircle2 className={cn(isMobile ? "h-4.5 w-4.5" : "h-3.5 w-3.5 sm:h-4 sm:w-4", "text-green-600")} />
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -496,9 +503,12 @@ export function TimeSlotGrid({
                                         e.stopPropagation();
                                         onAppointmentCancel(appointmentStarting.id);
                                       }}
-                                      className="p-0.5 rounded hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
+                                      className={cn(
+                                        "rounded hover:bg-red-200 dark:hover:bg-red-800 transition-colors",
+                                        isMobile ? "p-1.5" : "p-0.5"
+                                      )}
                                     >
-                                      <XCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-500" />
+                                      <XCircle className={cn(isMobile ? "h-4.5 w-4.5" : "h-3.5 w-3.5 sm:h-4 sm:w-4", "text-red-500")} />
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent>

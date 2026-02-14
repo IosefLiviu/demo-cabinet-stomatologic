@@ -879,14 +879,14 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
     <Sheet open={open} onOpenChange={onClose}>
       <SheetContent className="w-full sm:max-w-[95vw] xl:max-w-[1400px] overflow-y-auto p-0">
         {/* Modern Header Bar */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-6 py-4">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-3 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20">
-                <User className="h-7 w-7 text-primary" />
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+              <div className="flex h-10 w-10 sm:h-14 sm:w-14 items-center justify-center rounded-xl sm:rounded-2xl bg-primary/10 border border-primary/20 shrink-0">
+                <User className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-foreground tracking-tight">
+              <div className="min-w-0">
+                <h2 className="text-base sm:text-xl font-bold text-foreground tracking-tight truncate">
                   {patient.last_name} {patient.first_name}
                 </h2>
                 <div className="flex items-center gap-3 mt-0.5">
@@ -941,7 +941,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
           </div>
         </div>
 
-        <div className="px-6 py-6 space-y-6">
+        <div className="px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
           {/* Patient Info - Two Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Contact Info */}
@@ -1069,7 +1069,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                 onClose();
               }
             }}>
-              <DialogContent className="max-w-[98vw] w-full h-[95vh] max-h-[95vh] overflow-y-auto p-6">
+              <DialogContent className="max-w-[98vw] w-full h-[95vh] max-h-[95vh] overflow-y-auto p-3 sm:p-6">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Stethoscope className="h-5 w-5" />
@@ -1088,7 +1088,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
           {/* Radiographs - Full Screen Dialog */}
           {showRadiographsFullscreen && (
             <Dialog open={showRadiographsFullscreen} onOpenChange={setShowRadiographsFullscreen}>
-              <DialogContent className="max-w-[98vw] w-full h-[95vh] max-h-[95vh] overflow-y-auto p-6">
+              <DialogContent className="max-w-[98vw] w-full h-[95vh] max-h-[95vh] overflow-y-auto p-3 sm:p-6">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <FileImage className="h-5 w-5" />
@@ -1106,7 +1106,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
           {/* Treatment Plans - Full Screen Dialog */}
           {showPlansFullscreen && (
             <Dialog open={showPlansFullscreen} onOpenChange={setShowPlansFullscreen}>
-              <DialogContent className="max-w-[98vw] w-full h-[95vh] max-h-[95vh] overflow-y-auto p-6">
+              <DialogContent className="max-w-[98vw] w-full h-[95vh] max-h-[95vh] overflow-y-auto p-3 sm:p-6">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <ClipboardList className="h-5 w-5" />
@@ -1182,15 +1182,15 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                               <CollapsibleContent>
                                 <div className="p-4 border-t space-y-3">
 
-                                  <div className="border rounded-lg overflow-hidden">
-                                    <table className="w-full text-sm">
+                                  <div className="border rounded-lg overflow-hidden overflow-x-auto">
+                                    <table className="w-full text-xs sm:text-sm min-w-[480px]">
                                       <thead>
                                         <tr className="bg-muted/50">
-                                          <th className="px-3 py-2 text-left font-medium">Dinte</th>
-                                          <th className="px-3 py-2 text-left font-medium">Tratament</th>
-                                          <th className="px-3 py-2 text-center font-medium">Cant.</th>
-                                          <th className="px-3 py-2 text-right font-medium">De plată</th>
-                                          <th className="px-3 py-2 text-center font-medium">Status</th>
+                                          <th className="px-2 sm:px-3 py-2 text-left font-medium">Dinte</th>
+                                          <th className="px-2 sm:px-3 py-2 text-left font-medium">Tratament</th>
+                                          <th className="px-2 sm:px-3 py-2 text-center font-medium">Cant.</th>
+                                          <th className="px-2 sm:px-3 py-2 text-right font-medium">De plată</th>
+                                          <th className="px-2 sm:px-3 py-2 text-center font-medium">Status</th>
                                         </tr>
                                       </thead>
                                       <tbody>
@@ -1275,7 +1275,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                                   </div>
 
                                   {/* Actions */}
-                                  <div className="flex justify-end gap-2 pt-2">
+                                  <div className="flex flex-wrap justify-end gap-2 pt-2">
                                     {onCreateAppointment && patient && (
                                       <Button
                                         variant="default"

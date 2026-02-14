@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { getToothImage } from './toothImages';
 import { cleanDentalNotes } from '@/lib/cleanDentalNotes';
 
@@ -79,6 +80,7 @@ const lowerDeciduousTeeth = [85, 84, 83, 82, 81, 71, 72, 73, 74, 75];
 
 export function Enhanced3DDentalChart({ dentalStatus, onToothClick, readonly = false }: Enhanced3DDentalChartProps) {
   const [hoveredTooth, setHoveredTooth] = useState<number | null>(null);
+  const isMobile = useIsMobile();
 
   const getToothStatus = (toothNumber: number): ToothStatus => {
     const tooth = dentalStatus.find((t) => t.tooth_number === toothNumber);
@@ -131,10 +133,10 @@ export function Enhanced3DDentalChart({ dentalStatus, onToothClick, readonly = f
             isHovered && statusBorderColors[status],
             status !== 'healthy' && status !== 'missing' && 'ring-2',
             status !== 'healthy' && status !== 'missing' && statusBorderColors[status],
-            // Size based on tooth type - larger for better 3D effect
-            isDeciduous 
-              ? 'w-10 h-12 sm:w-11 sm:h-14' 
-              : 'w-11 h-14 sm:w-13 sm:h-16'
+            // Size based on tooth type - larger touch targets on mobile
+            isDeciduous
+              ? 'w-9 h-11 xs:w-10 xs:h-12 sm:w-11 sm:h-14'
+              : 'w-10 h-12 xs:w-11 xs:h-14 sm:w-13 sm:h-16'
           )}
           style={{
             transform: isHovered 
@@ -257,12 +259,12 @@ export function Enhanced3DDentalChart({ dentalStatus, onToothClick, readonly = f
   return (
     <div className="space-y-6">
       {/* Enhanced Legend with 3D effect */}
-      <div className="flex flex-wrap justify-center gap-2 text-xs">
+      <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 text-xs px-1 sm:px-0">
         {Object.entries(statusLabels).map(([status, label]) => (
           <div
             key={status}
             className={cn(
-              'px-3 py-1.5 rounded-lg border-2 flex items-center gap-2',
+              'px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg border-2 flex items-center gap-1.5 sm:gap-2',
               'shadow-sm transition-all duration-200 hover:scale-105',
               'cursor-default',
               status === 'healthy' && 'bg-success/20 border-success text-success',
@@ -295,75 +297,94 @@ export function Enhanced3DDentalChart({ dentalStatus, onToothClick, readonly = f
       </div>
 
       {/* 3D Dental Chart Container */}
-      <div 
-        className="relative rounded-2xl p-6 overflow-hidden"
+      <div
+        className={cn(
+          "relative rounded-2xl p-3 sm:p-6 overflow-hidden",
+          isMobile && "mobile-scroll-hint"
+        )}
         style={{
           background: 'linear-gradient(180deg, hsl(var(--muted)/0.3) 0%, hsl(var(--muted)/0.1) 100%)',
           boxShadow: 'inset 0 2px 20px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1)',
         }}
       >
         {/* Ambient light effect */}
-        <div 
+        <div
           className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 pointer-events-none"
           style={{
             background: 'radial-gradient(ellipse at center top, rgba(255,255,255,0.15) 0%, transparent 70%)',
           }}
         />
 
-        <div className="space-y-4 relative z-10">
-          {/* Upper jaw - permanent teeth */}
-          <div className="space-y-2">
-            <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase">
-              Maxilar Superior — Dinți Permanenți
+        {/* Scrollable container for mobile */}
+        <div className={cn(
+          "relative z-10",
+          isMobile && "overflow-x-auto pb-2 scrollbar-hide"
+        )}>
+          <div className={cn(
+            "space-y-4",
+            isMobile && "min-w-[580px]"
+          )}>
+            {/* Upper jaw - permanent teeth */}
+            <div className="space-y-2">
+              <div className="text-[10px] sm:text-xs font-medium text-muted-foreground text-center tracking-wide uppercase">
+                Maxilar Superior — Dinți Permanenți
+              </div>
+              <div className="flex justify-center gap-0.5 sm:gap-1">
+                {upperTeeth.map((tooth) => renderTooth(tooth, false, false))}
+              </div>
             </div>
-            <div className="flex justify-center gap-1">
-              {upperTeeth.map((tooth) => renderTooth(tooth, false, false))}
-            </div>
-          </div>
 
-          {/* Upper jaw - deciduous teeth */}
-          <div className="space-y-2 mt-4">
-            <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase opacity-70">
-              Dinți Temporari — Superior
+            {/* Upper jaw - deciduous teeth */}
+            <div className="space-y-2 mt-3 sm:mt-4">
+              <div className="text-[10px] sm:text-xs font-medium text-muted-foreground text-center tracking-wide uppercase opacity-70">
+                Dinți Temporari — Superior
+              </div>
+              <div className="flex justify-center gap-0.5 sm:gap-1">
+                {upperDeciduousTeeth.map((tooth) => renderTooth(tooth, true, false))}
+              </div>
             </div>
-            <div className="flex justify-center gap-1">
-              {upperDeciduousTeeth.map((tooth) => renderTooth(tooth, true, false))}
-            </div>
-          </div>
 
-          {/* Enhanced Divider with glow */}
-          <div className="flex justify-center py-4">
-            <div 
-              className="w-full max-w-3xl h-px"
-              style={{
-                background: 'linear-gradient(90deg, transparent 0%, hsl(var(--muted-foreground)/0.3) 20%, hsl(var(--muted-foreground)/0.5) 50%, hsl(var(--muted-foreground)/0.3) 80%, transparent 100%)',
-              }}
-            />
-          </div>
+            {/* Enhanced Divider with glow */}
+            <div className="flex justify-center py-2 sm:py-4">
+              <div
+                className="w-full max-w-3xl h-px"
+                style={{
+                  background: 'linear-gradient(90deg, transparent 0%, hsl(var(--muted-foreground)/0.3) 20%, hsl(var(--muted-foreground)/0.5) 50%, hsl(var(--muted-foreground)/0.3) 80%, transparent 100%)',
+                }}
+              />
+            </div>
 
-          {/* Lower jaw - deciduous teeth */}
-          <div className="space-y-2">
-            <div className="flex justify-center gap-1">
-              {lowerDeciduousTeeth.map((tooth) => renderTooth(tooth, true, true))}
+            {/* Lower jaw - deciduous teeth */}
+            <div className="space-y-2">
+              <div className="flex justify-center gap-0.5 sm:gap-1">
+                {lowerDeciduousTeeth.map((tooth) => renderTooth(tooth, true, true))}
+              </div>
+              <div className="text-[10px] sm:text-xs font-medium text-muted-foreground text-center tracking-wide uppercase opacity-70">
+                Dinți Temporari — Inferior
+              </div>
             </div>
-            <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase opacity-70">
-              Dinți Temporari — Inferior
-            </div>
-          </div>
 
-          {/* Lower jaw - permanent teeth */}
-          <div className="space-y-2 mt-4">
-            <div className="flex justify-center gap-1">
-              {lowerTeeth.map((tooth) => renderTooth(tooth, false, true))}
-            </div>
-            <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase">
-              Maxilar Inferior — Dinți Permanenți
+            {/* Lower jaw - permanent teeth */}
+            <div className="space-y-2 mt-3 sm:mt-4">
+              <div className="flex justify-center gap-0.5 sm:gap-1">
+                {lowerTeeth.map((tooth) => renderTooth(tooth, false, true))}
+              </div>
+              <div className="text-[10px] sm:text-xs font-medium text-muted-foreground text-center tracking-wide uppercase">
+                Maxilar Inferior — Dinți Permanenți
+              </div>
             </div>
           </div>
         </div>
 
+        {/* Swipe hint for mobile */}
+        {isMobile && (
+          <div className="text-center mt-2">
+            <span className="text-[10px] text-muted-foreground/60">← Glisează pentru a vedea toți dinții →</span>
+          </div>
+        )}
+
         {/* Bottom shadow gradient */}
-        <div 
+        <div
           className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none"
           style={{
             background: 'linear-gradient(to top, hsl(var(--muted)/0.2) 0%, transparent 100%)',
