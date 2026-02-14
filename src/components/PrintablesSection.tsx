@@ -76,28 +76,30 @@ export function PrintablesSection({ patients, doctors }: PrintablesSectionProps)
   };
 
   return (
-    <div className="flex gap-4 min-h-[600px]">
-      {/* Sidebar */}
-      <nav className="w-56 shrink-0 rounded-lg border bg-card p-2 space-y-1">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeItem === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveItem(item.id)}
-              className={cn(
-                'flex items-center gap-2.5 w-full rounded-md px-3 py-2.5 text-sm font-medium transition-colors text-left',
-                isActive
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-              )}
-            >
-              <Icon className={`h-4 w-4 shrink-0 ${isActive ? '' : item.iconColor || ''}`} />
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
+    <div className="flex flex-col md:flex-row gap-4 min-h-[600px]">
+      {/* Sidebar - horizontal scroll on mobile, vertical on desktop */}
+      <nav className="md:w-56 shrink-0 rounded-lg border bg-card p-2 overflow-x-auto md:overflow-x-visible scrollbar-hide">
+        <div className="flex md:flex-col gap-1 md:gap-1 min-w-max md:min-w-0">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeItem === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveItem(item.id)}
+                className={cn(
+                  'flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 md:py-2.5 text-xs md:text-sm font-medium transition-colors text-left',
+                  isActive
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                )}
+              >
+                <Icon className={`h-4 w-4 shrink-0 ${isActive ? '' : item.iconColor || ''}`} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </nav>
 
       {/* Content */}

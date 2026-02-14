@@ -898,8 +898,8 @@ export function InterventionSelector({
           })}
 
           {/* Totals */}
-          <div className="bg-muted/50 rounded-lg p-3">
-            <div className="grid grid-cols-6 gap-2 text-sm">
+          <div className="bg-muted/50 rounded-lg p-3 overflow-x-auto scrollbar-hide">
+            <div className="grid grid-cols-6 gap-2 text-sm min-w-[500px] sm:min-w-0">
               <div className="font-bold">TOTAL</div>
               <div className="text-right font-bold">{totalPretInitial.toFixed(2)} lei</div>
               <div className="text-right font-bold text-purple-600">{totalLaborator.toFixed(2)} lei</div>

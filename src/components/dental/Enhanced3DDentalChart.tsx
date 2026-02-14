@@ -135,8 +135,8 @@ export function Enhanced3DDentalChart({ dentalStatus, onToothClick, readonly = f
             status !== 'healthy' && status !== 'missing' && statusBorderColors[status],
             // Size based on tooth type - larger touch targets on mobile
             isDeciduous
-              ? 'w-9 h-11 xs:w-10 xs:h-12 sm:w-11 sm:h-14'
-              : 'w-10 h-12 xs:w-11 xs:h-14 sm:w-13 sm:h-16'
+              ? 'w-7 h-9 sm:w-11 sm:h-14'
+              : 'w-8 h-10 sm:w-13 sm:h-16'
           )}
           style={{
             transform: isHovered 
@@ -298,10 +298,7 @@ export function Enhanced3DDentalChart({ dentalStatus, onToothClick, readonly = f
 
       {/* 3D Dental Chart Container */}
       <div
-        className={cn(
-          "relative rounded-2xl p-3 sm:p-6 overflow-hidden",
-          isMobile && "mobile-scroll-hint"
-        )}
+        className="relative rounded-2xl p-3 sm:p-6 overflow-hidden"
         style={{
           background: 'linear-gradient(180deg, hsl(var(--muted)/0.3) 0%, hsl(var(--muted)/0.1) 100%)',
           boxShadow: 'inset 0 2px 20px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1)',
@@ -316,14 +313,8 @@ export function Enhanced3DDentalChart({ dentalStatus, onToothClick, readonly = f
         />
 
         {/* Scrollable container for mobile */}
-        <div className={cn(
-          "relative z-10",
-          isMobile && "overflow-x-auto pb-2 scrollbar-hide"
-        )}>
-          <div className={cn(
-            "space-y-4",
-            isMobile && "min-w-[580px]"
-          )}>
+        <div className="relative z-10">
+          <div className="space-y-4">
             {/* Upper jaw - permanent teeth */}
             <div className="space-y-2">
               <div className="text-[10px] sm:text-xs font-medium text-muted-foreground text-center tracking-wide uppercase">
@@ -375,13 +366,6 @@ export function Enhanced3DDentalChart({ dentalStatus, onToothClick, readonly = f
             </div>
           </div>
         </div>
-
-        {/* Swipe hint for mobile */}
-        {isMobile && (
-          <div className="text-center mt-2">
-            <span className="text-[10px] text-muted-foreground/60">← Glisează pentru a vedea toți dinții →</span>
-          </div>
-        )}
 
         {/* Bottom shadow gradient */}
         <div

@@ -285,8 +285,8 @@ export function DoctorScheduleManagement({
       <div
         key={day.toISOString()}
         className={cn(
-      "border border-border/50 p-2 transition-colors",
-          isMonthView ? "min-h-[120px]" : "min-h-[160px]",
+      "border border-border/50 p-1 sm:p-2 transition-colors",
+          isMonthView ? "min-h-[80px] sm:min-h-[120px]" : "min-h-[100px] sm:min-h-[160px]",
           !inCurrentMonth && "bg-muted/20",
           today && "bg-primary/5 ring-1 ring-primary/30 ring-inset",
         )}
@@ -323,8 +323,8 @@ export function DoctorScheduleManagement({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div
-                      className={cn(
-                        "rounded-md px-2 py-1.5 text-sm leading-snug cursor-default group relative",
+                     className={cn(
+                        "rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 text-xs sm:text-sm leading-snug cursor-default group relative",
                         "transition-all hover:ring-1 hover:ring-offset-1",
                         isMonthView ? "truncate" : ""
                       )}
@@ -488,18 +488,18 @@ export function DoctorScheduleManagement({
 
           {/* Calendar Grid */}
           {viewMode === 'week' ? (
-            <Card className="overflow-hidden">
-              <CardContent className="p-0">
+            <Card className="overflow-hidden overflow-x-auto scrollbar-hide">
+              <CardContent className="p-0 min-w-[600px] sm:min-w-0">
                 {/* Week header */}
                 <div className="grid grid-cols-7 border-b bg-muted/30">
                   {weekDays.map(day => (
                     <div key={day.toISOString()} className={cn(
-                      "px-3 py-3 text-center font-medium border-r last:border-r-0",
+                      "px-1 sm:px-3 py-2 sm:py-3 text-center font-medium border-r last:border-r-0",
                       isToday(day) ? "text-primary bg-primary/5" : "text-muted-foreground"
                     )}>
-                      <div className="uppercase tracking-wider text-xs">{format(day, 'EEE', { locale: ro })}</div>
+                      <div className="uppercase tracking-wider text-[10px] sm:text-xs">{format(day, 'EEE', { locale: ro })}</div>
                       <div className={cn(
-                        "text-2xl font-bold mt-0.5",
+                        "text-lg sm:text-2xl font-bold mt-0.5",
                         isToday(day) ? "text-primary" : "text-foreground"
                       )}>
                         {format(day, 'd')}
