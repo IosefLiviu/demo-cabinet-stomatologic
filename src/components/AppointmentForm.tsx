@@ -636,14 +636,14 @@ export function AppointmentForm({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-[850px] h-[90vh] max-h-[90vh] overflow-hidden flex flex-col p-3 sm:p-6">
+      <DialogContent className="w-[95vw] max-w-[850px] h-[90vh] max-h-[90vh] overflow-hidden flex flex-col p-2 sm:p-6">
         <DialogHeader className="pb-2 sm:pb-4">
           <DialogTitle className="text-base sm:text-lg">
             {editingAppointment ? 'Editare programare' : 'Programare nouă'}
           </DialogTitle>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 -mx-3 sm:-mx-6 px-3 sm:px-6">
+        <ScrollArea className="flex-1 -mx-2 sm:-mx-6 px-2 sm:px-6">
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 pb-4">
             {/* Patient Selection */}
             <div className="space-y-2">
@@ -920,8 +920,8 @@ export function AppointmentForm({
             )}
 
             {/* Cabinet, Doctor, Time - Horizontal scroll on mobile */}
-            <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
-              <div className="grid gap-3 sm:gap-4 grid-cols-3 min-w-[400px] sm:min-w-0">
+            <div className="overflow-x-auto -mx-2 sm:mx-0 px-2 sm:px-0">
+              <div className="grid gap-3 sm:gap-4 grid-cols-3 min-w-[360px] sm:min-w-0">
                 <div className="space-y-1.5">
                   <Label htmlFor="cabinet" className="text-xs sm:text-sm">Cabinet *</Label>
                   <Select
