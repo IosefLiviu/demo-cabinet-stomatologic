@@ -58,7 +58,7 @@ export function PatientDentalChart({ dentalStatus }: PatientDentalChartProps) {
       <div key={toothNumber} className="relative flex flex-col items-center">
         {!isLower && (
           <span className={cn(
-            "text-[10px] font-medium mb-0.5",
+            "text-[8px] sm:text-[10px] font-medium mb-0.5",
             hasStatus ? 'text-foreground' : 'text-muted-foreground'
           )}>
             {toothNumber}
@@ -73,9 +73,9 @@ export function PatientDentalChart({ dentalStatus }: PatientDentalChartProps) {
             'relative flex items-center justify-center transition-all rounded-md overflow-hidden cursor-pointer',
             isHovered && 'ring-2 ring-offset-1 ring-primary',
             hasStatus && 'ring-2',
-            isDeciduous 
-              ? 'w-7 h-9 sm:w-8 sm:h-10' 
-              : 'w-8 h-11 sm:w-9 sm:h-13'
+            isDeciduous
+              ? 'w-5 h-7 sm:w-8 sm:h-10'
+              : 'w-6 h-8 sm:w-9 sm:h-13'
           )}
           style={hasStatus && hexColor ? {
             boxShadow: `0 0 0 2px ${hexColor}`,
@@ -115,7 +115,7 @@ export function PatientDentalChart({ dentalStatus }: PatientDentalChartProps) {
         
         {isLower && (
           <span className={cn(
-            "text-[10px] font-medium mt-0.5",
+            "text-[8px] sm:text-[10px] font-medium mt-0.5",
             hasStatus ? 'text-foreground' : 'text-muted-foreground'
           )}>
             {toothNumber}
