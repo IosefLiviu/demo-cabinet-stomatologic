@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { SvgTooth, getToothDimensions } from './SvgTooth';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { QuadrantCircle } from './QuadrantCircle';
+
 import { Search, X } from 'lucide-react';
 import { useDentalConditionsCatalog, DentalCondition } from '@/hooks/useToothData';
 import { getToothOverlays } from './toothConditionOverlays';
@@ -305,20 +305,7 @@ export function MiniToothSelector({
           </div>
         )}
         <div className="flex justify-center py-0.5">
-          <QuadrantCircle
-            selectedTeeth={selectedTeeth}
-            onZoneClick={(teeth) => {
-              const allSelected = teeth.every(t => selectedTeeth.includes(t));
-              teeth.forEach(t => {
-                if (allSelected) {
-                  if (selectedTeeth.includes(t)) onToothClick(t);
-                } else {
-                  if (!selectedTeeth.includes(t)) onToothClick(t);
-                }
-              });
-            }}
-            size={isMobile ? 50 : 70}
-          />
+          <div className="h-px w-full bg-border" />
         </div>
         {(teethView === 'all' || teethView === 'deciduous') && (
           <div className="flex justify-center gap-px">
