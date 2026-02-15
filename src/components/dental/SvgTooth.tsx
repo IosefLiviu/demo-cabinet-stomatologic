@@ -1,100 +1,117 @@
 import React from 'react';
 
-// ─── Professional dental SVG paths from react-odontogram (MIT License) ───────
-// Source: https://github.com/biomathcode/react-odontogram
-// Each tooth type has: outlinePath, shadowPath, lineHighlightPath
-// These are anatomically accurate dental illustrations.
+// ─── Anatomically accurate dental SVG tooth paths ────────────────────────────
+// Each tooth type has a clean outline with distinct crown, cervical constriction,
+// and visible root(s). Molars have 2-3 roots with furcation areas.
+// All paths drawn in a 0 0 40 80 viewBox (crown at top, root at bottom).
 
 interface ToothPathData {
-  outlinePath: string;
-  shadowPath: string;
-  lineHighlightPath: string | string[];
-  viewBox: string; // x y w h
+  outline: string;       // Full tooth outline path
+  crownLine: string;     // Cervical/CEJ line separating crown from root
+  rootLines?: string[];  // Internal root separation lines
+  cusps?: string[];      // Cusp/surface detail lines
+  viewBox: string;
 }
 
-// 8 tooth types: 1=Central Incisor, 2=Lateral Incisor, 3=Canine,
-// 4=First Premolar, 5=Second Premolar, 6=First Molar, 7=Second Molar, 8=Third Molar
-const ODONTOGRAM_TEETH: Record<number, ToothPathData> = {
+// 8 tooth types mapped to FDI position number (1-8)
+const TOOTH_PATHS: Record<number, ToothPathData> = {
+  // 1 = Central Incisor - wide flat crown, single tapered root
   1: {
-    outlinePath:
-      "M173.951 1.698c-2.198.16-5.302.862-5.302.862s-5.531 1.025-7.781 2.27c-2.403 1.333-5.553 3.299-6.013 5.258-.432 1.84-.78 4.734-.491 6.832l.027.2c.348 2.527.865 6.28 1.239 10.316.186 2-.101 3.21.751 6.16.895 3.1 1.395 4.573 2.013 5.687.646 1.164 1.493 2.087 2.03 3.28.866 1.924 2.393 4.29 3.87 6.1a48.805 48.805 0 0 0 2.36 2.663c1.016 1.078 2.819 3.11 3.898 4.331 1.526 1.727 3.076 3.248 4.423 3.742 1.217.446 2.709.642 3.793.936 1.369.372 2.494.638 4.597 0 1.545-.468 2.725-.621 4.372-2.424 2.064-2.258 2.846-3.517 3.512-4.746 1.065-1.964 2.524-4.648 3.541-6.422.611-1.068 2.221-3.089 4.086-8.845 1.54-4.752 2.367-7.76 2.731-8.994.415-1.408 1.079-3.583 1.355-6.196.44-4.176 1.114-7.482 1.062-11.026-.044-3.046.104-5.04-1.065-6.306-.95-1.029-1.988-2.001-3.306-2.534-1.959-.79-3.775-1.358-5.298-1.592-1.351-.207-7.05-.35-11.219-.057-1.567.11-3.61.097-9.185.505Z",
-    shadowPath:
-      "M188.269 50.215c19.275-41.867 10.766-43.612 4.937-44.684-5.829-1.073-28.455 2.53-29.72 2.817-.442.218-8.911 0-4.767 19.54 3.416 16.105 16.193 26.596 17.244 27.265 3.148 2.003 8.837 2.595 12.306-4.938Z",
-    lineHighlightPath:
-      "M160.472 14.727c.392-.402 4.317-3.309 8.941-5.47 3.097-1.448 7.773-1.629 11.207-1.749 8.759-.365 10.004.91 12.637 1.495.562.139.909.276 1.771.595",
-    viewBox: "152 -2 52 64",
+    outline: "M12,2 C12,2 10,1 8,2 C6,3 5,5 5,8 L5,12 C5,15 6,18 7,20 C8,22 8,24 8,26 L8,28 C8,30 7,32 7,34 C7,36 7,38 7,40 L7,42 C7,48 8,56 9,62 C9.5,66 10,70 11,74 C11.5,76 12,78 13,80 L14,82 C14.5,84 15,86 16,88 L17,88 C18,86 18.5,84 19,82 L20,80 C21,78 21.5,76 22,74 C23,70 23.5,66 24,62 C25,56 26,48 26,42 L26,40 C26,38 26,36 26,34 C26,32 25,30 25,28 L25,26 C25,24 25,22 26,20 C27,18 28,15 28,12 L28,8 C28,5 27,3 25,2 C23,1 21,2 21,2 L12,2 Z",
+    crownLine: "M6,28 Q10,26 17,26 Q23,26 27,28",
+    cusps: [
+      "M10,5 Q17,3 23,5",   // Incisal edge detail
+    ],
+    viewBox: "3 -1 28 92",
   },
+
+  // 2 = Lateral Incisor - slightly narrower than central, single root
   2: {
-    outlinePath:
-      "M135.016 60.41c3.443 1.355 7.834 2.73 9.601 2.346 4.185-.91 7.044-4.017 8.123-8.152 2.069-7.927 2.249-16.288 1.995-24.436-.113-3.596.72-16.81-4.184-18.444-8.135-6.14-32.088.494-36.979 8.055-5.013 7.751.878 21.131 5.56 27.728 3.862 5.44 9.714 10.474 15.884 12.903Z",
-    shadowPath:
-      "M134.65 55.386c2.732 1.076 6.217 2.167 7.62 1.862 3.321-.723 5.59-3.188 6.446-6.47 1.642-6.29 1.786-12.927 1.583-19.393-.089-2.854.572-13.342-3.32-14.638-6.456-4.873-25.466.392-29.348 6.393-3.979 6.152.696 16.77 4.413 22.006 3.064 4.317 7.709 8.313 12.606 10.24Z",
-    lineHighlightPath:
-      "M121.569 28.952c.551-.984 6.354-8.214 12.866-9.045 3.238-.413 10.619-.17 11.838 0",
-    viewBox: "108 8 50 58",
+    outline: "M13,2 C11,1.5 9,2 8,4 C7,6 6.5,8 6.5,11 L6.5,14 C6.5,17 7,19 8,21 C9,23 9,25 9,27 L9,30 C9,33 8.5,36 8.5,40 C8.5,44 9,52 10,60 C10.5,64 11,68 12,72 C12.5,75 13,78 14,80 L15,82 C15.5,83 16,84 17,84 C18,84 18.5,83 19,82 L20,80 C21,78 21.5,75 22,72 C23,68 23.5,64 24,60 C25,52 25.5,44 25.5,40 C25.5,36 25,33 25,30 L25,27 C25,25 25,23 26,21 C27,19 27.5,17 27.5,14 L27.5,11 C27.5,8 27,6 26,4 C25,2 23,1.5 21,2 L13,2 Z",
+    crownLine: "M7.5,30 Q11,28 17,28 Q23,28 26.5,30",
+    cusps: [
+      "M11,4 Q17,2.5 23,4",
+    ],
+    viewBox: "4 -1 26 88",
   },
+
+  // 3 = Canine - pointed crown, long single root
   3: {
-    outlinePath:
-      "M77.63 64.236c1.692 1.401 15.516 14.583 34.698 16.903 5.569.674 15.058-7.184 15.789-12.89 1.335-10.423-12.444-29.205-21.965-33.703-4.542-2.145-25.892-4.039-28.523 2.939-2.471 6.557-6.596 21.29 0 26.751Z",
-    shadowPath:
-      "M123.285 66.267c1.072-8.368-10.234-23.94-17.99-27.603-3.72-1.757-21.206-3.308-23.36 2.407-1.757 4.66-4.09 13.284-2.306 18.17 4.15 11.36 40.897 28.573 43.656 7.026Z",
-    lineHighlightPath: [
-      "M82.84 60.043c-.01-.855-.193-4.63.256-8.12.667-5.185.703-5.866 1.29-8.106.437-1.666 2.083-4.91 17.487-3.748",
-      "M101.438 68.49c.376-.045 2.284-5.112 9.498-6.344",
+    outline: "M11,6 C9,5 7,6 6,8 C5,10 5,13 5,16 L5,19 C5,21 6,23 7,24 L9,26 C10,27 10,28 10,30 L10,33 C10,36 9.5,40 9.5,44 C9.5,48 10,56 11,64 C11.5,68 12,72 13,76 C13.5,79 14,82 15,85 C15.5,87 16,90 17,92 C18,90 18.5,87 19,85 C20,82 20.5,79 21,76 C22,72 22.5,68 23,64 C24,56 24.5,48 24.5,44 C24.5,40 24,36 24,33 L24,30 C24,28 24,27 25,26 L27,24 C28,23 29,21 29,19 L29,16 C29,13 29,10 28,8 C27,6 25,5 23,6 L18,10 L17,2 L16,10 L11,6 Z",
+    crownLine: "M7,33 Q11,31 17,31 Q23,31 27,33",
+    cusps: [
+      "M11,7 L17,2 L23,7",   // Canine cusp tip
     ],
-    viewBox: "74 30 56 54",
+    viewBox: "3 -1 28 96",
   },
+
+  // 4 = First Premolar - two cusps, bifurcated root (or single)
   4: {
-    outlinePath:
-      "M93.684 108.748c-7.498 3.397-35.368-7.397-35.596-7.441-1.429-.842-12.215-2.854-9.068-29.414.147-1.238 1.353-2.05 2.218-2.556.956-.559 3.157-1.595 7.587-2.794 2.707-.734 13.856-3.54 18.674-.92 2.216 1.206 6.363 4.117 10.473 7.036 4.11 2.919 10.958 8.715 13.327 11.338 2.291 2.537 10.324 13.75-7.615 24.751Z",
-    shadowPath:
-      "M91.495 105.931c-6.528 2.958-30.793-6.44-30.992-6.478-1.243-.734-10.634-2.486-7.895-25.61.128-1.078 1.178-1.785 1.932-2.225.832-.487 2.748-1.39 6.605-2.433 2.357-.639 12.064-3.082 16.258-.8 1.93 1.05 5.54 3.584 9.12 6.125 3.578 2.541 9.54 7.588 11.603 9.872 1.994 2.208 8.987 11.971-6.63 21.549Z",
-    lineHighlightPath: [
-      "M55.234 92.414c.022-.242.06-1.469.875-7.79.46-3.573 1.813-5.49 3.134-7.01 1.18-1.359 3.524-3.193 5.88-4.365 1.46-.632 3.029-1.126 6.044-1.776.826-.138 1.477-.175 2.526-.395",
-      "M87.02 101.387c4.183-.792 8.747-9.774 8.747-9.774",
+    outline: "M10,5 C8,4 6,5 5.5,8 C5,10 5,13 5,16 L5,19 C5,21 5.5,23 6.5,25 L8,27 C9,28 9,29 9,30 L9,32 C9,34 8.5,37 8.5,40 C8.5,43 8,48 8,52 C8,56 8.5,60 9,64 C9.5,68 10,72 11,76 C11.5,78 12,80 12.5,80 C13,80 13.5,78 14,74 C14.5,70 15,66 15,62 L15,58 C15.5,56 16,55 17,55 C18,55 18.5,56 19,58 L19,62 C19,66 19.5,70 20,74 C20.5,78 21,80 21.5,80 C22,80 22.5,78 23,76 C24,72 24.5,68 25,64 C25.5,60 26,56 26,52 C26,48 25.5,43 25.5,40 C25.5,37 25,34 25,32 L25,30 C25,29 25,28 26,27 L27.5,25 C28.5,23 29,21 29,19 L29,16 C29,13 29,10 28.5,8 C28,5 26,4 24,5 L20,8 L17,3 L14,8 L10,5 Z",
+    crownLine: "M7,32 Q11,30 17,30 Q23,30 27,32",
+    rootLines: [
+      "M15,55 L17,42",  // Root bifurcation
+      "M19,55 L17,42",
     ],
-    viewBox: "46 64 60 50",
+    cusps: [
+      "M10,6 L14,8 L17,3 L20,8 L24,6",  // Two cusps
+    ],
+    viewBox: "3 0 28 84",
   },
+
+  // 5 = Second Premolar - two cusps, single root
   5: {
-    outlinePath:
-      "M33.396 127.652c-1.088-2.713-4.486-11.852-3.962-15.246.477-3.085 14.47-12.008 23.595-12.008 2.178 0 25.157 6.665 35.073 17.908 4.551 9.324-1.624 23.339-16.22 23.339-8.193 0-23.563-1.897-25.453-2.215-1.896-.319-4.317-1.128-6.596-2.321-1.289-.675-2-1.035-2.478-1.647-.655-.84-2.101-3.178-3.96-7.81Z",
-    shadowPath:
-      "M36.837 126.778c-.945-2.356-3.895-10.289-3.44-13.235.414-2.679 12.561-10.424 20.483-10.424 1.89 0 21.837 5.785 30.445 15.545 3.951 8.094-1.41 20.26-14.08 20.26-7.112 0-20.454-1.647-22.095-1.922-1.645-.277-3.747-.98-5.725-2.015-1.12-.586-1.737-.899-2.151-1.43-.57-.729-1.825-2.759-3.437-6.779Z",
-    lineHighlightPath: [
-      "M40.8 131.221c-4.003-20.278 8.442-20.974 13.779-23.692",
-      "M74.056 134.729c6.35-4.264 6.343-10.503 6.489-11.448",
+    outline: "M10,5 C8,4 6.5,5.5 6,8 C5.5,10 5.5,13 5.5,16 L5.5,19 C5.5,21 6,23 7,25 L8.5,27 C9.5,28 9.5,29 9.5,31 L9.5,33 C9.5,36 9,39 9,42 C9,46 9.5,52 10,58 C10.5,62 11,66 12,70 C12.5,73 13,76 14,79 C14.5,81 15.5,83 17,84 C18.5,83 19.5,81 20,79 C21,76 21.5,73 22,70 C23,66 23.5,62 24,58 C24.5,52 25,46 25,42 C25,39 24.5,36 24.5,33 L24.5,31 C24.5,29 24.5,28 25.5,27 L27,25 C28,23 28.5,21 28.5,19 L28.5,16 C28.5,13 28.5,10 28,8 C27.5,5.5 26,4 24,5 L20,8 L17,3 L14,8 L10,5 Z",
+    crownLine: "M7.5,33 Q12,31 17,31 Q22,31 26.5,33",
+    cusps: [
+      "M10,6 L14,8 L17,3 L20,8 L24,6",
     ],
-    viewBox: "27 98 64 46",
+    viewBox: "3 0 28 88",
   },
+
+  // 6 = First Molar (upper) - wide crown, 3 roots
   6: {
-    outlinePath:
-      "M35.539 203.323c-3.363.196-32.788-4.02-28.495-42.465 3.631-20.408 26.21-23.364 29.557-22.912 9.019-.745 25.727 6.743 29.255 9.403 4.546 3.427 7.384 5.681 8.606 7.092 2.436 2.814 4.499 5.11 4.7 6.313.284 1.703 1.317 4.72-2.248 9.687-2.453 3.418-2.957 6.663-2.856 10.223.118 4.185.37 9.754-.524 11.63-.592 1.244-.984 2.627-2.375 3.392-2.015 1.108-4.61 2.317-11.93 3.748-3.623.708-9.309 1.83-12.401 2.292-5.19.777-8.423 1.43-11.289 1.597Z",
-    shadowPath:
-      "M36.515 199.085c-2.927.17-28.54-3.499-24.803-36.963 3.16-17.764 22.814-20.337 25.727-19.944 10.82-.893 25.709 5.989 32.955 14.358 2.12 2.45 3.917 4.448 4.091 5.495.248 1.482.513 4.268-2.59 8.591-2.135 2.975-1.94 5.641-1.852 8.74.096 3.417 1.402 10.917-2.523 13.076-1.754.964-4.013 2.016-10.384 3.261-6.762 1.322-13.728 2.984-20.621 3.386Z",
-    lineHighlightPath: [
-      "M37.132 192.147c1.288-.372 3.385-2.071 5.183-5.438m9.008-35.98c1.188 1.224 2.114 6.385.15 11.363m0 0c-1.537 3.899-4.944 9.378-11.195 9.378 6.877.321 4.651 10.343 2.037 15.239m9.159-24.617c1.47-2.589 4.966-7.572 8.068-8.217m-17.227 32.834c-.186 2.348.044 7.351 2.458 8.584",
+    outline: "M7,6 C5,5 3.5,7 3,10 C2.5,13 2.5,16 2.5,19 L2.5,22 C2.5,24 3,26 4,28 L5.5,30 C6.5,31 7,32 7,34 L7,36 C7,38 6.5,40 6.5,42 C6.5,44 6,48 5.5,52 C5,56 4.5,60 4.5,64 C4.5,68 5,72 5.5,74 C6,76 6.5,77 7,77 C7.5,77 8,76 8.5,73 C9,70 9.5,66 10,62 L10.5,58 C11,55 12,53 13,53 C14,53 14.5,55 14.5,58 L14.5,62 C14.5,66 15,72 15.5,76 C16,80 16.5,84 17,86 L18,86 C18.5,84 19,80 19.5,76 C20,72 20.5,66 20.5,62 L20.5,58 C20.5,55 21,53 22,53 C23,53 24,55 24.5,58 L25,62 C25.5,66 26,70 26.5,73 C27,76 27.5,77 28,77 C28.5,77 29,76 29.5,74 C30,72 30.5,68 30.5,64 C30.5,60 30,56 29.5,52 C29,48 28.5,44 28.5,42 C28.5,40 28,38 28,36 L28,34 C28,32 28.5,31 29.5,30 L31,28 C32,26 32.5,24 32.5,22 L32.5,19 C32.5,16 32.5,13 32,10 C31.5,7 30,5 28,6 L23,10 L20,7 L17,4 L14,7 L11,10 L7,6 Z",
+    crownLine: "M5,36 Q10,34 17.5,34 Q25,34 30,36",
+    rootLines: [
+      "M10.5,58 L13,44",   // Left root (palatal)
+      "M14.5,58 L17,44",   // Center
+      "M20.5,58 L17,44",   // Center
+      "M24.5,58 L22,44",   // Right root (buccal)
     ],
-    viewBox: "2 135 80 72",
+    cusps: [
+      "M7,7 L11,10 L14,7 L17,4 L20,7 L23,10 L28,7",  // Multi-cusp
+      "M10,12 Q17.5,10 25,12",   // Ridge line
+    ],
+    viewBox: "0 1 35 90",
   },
+
+  // 7 = Second Molar - similar to first molar, slightly smaller, 3 roots
   7: {
-    outlinePath:
-      "M4.969 248.132c-1.188-2.74-14.708-27.152 12.319-42.139 1.836-1.018 24.508-7.711 45.28 10.874 2.274 2.035 4.455 3.579 5.403 5.102 1.414 2.271 2.128 3.435 1.687 5.606-.387 1.901-1.54 3.642-3.77 7.711-1.127 2.056-1.854 3.427-1.369 7.824.175 1.59.627 3.935.048 6.603-.466 2.147-.941 3.567-2.578 5.006-2.53 2.224-5.307 3.645-9.076 4.35-1.091.204-3.133.811-7.525 1.702-2.776.563-6.619 1.234-10.09 1.654-3.47.42-6.478.638-8.612.636-3.353-.002-6.734.031-9.465-1.48l-.018-.01c-1.654-.915-4.076-2.255-6.245-4.732-2.258-2.579-4.591-5.482-5.989-8.707Z",
-    shadowPath:
-      "M8.799 246.28c-1.128-2.352-12.843-23.709 10.756-36.796 1.604-.889 21.4-6.732 39.538 9.496 1.986 1.777 3.89 3.125 4.717 4.454 1.235 1.983 1.859 3 1.473 4.895-.337 1.66-1.343 3.18-3.291 6.734-.984 1.795-1.619 2.992-1.196 6.831.154 1.389.548 3.436.042 5.766-2.872 13.231-31.213 11.657-33.076 11.656h-.007c-2.936-.003-12.714-.01-18.956-13.036Z",
-    lineHighlightPath: [
-      "M32.14 255.091c.748-.303 2.28-2.378 3.103-5.721m-1.99-35.481c3.009 1.363 4.015 4.888 3.736 8.716m0 0c-.424 5.835-3.832 12.377-7.683 13.049 6.954 1.18 7.244 8.414 5.937 13.716m1.746-26.765c.327-2.24 1.82-6.958 5.19-7.91m-6.936 34.675c.65 2.172 2.55 6.507 4.967 6.471",
+    outline: "M8,6 C6,5 4.5,7 4,10 C3.5,12 3.5,15 3.5,18 L3.5,21 C3.5,23 4,25 5,27 L6.5,29 C7.5,30 7.5,31 7.5,33 L7.5,35 C7.5,37 7,39 7,41 C7,44 6.5,48 6,52 C5.5,56 5.5,60 5.5,63 C5.5,66 6,70 6.5,72 C7,74 7.5,75 8,75 C8.5,75 9,73 9.5,70 C10,67 10.5,64 11,60 L11.5,56 C12,54 12.5,52 14,52 C15,52 15.5,54 15.5,56 L16,62 C16.5,66 17,72 17.5,76 C18,78 18.5,80 19,80 C19.5,80 20,78 20.5,76 C21,72 21.5,66 22,62 L22.5,56 C22.5,54 23,52 24,52 C25.5,52 26,54 26.5,56 L27,60 C27.5,64 28,67 28.5,70 C29,73 29.5,75 30,75 C30.5,75 31,74 31.5,72 C32,70 32.5,66 32.5,63 C32.5,60 32.5,56 32,52 C31.5,48 31,44 31,41 C31,39 30.5,37 30.5,35 L30.5,33 C30.5,31 30.5,30 31.5,29 L33,27 C34,25 34.5,23 34.5,21 L34.5,18 C34.5,15 34.5,12 34,10 C33.5,7 32,5 30,6 L25,9 L21,6 L17,4 L13,6 L9,9 L8,6 Z",
+    crownLine: "M6,35 Q12,33 19,33 Q26,33 32,35",
+    rootLines: [
+      "M11.5,56 L14,44",
+      "M15.5,56 L17,44",
+      "M22,56 L19,44",
+      "M26.5,56 L24,44",
     ],
-    viewBox: "-4 203 74 62",
+    cusps: [
+      "M8,7 L13,6 L17,4 L21,6 L25,9 L30,7",
+      "M11,11 Q19,9 27,11",
+    ],
+    viewBox: "1 1 36 82",
   },
+
+  // 8 = Third Molar (Wisdom) - smaller, irregular crown, 2-3 fused roots
   8: {
-    outlinePath:
-      "M.895 291.331c-.362-1.218-.116-3.411-.164-3.892-.035-.34.124-3.438.727-5.558 1.04-2.82 1.808-4.74 2.573-5.752 1.413-1.872 3.913-4.769 7.135-7.2 2.288-1.726 5.003-3.187 8.133-4.339 2.249-.828 4.362-1.502 7.732-1.693 2.175-.123 5.25-.155 8.782.108s7.403.804 10.353 1.397 4.92 1.218 6.641 1.893c1.722.675 3.148 1.389 3.972 1.768 1.51.696 2.9 1.209 3.824 2.14 1.857 1.872 2.617 3.334 2.912 4.807.254 1.27.252 3.216-.224 4.531-.672 1.859-1.468 2.856-1.468 5.7 0 3.857 1.713 5.95 1.915 8.356.337 4.008.317 6.168-.42 7.485-.591 1.057-1.532 2.383-5.541 5.088-1.173.791-2.684 1.634-6.643 3.424-2.762 1.248-6.977 3.108-9.205 4.107-2.473 1.109-4.667 2.226-8.234 3.053-2.54.589-5.631.784-9.012.186-2.307-.408-5.449-1.183-9.107-3.827-3.928-2.839-6.53-4.897-7.497-6.041-.866-1.026-1.714-2.082-2.412-3.555-.904-1.905-2.272-3.643-3-5.916-.846-2.633-1.167-4.233-1.772-6.27Z",
-    shadowPath:
-      "M4.732 291.175c-.317-1.07-.101-2.994-.144-3.416-.03-.299.11-3.019.638-4.88.914-2.476 1.588-4.161 2.26-5.05 1.24-1.643 3.434-4.187 6.263-6.321 2.009-1.515 4.393-2.797 7.14-3.809 1.974-.727 3.83-1.318 6.788-1.486 1.91-.108 4.61-.136 7.71.095 3.1.231 6.498.706 9.088 1.226 2.59.521 4.319 1.07 5.83 1.662 1.512.592 2.764 1.22 3.487 1.553 1.326.61 2.547 1.061 3.357 1.878 1.63 1.643 2.298 2.927 2.557 4.22.223 1.115.221 2.824-.196 3.978-.59 1.632-1.29 2.507-1.29 5.004 0 3.385 1.504 5.223 1.682 7.335.296 3.519.278 5.416-.369 6.571-.52.928-1.345 2.093-4.865 4.467-1.03.695-2.355 1.435-5.831 3.006-2.425 1.096-6.126 2.728-8.082 3.606-2.17.973-4.096 1.954-7.228 2.68-2.229.517-4.944.688-7.912.163-2.024-.358-4.783-1.038-7.995-3.359-3.448-2.493-5.732-4.299-6.58-5.304-.761-.901-1.505-1.827-2.119-3.121-.793-1.672-1.994-3.198-2.634-5.193-.742-2.312-1.024-3.717-1.555-5.505Z",
-    lineHighlightPath: [
-      "M31.732 309.511c1.462-.897 2.585-3.672 2.93-6.726m-2.93-29.453c2.114 1.092 3.49 4.44 3.61 8.062m4.133-7.58c-1.353 1.058-4.074 4.057-4.134 7.58m0 0c.155 4.693-1.797 9.846-6.983 11.152 5.379-.357 6.859 5.305 6.303 10.239m4.557 7.24c-1.678-.671-4.938-3.058-4.557-7.24",
+    outline: "M10,6 C8,5 6.5,7 6,10 C5.5,12 5.5,15 5.5,17 L5.5,20 C5.5,22 6,24 7,25.5 L8,27 C9,28 9,29 9,31 L9,33 C9,35 8.5,38 8.5,40 C8.5,43 8,47 7.5,51 C7,55 7,58 7,61 C7,64 7.5,67 8,69 C8.5,71 9,73 10,75 C10.5,76 11.5,77 13,78 C14,78.5 15.5,79 17,79 C18.5,79 20,78.5 21,78 C22.5,77 23.5,76 24,75 C25,73 25.5,71 26,69 C26.5,67 27,64 27,61 C27,58 27,55 26.5,51 C26,47 25.5,43 25.5,40 C25.5,38 25,35 25,33 L25,31 C25,29 25,28 26,27 L27,25.5 C28,24 28.5,22 28.5,20 L28.5,17 C28.5,15 28.5,12 28,10 C27.5,7 26,5 24,6 L21,8 L17,4 L13,8 L10,6 Z",
+    crownLine: "M7,33 Q11,31 17,31 Q23,31 27,33",
+    cusps: [
+      "M10,7 L13,8 L17,4 L21,8 L24,7",
+      "M12,10 Q17,8.5 22,10",
     ],
-    viewBox: "-2 262 68 58",
+    viewBox: "4 1 26 82",
   },
 };
 
@@ -107,17 +124,16 @@ function getToothTypeAndMirror(toothNumber: number): { type: number; mirror: boo
   if (quadrant >= 5) {
     const deciduousMap: Record<number, number> = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5 };
     const type = deciduousMap[position] || 1;
-    // Quadrants 5,8 = right side (mirror), 6,7 = left side (no mirror)
     const mirror = quadrant === 5 || quadrant === 8;
     return { type, mirror };
   }
 
-  // Quadrants 1,4 = right side (mirror the left-side paths), 2,3 = left side
+  // Quadrants 1,4 = right side (mirror), 2,3 = left side
   const mirror = quadrant === 1 || quadrant === 4;
   return { type: position, mirror };
 }
 
-// ─── Component interface (unchanged) ────────────────────────────────────────
+// ─── Component ─────────────────────────────────────────────────────────────
 interface SvgToothProps {
   toothNumber: number;
   isLower?: boolean;
@@ -142,22 +158,16 @@ export function SvgTooth({
   overlays,
 }: SvgToothProps) {
   const { type, mirror } = getToothTypeAndMirror(toothNumber);
-  const toothData = ODONTOGRAM_TEETH[type] || ODONTOGRAM_TEETH[1];
+  const toothData = TOOTH_PATHS[type] || TOOTH_PATHS[1];
   const id = `t${toothNumber}`;
 
-  // Parse viewBox for mirror transform
   const vbParts = toothData.viewBox.split(' ').map(Number);
-  const [vbX, vbY, vbW, vbH] = vbParts;
+  const [vbX, , vbW, vbH] = vbParts;
   const centerX = vbX + vbW / 2;
-  const centerY = vbY + vbH / 2;
 
   const mirrorTransform = mirror
     ? `translate(${centerX * 2}, 0) scale(-1, 1)`
     : undefined;
-
-  const lineHighlights = Array.isArray(toothData.lineHighlightPath)
-    ? toothData.lineHighlightPath
-    : [toothData.lineHighlightPath];
 
   return (
     <svg
@@ -174,45 +184,53 @@ export function SvgTooth({
       }}
     >
       <defs>
-        {/* Main body gradient */}
-        <linearGradient id={`g-${id}`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#f5f0e8" />
-          <stop offset="40%" stopColor="#faf7f2" />
-          <stop offset="100%" stopColor="#fefefe" />
+        {/* Crown gradient - ivory white */}
+        <linearGradient id={`gc-${id}`} x1="0.2" y1="0" x2="0.8" y2="1">
+          <stop offset="0%" stopColor="#fefefe" />
+          <stop offset="30%" stopColor="#faf7f0" />
+          <stop offset="70%" stopColor="#f0ebe0" />
+          <stop offset="100%" stopColor="#e8e0d2" />
         </linearGradient>
 
-        {/* Shadow fill gradient */}
-        <linearGradient id={`sh-${id}`} x1="0.3" y1="0" x2="0.7" y2="1">
-          <stop offset="0%" stopColor="#e8e0d0" stopOpacity="0.6" />
-          <stop offset="100%" stopColor="#d8cfc0" stopOpacity="0.3" />
+        {/* Root gradient - slightly darker, bone color */}
+        <linearGradient id={`gr-${id}`} x1="0.5" y1="0" x2="0.5" y2="1">
+          <stop offset="0%" stopColor="#f0ebe0" />
+          <stop offset="50%" stopColor="#e5ddd0" />
+          <stop offset="100%" stopColor="#d8cfc0" />
+        </linearGradient>
+
+        {/* Enamel highlight */}
+        <linearGradient id={`gh-${id}`} x1="0.3" y1="0" x2="0.7" y2="0.5">
+          <stop offset="0%" stopColor="white" stopOpacity="0.6" />
+          <stop offset="100%" stopColor="white" stopOpacity="0" />
         </linearGradient>
 
         <clipPath id={`clip-${id}`}>
-          <path d={toothData.outlinePath} />
+          <path d={toothData.outline} />
         </clipPath>
       </defs>
 
       {isMissing ? (
         <g transform={mirrorTransform}>
           <path
-            d={toothData.outlinePath}
+            d={toothData.outline}
             fill="none"
             stroke="#b0a89a"
-            strokeWidth="1.2"
-            strokeDasharray="4 3"
+            strokeWidth="0.8"
+            strokeDasharray="3 2"
             opacity={0.35}
           />
           {(!overlays || overlays.length === 0) && (
             <>
               <line
-                x1={vbX + vbW * 0.3} y1={vbY + vbH * 0.35}
-                x2={vbX + vbW * 0.7} y2={vbY + vbH * 0.65}
-                stroke="#b0a89a" strokeWidth="1" opacity="0.3"
+                x1={vbX + vbW * 0.3} y1={vbParts[1] + vbH * 0.3}
+                x2={vbX + vbW * 0.7} y2={vbParts[1] + vbH * 0.7}
+                stroke="#b0a89a" strokeWidth="0.8" opacity="0.3"
               />
               <line
-                x1={vbX + vbW * 0.7} y1={vbY + vbH * 0.35}
-                x2={vbX + vbW * 0.3} y2={vbY + vbH * 0.65}
-                stroke="#b0a89a" strokeWidth="1" opacity="0.3"
+                x1={vbX + vbW * 0.7} y1={vbParts[1] + vbH * 0.3}
+                x2={vbX + vbW * 0.3} y2={vbParts[1] + vbH * 0.7}
+                stroke="#b0a89a" strokeWidth="0.8" opacity="0.3"
               />
             </>
           )}
@@ -222,39 +240,73 @@ export function SvgTooth({
         <g transform={mirrorTransform}>
           {/* Soft drop shadow */}
           <path
-            d={toothData.outlinePath}
+            d={toothData.outline}
             fill="rgba(0,0,0,0.04)"
-            transform="translate(0.8, 1.5)"
+            transform="translate(0.6, 1.2)"
           />
 
-          {/* Main tooth body */}
+          {/* Main tooth body - root color (base layer) */}
           <path
-            d={toothData.outlinePath}
-            fill={`url(#g-${id})`}
-            stroke="#c8bfb0"
-            strokeWidth="0.6"
+            d={toothData.outline}
+            fill={`url(#gr-${id})`}
+            stroke="#c0b8a8"
+            strokeWidth="0.5"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
 
-          {/* Shadow / depth layer */}
+          {/* Crown area - brighter enamel overlay (clipped to outline) */}
           <g clipPath={`url(#clip-${id})`}>
-            <path
-              d={toothData.shadowPath}
-              fill={`url(#sh-${id})`}
+            {/* Enamel cap - paint the crown portion brighter */}
+            <rect
+              x={vbX}
+              y={vbParts[1]}
+              width={vbW + vbX * 2}
+              height={35}
+              fill={`url(#gc-${id})`}
+            />
+            {/* Highlight sheen */}
+            <rect
+              x={vbX}
+              y={vbParts[1]}
+              width={vbW + vbX * 2}
+              height={25}
+              fill={`url(#gh-${id})`}
             />
           </g>
 
-          {/* Detail lines */}
-          {lineHighlights.map((d, i) => (
+          {/* Cervical line (CEJ) */}
+          <path
+            d={toothData.crownLine}
+            fill="none"
+            stroke="#c8bfb0"
+            strokeWidth="0.5"
+            strokeLinecap="round"
+            opacity={0.7}
+          />
+
+          {/* Root separation lines */}
+          {toothData.rootLines?.map((d, i) => (
             <path
-              key={`lh-${i}`}
+              key={`rl-${i}`}
               d={d}
               fill="none"
-              stroke="#c0b8a8"
-              strokeWidth="0.5"
+              stroke="#c8bfb0"
+              strokeWidth="0.4"
               strokeLinecap="round"
-              strokeLinejoin="round"
+              opacity={0.5}
+            />
+          ))}
+
+          {/* Cusp detail lines */}
+          {toothData.cusps?.map((d, i) => (
+            <path
+              key={`cp-${i}`}
+              d={d}
+              fill="none"
+              stroke="#d0c8b8"
+              strokeWidth="0.4"
+              strokeLinecap="round"
               opacity={0.5}
             />
           ))}
@@ -262,7 +314,7 @@ export function SvgTooth({
           {/* Status color overlay */}
           {statusColor && (
             <path
-              d={toothData.outlinePath}
+              d={toothData.outline}
               fill={statusColor}
               opacity={isHovered ? 0.4 : 0.25}
             />
@@ -278,18 +330,18 @@ export function SvgTooth({
 
 export function getToothDimensions(toothNumber: number, isDeciduous: boolean = false) {
   if (isDeciduous) {
-    return { width: 50, height: 70 };
+    return { width: 28, height: 46 };
   }
   const pos = toothNumber % 10;
   switch (pos) {
-    case 1: return { width: 52, height: 72 };
-    case 2: return { width: 48, height: 68 };
-    case 3: return { width: 52, height: 66 };
-    case 4: return { width: 54, height: 62 };
-    case 5: return { width: 56, height: 60 };
-    case 6: return { width: 68, height: 78 };
-    case 7: return { width: 64, height: 72 };
-    case 8: return { width: 58, height: 66 };
-    default: return { width: 56, height: 68 };
+    case 1: return { width: 30, height: 58 };  // Central incisor
+    case 2: return { width: 28, height: 54 };  // Lateral incisor
+    case 3: return { width: 30, height: 60 };  // Canine - longest root
+    case 4: return { width: 30, height: 54 };  // First premolar
+    case 5: return { width: 30, height: 54 };  // Second premolar
+    case 6: return { width: 38, height: 60 };  // First molar - widest
+    case 7: return { width: 36, height: 56 };  // Second molar
+    case 8: return { width: 30, height: 52 };  // Third molar
+    default: return { width: 30, height: 54 };
   }
 }
