@@ -802,11 +802,10 @@ export function InterventionSelector({
 
               {/* Collapsible Content */}
               <CollapsibleContent>
-                <div className="p-3 space-y-4 border-t">
+                <div className="p-2 space-y-3 border-t">
                   {/* Mini Dental Chart for tooth selection */}
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">Selectează dinții</Label>
-                    <div className="bg-muted/30 rounded-lg p-2">
+                  <div>
+                    <div className="bg-muted/30 rounded-lg p-1.5">
                       <MiniToothSelector
                         selectedTeeth={intervention.selectedTeeth}
                         onToothClick={(toothNumber) => handleQuickToggleTooth(intervention.id, toothNumber)}

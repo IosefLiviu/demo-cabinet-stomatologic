@@ -271,9 +271,9 @@ export function MiniToothSelector({
 
   return (
     <TooltipProvider delayDuration={100}>
-      <div className={cn('space-y-0.5', className)}>
+      <div className={cn('space-y-0', className)}>
         {/* Toggle buttons */}
-        <div className="flex justify-end gap-1 mb-1">
+        <div className="flex justify-end gap-1 mb-0.5">
           <Button
             type="button"
             variant={teethView === 'deciduous' ? 'default' : 'outline'}
