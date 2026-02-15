@@ -636,7 +636,7 @@ export function AppointmentForm({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-[98vw] sm:w-[95vw] max-w-[850px] max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col p-1.5 sm:p-6">
+      <DialogContent className="w-[98vw] sm:w-[95vw] max-w-[850px] h-[95vh] sm:h-[90vh] max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col p-1.5 sm:p-6">
         <DialogHeader className="pb-2 sm:pb-4">
           <DialogTitle className="text-base sm:text-lg">
             {editingAppointment ? 'Editare programare' : 'Programare nouă'}
