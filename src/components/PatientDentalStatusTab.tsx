@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { TOOTH_STATUSES, getStatusHexColor as getStatusHexColorUtil } from '@/constants/toothStatuses';
-import { SvgTooth, getToothDimensions } from './dental/SvgTooth';
+import { getToothImage } from './dental/toothImages';
 import { getToothOverlays } from './dental/toothConditionOverlays';
 import { QuadrantCircle } from './dental/QuadrantCircle';
 import { ToothDetailPanel } from './dental/ToothDetailPanel';
