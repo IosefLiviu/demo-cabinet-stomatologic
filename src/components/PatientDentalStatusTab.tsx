@@ -8,13 +8,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { TOOTH_STATUSES, getStatusHexColor as getStatusHexColorUtil } from '@/constants/toothStatuses';
 import { SvgTooth, getToothDimensions } from './dental/SvgTooth';
 import { getToothOverlays } from './dental/toothConditionOverlays';
-import { QuadrantCircle } from './dental/QuadrantCircle';
 import { ToothDetailPanel } from './dental/ToothDetailPanel';
 import { PatientDentalInfo } from './dental/PatientDentalInfo';
 import { useDentalConditionsCatalog, useToothConditions, useToothInterventions } from '@/hooks/useToothData';
 import { useDoctors } from '@/hooks/useDoctors';
 import { useTreatments } from '@/hooks/useTreatments';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 
 export interface ToothData {
   tooth_number: number;
@@ -214,6 +214,8 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<number[]>([]);
   const [journalKey, setJournalKey] = useState(0);
+  const [showPermanentTeeth, setShowPermanentTeeth] = useState(true);
+  const [showDeciduousTeeth, setShowDeciduousTeeth] = useState(true);
   const isMobile = useIsMobile();
 
   // Data hooks
@@ -436,58 +438,73 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
           }}
         >
           <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase">
-                Maxilar Superior — Dinți Permanenți
+            {showPermanentTeeth && (
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase">
+                  Maxilar Superior — Dinți Permanenți
+                </div>
+                <div className="flex justify-center gap-0.5 sm:gap-1">
+                  {upperTeeth.map(tooth => renderTooth(tooth, false, false))}
+                </div>
               </div>
-              <div className="flex justify-center gap-0.5 sm:gap-1">
-                {upperTeeth.map(tooth => renderTooth(tooth, false, false))}
+            )}
+
+            {showDeciduousTeeth && (
+              <div className="space-y-2 mt-4">
+                <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase opacity-70">
+                  Dinți Temporari — Superior
+                </div>
+                <div className="flex justify-center gap-0.5 sm:gap-1">
+                  {upperDeciduousTeeth.map(tooth => renderTooth(tooth, true, false))}
+                </div>
               </div>
+            )}
+
+            {/* Separator with teeth type toggle */}
+            <div className="flex justify-center items-center gap-2 py-2">
+              <div className="h-px flex-1 bg-border" />
+              <div className="flex gap-1">
+                <Button
+                  variant={showDeciduousTeeth ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-6 text-[10px] px-2"
+                  onClick={() => setShowDeciduousTeeth(!showDeciduousTeeth)}
+                >
+                  Temporari
+                </Button>
+                <Button
+                  variant={showPermanentTeeth ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-6 text-[10px] px-2"
+                  onClick={() => setShowPermanentTeeth(!showPermanentTeeth)}
+                >
+                  Permanenți
+                </Button>
+              </div>
+              <div className="h-px flex-1 bg-border" />
             </div>
 
-            <div className="space-y-2 mt-4">
-              <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase opacity-70">
-                Dinți Temporari — Superior
+            {showDeciduousTeeth && (
+              <div className="space-y-2">
+                <div className="flex justify-center gap-0.5 sm:gap-1">
+                  {lowerDeciduousTeeth.map(tooth => renderTooth(tooth, true, true))}
+                </div>
+                <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase opacity-70">
+                  Dinți Temporari — Inferior
+                </div>
               </div>
-              <div className="flex justify-center gap-0.5 sm:gap-1">
-                {upperDeciduousTeeth.map(tooth => renderTooth(tooth, true, false))}
-              </div>
-            </div>
+            )}
 
-            {/* Quadrant circle diagram */}
-            <div className="flex justify-center py-3">
-              <QuadrantCircle
-                selectedTeeth={selectedGroup}
-                onZoneClick={(teeth) => {
-                  if (selectedGroup.length === teeth.length && teeth.every(t => selectedGroup.includes(t))) {
-                    setSelectedGroup([]);
-                    setSelectedTooth(null);
-                  } else {
-                    setSelectedGroup(teeth);
-                    setSelectedTooth(teeth[0]);
-                  }
-                }}
-                size={130}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-center gap-0.5 sm:gap-1">
-                {lowerDeciduousTeeth.map(tooth => renderTooth(tooth, true, true))}
+            {showPermanentTeeth && (
+              <div className="space-y-2 mt-4">
+                <div className="flex justify-center gap-0.5 sm:gap-1">
+                  {lowerTeeth.map(tooth => renderTooth(tooth, false, true))}
+                </div>
+                <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase">
+                  Maxilar Inferior — Dinți Permanenți
+                </div>
               </div>
-              <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase opacity-70">
-                Dinți Temporari — Inferior
-              </div>
-            </div>
-
-            <div className="space-y-2 mt-4">
-              <div className="flex justify-center gap-0.5 sm:gap-1">
-                {lowerTeeth.map(tooth => renderTooth(tooth, false, true))}
-              </div>
-              <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase">
-                Maxilar Inferior — Dinți Permanenți
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Selection indicator */}

@@ -3,7 +3,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { SvgTooth, getToothDimensions } from './SvgTooth';
 import { cn } from '@/lib/utils';
 import { cleanDentalNotes } from '@/lib/cleanDentalNotes';
-import { QuadrantCircle } from './QuadrantCircle';
+
 import { getToothOverlays } from './toothConditionOverlays';
 
 // FDI notation - permanent teeth
@@ -168,12 +168,9 @@ export function ToothSelector({
           {upperDeciduousTeeth.map(tooth => renderToothButton(tooth, true))}
         </div>
       </div>
-      <div className="flex justify-center py-1">
-        <QuadrantCircle
-          selectedTeeth={selectedTeeth}
-          onZoneClick={(teeth) => onArchSelection(teeth)}
-          size={80}
-        />
+      <div className="flex justify-center items-center gap-2 py-1">
+        <div className="h-px flex-1 bg-border" />
+        <div className="h-px flex-1 bg-border" />
       </div>
       <div className="space-y-1">
         <div className="text-[10px] text-muted-foreground text-center">De lapte inferior</div>
