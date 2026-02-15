@@ -1,4 +1,5 @@
 import { useCallback, useState, useRef, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { SvgTooth, getToothDimensions } from './SvgTooth';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -71,6 +72,7 @@ export function MiniToothSelector({
 }: MiniToothSelectorProps) {
   const [popoverTooth, setPopoverTooth] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [teethView, setTeethView] = useState<'all' | 'permanent' | 'deciduous'>('permanent');
   const popoverRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { conditions } = useDentalConditionsCatalog();
@@ -270,12 +272,36 @@ export function MiniToothSelector({
   return (
     <TooltipProvider delayDuration={100}>
       <div className={cn('space-y-0.5', className)}>
-        <div className="flex justify-center gap-px">
-          {upperTeeth.map(t => renderTooth(t, false, false))}
+        {/* Toggle buttons */}
+        <div className="flex justify-end gap-1 mb-1">
+          <Button
+            variant={teethView === 'deciduous' ? 'default' : 'outline'}
+            size="sm"
+            className="h-5 text-[9px] px-1.5"
+            onClick={() => setTeethView(teethView === 'deciduous' ? 'all' : 'deciduous')}
+          >
+            Temporari
+          </Button>
+          <Button
+            variant={teethView === 'permanent' ? 'default' : 'outline'}
+            size="sm"
+            className="h-5 text-[9px] px-1.5"
+            onClick={() => setTeethView(teethView === 'permanent' ? 'all' : 'permanent')}
+          >
+            Permanenți
+          </Button>
         </div>
-        <div className="flex justify-center gap-px">
-          {upperDeciduousTeeth.map(t => renderTooth(t, true, false))}
-        </div>
+
+        {(teethView === 'all' || teethView === 'permanent') && (
+          <div className="flex justify-center gap-px">
+            {upperTeeth.map(t => renderTooth(t, false, false))}
+          </div>
+        )}
+        {(teethView === 'all' || teethView === 'deciduous') && (
+          <div className="flex justify-center gap-px">
+            {upperDeciduousTeeth.map(t => renderTooth(t, true, false))}
+          </div>
+        )}
         <div className="flex justify-center py-0.5">
           <QuadrantCircle
             selectedTeeth={selectedTeeth}
@@ -292,12 +318,16 @@ export function MiniToothSelector({
             size={isMobile ? 50 : 70}
           />
         </div>
-        <div className="flex justify-center gap-px">
-          {lowerDeciduousTeeth.map(t => renderTooth(t, true, true))}
-        </div>
-        <div className="flex justify-center gap-px">
-          {lowerTeeth.map(t => renderTooth(t, false, true))}
-        </div>
+        {(teethView === 'all' || teethView === 'deciduous') && (
+          <div className="flex justify-center gap-px">
+            {lowerDeciduousTeeth.map(t => renderTooth(t, true, true))}
+          </div>
+        )}
+        {(teethView === 'all' || teethView === 'permanent') && (
+          <div className="flex justify-center gap-px">
+            {lowerTeeth.map(t => renderTooth(t, false, true))}
+          </div>
+        )}
         {selectedTeeth.length > 0 && (
           <div className="text-center text-[10px] text-muted-foreground pt-1">
             <span className="font-medium text-foreground">{selectedTeeth.length}</span> dinți selectați: {selectedTeeth.sort((a, b) => a - b).join(', ')}
