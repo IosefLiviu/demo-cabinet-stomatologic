@@ -214,7 +214,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<number[]>([]);
   const [journalKey, setJournalKey] = useState(0);
-  const [teethView, setTeethView] = useState<'all' | 'permanent' | 'deciduous'>('all');
+  const [teethView, setTeethView] = useState<'all' | 'permanent' | 'deciduous'>('permanent');
   const isMobile = useIsMobile();
 
   // Data hooks
