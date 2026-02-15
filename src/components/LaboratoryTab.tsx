@@ -78,7 +78,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
   const { samples, loading, addSample, markAsReturned, markAsTrial, markAsFinalized, resendToLab, deleteSample } = useLabSamples();
   const { cabinets } = useCabinets();
   const [activeSubTab, setActiveSubTab] = useState<TabStatus>('sent');
-  const [viewMode, setViewMode] = useState<'kanban' | 'tabs'>('kanban');
+  const [viewMode, setViewMode] = useState<'kanban' | 'tabs'>('tabs');
   const [draggedSampleId, setDraggedSampleId] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<TabStatus | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
