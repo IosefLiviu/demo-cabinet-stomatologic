@@ -12,6 +12,7 @@ import Install from "./pages/Install";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
+import { DemoApp } from "@/demo/DemoApp";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ function AppContent() {
             }
           />
           <Route path="/install" element={<Install />} />
+          <Route path="/demo/*" element={<DemoApp />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
