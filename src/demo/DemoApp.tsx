@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { DemoAuthProvider, useDemoAuth } from "@/demo/contexts/DemoAuthContext";
 import { DemoDataProvider } from "@/demo/contexts/DemoDataContext";
@@ -6,8 +6,9 @@ import { DemoDashboard } from "@/demo/pages/DemoDashboard";
 import { DemoPatients } from "@/demo/pages/DemoPatients";
 import { DemoAuth } from "@/demo/pages/DemoAuth";
 import { DemoAdmin } from "@/demo/pages/DemoAdmin";
-import { DemoBanner } from "@/demo/components/DemoBanner";
-import { DemoSidebar } from "@/demo/components/DemoSidebar";
+import { DemoHeader } from "@/demo/components/DemoHeader";
+import { AppSidebar } from "@/components/AppSidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 function DemoProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useDemoAuth();
@@ -15,26 +16,39 @@ function DemoProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function DemoLayout({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
+function DemoMainView() {
+  const [activeTab, setActiveTab] = useState('calendar');
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    return activeTab !== 'calendar';
+  });
+
+  useEffect(() => {
+    setSidebarOpen(activeTab !== 'calendar');
+  }, [activeTab]);
 
   return (
-    <div className={darkMode ? "dark" : ""}>
-      <div className="min-h-screen bg-background text-foreground">
-        <DemoBanner />
-        <div className="flex">
-          <DemoSidebar
-            isOpen={sidebarOpen}
-            onToggle={() => setSidebarOpen(!sidebarOpen)}
-            darkMode={darkMode}
-            onToggleDark={() => setDarkMode(!darkMode)}
+    <div className="min-h-screen bg-background flex flex-col">
+      <DemoHeader />
+      <SidebarProvider
+        open={sidebarOpen}
+        onOpenChange={setSidebarOpen}
+        style={{ '--sidebar-top': '3.5rem' } as React.CSSProperties}
+        className="!min-h-0 flex-1 sm:[--sidebar-top:4rem]"
+      >
+        <div className="flex w-full">
+          <AppSidebar
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            isAdmin={true}
+            isReception={false}
+            unreadCount={3}
+            pendingRemindersCount={5}
           />
-          <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-16"}`}>
-            <div className="p-6">{children}</div>
+          <main className="flex-1 min-w-0 w-full">
+            <DemoDashboard activeTab={activeTab} onTabChange={setActiveTab} />
           </main>
         </div>
-      </div>
+      </SidebarProvider>
     </div>
   );
 }
@@ -49,15 +63,7 @@ export function DemoApp() {
             path="/"
             element={
               <DemoProtectedRoute>
-                <DemoLayout><DemoDashboard /></DemoLayout>
-              </DemoProtectedRoute>
-            }
-          />
-          <Route
-            path="/patients"
-            element={
-              <DemoProtectedRoute>
-                <DemoLayout><DemoPatients /></DemoLayout>
+                <DemoMainView />
               </DemoProtectedRoute>
             }
           />
@@ -65,7 +71,7 @@ export function DemoApp() {
             path="/admin"
             element={
               <DemoProtectedRoute>
-                <DemoLayout><DemoAdmin /></DemoLayout>
+                <DemoMainView />
               </DemoProtectedRoute>
             }
           />
