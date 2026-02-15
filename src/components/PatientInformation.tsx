@@ -58,11 +58,12 @@ interface EditableTreatmentRecord extends TreatmentRecord {
 interface PatientInformationProps {
   patients: Patient[];
   doctors: Doctor[];
+  initialPatientId?: string;
 }
 
-export function PatientInformation({ patients, doctors }: PatientInformationProps) {
+export function PatientInformation({ patients, doctors, initialPatientId }: PatientInformationProps) {
   const printRef = useRef<HTMLDivElement>(null);
-  const [selectedPatientId, setSelectedPatientId] = useState<string>('');
+  const [selectedPatientId, setSelectedPatientId] = useState<string>(initialPatientId || '');
   const [patientSearch, setPatientSearch] = useState('');
   const [patientOpen, setPatientOpen] = useState(false);
   const [treatmentRecords, setTreatmentRecords] = useState<EditableTreatmentRecord[]>([]);

@@ -29,12 +29,14 @@ interface Doctor {
 interface RadiologyReferralProps {
   patients: Patient[];
   doctors: Doctor[];
+  initialPatientId?: string;
+  initialDoctorId?: string;
 }
 
-export function RadiologyReferral({ patients, doctors }: RadiologyReferralProps) {
+export function RadiologyReferral({ patients, doctors, initialPatientId, initialDoctorId }: RadiologyReferralProps) {
   const printRef = useRef<HTMLDivElement>(null);
-  const [selectedPatientId, setSelectedPatientId] = useState<string>('');
-  const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
+  const [selectedPatientId, setSelectedPatientId] = useState<string>(initialPatientId || '');
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>(initialDoctorId || '');
   const [referralDate, setReferralDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
   const [patientSearch, setPatientSearch] = useState('');
   

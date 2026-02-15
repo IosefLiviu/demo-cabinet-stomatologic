@@ -82,6 +82,8 @@ interface SavedPrescription {
 interface PrescriptionFormProps {
   patients: Patient[];
   doctors: Doctor[];
+  initialPatientId?: string;
+  initialDoctorId?: string;
 }
 
 // Lista predefinită de diagnostice stomatologice (conform CMSR)
@@ -182,7 +184,7 @@ const PREDEFINED_MEDICATIONS = [
   { name: 'Olynth', category: 'Alte' },
 ];
 
-const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
+const PrescriptionForm = ({ patients, doctors, initialPatientId, initialDoctorId }: PrescriptionFormProps) => {
   const printRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
@@ -190,8 +192,8 @@ const PrescriptionForm = ({ patients, doctors }: PrescriptionFormProps) => {
   const [activeSubTab, setActiveSubTab] = useState('new');
   
   // Form state
-  const [selectedPatientId, setSelectedPatientId] = useState<string>('');
-  const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
+  const [selectedPatientId, setSelectedPatientId] = useState<string>(initialPatientId || '');
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>(initialDoctorId || '');
   const [patientSearch, setPatientSearch] = useState('');
   
   // Prescription header fields

@@ -28,12 +28,14 @@ interface Doctor {
 interface InformedConsentFormProps {
   patients: Patient[];
   doctors: Doctor[];
+  initialPatientId?: string;
+  initialDoctorId?: string;
 }
 
-export function InformedConsentForm({ patients, doctors }: InformedConsentFormProps) {
+export function InformedConsentForm({ patients, doctors, initialPatientId, initialDoctorId }: InformedConsentFormProps) {
   const printRef = useRef<HTMLDivElement>(null);
-  const [selectedPatientId, setSelectedPatientId] = useState<string>('');
-  const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
+  const [selectedPatientId, setSelectedPatientId] = useState<string>(initialPatientId || '');
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>(initialDoctorId || '');
   const [consentDate, setConsentDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
   const [patientSearch, setPatientSearch] = useState('');
   const [interventionType, setInterventionType] = useState<string>('');

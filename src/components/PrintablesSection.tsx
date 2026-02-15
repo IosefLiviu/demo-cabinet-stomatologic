@@ -33,6 +33,8 @@ interface Doctor {
 interface PrintablesSectionProps {
   patients: Patient[];
   doctors: Doctor[];
+  initialPatientId?: string;
+  initialDoctorId?: string;
 }
 
 const menuItems = [
@@ -47,27 +49,27 @@ const menuItems = [
   { id: 'protocols', label: 'Protocoale & Indicații', icon: ClipboardList, iconColor: 'text-orange-500' },
 ];
 
-export function PrintablesSection({ patients, doctors }: PrintablesSectionProps) {
+export function PrintablesSection({ patients, doctors, initialPatientId, initialDoctorId }: PrintablesSectionProps) {
   const [activeItem, setActiveItem] = useState('radiology-referral');
 
   const renderContent = () => {
     switch (activeItem) {
       case 'radiology-referral':
-        return <RadiologyReferral patients={patients} doctors={doctors} />;
+        return <RadiologyReferral patients={patients} doctors={doctors} initialPatientId={initialPatientId} initialDoctorId={initialDoctorId} />;
       case 'billing':
-        return <BillingInvoice patients={patients} />;
+        return <BillingInvoice patients={patients} initialPatientId={initialPatientId} />;
       case 'prescription':
-        return <PrescriptionForm patients={patients} doctors={doctors} />;
+        return <PrescriptionForm patients={patients} doctors={doctors} initialPatientId={initialPatientId} initialDoctorId={initialDoctorId} />;
       case 'patient-info':
-        return <PatientInformation patients={patients} doctors={doctors} />;
+        return <PatientInformation patients={patients} doctors={doctors} initialPatientId={initialPatientId} />;
       case 'specialist-referral':
-        return <SpecialistReferral patients={patients} doctors={doctors} />;
+        return <SpecialistReferral patients={patients} doctors={doctors} initialPatientId={initialPatientId} initialDoctorId={initialDoctorId} />;
       case 'lab-test-referral':
-        return <LabTestReferral patients={patients} doctors={doctors} />;
+        return <LabTestReferral patients={patients} doctors={doctors} initialPatientId={initialPatientId} initialDoctorId={initialDoctorId} />;
       case 'informed-consent':
-        return <InformedConsentForm patients={patients} doctors={doctors} />;
+        return <InformedConsentForm patients={patients} doctors={doctors} initialPatientId={initialPatientId} initialDoctorId={initialDoctorId} />;
       case 'medical-certificate':
-        return <MedicalCertificate patients={patients} doctors={doctors} />;
+        return <MedicalCertificate patients={patients} doctors={doctors} initialPatientId={initialPatientId} initialDoctorId={initialDoctorId} />;
       case 'protocols':
         return <ProtocolsIndicatii />;
       default:

@@ -30,6 +30,8 @@ interface Doctor {
 interface LabTestReferralProps {
   patients: Patient[];
   doctors: Doctor[];
+  initialPatientId?: string;
+  initialDoctorId?: string;
 }
 
 // Default lab tests available for selection
@@ -45,10 +47,10 @@ const LAB_TESTS = [
   { id: 'trigliceride', name: 'Trigliceride' },
 ];
 
-export function LabTestReferral({ patients, doctors }: LabTestReferralProps) {
+export function LabTestReferral({ patients, doctors, initialPatientId, initialDoctorId }: LabTestReferralProps) {
   const printRef = useRef<HTMLDivElement>(null);
-  const [selectedPatientId, setSelectedPatientId] = useState<string>('');
-  const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
+  const [selectedPatientId, setSelectedPatientId] = useState<string>(initialPatientId || '');
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>(initialDoctorId || '');
   const [referralDate, setReferralDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
   const [patientSearch, setPatientSearch] = useState('');
   
