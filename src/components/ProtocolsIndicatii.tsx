@@ -150,15 +150,15 @@ const ProtocolsIndicatii = () => {
         </Button>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="protocoale" className="space-y-4">
+        <Tabs defaultValue="indicatii" className="space-y-4">
           <TabsList className="w-full justify-start">
-            <TabsTrigger value="protocoale" className="gap-2">
-              <FileText className="h-4 w-4" />
-              Protocoale
-            </TabsTrigger>
             <TabsTrigger value="indicatii" className="gap-2">
               <Stethoscope className="h-4 w-4" />
               Indicații
+            </TabsTrigger>
+            <TabsTrigger value="protocoale" className="gap-2">
+              <FileText className="h-4 w-4" />
+              Protocoale
             </TabsTrigger>
           </TabsList>
 
