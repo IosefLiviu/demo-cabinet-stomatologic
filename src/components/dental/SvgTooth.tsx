@@ -330,18 +330,18 @@ export function SvgTooth({
 
 export function getToothDimensions(toothNumber: number, isDeciduous: boolean = false) {
   if (isDeciduous) {
-    return { width: 28, height: 46 };
+    return { width: 34, height: 56 };
   }
   const pos = toothNumber % 10;
   switch (pos) {
-    case 1: return { width: 30, height: 58 };  // Central incisor
-    case 2: return { width: 28, height: 54 };  // Lateral incisor
-    case 3: return { width: 30, height: 60 };  // Canine - longest root
-    case 4: return { width: 30, height: 54 };  // First premolar
-    case 5: return { width: 30, height: 54 };  // Second premolar
-    case 6: return { width: 38, height: 60 };  // First molar - widest
-    case 7: return { width: 36, height: 56 };  // Second molar
-    case 8: return { width: 30, height: 52 };  // Third molar
-    default: return { width: 30, height: 54 };
+    case 1: return { width: 36, height: 70 };
+    case 2: return { width: 34, height: 66 };
+    case 3: return { width: 36, height: 72 };
+    case 4: return { width: 36, height: 66 };
+    case 5: return { width: 36, height: 66 };
+    case 6: return { width: 46, height: 74 };
+    case 7: return { width: 44, height: 70 };
+    case 8: return { width: 36, height: 64 };
+    default: return { width: 36, height: 66 };
   }
 }
