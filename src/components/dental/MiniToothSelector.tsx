@@ -57,8 +57,8 @@ interface MiniToothSelectorProps {
   className?: string;
 }
 
-const MINI_SCALE = 0.28;
-const MINI_SCALE_SM = 0.4;
+const MINI_SCALE = 0.38;
+const MINI_SCALE_SM = 0.55;
 
 export function MiniToothSelector({
   selectedTeeth,
