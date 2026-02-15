@@ -637,14 +637,14 @@ export function AppointmentForm({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="w-[98vw] sm:w-[95vw] max-w-[850px] h-[95vh] sm:h-[90vh] max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col p-1.5 sm:p-6">
-        <DialogHeader className="pb-2 sm:pb-4">
+        <DialogHeader className="pb-1 sm:pb-2">
           <DialogTitle className="text-base sm:text-lg">
             {editingAppointment ? 'Editare programare' : 'Programare nouă'}
           </DialogTitle>
         </DialogHeader>
         
         <ScrollArea className="flex-1 -mx-2 sm:-mx-6 px-2 sm:px-6">
-          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 pb-4">
+          <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-3 pb-2">
             {/* Patient Selection */}
             <div className="space-y-2">
               <Label className="text-sm">Pacient *</Label>
