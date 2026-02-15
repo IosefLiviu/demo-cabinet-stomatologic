@@ -765,7 +765,7 @@ export function InterventionSelector({
             >
               {/* Intervention Header */}
               <CollapsibleTrigger asChild>
-                <div className="bg-muted/30 p-3 cursor-pointer hover:bg-muted/50 transition-colors">
+                <div className="bg-muted/30 p-2 cursor-pointer hover:bg-muted/50 transition-colors">
                   <div className="flex items-center gap-2">
                     <ChevronDown 
                       className={cn(
@@ -802,7 +802,7 @@ export function InterventionSelector({
 
               {/* Collapsible Content */}
               <CollapsibleContent>
-                <div className="p-2 space-y-3 border-t">
+                <div className="p-2 space-y-2 border-t">
                   {/* Mini Dental Chart for tooth selection */}
                   <div>
                     <div className="bg-muted/30 rounded-lg p-1.5">
@@ -817,8 +817,8 @@ export function InterventionSelector({
                   </div>
 
                   {/* Prices Row */}
-                  <div className="grid grid-cols-6 gap-2">
-                    <div className="space-y-1">
+                  <div className="grid grid-cols-6 gap-1.5">
+                    <div className="space-y-0.5">
                       <Label className="text-xs">Preț inițial</Label>
                       <Input
                         type="number"
@@ -829,7 +829,7 @@ export function InterventionSelector({
                         className="h-8"
                       />
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-0.5">
                       <Label className="text-xs text-purple-600">Laborator</Label>
                       <Input
                         type="number"
@@ -840,7 +840,7 @@ export function InterventionSelector({
                         className="h-8"
                       />
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-0.5">
                       <Label className="text-xs">Preț</Label>
                       <Input
                         type="number"
@@ -850,7 +850,7 @@ export function InterventionSelector({
                         className="h-8 bg-muted"
                       />
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-0.5">
                       <Label className={`text-xs ${isCasDisabled ? 'text-muted-foreground' : 'text-green-600'}`}>CAS</Label>
                       <Input
                         type="number"
@@ -862,7 +862,7 @@ export function InterventionSelector({
                         disabled={isCasDisabled}
                       />
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-0.5">
                       <Label className="text-xs text-pink-600">Discount %</Label>
                       <Input
                         type="number"
@@ -875,7 +875,7 @@ export function InterventionSelector({
                         max={100}
                       />
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-0.5">
                       <Label className="text-xs text-orange-600">De plată</Label>
                       <Input
                         type="number"
