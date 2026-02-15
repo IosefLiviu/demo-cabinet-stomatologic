@@ -1,8 +1,10 @@
 /**
  * SVG overlays for dental conditions.
- * Each condition code maps to an SVG fragment drawn on viewBox 0 0 40 80.
- * Upper teeth: root at top (y≈0-40), crown at bottom (y≈40-78).
- * Lower teeth are flipped via the parent SvgTooth transform.
+ * Adapted for the new anatomical tooth models where:
+ *   - Crown is at TOP (y ≈ 2-30), root at BOTTOM (y ≈ 34-85+)
+ *   - Center X ≈ 17, typical range x ≈ 7-27
+ *   - Cervical/CEJ line ≈ y 28-34
+ *   - Lower teeth are flipped via the parent SvgTooth transform (rotate 180°)
  */
 
 interface OverlayDef {
@@ -24,17 +26,17 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   bi: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <line x1="12" y1="48" x2="28" y2="74" stroke="#8B0000" strokeWidth="2.5" strokeLinecap="round" opacity="0.85" />
-        <line x1="28" y1="48" x2="12" y2="74" stroke="#8B0000" strokeWidth="2.5" strokeLinecap="round" opacity="0.85" />
+        <line x1="10" y1="4" x2="24" y2="28" stroke="#8B0000" strokeWidth="2.5" strokeLinecap="round" opacity="0.85" />
+        <line x1="24" y1="4" x2="10" y2="28" stroke="#8B0000" strokeWidth="2.5" strokeLinecap="round" opacity="0.85" />
       </g>
     ),
   },
 
-  // Carie avansată - large red area covering crown tip
+  // Carie avansată - large red area covering crown tip (occlusal/incisal)
   ca: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M14,62 Q14,74 20,76 Q26,74 26,62 Z" fill="#DC2626" opacity="0.75" />
+        <path d="M12,2 Q12,12 17,14 Q22,12 22,2 Z" fill="#DC2626" opacity="0.75" />
       </g>
     ),
   },
@@ -43,16 +45,16 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   cc: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="14" y="46" width="12" height="6" rx="1.5" fill="#DC2626" opacity="0.75" />
+        <rect x="10" y="27" width="14" height="6" rx="1.5" fill="#DC2626" opacity="0.75" />
       </g>
     ),
   },
 
-  // Carie incipientă - red area at crown base (similar to avansată but smaller)
+  // Carie incipientă - red area at crown (smaller than avansată)
   ci: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M15,66 Q15,76 20,76 Q25,76 25,66 Z" fill="#DC2626" opacity="0.65" />
+        <path d="M13,2 Q13,8 17,10 Q21,8 21,2 Z" fill="#DC2626" opacity="0.65" />
       </g>
     ),
   },
@@ -61,25 +63,25 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   cm: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="10" y="54" width="7" height="10" rx="1.5" fill="#DC2626" opacity="0.75" />
+        <rect x="7" y="10" width="7" height="10" rx="1.5" fill="#DC2626" opacity="0.75" />
       </g>
     ),
   },
 
-  // Carie ocluzală - large red block on occlusal (bottom) surface
+  // Carie ocluzală - large red block on occlusal (top) surface
   co: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="13" y="62" width="14" height="12" rx="2" fill="#DC2626" opacity="0.7" />
+        <rect x="11" y="4" width="12" height="10" rx="2" fill="#DC2626" opacity="0.7" />
       </g>
     ),
   },
 
-  // Carie mezio-ocluzală - mesial side + occlusal bottom
+  // Carie mezio-ocluzală - mesial side + occlusal
   cmo: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M10,54 L17,54 L17,62 L27,62 L27,74 L13,74 L13,62 L10,62 Z" fill="#DC2626" opacity="0.7" rx="1" />
+        <path d="M7,10 L14,10 L14,4 L23,4 L23,14 L11,14 L11,10 L7,10 L7,20 L14,20 L14,14 Z" fill="#DC2626" opacity="0.7" />
       </g>
     ),
   },
@@ -88,7 +90,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   cmod: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M10,54 L17,54 L17,62 L23,62 L23,54 L30,54 L30,62 L27,62 L27,74 L13,74 L13,62 L10,62 Z" fill="#DC2626" opacity="0.7" />
+        <path d="M7,10 L14,10 L14,4 L20,4 L20,10 L27,10 L27,20 L20,20 L20,14 L14,14 L14,20 L7,20 Z" fill="#DC2626" opacity="0.7" />
       </g>
     ),
   },
@@ -97,44 +99,43 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   cod: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M13,62 L27,62 L30,62 L30,54 L23,54 L23,62 L27,74 L13,74 Z" fill="#DC2626" opacity="0.7" />
+        <path d="M11,4 L23,4 L23,10 L27,10 L27,20 L20,20 L20,14 L11,14 Z" fill="#DC2626" opacity="0.7" />
       </g>
     ),
   },
 
-  // Carie palatinală - small red patch on the palatal surface (upper part of crown)
+  // Carie palatinală - small red patch on palatal surface
   cp: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="10" y="50" width="6" height="6" rx="1.5" fill="#DC2626" opacity="0.7" />
+        <rect x="7" y="14" width="6" height="6" rx="1.5" fill="#DC2626" opacity="0.7" />
       </g>
     ),
   },
 
-  // Carie vestibulară - red on vestibular (front) surface
-  // Carie vestibulară - red square on the front surface of crown
+  // Carie vestibulară - red on vestibular (front) surface of crown
   cv: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="15" y="56" width="10" height="8" rx="1.5" fill="#DC2626" opacity="0.7" />
+        <rect x="12" y="10" width="10" height="8" rx="1.5" fill="#DC2626" opacity="0.7" />
       </g>
     ),
   },
 
-  // Carie radiculară distală - red patch on distal (right) root area
+  // Carie radiculară distală - red patch on distal root area
   crd: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="22" y="22" width="6" height="10" rx="1.5" fill="#DC2626" opacity="0.65" />
+        <rect x="21" y="50" width="6" height="10" rx="1.5" fill="#DC2626" opacity="0.65" />
       </g>
     ),
   },
 
-  // Carie radiculară mezială - red patch on mesial (left) root area
+  // Carie radiculară mezială - red patch on mesial root area
   crm: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="12" y="22" width="6" height="10" rx="1.5" fill="#DC2626" opacity="0.65" />
+        <rect x="9" y="50" width="6" height="10" rx="1.5" fill="#DC2626" opacity="0.65" />
       </g>
     ),
   },
@@ -143,8 +144,8 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   csd: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="23" y="54" width="7" height="5" rx="1" fill="#3B82F6" opacity="0.65" />
-        <rect x="23" y="59" width="7" height="5" rx="1" fill="#DC2626" opacity="0.7" />
+        <rect x="21" y="10" width="7" height="5" rx="1" fill="#3B82F6" opacity="0.65" />
+        <rect x="21" y="15" width="7" height="5" rx="1" fill="#DC2626" opacity="0.7" />
       </g>
     ),
   },
@@ -153,8 +154,8 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   csm: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="10" y="54" width="7" height="5" rx="1" fill="#DC2626" opacity="0.7" />
-        <rect x="10" y="59" width="7" height="5" rx="1" fill="#3B82F6" opacity="0.65" />
+        <rect x="7" y="10" width="7" height="5" rx="1" fill="#DC2626" opacity="0.7" />
+        <rect x="7" y="15" width="7" height="5" rx="1" fill="#3B82F6" opacity="0.65" />
       </g>
     ),
   },
@@ -163,9 +164,9 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   csmo: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="10" y="54" width="7" height="5" rx="1" fill="#DC2626" opacity="0.7" />
-        <rect x="10" y="59" width="7" height="5" rx="1" fill="#3B82F6" opacity="0.6" />
-        <rect x="13" y="64" width="14" height="4" rx="1" fill="#3B82F6" opacity="0.55" />
+        <rect x="7" y="10" width="7" height="5" rx="1" fill="#DC2626" opacity="0.7" />
+        <rect x="7" y="15" width="7" height="5" rx="1" fill="#3B82F6" opacity="0.6" />
+        <rect x="11" y="4" width="12" height="4" rx="1" fill="#3B82F6" opacity="0.55" />
       </g>
     ),
   },
@@ -174,8 +175,8 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   cso: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="13" y="62" width="14" height="5" rx="1" fill="#DC2626" opacity="0.7" />
-        <rect x="13" y="67" width="14" height="5" rx="1" fill="#3B82F6" opacity="0.6" />
+        <rect x="11" y="4" width="12" height="5" rx="1" fill="#DC2626" opacity="0.7" />
+        <rect x="11" y="9" width="12" height="5" rx="1" fill="#3B82F6" opacity="0.6" />
       </g>
     ),
   },
@@ -184,9 +185,9 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   csod: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="13" y="62" width="14" height="5" rx="1" fill="#3B82F6" opacity="0.55" />
-        <rect x="23" y="54" width="7" height="5" rx="1" fill="#DC2626" opacity="0.7" />
-        <rect x="23" y="59" width="7" height="5" rx="1" fill="#3B82F6" opacity="0.6" />
+        <rect x="11" y="4" width="12" height="5" rx="1" fill="#3B82F6" opacity="0.55" />
+        <rect x="21" y="10" width="7" height="5" rx="1" fill="#DC2626" opacity="0.7" />
+        <rect x="21" y="15" width="7" height="5" rx="1" fill="#3B82F6" opacity="0.6" />
       </g>
     ),
   },
@@ -195,8 +196,8 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   rcd: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="23" y="54" width="7" height="10" rx="1.5" fill="#B91C1C" opacity="0.7" />
-        <line x1="24" y1="56" x2="28" y2="62" stroke="#7F1D1D" strokeWidth="0.8" opacity="0.4" />
+        <rect x="21" y="10" width="7" height="10" rx="1.5" fill="#B91C1C" opacity="0.7" />
+        <line x1="22" y1="12" x2="26" y2="18" stroke="#7F1D1D" strokeWidth="0.8" opacity="0.4" />
       </g>
     ),
   },
@@ -205,8 +206,8 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   rcm: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="10" y="54" width="7" height="10" rx="1.5" fill="#B91C1C" opacity="0.7" />
-        <line x1="12" y1="56" x2="16" y2="62" stroke="#7F1D1D" strokeWidth="0.8" opacity="0.4" />
+        <rect x="7" y="10" width="7" height="10" rx="1.5" fill="#B91C1C" opacity="0.7" />
+        <line x1="9" y1="12" x2="13" y2="18" stroke="#7F1D1D" strokeWidth="0.8" opacity="0.4" />
       </g>
     ),
   },
@@ -215,7 +216,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   rcmo: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M10,54 L17,54 L17,62 L27,62 L27,74 L13,74 L13,62 L10,62 Z" fill="#B91C1C" opacity="0.65" />
+        <path d="M7,10 L14,10 L14,4 L23,4 L23,14 L11,14 L11,10 L7,10 L7,20 L14,20 L14,14 Z" fill="#B91C1C" opacity="0.65" />
       </g>
     ),
   },
@@ -224,7 +225,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   rco: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="13" y="62" width="14" height="12" rx="2" fill="#B91C1C" opacity="0.65" />
+        <rect x="11" y="4" width="12" height="10" rx="2" fill="#B91C1C" opacity="0.65" />
       </g>
     ),
   },
@@ -233,7 +234,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   rcod: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M13,62 L27,62 L30,62 L30,54 L23,54 L23,62 L27,74 L13,74 Z" fill="#B91C1C" opacity="0.65" />
+        <path d="M11,4 L23,4 L23,10 L27,10 L27,20 L20,20 L20,14 L11,14 Z" fill="#B91C1C" opacity="0.65" />
       </g>
     ),
   },
@@ -242,8 +243,8 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   chist: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <ellipse cx="20" cy="8" rx="7" ry="6" fill="#A3A23A" opacity="0.65" />
-        <ellipse cx="20" cy="8" rx="4" ry="3.5" fill="#C4C34A" opacity="0.4" />
+        <ellipse cx="17" cy="76" rx="7" ry="6" fill="#A3A23A" opacity="0.65" />
+        <ellipse cx="17" cy="76" rx="4" ry="3.5" fill="#C4C34A" opacity="0.4" />
       </g>
     ),
   },
@@ -252,8 +253,8 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   cor: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M12,48 Q12,44 20,42 Q28,44 28,48 L28,62 Q28,74 20,76 Q12,74 12,62 Z" fill="#D4A017" opacity="0.45" />
-        <path d="M14,48 Q14,46 20,44 Q26,46 26,48 L26,52" fill="none" stroke="#B8860B" strokeWidth="0.8" opacity="0.5" />
+        <path d="M9,4 Q9,2 17,2 Q25,2 25,4 L25,20 Q25,28 17,30 Q9,28 9,20 Z" fill="#D4A017" opacity="0.45" />
+        <path d="M11,6 Q11,4 17,3 Q23,4 23,6" fill="none" stroke="#B8860B" strokeWidth="0.8" opacity="0.5" />
       </g>
     ),
   },
@@ -262,17 +263,17 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   dev: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M20,4 C17,4 14,14 13,26 C12,34 11,42 10,50 C9,58 9,64 10,68 C11,72 14,76 20,76 C26,76 29,72 30,68 C31,64 31,58 30,50 C29,42 28,34 27,26 C26,14 23,4 20,4Z" fill="#9CA3AF" opacity="0.4" />
+        <path d="M17,2 C13,2 10,12 9,24 C8,32 8,40 9,48 C10,56 11,64 13,72 C15,78 17,82 17,82 C17,82 19,78 21,72 C23,64 24,56 25,48 C26,40 26,32 25,24 C24,12 21,2 17,2 Z" fill="#9CA3AF" opacity="0.4" />
       </g>
     ),
   },
 
-  // Durere - red pulsing dot at the crown tip
+  // Durere - red pulsing dot at the crown tip (occlusal/incisal)
   dur: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <ellipse cx="20" cy="72" rx="5" ry="4" fill="#EF4444" opacity="0.7" />
-        <ellipse cx="20" cy="72" rx="3" ry="2.5" fill="#FCA5A5" opacity="0.6" />
+        <ellipse cx="17" cy="6" rx="5" ry="4" fill="#EF4444" opacity="0.7" />
+        <ellipse cx="17" cy="6" rx="3" ry="2.5" fill="#FCA5A5" opacity="0.6" />
       </g>
     ),
   },
@@ -281,8 +282,8 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   fract: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <line x1="10" y1="20" x2="30" y2="70" stroke="#991B1B" strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
-        <line x1="30" y1="20" x2="10" y2="70" stroke="#991B1B" strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
+        <line x1="8" y1="6" x2="26" y2="70" stroke="#991B1B" strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
+        <line x1="26" y1="6" x2="8" y2="70" stroke="#991B1B" strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
       </g>
     ),
   },
@@ -291,7 +292,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   gg: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M8,46 Q20,40 32,46 L32,50 Q20,44 8,50 Z" fill="#EF4444" opacity="0.55" />
+        <path d="M6,28 Q17,24 28,28 L28,32 Q17,28 6,32 Z" fill="#EF4444" opacity="0.55" />
       </g>
     ),
   },
@@ -301,11 +302,11 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
     isAbsent: true,
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="16" y="6" width="8" height="38" rx="3" fill="#22C55E" opacity="0.7" />
-        {[12, 18, 24, 30].map((y) => (
-          <line key={y} x1="16" y1={y} x2="24" y2={y} stroke="#166534" strokeWidth="1" opacity="0.5" />
+        <rect x="14" y="34" width="8" height="38" rx="3" fill="#22C55E" opacity="0.7" />
+        {[40, 46, 52, 58].map((y) => (
+          <line key={y} x1="14" y1={y} x2="22" y2={y} stroke="#166534" strokeWidth="1" opacity="0.5" />
         ))}
-        <rect x="14" y="4" width="12" height="4" rx="1.5" fill="#16A34A" opacity="0.6" />
+        <rect x="12" y="30" width="12" height="4" rx="1.5" fill="#16A34A" opacity="0.6" />
       </g>
     ),
   },
@@ -314,7 +315,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   lc: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M12,48 L20,54 L12,54 Z" fill="#DC2626" opacity="0.7" />
+        <path d="M9,28 L17,22 L9,22 Z" fill="#DC2626" opacity="0.7" />
       </g>
     ),
   },
@@ -323,9 +324,9 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   mm: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M20,4 C17,4 14,14 13,26 C12,34 11,42 10,50 C9,58 9,64 10,68 C11,72 14,76 20,76 C26,76 29,72 30,68 C31,64 31,58 30,50 C29,42 28,34 27,26 C26,14 23,4 20,4Z" fill="#F87171" opacity="0.3" />
-        <ellipse cx="17" cy="55" rx="3" ry="5" fill="#FBBF24" opacity="0.2" />
-        <ellipse cx="24" cy="62" rx="2.5" ry="4" fill="#FBBF24" opacity="0.2" />
+        <path d="M17,2 C13,2 10,12 9,24 C8,32 8,40 9,48 C10,56 13,72 17,82 C21,72 24,56 25,48 C26,40 26,32 25,24 C24,12 21,2 17,2 Z" fill="#F87171" opacity="0.3" />
+        <ellipse cx="14" cy="14" rx="3" ry="5" fill="#FBBF24" opacity="0.2" />
+        <ellipse cx="21" cy="10" rx="2.5" ry="4" fill="#FBBF24" opacity="0.2" />
       </g>
     ),
   },
@@ -334,8 +335,8 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   migr: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <line x1="8" y1="58" x2="32" y2="58" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
-        <path d="M28,54 L34,58 L28,62" fill="none" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
+        <line x1="5" y1="16" x2="29" y2="16" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
+        <path d="M25,12 L31,16 L25,20" fill="none" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
       </g>
     ),
   },
@@ -344,9 +345,9 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   mob: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <line x1="20" y1="14" x2="20" y2="68" stroke="#DC2626" strokeWidth="2" opacity="0.6" />
-        <path d="M16,18 L20,10 L24,18" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
-        <path d="M16,64 L20,72 L24,64" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
+        <line x1="17" y1="8" x2="17" y2="72" stroke="#DC2626" strokeWidth="2" opacity="0.6" />
+        <path d="M13,12 L17,4 L21,12" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
+        <path d="M13,68 L17,76 L21,68" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
       </g>
     ),
   },
@@ -355,9 +356,9 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   m1: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <line x1="20" y1="26" x2="20" y2="58" stroke="#DC2626" strokeWidth="1.5" opacity="0.5" />
-        <path d="M17,30 L20,24 L23,30" fill="none" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
-        <path d="M17,54 L20,60 L23,54" fill="none" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
+        <line x1="17" y1="16" x2="17" y2="50" stroke="#DC2626" strokeWidth="1.5" opacity="0.5" />
+        <path d="M14,20 L17,14 L20,20" fill="none" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
+        <path d="M14,46 L17,52 L20,46" fill="none" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
       </g>
     ),
   },
@@ -366,7 +367,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   odc: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M18,8 Q18,24 17,38 L23,38 Q22,24 22,8 Z" fill="#22C55E" opacity="0.55" />
+        <path d="M15,34 Q15,50 14,68 L20,68 Q19,50 19,34 Z" fill="#22C55E" opacity="0.55" />
       </g>
     ),
   },
@@ -375,7 +376,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   oed: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="23" y="54" width="7" height="10" rx="1.5" fill="#3B82F6" opacity="0.65" />
+        <rect x="21" y="10" width="7" height="10" rx="1.5" fill="#3B82F6" opacity="0.65" />
       </g>
     ),
   },
@@ -384,7 +385,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   oem: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="10" y="54" width="7" height="10" rx="1.5" fill="#3B82F6" opacity="0.65" />
+        <rect x="7" y="10" width="7" height="10" rx="1.5" fill="#3B82F6" opacity="0.65" />
       </g>
     ),
   },
@@ -393,7 +394,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   oemo: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M10,54 L17,54 L17,62 L27,62 L27,74 L13,74 L13,62 L10,62 Z" fill="#3B82F6" opacity="0.6" />
+        <path d="M7,10 L14,10 L14,4 L23,4 L23,14 L11,14 L11,10 L7,10 L7,20 L14,20 L14,14 Z" fill="#3B82F6" opacity="0.6" />
       </g>
     ),
   },
@@ -402,7 +403,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   oemod: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M10,54 L17,54 L17,62 L23,62 L23,54 L30,54 L30,62 L27,62 L27,74 L13,74 L13,62 L10,62 Z" fill="#3B82F6" opacity="0.6" />
+        <path d="M7,10 L14,10 L14,4 L20,4 L20,10 L27,10 L27,20 L20,20 L20,14 L14,14 L14,20 L7,20 Z" fill="#3B82F6" opacity="0.6" />
       </g>
     ),
   },
@@ -411,7 +412,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   oeo: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="13" y="62" width="14" height="12" rx="2" fill="#3B82F6" opacity="0.6" />
+        <rect x="11" y="4" width="12" height="10" rx="2" fill="#3B82F6" opacity="0.6" />
       </g>
     ),
   },
@@ -420,7 +421,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   oeod: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M13,62 L27,62 L30,62 L30,54 L23,54 L23,62 L27,74 L13,74 Z" fill="#3B82F6" opacity="0.6" />
+        <path d="M11,4 L23,4 L23,10 L27,10 L27,20 L20,20 L20,14 L11,14 Z" fill="#3B82F6" opacity="0.6" />
       </g>
     ),
   },
@@ -429,8 +430,8 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   rcr: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="17" y="8" width="6" height="36" rx="2" fill="#6B7280" opacity="0.7" />
-        <rect x="15" y="40" width="10" height="6" rx="1.5" fill="#9CA3AF" opacity="0.6" />
+        <rect x="15" y="34" width="6" height="36" rx="2" fill="#6B7280" opacity="0.7" />
+        <rect x="13" y="28" width="10" height="6" rx="1.5" fill="#9CA3AF" opacity="0.6" />
       </g>
     ),
   },
@@ -439,7 +440,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   prot: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M8,44 Q20,38 32,44 L32,52 Q20,46 8,52 Z" fill="#F9A8D4" opacity="0.55" />
+        <path d="M6,26 Q17,22 28,26 L28,34 Q17,30 6,34 Z" fill="#F9A8D4" opacity="0.55" />
       </g>
     ),
   },
@@ -448,8 +449,8 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   pp: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <ellipse cx="20" cy="58" rx="5" ry="8" fill="#FBBF24" opacity="0.5" />
-        <ellipse cx="20" cy="58" rx="3" ry="5" fill="#F59E0B" opacity="0.4" />
+        <ellipse cx="17" cy="16" rx="5" ry="8" fill="#FBBF24" opacity="0.5" />
+        <ellipse cx="17" cy="16" rx="3" ry="5" fill="#F59E0B" opacity="0.4" />
       </g>
     ),
   },
@@ -458,8 +459,8 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   punte: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M8,48 L32,48 L32,62 Q20,66 8,62 Z" fill="#D97706" opacity="0.45" />
-        <line x1="8" y1="48" x2="32" y2="48" stroke="#B45309" strokeWidth="1" opacity="0.5" />
+        <path d="M6,6 L28,6 L28,20 Q17,24 6,20 Z" fill="#D97706" opacity="0.45" />
+        <line x1="6" y1="6" x2="28" y2="6" stroke="#B45309" strokeWidth="1" opacity="0.5" />
       </g>
     ),
   },
@@ -468,17 +469,17 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   rr: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M17,4 Q16,20 15,38 L25,38 Q24,20 23,4 Z" fill="#6B7280" opacity="0.6" />
-        <path d="M15,38 L25,38 L27,46 L13,46 Z" fill="#4B5563" opacity="0.5" />
+        <path d="M14,34 Q14,50 13,68 L21,68 Q20,50 20,34 Z" fill="#6B7280" opacity="0.6" />
+        <path d="M11,28 L23,28 L21,34 L14,34 Z" fill="#4B5563" opacity="0.5" />
       </g>
     ),
   },
 
-  // Semi erupt - faded/transparent lower half (partially erupted)
+  // Semi erupt - faded/transparent lower half of crown (partially erupted)
   se: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="6" y="56" width="28" height="24" fill="white" opacity="0.65" />
+        <rect x="4" y="16" width="26" height="20" fill="white" opacity="0.65" />
       </g>
     ),
   },
@@ -487,8 +488,8 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   te: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M18,8 Q18,24 17,42 L23,42 Q22,24 22,8 Z" fill="#22C55E" opacity="0.55" />
-        <circle cx="20" cy="8" r="2" fill="#16A34A" opacity="0.5" />
+        <path d="M15,34 Q15,50 14,72 L20,72 Q19,50 19,34 Z" fill="#22C55E" opacity="0.55" />
+        <circle cx="17" cy="74" r="2" fill="#16A34A" opacity="0.5" />
       </g>
     ),
   },
@@ -497,8 +498,8 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   tei: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M18,20 Q18,30 17,42 L23,42 Q22,30 22,20 Z" fill="#22C55E" opacity="0.45" />
-        <line x1="16" y1="20" x2="24" y2="20" stroke="#F97316" strokeWidth="1.5" opacity="0.6" />
+        <path d="M15,34 Q15,44 14,56 L20,56 Q19,44 19,34 Z" fill="#22C55E" opacity="0.45" />
+        <line x1="13" y1="56" x2="21" y2="56" stroke="#F97316" strokeWidth="1.5" opacity="0.6" />
       </g>
     ),
   },
@@ -507,7 +508,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   tart: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M10,46 Q20,42 30,46 L30,50 Q20,46 10,50 Z" fill="#92400E" opacity="0.45" />
+        <path d="M8,28 Q17,24 26,28 L26,32 Q17,28 8,32 Z" fill="#92400E" opacity="0.45" />
       </g>
     ),
   },
@@ -516,8 +517,8 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   urg: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="18" y="20" width="4" height="24" rx="2" fill="#EF4444" opacity="0.75" />
-        <circle cx="20" cy="52" r="2.5" fill="#EF4444" opacity="0.75" />
+        <rect x="15" y="10" width="4" height="20" rx="2" fill="#EF4444" opacity="0.75" />
+        <circle cx="17" cy="38" r="2.5" fill="#EF4444" opacity="0.75" />
       </g>
     ),
   },
@@ -526,7 +527,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   vc: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M12,48 Q12,60 14,70 Q20,76 26,70 Q28,60 28,48 Q20,44 12,48 Z" fill="#93C5FD" opacity="0.4" />
+        <path d="M9,4 Q9,14 11,22 Q17,28 23,22 Q25,14 25,4 Q17,2 9,4 Z" fill="#93C5FD" opacity="0.4" />
       </g>
     ),
   },
@@ -535,7 +536,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   vco: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M12,48 Q12,60 14,70 Q20,76 26,70 Q28,60 28,48 Q20,44 12,48 Z" fill="#FCD34D" opacity="0.4" />
+        <path d="M9,4 Q9,14 11,22 Q17,28 23,22 Q25,14 25,4 Q17,2 9,4 Z" fill="#FCD34D" opacity="0.4" />
       </g>
     ),
   },
@@ -544,8 +545,8 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   ccr: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M12,48 Q12,44 20,42 Q28,44 28,48 L28,62 Q28,74 20,76 Q12,74 12,62 Z" fill="#F0F0F0" opacity="0.5" />
-        <path d="M12,48 Q20,44 28,48" fill="none" stroke="#D1D5DB" strokeWidth="0.8" opacity="0.6" />
+        <path d="M9,4 Q9,2 17,2 Q25,2 25,4 L25,20 Q25,28 17,30 Q9,28 9,20 Z" fill="#F0F0F0" opacity="0.5" />
+        <path d="M9,28 Q17,24 25,28" fill="none" stroke="#D1D5DB" strokeWidth="0.8" opacity="0.6" />
       </g>
     ),
   },
@@ -554,8 +555,8 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   cmc: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M12,48 Q12,44 20,42 Q28,44 28,48 L28,62 Q28,74 20,76 Q12,74 12,62 Z" fill="#9CA3AF" opacity="0.4" />
-        <path d="M12,48 Q20,44 28,48" fill="none" stroke="#6B7280" strokeWidth="0.8" opacity="0.6" />
+        <path d="M9,4 Q9,2 17,2 Q25,2 25,4 L25,20 Q25,28 17,30 Q9,28 9,20 Z" fill="#9CA3AF" opacity="0.4" />
+        <path d="M9,28 Q17,24 25,28" fill="none" stroke="#6B7280" strokeWidth="0.8" opacity="0.6" />
       </g>
     ),
   },
@@ -564,7 +565,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   cpv: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M12,48 Q12,44 20,42 Q28,44 28,48 L28,62 Q28,74 20,76 Q12,74 12,62 Z" fill="#FBBF24" opacity="0.35" strokeDasharray="2 1" stroke="#D97706" strokeWidth="0.5" />
+        <path d="M9,4 Q9,2 17,2 Q25,2 25,4 L25,20 Q25,28 17,30 Q9,28 9,20 Z" fill="#FBBF24" opacity="0.35" strokeDasharray="2 1" stroke="#D97706" strokeWidth="0.5" />
       </g>
     ),
   },
@@ -573,8 +574,8 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   di: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <rect x="6" y="0" width="28" height="80" fill="white" opacity="0.5" />
-        <path d="M16,60 L20,70 L24,60" fill="none" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+        <rect x="4" y="0" width="26" height="84" fill="white" opacity="0.5" />
+        <path d="M13,60 L17,70 L21,60" fill="none" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
       </g>
     ),
   },
@@ -583,7 +584,7 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   er: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <path d="M14,58 L18,64 L26,52" fill="none" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
+        <path d="M11,14 L15,20 L23,8" fill="none" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
       </g>
     ),
   },
@@ -592,8 +593,8 @@ export const CONDITION_OVERLAYS: Record<string, OverlayDef> = {
   ext: {
     render: (id) => (
       <g key={`ov-${id}`}>
-        <line x1="20" y1="70" x2="20" y2="20" stroke="#7C3AED" strokeWidth="2" opacity="0.5" />
-        <path d="M15,26 L20,16 L25,26" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
+        <line x1="17" y1="70" x2="17" y2="10" stroke="#7C3AED" strokeWidth="2" opacity="0.5" />
+        <path d="M12,16 L17,6 L22,16" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
       </g>
     ),
   },
