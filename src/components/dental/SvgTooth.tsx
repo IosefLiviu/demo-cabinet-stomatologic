@@ -820,85 +820,91 @@ export function SvgTooth({
       ) : (
         <>
           <defs>
-            {/* ─── Main body gradient – root is darker/more yellow (cementum), crown lighter ─── */}
-            <linearGradient id={`g-${id}`} x1="0.1" y1="0" x2="0.9" y2="1">
-              <stop offset="0%" stopColor="#d8ce9e" />
-              <stop offset="20%" stopColor="#ddd5b0" />
-              <stop offset="40%" stopColor="#e2dbc0" />
-              <stop offset="55%" stopColor="#e6e0c8" />
-              <stop offset="70%" stopColor="#eae4d0" />
-              <stop offset="85%" stopColor="#ede8d8" />
-              <stop offset="100%" stopColor="#f0ebde" />
+            {/* ─── Main body gradient – bright ivory/white base, warmer at root apex ─── */}
+            <linearGradient id={`g-${id}`} x1="0.15" y1="0" x2="0.85" y2="1">
+              <stop offset="0%" stopColor="#e8e0cc" />
+              <stop offset="12%" stopColor="#ede6d4" />
+              <stop offset="28%" stopColor="#f2ede2" />
+              <stop offset="42%" stopColor="#f6f2ea" />
+              <stop offset="55%" stopColor="#f9f6f0" />
+              <stop offset="70%" stopColor="#fbf9f4" />
+              <stop offset="85%" stopColor="#fdfcf9" />
+              <stop offset="100%" stopColor="#fefefe" />
             </linearGradient>
 
-            {/* ─── Enamel cap – translucent white sheen on CROWN only ─── */}
+            {/* ─── Enamel cap – prominent white sheen on CROWN only ─── */}
             {shape.crownArea && (
-              <linearGradient id={`ce-${id}`} x1="0.5" y1="0.35" x2="0.5" y2="1">
-                <stop offset="0%" stopColor="white" stopOpacity="0.02" />
-                <stop offset="10%" stopColor="white" stopOpacity="0.12" />
-                <stop offset="25%" stopColor="white" stopOpacity="0.22" />
-                <stop offset="40%" stopColor="white" stopOpacity="0.28" />
-                <stop offset="55%" stopColor="white" stopOpacity="0.24" />
-                <stop offset="70%" stopColor="white" stopOpacity="0.18" />
-                <stop offset="85%" stopColor="white" stopOpacity="0.1" />
-                <stop offset="100%" stopColor="white" stopOpacity="0.06" />
+              <linearGradient id={`ce-${id}`} x1="0.5" y1="0.3" x2="0.5" y2="1">
+                <stop offset="0%" stopColor="white" stopOpacity="0.05" />
+                <stop offset="8%" stopColor="white" stopOpacity="0.2" />
+                <stop offset="20%" stopColor="white" stopOpacity="0.38" />
+                <stop offset="35%" stopColor="white" stopOpacity="0.48" />
+                <stop offset="50%" stopColor="white" stopOpacity="0.44" />
+                <stop offset="65%" stopColor="white" stopOpacity="0.36" />
+                <stop offset="80%" stopColor="white" stopOpacity="0.22" />
+                <stop offset="100%" stopColor="white" stopOpacity="0.12" />
               </linearGradient>
             )}
 
-            {/* ─── Left specular highlight ─── */}
-            <linearGradient id={`h-${id}`} x1="0" y1="0.2" x2="0.65" y2="0.8">
-              <stop offset="0%" stopColor="white" stopOpacity="0.42" />
-              <stop offset="18%" stopColor="white" stopOpacity="0.16" />
-              <stop offset="45%" stopColor="white" stopOpacity="0.04" />
+            {/* ─── Left specular highlight – strong 3D shine ─── */}
+            <linearGradient id={`h-${id}`} x1="0" y1="0.15" x2="0.6" y2="0.85">
+              <stop offset="0%" stopColor="white" stopOpacity="0.6" />
+              <stop offset="12%" stopColor="white" stopOpacity="0.35" />
+              <stop offset="30%" stopColor="white" stopOpacity="0.12" />
+              <stop offset="55%" stopColor="white" stopOpacity="0.03" />
               <stop offset="100%" stopColor="white" stopOpacity="0" />
             </linearGradient>
 
-            {/* ─── Right edge shadow ─── */}
-            <linearGradient id={`rs2-${id}`} x1="1" y1="0.3" x2="0.3" y2="0.7">
-              <stop offset="0%" stopColor="#8a7c5e" stopOpacity="0.2" />
-              <stop offset="35%" stopColor="#8a7c5e" stopOpacity="0.06" />
-              <stop offset="100%" stopColor="#8a7c5e" stopOpacity="0" />
+            {/* ─── Right edge shadow – subtle depth ─── */}
+            <linearGradient id={`rs2-${id}`} x1="1" y1="0.25" x2="0.25" y2="0.75">
+              <stop offset="0%" stopColor="#9e9080" stopOpacity="0.28" />
+              <stop offset="25%" stopColor="#9e9080" stopOpacity="0.12" />
+              <stop offset="50%" stopColor="#9e9080" stopOpacity="0.04" />
+              <stop offset="100%" stopColor="#9e9080" stopOpacity="0" />
             </linearGradient>
 
             {/* ─── Cementum darkening on root apex ─── */}
             <linearGradient id={`rs-${id}`} x1="0.5" y1="0" x2="0.5" y2="0.5">
-              <stop offset="0%" stopColor="#a09060" stopOpacity="0.32" />
-              <stop offset="25%" stopColor="#a89870" stopOpacity="0.18" />
-              <stop offset="50%" stopColor="#b0a080" stopOpacity="0.08" />
-              <stop offset="100%" stopColor="#b0a080" stopOpacity="0" />
+              <stop offset="0%" stopColor="#c0b090" stopOpacity="0.35" />
+              <stop offset="20%" stopColor="#c8b898" stopOpacity="0.22" />
+              <stop offset="40%" stopColor="#d0c0a0" stopOpacity="0.12" />
+              <stop offset="70%" stopColor="#d8c8a8" stopOpacity="0.05" />
+              <stop offset="100%" stopColor="#d8c8a8" stopOpacity="0" />
             </linearGradient>
 
             {/* ─── Furcation depth shadow – gum-coloured radial gradient ─── */}
             {shape.furcationArea && (
               <radialGradient id={`fur-${id}`} cx="0.5" cy="0.6" r="0.5">
-                <stop offset="0%" stopColor="#c08878" stopOpacity="0.6" />
-                <stop offset="25%" stopColor="#c89888" stopOpacity="0.4" />
-                <stop offset="50%" stopColor="#d4a898" stopOpacity="0.2" />
-                <stop offset="80%" stopColor="#e0bab0" stopOpacity="0.06" />
-                <stop offset="100%" stopColor="#e0bab0" stopOpacity="0" />
+                <stop offset="0%" stopColor="#c89888" stopOpacity="0.55" />
+                <stop offset="20%" stopColor="#d0a090" stopOpacity="0.35" />
+                <stop offset="45%" stopColor="#d8b0a0" stopOpacity="0.15" />
+                <stop offset="75%" stopColor="#e0c0b0" stopOpacity="0.05" />
+                <stop offset="100%" stopColor="#e0c0b0" stopOpacity="0" />
               </radialGradient>
             )}
 
-            {/* ─── Ambient occlusion ─── */}
+            {/* ─── Ambient occlusion – softer for whiter teeth ─── */}
             <radialGradient id={`ao-${id}`} cx="0.5" cy="0.52" r="0.48">
-              <stop offset="55%" stopColor="transparent" />
-              <stop offset="82%" stopColor="#7a6c50" stopOpacity="0.08" />
-              <stop offset="100%" stopColor="#7a6c50" stopOpacity="0.18" />
+              <stop offset="50%" stopColor="transparent" />
+              <stop offset="75%" stopColor="#8a8070" stopOpacity="0.06" />
+              <stop offset="90%" stopColor="#8a8070" stopOpacity="0.14" />
+              <stop offset="100%" stopColor="#8a8070" stopOpacity="0.22" />
             </radialGradient>
 
-            {/* ─── Inner body highlight ─── */}
-            <radialGradient id={`ih-${id}`} cx="0.42" cy="0.55" r="0.35" fx="0.38" fy="0.5">
-              <stop offset="0%" stopColor="white" stopOpacity="0.18" />
-              <stop offset="50%" stopColor="white" stopOpacity="0.05" />
+            {/* ─── Inner body highlight – stronger volumetric glow ─── */}
+            <radialGradient id={`ih-${id}`} cx="0.4" cy="0.55" r="0.38" fx="0.35" fy="0.48">
+              <stop offset="0%" stopColor="white" stopOpacity="0.32" />
+              <stop offset="35%" stopColor="white" stopOpacity="0.12" />
+              <stop offset="70%" stopColor="white" stopOpacity="0.03" />
               <stop offset="100%" stopColor="white" stopOpacity="0" />
             </radialGradient>
 
             {/* ─── Dentin warmth (subtle warm layer beneath enamel) ─── */}
             {shape.crownArea && (
               <radialGradient id={`dt-${id}`} cx="0.5" cy="0.6" r="0.4">
-                <stop offset="0%" stopColor="#f5e8c8" stopOpacity="0.12" />
-                <stop offset="60%" stopColor="#ede0c0" stopOpacity="0.05" />
-                <stop offset="100%" stopColor="#ede0c0" stopOpacity="0" />
+                <stop offset="0%" stopColor="#f8edd5" stopOpacity="0.1" />
+                <stop offset="50%" stopColor="#f0e4c8" stopOpacity="0.04" />
+                <stop offset="100%" stopColor="#f0e4c8" stopOpacity="0" />
               </radialGradient>
             )}
 
@@ -911,9 +917,9 @@ export function SvgTooth({
             {/* Soft drop shadow */}
             <path
               d={shape.outline}
-              fill="rgba(0,0,0,0.05)"
+              fill="rgba(0,0,0,0.04)"
               fillRule="evenodd"
-              transform="translate(0.8, 1.5)"
+              transform="translate(0.6, 1.2)"
             />
 
             {/* Main tooth fill */}
@@ -921,8 +927,8 @@ export function SvgTooth({
               d={shape.outline}
               fill={`url(#g-${id})`}
               fillRule="evenodd"
-              stroke="#b5a878"
-              strokeWidth="0.5"
+              stroke="#cdc0a8"
+              strokeWidth="0.45"
               strokeLinejoin="round"
             />
 
@@ -966,10 +972,10 @@ export function SvgTooth({
                 key={`rl-${i}`}
                 d={line}
                 fill="none"
-                stroke="#c0b088"
-                strokeWidth="0.35"
+                stroke="#d0c4a8"
+                strokeWidth="0.3"
                 strokeLinecap="round"
-                opacity={0.2}
+                opacity={0.18}
               />
             ))}
 
@@ -978,10 +984,10 @@ export function SvgTooth({
               <path
                 d={shape.cervical}
                 fill="none"
-                stroke="#a89870"
-                strokeWidth="0.75"
+                stroke="#c0b498"
+                strokeWidth="0.65"
                 strokeLinecap="round"
-                opacity={0.5}
+                opacity={0.45}
               />
             )}
 
@@ -991,11 +997,11 @@ export function SvgTooth({
                 key={`cusp-${i}`}
                 d={cusp}
                 fill="none"
-                stroke="#c0b490"
-                strokeWidth="0.5"
+                stroke="#d0c4a0"
+                strokeWidth="0.45"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                opacity={0.38}
+                opacity={0.3}
               />
             ))}
 
@@ -1005,10 +1011,10 @@ export function SvgTooth({
                 key={`mr-${i}`}
                 d={ridge}
                 fill="none"
-                stroke="#bfb490"
-                strokeWidth="0.4"
+                stroke="#cfc4a0"
+                strokeWidth="0.35"
                 strokeLinecap="round"
-                opacity={0.28}
+                opacity={0.22}
               />
             ))}
 
@@ -1018,10 +1024,10 @@ export function SvgTooth({
                 key={i}
                 d={detail}
                 fill="none"
-                stroke="#a08858"
-                strokeWidth="0.5"
+                stroke="#b8a880"
+                strokeWidth="0.45"
                 strokeLinecap="round"
-                opacity={0.38}
+                opacity={0.3}
               />
             ))}
 
