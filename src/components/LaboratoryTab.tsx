@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback, DragEvent } from 'react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Plus, Check, Trash2, Search, Send, ArrowDownToLine, FlaskConical, RotateCcw, CheckCircle, User, Calendar, Palette, MapPin, Stethoscope, Clock, Building2, MessageSquare } from 'lucide-react';
+import { Plus, Check, Trash2, Search, Send, ArrowDownToLine, FlaskConical, RotateCcw, CheckCircle, User, Calendar, Palette, MapPin, Stethoscope, Clock, Building2, MessageSquare, GripVertical, LayoutGrid, Columns3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -78,6 +78,9 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
   const { samples, loading, addSample, markAsReturned, markAsTrial, markAsFinalized, resendToLab, deleteSample } = useLabSamples();
   const { cabinets } = useCabinets();
   const [activeSubTab, setActiveSubTab] = useState<TabStatus>('sent');
+  const [viewMode, setViewMode] = useState<'kanban' | 'tabs'>('kanban');
+  const [draggedSampleId, setDraggedSampleId] = useState<string | null>(null);
+  const [dragOverColumn, setDragOverColumn] = useState<TabStatus | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showResendDialog, setShowResendDialog] = useState(false);
   const [showTrialDialog, setShowTrialDialog] = useState(false);
@@ -207,6 +210,83 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
     return doctor?.name || null;
   };
 
+  // Drag and drop handlers
+  const VALID_TRANSITIONS: Record<string, TabStatus[]> = {
+    sent: ['returned'],
+    resent: ['returned'],
+    returned: ['trial'],
+    trial: ['finalized', 'sent'],
+  };
+
+  const handleDragStart = (e: DragEvent<HTMLDivElement>, sampleId: string) => {
+    setDraggedSampleId(sampleId);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', sampleId);
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '0.5';
+    }
+  };
+
+  const handleDragEnd = (e: DragEvent<HTMLDivElement>) => {
+    setDraggedSampleId(null);
+    setDragOverColumn(null);
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '1';
+    }
+  };
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>, column: TabStatus) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverColumn(column);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverColumn(null);
+  };
+
+  const handleDrop = async (e: DragEvent<HTMLDivElement>, targetColumn: TabStatus) => {
+    e.preventDefault();
+    setDragOverColumn(null);
+    const sampleId = e.dataTransfer.getData('text/plain');
+    if (!sampleId) return;
+
+    const sample = samples.find(s => s.id === sampleId);
+    if (!sample) return;
+
+    const validTargets = VALID_TRANSITIONS[sample.status] || [];
+    if (!validTargets.includes(targetColumn)) {
+      setDraggedSampleId(null);
+      return;
+    }
+
+    if (targetColumn === 'returned') {
+      await markAsReturned(sampleId);
+    } else if (targetColumn === 'trial') {
+      // Need cabinet selection - open dialog
+      setTrialSampleId(sampleId);
+      setSelectedCabinetId('');
+      setShowTrialDialog(true);
+    } else if (targetColumn === 'finalized') {
+      await markAsFinalized(sampleId);
+    } else if (targetColumn === 'sent') {
+      // Resend - need reason
+      setResendSampleId(sampleId);
+      setResendReason('');
+      setShowResendDialog(true);
+    }
+
+    setDraggedSampleId(null);
+  };
+
+  const canDropOnColumn = (column: TabStatus): boolean => {
+    if (!draggedSampleId) return false;
+    const sample = samples.find(s => s.id === draggedSampleId);
+    if (!sample) return false;
+    const validTargets = VALID_TRANSITIONS[sample.status] || [];
+    return validTargets.includes(column);
+  };
+
   const getCabinetName = (cabinetId: number | null) => {
     if (!cabinetId) return null;
     const cabinet = cabinets.find(c => c.id === cabinetId);
@@ -229,11 +309,19 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
     return (
       <div
         key={sample.id}
+        draggable
+        onDragStart={(e) => handleDragStart(e, sample.id)}
+        onDragEnd={handleDragEnd}
         className={cn(
-          "group relative rounded-xl border p-4 transition-all hover:shadow-md",
-          config.bgColor, config.borderColor
+          "group relative rounded-xl border p-4 transition-all hover:shadow-md cursor-grab active:cursor-grabbing",
+          config.bgColor, config.borderColor,
+          draggedSampleId === sample.id && "opacity-50 scale-95"
         )}
       >
+        {/* Drag handle indicator */}
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-30 transition-opacity">
+          <GripVertical className="h-4 w-4 text-muted-foreground" />
+        </div>
         {/* Top row: status + date + actions */}
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">
@@ -410,6 +498,24 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
               className="pl-8 w-full sm:w-[200px] h-9"
             />
           </div>
+          <div className="flex items-center border rounded-lg h-9">
+            <Button
+              variant={viewMode === 'kanban' ? 'secondary' : 'ghost'}
+              size="icon"
+              className="h-8 w-8 rounded-r-none"
+              onClick={() => setViewMode('kanban')}
+            >
+              <Columns3 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'tabs' ? 'secondary' : 'ghost'}
+              size="icon"
+              className="h-8 w-8 rounded-l-none"
+              onClick={() => setViewMode('tabs')}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+          </div>
           <Button onClick={() => setShowAddDialog(true)} className="gap-2 h-9">
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">Lucrare Nouă</span>
@@ -417,61 +523,114 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
         </div>
       </div>
 
-      {/* Summary stats */}
-      <div className="grid grid-cols-4 gap-2">
-        {([
-          { key: 'sent' as TabStatus, count: sentSamples.length, label: 'La Laborator', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/30', border: 'border-blue-200 dark:border-blue-800', Icon: Send },
-          { key: 'returned' as TabStatus, count: returnedSamples.length, label: 'Primite', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-200 dark:border-emerald-800', Icon: ArrowDownToLine },
-          { key: 'trial' as TabStatus, count: trialSamples.length, label: 'La Probă', color: 'text-violet-600', bg: 'bg-violet-50 dark:bg-violet-950/30', border: 'border-violet-200 dark:border-violet-800', Icon: FlaskConical },
-          { key: 'finalized' as TabStatus, count: finalizedSamples.length, label: 'Finalizate', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-200 dark:border-emerald-800', Icon: CheckCircle },
-        ]).map(({ key, count, label, color, bg, border, Icon }) => (
-          <button
-            key={key}
-            onClick={() => setActiveSubTab(key)}
-            className={cn(
-              "rounded-xl border p-3 text-left transition-all hover:shadow-sm cursor-pointer",
-              activeSubTab === key ? `${bg} ${border} ring-1 ring-primary/20` : "bg-card border-border"
-            )}
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <Icon className={cn("h-3.5 w-3.5", color)} />
-              <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{label}</span>
+      {viewMode === 'kanban' ? (
+        /* Kanban Board */
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          {([
+            { key: 'sent' as TabStatus, list: filteredSentSamples, label: 'La Laborator', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/30', border: 'border-blue-200 dark:border-blue-800', headerBg: 'bg-blue-100 dark:bg-blue-900/40', Icon: Send },
+            { key: 'returned' as TabStatus, list: filteredReturnedSamples, label: 'Primite', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-200 dark:border-emerald-800', headerBg: 'bg-emerald-100 dark:bg-emerald-900/40', Icon: ArrowDownToLine },
+            { key: 'trial' as TabStatus, list: filteredTrialSamples, label: 'La Probă', color: 'text-violet-600', bg: 'bg-violet-50 dark:bg-violet-950/30', border: 'border-violet-200 dark:border-violet-800', headerBg: 'bg-violet-100 dark:bg-violet-900/40', Icon: FlaskConical },
+            { key: 'finalized' as TabStatus, list: filteredFinalizedSamples, label: 'Finalizate', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-200 dark:border-emerald-800', headerBg: 'bg-emerald-100 dark:bg-emerald-900/40', Icon: CheckCircle },
+          ]).map(({ key, list, label, color, bg, border, headerBg, Icon }) => (
+            <div
+              key={key}
+              className={cn(
+                "flex flex-col rounded-xl border-2 transition-all min-h-[300px]",
+                border,
+                dragOverColumn === key && canDropOnColumn(key) && "ring-2 ring-primary shadow-lg scale-[1.01]",
+                dragOverColumn === key && !canDropOnColumn(key) && "opacity-50",
+              )}
+              onDragOver={(e) => handleDragOver(e, key)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, key)}
+            >
+              {/* Column header */}
+              <div className={cn("flex items-center justify-between px-3 py-2.5 rounded-t-[10px]", headerBg)}>
+                <div className="flex items-center gap-2">
+                  <Icon className={cn("h-4 w-4", color)} />
+                  <span className={cn("text-sm font-semibold", color)}>{label}</span>
+                </div>
+                <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{list.length}</Badge>
+              </div>
+
+              {/* Column body */}
+              <div className="flex-1 p-2 space-y-2 overflow-y-auto max-h-[600px]">
+                {loading ? (
+                  <div className="text-center py-8 text-muted-foreground text-xs">Se încarcă...</div>
+                ) : list.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                    <FlaskConical className="h-6 w-6 mb-2 opacity-20" />
+                    <p className="text-[11px]">{searchTerm ? 'Nimic găsit' : 'Gol'}</p>
+                    {draggedSampleId && canDropOnColumn(key) && (
+                      <p className="text-[10px] mt-1 text-primary font-medium animate-pulse">Trage aici ↓</p>
+                    )}
+                  </div>
+                ) : (
+                  list.map(s => renderSampleCard(s, key))
+                )}
+              </div>
             </div>
-            <p className={cn("text-2xl font-bold", color)}>{count}</p>
-          </button>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        /* Tabs View (original) */
+        <>
+          {/* Summary stats */}
+          <div className="grid grid-cols-4 gap-2">
+            {([
+              { key: 'sent' as TabStatus, count: sentSamples.length, label: 'La Laborator', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/30', border: 'border-blue-200 dark:border-blue-800', Icon: Send },
+              { key: 'returned' as TabStatus, count: returnedSamples.length, label: 'Primite', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-200 dark:border-emerald-800', Icon: ArrowDownToLine },
+              { key: 'trial' as TabStatus, count: trialSamples.length, label: 'La Probă', color: 'text-violet-600', bg: 'bg-violet-50 dark:bg-violet-950/30', border: 'border-violet-200 dark:border-violet-800', Icon: FlaskConical },
+              { key: 'finalized' as TabStatus, count: finalizedSamples.length, label: 'Finalizate', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-200 dark:border-emerald-800', Icon: CheckCircle },
+            ]).map(({ key, count, label, color, bg, border, Icon }) => (
+              <button
+                key={key}
+                onClick={() => setActiveSubTab(key)}
+                className={cn(
+                  "rounded-xl border p-3 text-left transition-all hover:shadow-sm cursor-pointer",
+                  activeSubTab === key ? `${bg} ${border} ring-1 ring-primary/20` : "bg-card border-border"
+                )}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <Icon className={cn("h-3.5 w-3.5", color)} />
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{label}</span>
+                </div>
+                <p className={cn("text-2xl font-bold", color)}>{count}</p>
+              </button>
+            ))}
+          </div>
 
-      {/* Tabs content */}
-      <Tabs value={activeSubTab} onValueChange={(v) => setActiveSubTab(v as TabStatus)}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="sent" className="gap-1.5">
-            <Send className="h-3.5 w-3.5" />
-            La Laborator
-            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{sentSamples.length}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="returned" className="gap-1.5">
-            <ArrowDownToLine className="h-3.5 w-3.5" />
-            Primite
-            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{returnedSamples.length}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="trial" className="gap-1.5">
-            <FlaskConical className="h-3.5 w-3.5" />
-            La Probă
-            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{trialSamples.length}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="finalized" className="gap-1.5">
-            <CheckCircle className="h-3.5 w-3.5" />
-            Finalizate
-            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{finalizedSamples.length}</Badge>
-          </TabsTrigger>
-        </TabsList>
+          <Tabs value={activeSubTab} onValueChange={(v) => setActiveSubTab(v as TabStatus)}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="sent" className="gap-1.5">
+                <Send className="h-3.5 w-3.5" />
+                La Laborator
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{sentSamples.length}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="returned" className="gap-1.5">
+                <ArrowDownToLine className="h-3.5 w-3.5" />
+                Primite
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{returnedSamples.length}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="trial" className="gap-1.5">
+                <FlaskConical className="h-3.5 w-3.5" />
+                La Probă
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{trialSamples.length}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="finalized" className="gap-1.5">
+                <CheckCircle className="h-3.5 w-3.5" />
+                Finalizate
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{finalizedSamples.length}</Badge>
+              </TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="sent">{renderCardGrid(filteredSentSamples, 'sent')}</TabsContent>
-        <TabsContent value="returned">{renderCardGrid(filteredReturnedSamples, 'returned')}</TabsContent>
-        <TabsContent value="trial">{renderCardGrid(filteredTrialSamples, 'trial')}</TabsContent>
-        <TabsContent value="finalized">{renderCardGrid(filteredFinalizedSamples, 'finalized')}</TabsContent>
-      </Tabs>
+            <TabsContent value="sent">{renderCardGrid(filteredSentSamples, 'sent')}</TabsContent>
+            <TabsContent value="returned">{renderCardGrid(filteredReturnedSamples, 'returned')}</TabsContent>
+            <TabsContent value="trial">{renderCardGrid(filteredTrialSamples, 'trial')}</TabsContent>
+            <TabsContent value="finalized">{renderCardGrid(filteredFinalizedSamples, 'finalized')}</TabsContent>
+          </Tabs>
+        </>
+      )}
 
       {/* Add Sample Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
