@@ -96,7 +96,7 @@ export function ToothSelector({
     const isMissing = statusName === 'missing' || conditionAbsent;
     const isLower = Math.floor(tooth / 10) === 3 || Math.floor(tooth / 10) === 4 || Math.floor(tooth / 10) === 7 || Math.floor(tooth / 10) === 8;
     const dims = getToothDimensions(tooth, isDeciduous);
-    const scale = isDeciduous ? 0.45 : 0.5;
+    const scale = isDeciduous ? 0.55 : 0.6;
     
     const toothContent = (
       <button
