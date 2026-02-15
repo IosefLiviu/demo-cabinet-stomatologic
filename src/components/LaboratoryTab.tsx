@@ -216,6 +216,7 @@ export function LaboratoryTab({ patients, doctors }: LaboratoryTabProps) {
     resent: ['returned'],
     returned: ['trial'],
     trial: ['finalized', 'sent'],
+    finalized: ['returned', 'trial'],
   };
 
   const handleDragStart = (e: DragEvent<HTMLDivElement>, sampleId: string) => {
