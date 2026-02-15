@@ -437,7 +437,27 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             background: 'linear-gradient(180deg, hsl(var(--muted)/0.3) 0%, hsl(var(--muted)/0.1) 100%)',
           }}
         >
-          <div className="space-y-4">
+          <div className="space-y-4 relative">
+            {/* Teeth type toggle - top right */}
+            <div className="absolute top-0 right-0 flex gap-1 z-10">
+              <Button
+                variant={showDeciduousTeeth ? 'default' : 'outline'}
+                size="sm"
+                className="h-6 text-[10px] px-2"
+                onClick={() => setShowDeciduousTeeth(!showDeciduousTeeth)}
+              >
+                Temporari
+              </Button>
+              <Button
+                variant={showPermanentTeeth ? 'default' : 'outline'}
+                size="sm"
+                className="h-6 text-[10px] px-2"
+                onClick={() => setShowPermanentTeeth(!showPermanentTeeth)}
+              >
+                Permanenți
+              </Button>
+            </div>
+
             {showPermanentTeeth && (
               <div className="space-y-2">
                 <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase">
@@ -460,28 +480,9 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
               </div>
             )}
 
-            {/* Separator with teeth type toggle */}
-            <div className="flex justify-center items-center gap-2 py-2">
-              <div className="h-px flex-1 bg-border" />
-              <div className="flex gap-1">
-                <Button
-                  variant={showDeciduousTeeth ? 'default' : 'outline'}
-                  size="sm"
-                  className="h-6 text-[10px] px-2"
-                  onClick={() => setShowDeciduousTeeth(!showDeciduousTeeth)}
-                >
-                  Temporari
-                </Button>
-                <Button
-                  variant={showPermanentTeeth ? 'default' : 'outline'}
-                  size="sm"
-                  className="h-6 text-[10px] px-2"
-                  onClick={() => setShowPermanentTeeth(!showPermanentTeeth)}
-                >
-                  Permanenți
-                </Button>
-              </div>
-              <div className="h-px flex-1 bg-border" />
+            {/* Separator */}
+            <div className="flex justify-center py-2">
+              <div className="h-px w-full bg-border" />
             </div>
 
             {showDeciduousTeeth && (
