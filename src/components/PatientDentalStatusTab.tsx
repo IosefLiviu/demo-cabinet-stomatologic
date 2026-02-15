@@ -214,8 +214,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<number[]>([]);
   const [journalKey, setJournalKey] = useState(0);
-  const [showPermanentTeeth, setShowPermanentTeeth] = useState(true);
-  const [showDeciduousTeeth, setShowDeciduousTeeth] = useState(true);
+  const [teethView, setTeethView] = useState<'all' | 'permanent' | 'deciduous'>('all');
   const isMobile = useIsMobile();
 
   // Data hooks
@@ -441,24 +440,24 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
             {/* Teeth type toggle - top right */}
             <div className="absolute top-0 right-0 flex gap-1 z-10">
               <Button
-                variant={showDeciduousTeeth ? 'default' : 'outline'}
+                variant={teethView === 'deciduous' ? 'default' : 'outline'}
                 size="sm"
                 className="h-6 text-[10px] px-2"
-                onClick={() => setShowDeciduousTeeth(!showDeciduousTeeth)}
+                onClick={() => setTeethView(teethView === 'deciduous' ? 'all' : 'deciduous')}
               >
                 Temporari
               </Button>
               <Button
-                variant={showPermanentTeeth ? 'default' : 'outline'}
+                variant={teethView === 'permanent' ? 'default' : 'outline'}
                 size="sm"
                 className="h-6 text-[10px] px-2"
-                onClick={() => setShowPermanentTeeth(!showPermanentTeeth)}
+                onClick={() => setTeethView(teethView === 'permanent' ? 'all' : 'permanent')}
               >
                 Permanenți
               </Button>
             </div>
 
-            {showPermanentTeeth && (
+            {(teethView === 'all' || teethView === 'permanent') && (
               <div className="space-y-2">
                 <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase">
                   Maxilar Superior — Dinți Permanenți
@@ -469,7 +468,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
               </div>
             )}
 
-            {showDeciduousTeeth && (
+            {(teethView === 'all' || teethView === 'deciduous') && (
               <div className="space-y-2 mt-4">
                 <div className="text-xs font-medium text-muted-foreground text-center tracking-wide uppercase opacity-70">
                   Dinți Temporari — Superior
@@ -485,7 +484,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
               <div className="h-px w-full bg-border" />
             </div>
 
-            {showDeciduousTeeth && (
+            {(teethView === 'all' || teethView === 'deciduous') && (
               <div className="space-y-2">
                 <div className="flex justify-center gap-0.5 sm:gap-1">
                   {lowerDeciduousTeeth.map(tooth => renderTooth(tooth, true, true))}
@@ -496,7 +495,7 @@ export function PatientDentalStatusTab({ patientId, dentalStatus, onStatusChange
               </div>
             )}
 
-            {showPermanentTeeth && (
+            {(teethView === 'all' || teethView === 'permanent') && (
               <div className="space-y-2 mt-4">
                 <div className="flex justify-center gap-0.5 sm:gap-1">
                   {lowerTeeth.map(tooth => renderTooth(tooth, false, true))}
