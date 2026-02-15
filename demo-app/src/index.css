@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+  display: none !important;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield !important;
+}
+
+@layer base {
+  :root {
+    --background: 40 20% 97%;
+    --foreground: 24 40% 18%;
+    --card: 40 33% 98%;
+    --card-foreground: 24 40% 18%;
+    --popover: 40 33% 98%;
+    --popover-foreground: 24 40% 18%;
+    --primary: 23 44% 35%;
+    --primary-foreground: 40 33% 97%;
+    --secondary: 40 20% 94%;
+    --secondary-foreground: 24 40% 18%;
+    --muted: 40 15% 90%;
+    --muted-foreground: 24 20% 40%;
+    --accent: 42 58% 88%;
+    --accent-foreground: 24 44% 25%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 40 20% 85%;
+    --input: 40 20% 85%;
+    --ring: 23 44% 35%;
+    --radius: 0.75rem;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --cabinet-1: 23 44% 35%;
+    --cabinet-2: 199 89% 48%;
+    --cabinet-3: 262 52% 47%;
+    --cabinet-4: 25 95% 53%;
+    --cabinet-5: 340 82% 52%;
+    --sidebar-background: 40 20% 96%;
+    --sidebar-foreground: 24 40% 20%;
+    --sidebar-primary: 23 44% 35%;
+    --sidebar-primary-foreground: 40 33% 97%;
+    --sidebar-accent: 42 58% 92%;
+    --sidebar-accent-foreground: 24 44% 25%;
+    --sidebar-border: 40 20% 85%;
+    --sidebar-ring: 23 44% 35%;
+  }
+
+  .dark {
+    --background: 24 30% 8%;
+    --foreground: 40 20% 94%;
+    --card: 24 25% 12%;
+    --card-foreground: 40 20% 94%;
+    --popover: 24 25% 12%;
+    --popover-foreground: 40 20% 94%;
+    --primary: 23 50% 50%;
+    --primary-foreground: 24 30% 8%;
+    --secondary: 24 20% 18%;
+    --secondary-foreground: 40 20% 90%;
+    --muted: 24 20% 20%;
+    --muted-foreground: 40 15% 60%;
+    --accent: 42 40% 25%;
+    --accent-foreground: 42 58% 80%;
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 24 20% 22%;
+    --input: 24 20% 22%;
+    --ring: 23 50% 50%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --cabinet-1: 23 50% 50%;
+    --cabinet-2: 199 89% 58%;
+    --cabinet-3: 262 52% 57%;
+    --cabinet-4: 25 95% 63%;
+    --cabinet-5: 340 82% 62%;
+    --sidebar-background: 24 25% 10%;
+    --sidebar-foreground: 40 20% 90%;
+    --sidebar-primary: 23 50% 50%;
+    --sidebar-primary-foreground: 40 33% 97%;
+    --sidebar-accent: 42 40% 20%;
+    --sidebar-accent-foreground: 42 58% 80%;
+    --sidebar-border: 24 20% 22%;
+    --sidebar-ring: 23 50% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+.demo-banner {
+  background: linear-gradient(90deg, #ef4444, #f97316, #ef4444);
+  background-size: 200% 100%;
+  animation: demo-banner-scroll 3s linear infinite;
+}
+
+@keyframes demo-banner-scroll {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
