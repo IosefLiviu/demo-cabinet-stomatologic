@@ -275,18 +275,20 @@ export function MiniToothSelector({
         {/* Toggle buttons */}
         <div className="flex justify-end gap-1 mb-1">
           <Button
+            type="button"
             variant={teethView === 'deciduous' ? 'default' : 'outline'}
             size="sm"
             className="h-5 text-[9px] px-1.5"
-            onClick={() => setTeethView(teethView === 'deciduous' ? 'all' : 'deciduous')}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTeethView(teethView === 'deciduous' ? 'all' : 'deciduous'); }}
           >
             Temporari
           </Button>
           <Button
+            type="button"
             variant={teethView === 'permanent' ? 'default' : 'outline'}
             size="sm"
             className="h-5 text-[9px] px-1.5"
-            onClick={() => setTeethView(teethView === 'permanent' ? 'all' : 'permanent')}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTeethView(teethView === 'permanent' ? 'all' : 'permanent'); }}
           >
             Permanenți
           </Button>
