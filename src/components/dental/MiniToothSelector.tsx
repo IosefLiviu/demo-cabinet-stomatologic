@@ -304,9 +304,7 @@ export function MiniToothSelector({
             {upperDeciduousTeeth.map(t => renderTooth(t, true, false))}
           </div>
         )}
-        <div className="flex justify-center py-0.5">
-          <div className="h-px w-full bg-border" />
-        </div>
+        <div className="h-px w-full bg-border" />
         {(teethView === 'all' || teethView === 'deciduous') && (
           <div className="flex justify-center gap-px">
             {lowerDeciduousTeeth.map(t => renderTooth(t, true, true))}
