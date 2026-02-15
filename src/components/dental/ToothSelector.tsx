@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { SvgTooth, getToothDimensions } from './SvgTooth';
@@ -81,6 +82,8 @@ export function ToothSelector({
   dentalStatus = {},
   conditionCodes = {},
 }: ToothSelectorProps) {
+  const [teethView, setTeethView] = useState<'all' | 'permanent' | 'deciduous'>('permanent');
+
   const renderToothButton = (tooth: number, isDeciduous: boolean = false) => {
     const isSelected = selectedTeeth.includes(tooth);
     const status = dentalStatus[tooth];
@@ -153,37 +156,62 @@ export function ToothSelector({
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-4">
         <p className="text-sm font-medium">Selectează dinții</p>
+        <div className="flex gap-1">
+          <Button
+            variant={teethView === 'deciduous' ? 'default' : 'outline'}
+            size="sm"
+            className="h-5 text-[9px] px-1.5"
+            onClick={() => setTeethView(teethView === 'deciduous' ? 'all' : 'deciduous')}
+          >
+            Temporari
+          </Button>
+          <Button
+            variant={teethView === 'permanent' ? 'default' : 'outline'}
+            size="sm"
+            className="h-5 text-[9px] px-1.5"
+            onClick={() => setTeethView(teethView === 'permanent' ? 'all' : 'permanent')}
+          >
+            Permanenți
+          </Button>
+        </div>
       </div>
       
-      {/* Individual teeth selection */}
-      <div className="space-y-1">
-        <div className="text-[10px] text-muted-foreground text-center">Superior permanent</div>
-        <div className="flex justify-center">
-          {upperPermanentTeeth.map(tooth => renderToothButton(tooth))}
+      {(teethView === 'all' || teethView === 'permanent') && (
+        <div className="space-y-1">
+          <div className="text-[10px] text-muted-foreground text-center">Superior permanent</div>
+          <div className="flex justify-center">
+            {upperPermanentTeeth.map(tooth => renderToothButton(tooth))}
+          </div>
         </div>
-      </div>
-      <div className="space-y-1">
-        <div className="text-[10px] text-muted-foreground text-center">De lapte superior</div>
-        <div className="flex justify-center gap-0.5">
-          {upperDeciduousTeeth.map(tooth => renderToothButton(tooth, true))}
+      )}
+      {(teethView === 'all' || teethView === 'deciduous') && (
+        <div className="space-y-1">
+          <div className="text-[10px] text-muted-foreground text-center">De lapte superior</div>
+          <div className="flex justify-center gap-0.5">
+            {upperDeciduousTeeth.map(tooth => renderToothButton(tooth, true))}
+          </div>
         </div>
-      </div>
+      )}
       <div className="flex justify-center items-center gap-2 py-1">
         <div className="h-px flex-1 bg-border" />
         <div className="h-px flex-1 bg-border" />
       </div>
-      <div className="space-y-1">
-        <div className="text-[10px] text-muted-foreground text-center">De lapte inferior</div>
-        <div className="flex justify-center gap-0.5">
-          {lowerDeciduousTeeth.map(tooth => renderToothButton(tooth, true))}
+      {(teethView === 'all' || teethView === 'deciduous') && (
+        <div className="space-y-1">
+          <div className="text-[10px] text-muted-foreground text-center">De lapte inferior</div>
+          <div className="flex justify-center gap-0.5">
+            {lowerDeciduousTeeth.map(tooth => renderToothButton(tooth, true))}
+          </div>
         </div>
-      </div>
-      <div className="space-y-1">
-        <div className="text-[10px] text-muted-foreground text-center">Inferior permanent</div>
-        <div className="flex justify-center">
-          {lowerPermanentTeeth.map(tooth => renderToothButton(tooth))}
+      )}
+      {(teethView === 'all' || teethView === 'permanent') && (
+        <div className="space-y-1">
+          <div className="text-[10px] text-muted-foreground text-center">Inferior permanent</div>
+          <div className="flex justify-center">
+            {lowerPermanentTeeth.map(tooth => renderToothButton(tooth))}
+          </div>
         </div>
-      </div>
+      )}
       
       <div className="flex items-center justify-between pt-2 border-t">
         <p className="text-xs text-muted-foreground">
