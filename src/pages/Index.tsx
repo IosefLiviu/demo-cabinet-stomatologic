@@ -116,6 +116,8 @@ const Index = () => {
   const [existingInterventions, setExistingInterventions] = useState<SelectedIntervention[]>([]);
   const [reminderDialogPatient, setReminderDialogPatient] = useState<Patient | null>(null);
   const [whatsappDialogPatient, setWhatsappDialogPatient] = useState<Patient | null>(null);
+  const [printablePatientId, setPrintablePatientId] = useState<string | undefined>();
+  const [printableDoctorId, setPrintableDoctorId] = useState<string | undefined>();
 
   // Complete appointment dialog state
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
@@ -655,7 +657,7 @@ const Index = () => {
           />
         );
       case 'printabile':
-        return <PrintablesSection patients={patients} doctors={doctors} />;
+        return <PrintablesSection patients={patients} doctors={doctors} initialPatientId={printablePatientId} initialDoctorId={printableDoctorId} />;
       case 'expenses':
         return isAdmin ? <MonthlyExpenses /> : null;
       case 'stock':
@@ -900,8 +902,10 @@ const Index = () => {
           setPatientDetailsInitialTab('radiographs');
           setSelectedPatient(patient);
         }}
-        onViewPrintables={() => {
+        onViewPrintables={(patient, doctorId) => {
           setShowAppointmentForm(false);
+          setPrintablePatientId(patient.id);
+          setPrintableDoctorId(doctorId);
           pushNavState({ tab: 'printabile' });
           setActiveTab('printabile');
         }}

@@ -101,7 +101,7 @@ interface AppointmentFormProps {
   onViewPatient?: (patient: Patient) => void;
   onViewDentalStatus?: (patient: Patient) => void;
   onViewRadiographs?: (patient: Patient) => void;
-  onViewPrintables?: (patient: Patient) => void;
+  onViewPrintables?: (patient: Patient, doctorId?: string) => void;
   onViewTreatmentPlan?: (patient: Patient) => void;
   onViewReminder?: (patient: Patient) => void;
   onSendWhatsApp?: (patient: Patient) => void;
@@ -833,7 +833,7 @@ export function AppointmentForm({
                           className="text-xs sm:text-sm gap-1"
                           onClick={() => {
                             const patient = patients.find(p => p.id === formData.patientId);
-                            if (patient) onViewPrintables(patient);
+                            if (patient) onViewPrintables(patient, formData.doctorId || undefined);
                           }}
                         >
                           <Printer className="h-3.5 w-3.5 text-amber-600" />

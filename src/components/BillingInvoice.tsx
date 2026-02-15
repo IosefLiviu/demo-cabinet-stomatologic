@@ -37,12 +37,15 @@ interface InvoiceItem {
 
 interface BillingInvoiceProps {
   patients: Patient[];
+  initialPatientId?: string;
 }
 
-const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients }) => {
+const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients, initialPatientId }) => {
   const printRef = useRef<HTMLDivElement>(null);
   const { treatments } = useTreatments();
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(
+    initialPatientId ? patients.find(p => p.id === initialPatientId) || null : null
+  );
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [invoiceDate, setInvoiceDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [preparedBy, setPreparedBy] = useState('');
