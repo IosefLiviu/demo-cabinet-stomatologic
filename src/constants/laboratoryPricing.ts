@@ -32,6 +32,9 @@ export const LAB_WORK_TYPES: LabWorkType[] = [
   // Proteze
   { id: 'proteza_acrilica', name: 'Proteza Acrilica totala/partiala', priceNecula: 600, priceChisinau: 450, category: 'Proteze' },
   { id: 'rebazare_proteza', name: 'Rebazare proteza', priceNecula: 200, priceChisinau: null, category: 'Proteze' },
+  
+  // Șabloane
+  { id: 'sablon', name: 'Șablon', priceNecula: null, priceChisinau: null, category: 'Șabloane' },
 ];
 
 // Group work types by category for display
