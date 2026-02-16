@@ -41,8 +41,10 @@ export function DiscountedAppointmentsReport({ appointments, dateRange }: Discou
 
         discountedTreatments.forEach(t => {
           const price = t.price || 0;
+          const cas = t.decont || 0;
           const discountPercent = t.discount_percent || 0;
-          const discountAmount = (price * discountPercent) / 100;
+          const priceAfterCas = price - cas;
+          const discountAmount = priceAfterCas * (discountPercent / 100);
           totalDiscount += discountAmount;
           totalGross += price;
           treatmentNames.push(`${t.treatment_name} (${discountPercent}%)`);
