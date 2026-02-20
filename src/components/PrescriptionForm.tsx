@@ -631,7 +631,12 @@ const PrescriptionForm = ({ patients, doctors, initialPatientId, initialDoctorId
           
           <div class="form-row">
             <span class="form-label">Diagnostic:</span>
-            <span class="form-value">${escapeHtml(printDiagnostic)}</span>
+            <span class="form-value">${(() => {
+              const diagEntry = PREDEFINED_DIAGNOSTICS.find(d => d.name === printDiagnostic);
+              return diagEntry
+                ? `${escapeHtml(diagEntry.name)} (Cod ${escapeHtml(diagEntry.code)})`
+                : escapeHtml(printDiagnostic || '');
+            })()}</span>
           </div>
           
           <div class="prescription-section">
