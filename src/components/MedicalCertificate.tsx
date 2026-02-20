@@ -103,6 +103,7 @@ export function MedicalCertificate({ patients, doctors, initialPatientId, initia
         <head>
           <title>${t('Adeverință Medicală')}</title>
           <style>
+            @page { size: A4; margin: 15mm; }
             body { 
               font-family: Arial, sans-serif; 
               padding: 30px 40px; 

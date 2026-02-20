@@ -413,8 +413,8 @@ const PrescriptionForm = ({ patients, doctors, initialPatientId, initialDoctorId
           <title>Rețetă - ${escapeHtml(patientToPrint.first_name)} ${escapeHtml(patientToPrint.last_name)}</title>
           <style>
             @page {
-              size: A5 portrait;
-              margin: 8mm 10mm;
+              size: A4;
+              margin: 15mm;
             }
             * {
               margin: 0;
