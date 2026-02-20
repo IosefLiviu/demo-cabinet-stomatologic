@@ -103,8 +103,9 @@ const BillingInvoice: React.FC<BillingInvoiceProps> = ({ patients, initialPatien
           <meta charset="UTF-8">
           <title>Proformă ${escapeHtml(invoiceNumber)}</title>
           <style>
+            @page { size: A4; margin: 15mm; }
             * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { 
+            body {
               font-family: Arial, sans-serif; 
               padding: 20px; 
               color: #1a365d; 

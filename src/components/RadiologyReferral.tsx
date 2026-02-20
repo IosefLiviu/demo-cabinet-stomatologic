@@ -88,6 +88,7 @@ export function RadiologyReferral({ patients, doctors, initialPatientId, initial
         <head>
           <title>Trimitere Radiologie</title>
           <style>
+            @page { size: A4; margin: 15mm; }
             body { 
               font-family: Arial, sans-serif; 
               padding: 20px; 

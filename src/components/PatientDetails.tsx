@@ -261,7 +261,8 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
         <head>
           <title>Plan de Tratament</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 20px; color: #1a365d; }
+            @page { size: A4; margin: 15mm; }
+            body { font-family: Arial, sans-serif; color: #1a365d; }
             .header { 
               display: flex; justify-content: space-between; align-items: flex-start; 
               margin-bottom: 20px; border-bottom: 3px solid #b8860b; padding-bottom: 15px;
@@ -424,7 +425,8 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
         <head>
           <title>Istoric Tratamente - ${escapeHtml(patient.first_name)} ${escapeHtml(patient.last_name)}</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 20px; color: #1a365d; font-size: 12px; }
+            @page { size: A4; margin: 15mm; }
+            body { font-family: Arial, sans-serif; color: #1a365d; font-size: 12px; }
             .header { 
               display: flex; justify-content: space-between; align-items: flex-start; 
               margin-bottom: 20px; border-bottom: 3px solid #b8860b; padding-bottom: 15px;

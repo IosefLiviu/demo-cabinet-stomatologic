@@ -574,7 +574,8 @@ export function TreatmentPlan({ patients, treatments, doctors, initialPatientId,
         <head>
           <title>Plan de Tratament</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 20px; color: #1a365d; }
+            @page { size: A4; margin: 15mm; }
+            body { font-family: Arial, sans-serif; color: #1a365d; }
             .header { 
               display: flex; justify-content: space-between; align-items: flex-start; 
               margin-bottom: 20px; border-bottom: 3px solid #b8860b; padding-bottom: 15px;
