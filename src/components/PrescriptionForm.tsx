@@ -413,8 +413,8 @@ const PrescriptionForm = ({ patients, doctors, initialPatientId, initialDoctorId
           <title>Rețetă - ${escapeHtml(patientToPrint.first_name)} ${escapeHtml(patientToPrint.last_name)}</title>
           <style>
             @page {
-              size: 100mm 210mm;
-              margin: 2mm;
+              size: A5 portrait;
+              margin: 8mm 10mm;
             }
             * {
               margin: 0;
@@ -424,10 +424,9 @@ const PrescriptionForm = ({ patients, doctors, initialPatientId, initialDoctorId
             body {
               font-family: 'Times New Roman', serif;
               font-size: 10pt;
-              line-height: 1.2;
-              padding: 5px;
-              max-width: 95mm;
+              line-height: 1.3;
               color: #1a365d;
+              width: 128mm;
             }
             .header {
               display: flex;
