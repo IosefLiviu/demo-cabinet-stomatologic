@@ -9,7 +9,15 @@ export function useAppointments() {
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      setAppointments(JSON.parse(stored));
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setAppointments(parsed);
+        }
+      } catch {
+        console.error('Corrupt appointment data in localStorage, resetting');
+        localStorage.removeItem(STORAGE_KEY);
+      }
     }
   }, []);
 
