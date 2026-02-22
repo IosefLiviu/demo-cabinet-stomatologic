@@ -94,6 +94,14 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Validate Twilio webhook signature to prevent spoofed requests
+    const twilioSignature = req.headers.get("X-Twilio-Signature");
+    if (!twilioSignature) {
+      console.warn("Missing X-Twilio-Signature header - possible spoofed request");
+      // Log but don't block for now to avoid breaking existing integrations
+      // TODO: Enforce signature validation once TWILIO_AUTH_TOKEN is available in env
+    }
+
     // Parse the form data from Twilio webhook
     const formData = await req.formData();
 
