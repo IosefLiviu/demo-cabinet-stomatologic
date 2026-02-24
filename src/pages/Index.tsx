@@ -715,15 +715,11 @@ const Index = () => {
                   </div>
                   <div className="flex gap-2 ml-auto">
                     <AppointmentSearch
-                      appointments={legacyAppointments}
-                      onAppointmentSelect={(date, appointmentId) => {
+                      onAppointmentSelect={(date, appointmentId, cabinetId, doctorId) => {
                         setSelectedDate(date);
-                        const apt = legacyAppointments.find(a => a.id === appointmentId);
-                        if (apt) {
-                          setSelectedCabinet(apt.cabinetId);
-                          if (apt.doctorId) {
-                            setSelectedDoctorFilter(apt.doctorId);
-                          }
+                        setSelectedCabinet(cabinetId);
+                        if (doctorId) {
+                          setSelectedDoctorFilter(doctorId);
                         }
                       }}
                     />

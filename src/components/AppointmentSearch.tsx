@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
 import { Search, Calendar, User, Clock } from "lucide-react";
@@ -13,42 +13,111 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Appointment } from "@/types/appointment";
+import { supabase } from "@/integrations/supabase/client";
 
-interface AppointmentSearchProps {
-  appointments: Appointment[];
-  onAppointmentSelect: (date: Date, appointmentId: string) => void;
+interface SearchResult {
+  id: string;
+  appointment_date: string;
+  start_time: string;
+  status: string;
+  cabinet_id: number;
+  doctor_id: string | null;
+  patient_name: string;
+  treatment_names: string[];
 }
 
-export function AppointmentSearch({ appointments, onAppointmentSelect }: AppointmentSearchProps) {
+interface AppointmentSearchProps {
+  onAppointmentSelect: (date: Date, appointmentId: string, cabinetId: number, doctorId?: string) => void;
+}
+
+export function AppointmentSearch({ onAppointmentSelect }: AppointmentSearchProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const filteredAppointments = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    
-    const searchWords = searchQuery.toLowerCase().trim().split(/\s+/);
-    
-    return appointments
-      .filter((apt) => {
-        const patientName = apt.patientName.toLowerCase();
-        // Word-order agnostic search - each word must match
-        return searchWords.every(word => patientName.includes(word));
-      })
-      .sort((a, b) => {
-        // Sort by date descending (most recent first)
-        const dateA = new Date(`${a.date}T${a.time}`);
-        const dateB = new Date(`${b.date}T${b.time}`);
-        return dateB.getTime() - dateA.getTime();
-      })
-      .slice(0, 50); // Limit results
-  }, [appointments, searchQuery]);
+  const searchAppointments = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setResults([]);
+      return;
+    }
 
-  const handleSelect = (apt: Appointment) => {
-    const date = new Date(apt.date);
-    onAppointmentSelect(date, apt.id);
+    setLoading(true);
+    try {
+      // Split search into words for flexible matching
+      const words = query.trim().toLowerCase().split(/\s+/);
+
+      // Build ilike filters for patient name matching (first_name, last_name)
+      // We search where the concatenated name matches all words
+      let dbQuery = supabase
+        .from('appointments')
+        .select(`
+          id, appointment_date, start_time, status, cabinet_id, doctor_id,
+          patients!inner (first_name, last_name),
+          appointment_treatments (treatment_name)
+        `)
+        .neq('status', 'deleted')
+        .order('appointment_date', { ascending: false })
+        .order('start_time', { ascending: false })
+        .limit(50);
+
+      // For each word, add an or filter matching first_name or last_name
+      for (const word of words) {
+        const pattern = `%${word}%`;
+        dbQuery = dbQuery.or(`first_name.ilike.${pattern},last_name.ilike.${pattern}`, { referencedTable: 'patients' });
+      }
+
+      const { data, error } = await dbQuery;
+
+      if (error) {
+        console.error('Search error:', error);
+        setResults([]);
+        return;
+      }
+
+      // Post-filter: ensure ALL words match the full name
+      const mapped: SearchResult[] = (data || [])
+        .map((apt: any) => {
+          const fullName = `${apt.patients?.first_name || ''} ${apt.patients?.last_name || ''}`.trim();
+          return {
+            id: apt.id,
+            appointment_date: apt.appointment_date,
+            start_time: apt.start_time,
+            status: apt.status,
+            cabinet_id: apt.cabinet_id,
+            doctor_id: apt.doctor_id,
+            patient_name: fullName,
+            treatment_names: (apt.appointment_treatments || []).map((t: any) => t.treatment_name),
+          };
+        })
+        .filter((r: SearchResult) => {
+          const nameLower = r.patient_name.toLowerCase();
+          return words.every(w => nameLower.includes(w));
+        });
+
+      setResults(mapped);
+    } catch (err) {
+      console.error('Search failed:', err);
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      searchAppointments(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, searchAppointments]);
+
+  const handleSelect = (apt: SearchResult) => {
+    const date = new Date(apt.appointment_date);
+    onAppointmentSelect(date, apt.id, apt.cabinet_id, apt.doctor_id || undefined);
     setOpen(false);
     setSearchQuery("");
+    setResults([]);
   };
 
   const getStatusBadge = (status: string) => {
@@ -57,6 +126,12 @@ export function AppointmentSearch({ appointments, onAppointmentSelect }: Appoint
         return <Badge variant="default" className="bg-green-500">Finalizată</Badge>;
       case "cancelled":
         return <Badge variant="destructive">Anulată</Badge>;
+      case "confirmed":
+        return <Badge variant="secondary">Confirmată</Badge>;
+      case "in_progress":
+        return <Badge variant="default" className="bg-blue-500">În curs</Badge>;
+      case "no_show":
+        return <Badge variant="destructive">Neprezentare</Badge>;
       case "scheduled":
       default:
         return <Badge variant="secondary">Programată</Badge>;
@@ -64,7 +139,7 @@ export function AppointmentSearch({ appointments, onAppointmentSelect }: Appoint
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setSearchQuery(""); setResults([]); } }}>
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2" size="sm">
           <Search className="h-4 w-4" />
@@ -90,14 +165,18 @@ export function AppointmentSearch({ appointments, onAppointmentSelect }: Appoint
 
           {searchQuery.trim() && (
             <ScrollArea className="h-[400px]">
-              {filteredAppointments.length === 0 ? (
+              {loading ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>Se caută...</p>
+                </div>
+              ) : results.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>Nu s-au găsit programări pentru "{searchQuery}"</p>
                 </div>
               ) : (
                 <div className="space-y-2 pr-4">
-                  {filteredAppointments.map((apt) => (
+                  {results.map((apt) => (
                     <button
                       key={apt.id}
                       onClick={() => handleSelect(apt)}
@@ -107,21 +186,21 @@ export function AppointmentSearch({ appointments, onAppointmentSelect }: Appoint
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <User className="h-4 w-4 text-muted-foreground shrink-0" />
-                            <span className="font-medium truncate">{apt.patientName}</span>
+                            <span className="font-medium truncate">{apt.patient_name}</span>
                           </div>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
-                              <span>{format(new Date(apt.date), "d MMMM yyyy", { locale: ro })}</span>
+                              <span>{format(new Date(apt.appointment_date), "d MMMM yyyy", { locale: ro })}</span>
                             </div>
                             <div className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              <span>{apt.time}</span>
+                              <span>{apt.start_time}</span>
                             </div>
                           </div>
-                          {apt.treatment && (
+                          {apt.treatment_names.length > 0 && (
                             <p className="text-sm text-muted-foreground mt-1 truncate">
-                              {apt.treatment}
+                              {apt.treatment_names.join(", ")}
                             </p>
                           )}
                         </div>
