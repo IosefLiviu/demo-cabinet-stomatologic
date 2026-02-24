@@ -175,36 +175,36 @@ export function AppointmentSearch({ onAppointmentSelect }: AppointmentSearchProp
                   <p>Nu s-au găsit programări pentru "{searchQuery}"</p>
                 </div>
               ) : (
-                <div className="space-y-2 pr-4">
+                <div className="space-y-3 pr-4">
                   {results.map((apt) => (
                     <button
                       key={apt.id}
                       onClick={() => handleSelect(apt)}
-                      className="w-full text-left p-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors overflow-hidden focus:outline-none focus:ring-2 focus:ring-ring"
+                      className="w-full text-left p-4 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
                     >
-                      <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex items-center gap-2 mb-2">
                             <User className="h-4 w-4 text-muted-foreground shrink-0" />
                             <span className="font-medium truncate">{apt.patient_name}</span>
                           </div>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
+                              <Calendar className="h-3.5 w-3.5 shrink-0" />
                               <span>{format(new Date(apt.appointment_date), "d MMMM yyyy", { locale: ro })}</span>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
+                              <Clock className="h-3.5 w-3.5 shrink-0" />
                               <span>{apt.start_time?.substring(0, 5)}</span>
                             </div>
                           </div>
                           {apt.treatment_names.length > 0 && (
-                            <p className="text-sm text-muted-foreground mt-1 truncate">
+                            <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
                               {apt.treatment_names.join(", ")}
                             </p>
                           )}
                         </div>
-                        <div className="shrink-0">
+                        <div className="shrink-0 mt-0.5">
                           {getStatusBadge(apt.status)}
                         </div>
                       </div>
