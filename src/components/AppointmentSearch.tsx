@@ -146,7 +146,7 @@ export function AppointmentSearch({ onAppointmentSelect }: AppointmentSearchProp
           <span className="hidden sm:inline">Căutare programare</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Căutare programare</DialogTitle>
         </DialogHeader>
@@ -195,7 +195,7 @@ export function AppointmentSearch({ onAppointmentSelect }: AppointmentSearchProp
                             </div>
                             <div className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              <span>{apt.start_time}</span>
+                              <span>{apt.start_time?.substring(0, 5)}</span>
                             </div>
                           </div>
                           {apt.treatment_names.length > 0 && (
