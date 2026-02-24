@@ -146,7 +146,7 @@ export function AppointmentSearch({ onAppointmentSelect }: AppointmentSearchProp
           <span className="hidden sm:inline">Căutare programare</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] bg-background">
         <DialogHeader>
           <DialogTitle>Căutare programare</DialogTitle>
         </DialogHeader>
@@ -180,7 +180,7 @@ export function AppointmentSearch({ onAppointmentSelect }: AppointmentSearchProp
                     <button
                       key={apt.id}
                       onClick={() => handleSelect(apt)}
-                      className="w-full text-left p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                      className="w-full text-left p-3 rounded-lg border bg-background hover:bg-muted/50 transition-colors overflow-hidden"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
