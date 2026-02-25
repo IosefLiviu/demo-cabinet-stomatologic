@@ -392,9 +392,13 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         // CASE 2: Appointment is OUTSIDE range but debt was paid IN this period
         // Only add the debt payment amount to this period's revenue
         else if (debtAmount > 0 && debtPaidInCurrentPeriod) {
-          // Add only the debt amount to this period's cash flow
+          const debtMethod = getPaymentMethod(a);
           doctorStats[doctorName].paid += debtAmount;
-          doctorStats[doctorName].paidCash += debtAmount; // Assume cash for debt payments
+          if (debtMethod === 'card' || debtMethod === 'partial_card') {
+            doctorStats[doctorName].paidCard += debtAmount;
+          } else {
+            doctorStats[doctorName].paidCash += debtAmount;
+          }
           doctorStats[doctorName].totalWithNetLab += debtAmount;
         }
       } else if (a.status === 'scheduled' && appointmentInRange) {

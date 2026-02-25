@@ -268,22 +268,53 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
     if (!selectedUnpaid) return;
     setUpdatingPayment(true);
     try {
-      const newPaidAmount = paymentData.paidAmount ?? 0;
-      const isFullyPaid = newPaidAmount >= selectedUnpaid.price;
+      const currentPaid = selectedUnpaid.paid_amount;
+      const remainingAmount = selectedUnpaid.remaining;
+      
+      // Determine how much is being paid now
+      let amountPayingNow: number;
+      if (paymentData.method === 'unpaid') {
+        amountPayingNow = 0;
+      } else if (paymentData.method === 'partial_card' || paymentData.method === 'partial_cash') {
+        amountPayingNow = paymentData.paidAmount ?? 0;
+      } else {
+        // card or cash = full remaining payment
+        amountPayingNow = remainingAmount;
+      }
+      
+      const newTotalPaid = currentPaid + amountPayingNow;
+      const isFullyPaid = newTotalPaid >= selectedUnpaid.price;
+      
+      // Determine the payment_method to store
+      // If partial payment, use partial_card/partial_cash; if full, use card/cash
+      let storedMethod = paymentData.method;
+      if ((storedMethod === 'card' || storedMethod === 'cash') && !isFullyPaid) {
+        storedMethod = storedMethod === 'card' ? 'partial_card' : 'partial_cash';
+      }
 
       const { error } = await supabase
         .from('appointments')
         .update({
-          paid_amount: newPaidAmount,
+          paid_amount: newTotalPaid,
           is_paid: isFullyPaid,
-          payment_method: paymentData.method,
-          ...(isFullyPaid ? { debt_paid_at: new Date().toISOString(), debt_amount: selectedUnpaid.price } : {}),
+          payment_method: storedMethod,
+          // debt_paid_at marks WHEN this debt payment occurred (for report attribution)
+          // debt_amount tracks HOW MUCH was paid as debt (for splitting across periods)
+          ...(amountPayingNow > 0 ? { 
+            debt_paid_at: new Date().toISOString(), 
+            debt_amount: amountPayingNow 
+          } : {}),
         })
         .eq('id', selectedUnpaid.id);
 
       if (error) throw error;
 
-      toast({ title: 'Plată actualizată', description: isFullyPaid ? 'Programarea a fost achitată complet.' : `Sumă achitată: ${newPaidAmount} RON` });
+      toast({ 
+        title: 'Plată actualizată', 
+        description: isFullyPaid 
+          ? 'Programarea a fost achitată complet.' 
+          : `Sumă achitată: ${amountPayingNow.toLocaleString()} RON. Rest: ${(remainingAmount - amountPayingNow).toLocaleString()} RON` 
+      });
       setEditPaymentOpen(false);
       setSelectedUnpaid(null);
       await loadUnpaidAppointments();
