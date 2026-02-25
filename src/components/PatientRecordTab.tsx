@@ -22,7 +22,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { cleanDentalNotes } from '@/lib/cleanDentalNotes';
 import { STATUS_ENUM_TO_NAME, getStatusHexColor } from '@/constants/toothStatuses';
-import { EditPaymentDialog } from './EditPaymentDialog';
+import { CompleteAppointmentDialog, PaymentData } from './CompleteAppointmentDialog';
 import {
   Collapsible,
   CollapsibleContent,
@@ -264,19 +264,19 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
     }
   };
 
-  const handlePaymentConfirm = async (newPaidAmount: number) => {
+  const handlePaymentConfirm = async (paymentData: PaymentData) => {
     if (!selectedUnpaid) return;
     setUpdatingPayment(true);
     try {
+      const newPaidAmount = paymentData.paidAmount ?? 0;
       const isFullyPaid = newPaidAmount >= selectedUnpaid.price;
-      const paymentMethod = isFullyPaid ? 'cash' : 'partial_cash';
 
       const { error } = await supabase
         .from('appointments')
         .update({
           paid_amount: newPaidAmount,
           is_paid: isFullyPaid,
-          payment_method: paymentMethod,
+          payment_method: paymentData.method,
           ...(isFullyPaid ? { debt_paid_at: new Date().toISOString(), debt_amount: selectedUnpaid.price } : {}),
         })
         .eq('id', selectedUnpaid.id);
@@ -576,7 +576,7 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
 
       {/* Payment Dialog */}
       {selectedUnpaid && (
-        <EditPaymentDialog
+        <CompleteAppointmentDialog
           open={editPaymentOpen}
           onOpenChange={(open) => {
             setEditPaymentOpen(open);
@@ -585,7 +585,7 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
           onConfirm={handlePaymentConfirm}
           patientName={patientName}
           totalPrice={selectedUnpaid.price}
-          currentPaidAmount={selectedUnpaid.paid_amount}
+          payableAmount={selectedUnpaid.remaining}
           isLoading={updatingPayment}
         />
       )}
