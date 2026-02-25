@@ -45,6 +45,9 @@ const LAB_TESTS = [
   { id: 'aghvc', name: 'AgHVC' },
   { id: 'achvc', name: 'AcHVC' },
   { id: 'trigliceride', name: 'Trigliceride' },
+  { id: 'vit_d3', name: 'Vit. D3' },
+  { id: 'inr', name: 'INR' },
+  { id: 'beta_ctx', name: 'Beta-CTx' },
 ];
 
 export function LabTestReferral({ patients, doctors, initialPatientId, initialDoctorId }: LabTestReferralProps) {
@@ -56,7 +59,7 @@ export function LabTestReferral({ patients, doctors, initialPatientId, initialDo
   
   // Selected lab tests
   const [selectedTests, setSelectedTests] = useState<string[]>([]);
-  const [includeBetaCTx, setIncludeBetaCTx] = useState(false);
+  
 
   const selectedPatient = patients.find(p => p.id === selectedPatientId);
   const selectedDoctor = doctors.find(d => d.id === selectedDoctorId);
@@ -292,11 +295,6 @@ export function LabTestReferral({ patients, doctors, initialPatientId, initialDo
             </div>
           </div>
 
-          ${includeBetaCTx ? `
-            <ul class="optional-note">
-              <li>Optional pentru doamne: Beta-CTx</li>
-            </ul>
-          ` : ''}
 
           <div class="footer">
             <p>${escapeHtml(CLINIC.name)} | ${escapeHtml(CLINIC.address)}</p>
@@ -412,17 +410,6 @@ export function LabTestReferral({ patients, doctors, initialPatientId, initialDo
             </div>
           </div>
 
-          {/* Optional Beta-CTx */}
-          <div className="flex items-center space-x-2 pt-4 border-t">
-            <Checkbox
-              id="beta-ctx"
-              checked={includeBetaCTx}
-              onCheckedChange={(checked) => setIncludeBetaCTx(checked === true)}
-            />
-            <Label htmlFor="beta-ctx" className="text-sm cursor-pointer">
-              Optional pentru doamne: Beta-CTx
-            </Label>
-          </div>
 
           {/* Preview of selected tests */}
           {selectedTests.length > 0 && (
@@ -433,7 +420,7 @@ export function LabTestReferral({ patients, doctors, initialPatientId, initialDo
                   const test = LAB_TESTS.find(t => t.id === id);
                   return test ? <li key={id}>{test.name}</li> : null;
                 })}
-                {includeBetaCTx && <li className="italic">Beta-CTx (optional doamne)</li>}
+                
               </ul>
             </div>
           )}
