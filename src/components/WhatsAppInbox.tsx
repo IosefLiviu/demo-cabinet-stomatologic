@@ -33,78 +33,38 @@ interface Conversation {
 
 function FileDownloadButton({ url, mediaType }: { url: string; mediaType: string }) {
   const [loading, setLoading] = useState(false);
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const label = mediaType.split("/")[1] || "atașament";
-  const isPdf = mediaType === "application/pdf";
 
-  const handleOpen = async () => {
+  const handleDownload = async () => {
     setLoading(true);
     try {
       const response = await fetch(url);
       if (!response.ok) throw new Error("Download failed");
       const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      setBlobUrl(objectUrl);
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `document.${label}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
     } catch (err) {
-      console.error("Error opening file:", err);
-      // Last resort fallback
-      setBlobUrl(url);
+      console.error("Error downloading file:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleClose = () => {
-    if (blobUrl && blobUrl.startsWith("blob:")) {
-      URL.revokeObjectURL(blobUrl);
-    }
-    setBlobUrl(null);
-  };
-
-  const handleDownload = () => {
-    if (!blobUrl) return;
-    const a = document.createElement("a");
-    a.href = blobUrl;
-    a.download = `document.${label}`;
-    a.click();
-  };
-
   return (
-    <>
-      <button
-        onClick={handleOpen}
-        disabled={loading}
-        className="flex items-center gap-2 text-xs underline hover:no-underline text-blue-600 dark:text-blue-400 disabled:opacity-50"
-      >
-        {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <FileText className="h-3 w-3" />}
-        {label.toUpperCase()} ({loading ? "se încarcă..." : "deschide"})
-      </button>
-
-      {blobUrl && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex flex-col items-center justify-center" onClick={handleClose}>
-          <div className="bg-card rounded-lg shadow-xl w-[95vw] h-[90vh] max-w-4xl flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-4 py-2 border-b border-border">
-              <span className="text-sm font-medium">Vizualizare {label.toUpperCase()}</span>
-              <div className="flex gap-2">
-                <button onClick={handleDownload} className="text-xs px-3 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90">
-                  <Download className="h-3 w-3 inline mr-1" /> Descarcă
-                </button>
-                <button onClick={handleClose} className="text-xs px-3 py-1 rounded bg-muted hover:bg-muted/80 text-foreground">
-                  Închide
-                </button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-hidden">
-              {isPdf ? (
-                <iframe src={blobUrl} className="w-full h-full border-0" title="PDF Viewer" />
-              ) : (
-                <iframe src={blobUrl} className="w-full h-full border-0" title="File Viewer" />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+    <button
+      onClick={handleDownload}
+      disabled={loading}
+      className="flex items-center gap-2 text-xs underline hover:no-underline text-blue-600 dark:text-blue-400 disabled:opacity-50"
+    >
+      {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
+      {label.toUpperCase()} ({loading ? "se descarcă..." : "descarcă"})
+    </button>
   );
 }
 
