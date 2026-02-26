@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { ro } from "date-fns/locale";
 import {
   MessageSquare, Check, CheckCheck, Trash2, User, Phone, ExternalLink,
-  Send, ChevronLeft, Image, Search, UserPlus, ArrowDown, Clock, Mail, MailOpen,
+  Send, ChevronLeft, Image, Search, UserPlus, ArrowDown, Clock, Mail, MailOpen, FileText, Download, Loader2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,6 +29,39 @@ interface Conversation {
   messages: WhatsAppMessage[];
   unreadCount: number;
   lastMessageAt: string;
+}
+
+function FileDownloadButton({ url, mediaType }: { url: string; mediaType: string }) {
+  const [loading, setLoading] = useState(false);
+  const label = mediaType.split("/")[1] || "atașament";
+
+  const handleOpen = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Download failed");
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, "_blank");
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    } catch (err) {
+      console.error("Error opening file:", err);
+      window.open(url, "_blank");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleOpen}
+      disabled={loading}
+      className="flex items-center gap-2 text-xs underline hover:no-underline text-blue-600 dark:text-blue-400 disabled:opacity-50"
+    >
+      {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <FileText className="h-3 w-3" />}
+      {label.toUpperCase()} ({loading ? "se încarcă..." : "deschide"})
+    </button>
+  );
 }
 
 function MessageStatusIcon({ status, direction }: { status: string | null; direction: string }) {
@@ -462,16 +495,7 @@ export function WhatsAppInbox() {
                                   />
                                 </a>
                               ) : (
-                                <a
-                                  key={idx}
-                                  href={url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-2 text-xs underline hover:no-underline text-blue-600 dark:text-blue-400"
-                                >
-                                  <ExternalLink className="h-3 w-3" />
-                                  Fișier ({mediaType.split("/")[1] || "atașament"})
-                                </a>
+                                <FileDownloadButton key={idx} url={url} mediaType={mediaType} />
                               );
                             })}
                           </div>
