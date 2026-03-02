@@ -90,7 +90,7 @@ export function AppSidebar({ activeTab, onTabChange, isAdmin, isReception, unrea
                       onClick={() => handleClick(item.id)}
                       className="relative"
                     >
-                      <Icon className={`h-4 w-4 shrink-0 ${isActive ? '' : item.iconColor || ''}`} />
+                      <Icon className={`h-4 w-4 shrink-0 ${item.iconColor || ''}`} />
                       <span>{item.label}</span>
                       {badge > 0 && (
                         <span className={`absolute ${isCollapsed ? 'top-0 right-0' : 'right-2'} flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-medium px-1`}>

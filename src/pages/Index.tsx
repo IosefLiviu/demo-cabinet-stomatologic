@@ -686,6 +686,19 @@ const Index = () => {
     }
   };
 
+  const TAB_META: Record<string, { title: string; Icon: typeof Users }> = {
+    patients:        { title: 'Pacienți',       Icon: Users },
+    reports:         { title: 'Rapoarte',        Icon: BarChart3 },
+    expenses:        { title: 'Cheltuieli',      Icon: Wallet },
+    'treatment-plan':{ title: 'Plan Tratament',  Icon: ClipboardList },
+    printabile:      { title: 'Printabile',      Icon: Printer },
+    stock:           { title: 'Stoc',            Icon: Package },
+    schedule:        { title: 'Program',         Icon: CalendarClock },
+    whatsapp:        { title: 'WhatsApp',        Icon: MessageSquare },
+    laborator:       { title: 'Laborator',       Icon: FlaskRound },
+    reminders:       { title: 'Rechemări',       Icon: Bell },
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
@@ -748,7 +761,7 @@ const Index = () => {
                   </div>
                 </div>
                 {/* Row 2: Cabinet tabs - mobile only */}
-                <div className="flex items-center gap-2 mt-2 md:hidden">
+                <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border md:hidden">
                   <CabinetTabs
                     selectedCabinet={selectedCabinet}
                     onSelectCabinet={setSelectedCabinet}
@@ -759,8 +772,18 @@ const Index = () => {
             )}
 
             {/* Content area */}
-            <div className="px-1 sm:px-2 lg:px-4 py-2 sm:py-4">
-              {activeTab !== 'calendar' && <SidebarTrigger className="mb-2" />}
+            <div className="px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
+              {activeTab !== 'calendar' && TAB_META[activeTab] && (() => {
+                const { title, Icon } = TAB_META[activeTab];
+                return (
+                  <div className="flex items-center gap-3 mb-6">
+                    <SidebarTrigger />
+                    <div className="h-6 w-px bg-border" />
+                    <Icon className="h-5 w-5 text-muted-foreground" />
+                    <h2 className="text-xl font-semibold">{title}</h2>
+                  </div>
+                );
+              })()}
               {renderActiveContent()}
             </div>
           </main>

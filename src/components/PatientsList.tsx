@@ -56,6 +56,7 @@ import {
 } from '@/components/ui/dialog';
 import { Patient } from '@/hooks/usePatients';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useSendWhatsApp } from '@/hooks/useSendWhatsApp';
 import { useAppSettings } from '@/hooks/useAppSettings';
 import { PatientReminderDialog } from './PatientReminderDialog';
@@ -253,8 +254,34 @@ export function PatientsList({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-muted-foreground">Se încarcă pacienții...</div>
+      <div className="space-y-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <Skeleton className="h-10 w-full max-w-md" />
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-28" />
+            <Skeleton className="h-10 w-32" />
+          </div>
+        </div>
+        <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+          <div className="p-0">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-4 py-3 border-b last:border-b-0">
+                <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+                <Skeleton className="hidden md:block h-4 w-28" />
+                <Skeleton className="hidden md:block h-4 w-16" />
+                <div className="flex gap-1 ml-auto">
+                  <Skeleton className="h-8 w-8 rounded-md" />
+                  <Skeleton className="h-8 w-8 rounded-md" />
+                  <Skeleton className="h-8 w-8 rounded-md" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -298,8 +325,8 @@ export function PatientsList({
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead 
-                className="w-[250px] cursor-pointer hover:bg-muted/80 transition-colors"
+              <TableHead
+                className="w-[250px] cursor-pointer hover:bg-muted/80 transition-colors text-xs uppercase tracking-wide font-semibold text-muted-foreground"
                 onClick={() => handleSort('name')}
               >
                 <div className="flex items-center gap-2">
@@ -307,8 +334,8 @@ export function PatientsList({
                   <SortIcon field="name" />
                 </div>
               </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-muted/80 transition-colors"
+              <TableHead
+                className="cursor-pointer hover:bg-muted/80 transition-colors text-xs uppercase tracking-wide font-semibold text-muted-foreground"
                 onClick={() => handleSort('phone')}
               >
                 <div className="flex items-center gap-2">
@@ -316,8 +343,8 @@ export function PatientsList({
                   <SortIcon field="phone" />
                 </div>
               </TableHead>
-              <TableHead 
-                className="hidden md:table-cell cursor-pointer hover:bg-muted/80 transition-colors"
+              <TableHead
+                className="hidden md:table-cell cursor-pointer hover:bg-muted/80 transition-colors text-xs uppercase tracking-wide font-semibold text-muted-foreground"
                 onClick={() => handleSort('age')}
               >
                 <div className="flex items-center gap-2">
@@ -325,9 +352,9 @@ export function PatientsList({
                   <SortIcon field="age" />
                 </div>
               </TableHead>
-              <TableHead className="hidden lg:table-cell">Alerte medicale</TableHead>
-              <TableHead 
-                className="hidden md:table-cell cursor-pointer hover:bg-muted/80 transition-colors"
+              <TableHead className="hidden lg:table-cell text-xs uppercase tracking-wide font-semibold text-muted-foreground">Alerte medicale</TableHead>
+              <TableHead
+                className="hidden md:table-cell cursor-pointer hover:bg-muted/80 transition-colors text-xs uppercase tracking-wide font-semibold text-muted-foreground"
                 onClick={() => handleSort('created_at')}
               >
                 <div className="flex items-center gap-2">
@@ -335,7 +362,7 @@ export function PatientsList({
                   <SortIcon field="created_at" />
                 </div>
               </TableHead>
-              <TableHead className="w-[100px] sm:w-[120px] text-right">Acțiuni</TableHead>
+              <TableHead className="w-[100px] sm:w-[120px] text-right text-xs uppercase tracking-wide font-semibold text-muted-foreground">Acțiuni</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
