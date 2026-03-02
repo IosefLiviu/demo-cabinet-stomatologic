@@ -1130,6 +1130,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
         <AppointmentsPatientReport 
           appointments={appointments} 
           dateRange={dateRange}
+          onFetchRange={onFetchRange}
         />
       </TabsContent>
 

@@ -16,6 +16,7 @@ import * as XLSX from 'xlsx';
 interface AppointmentsPatientReportProps {
   appointments: AppointmentDB[];
   dateRange: { from: Date; to: Date };
+  onFetchRange: (startDate: string, endDate: string) => Promise<void>;
 }
 
 interface PatientAppointmentsSummary {
@@ -38,12 +39,22 @@ interface PatientAppointmentsSummary {
   }[];
 }
 
-export function AppointmentsPatientReport({ appointments, dateRange }: AppointmentsPatientReportProps) {
+export function AppointmentsPatientReport({ appointments, dateRange, onFetchRange }: AppointmentsPatientReportProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'cancelled'>('all');
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [localFrom, setLocalFrom] = useState<Date>(dateRange.from);
   const [localTo, setLocalTo] = useState<Date>(dateRange.to);
+
+  const handleLocalFromChange = async (d: Date) => {
+    setLocalFrom(d);
+    await onFetchRange(format(d, 'yyyy-MM-dd'), format(localTo, 'yyyy-MM-dd'));
+  };
+
+  const handleLocalToChange = async (d: Date) => {
+    setLocalTo(d);
+    await onFetchRange(format(localFrom, 'yyyy-MM-dd'), format(d, 'yyyy-MM-dd'));
+  };
 
   // Filter appointments by local date range
   const filteredByDate = useMemo(() => {
@@ -235,7 +246,18 @@ export function AppointmentsPatientReport({ appointments, dateRange }: Appointme
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5">
+        <Card className="border-primary/30 bg-primary/5">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Programări</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totals.completed + totals.cancelled}</div>
+            <p className="text-xs text-muted-foreground">{(totals.completedRevenue + totals.cancelledRevenue).toLocaleString()} RON total</p>
+          </CardContent>
+        </Card>
+
         <Card className="border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-green-700 dark:text-green-400">Finalizate</CardTitle>
@@ -299,7 +321,7 @@ export function AppointmentsPatientReport({ appointments, dateRange }: Appointme
               <Calendar
                 mode="single"
                 selected={localFrom}
-                onSelect={(d) => d && setLocalFrom(d)}
+                onSelect={(d) => d && handleLocalFromChange(d)}
                 initialFocus
                 className={cn("p-3 pointer-events-auto")}
               />
@@ -317,7 +339,7 @@ export function AppointmentsPatientReport({ appointments, dateRange }: Appointme
               <Calendar
                 mode="single"
                 selected={localTo}
-                onSelect={(d) => d && setLocalTo(d)}
+                onSelect={(d) => d && handleLocalToChange(d)}
                 initialFocus
                 className={cn("p-3 pointer-events-auto")}
               />
