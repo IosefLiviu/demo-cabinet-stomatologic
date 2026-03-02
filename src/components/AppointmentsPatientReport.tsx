@@ -1,12 +1,15 @@
 import { useState, useMemo } from 'react';
-import { format } from 'date-fns';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { XCircle, CheckCircle, Users, Download, Search, Filter } from 'lucide-react';
+import { XCircle, CheckCircle, Users, Download, Search, Filter, CalendarIcon } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 import { AppointmentDB } from '@/hooks/useAppointmentsDB';
 import * as XLSX from 'xlsx';
 
@@ -39,10 +42,20 @@ export function AppointmentsPatientReport({ appointments, dateRange }: Appointme
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'cancelled'>('all');
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+  const [localFrom, setLocalFrom] = useState<Date>(dateRange.from);
+  const [localTo, setLocalTo] = useState<Date>(dateRange.to);
+
+  // Filter appointments by local date range
+  const filteredByDate = useMemo(() => {
+    return appointments.filter(a => {
+      const d = new Date(a.appointment_date);
+      return d >= localFrom && d <= localTo;
+    });
+  }, [appointments, localFrom, localTo]);
 
   // Group appointments by patient
   const patientSummaries = useMemo(() => {
-    const completedAndCancelled = appointments.filter(
+    const completedAndCancelled = filteredByDate.filter(
       a => a.status === 'completed' || a.status === 'cancelled'
     );
 
@@ -88,7 +101,7 @@ export function AppointmentsPatientReport({ appointments, dateRange }: Appointme
       const totalB = b.completedCount + b.cancelledCount;
       return totalB - totalA;
     });
-  }, [appointments]);
+  }, [filteredByDate]);
 
   // Filter summaries
   const filteredSummaries = useMemo(() => {
@@ -128,7 +141,7 @@ export function AppointmentsPatientReport({ appointments, dateRange }: Appointme
     // Sheet 1: Summary per patient
     const summaryData = [
       ['Raport Programări pe Pacienți', '', '', '', '', ''],
-      ['Perioadă', `${format(dateRange.from, 'dd.MM.yyyy')} - ${format(dateRange.to, 'dd.MM.yyyy')}`, '', '', '', ''],
+      ['Perioadă', `${format(localFrom, 'dd.MM.yyyy')} - ${format(localTo, 'dd.MM.yyyy')}`, '', '', '', ''],
       ['Filtru Status', statusFilter === 'all' ? 'Toate' : statusFilter === 'completed' ? 'Finalizate' : 'Anulate', '', '', '', ''],
       ['', '', '', '', '', ''],
       ['Pacient', 'Telefon', 'Finalizate', 'Venit Finalizate (RON)', 'Anulate', 'Venit Pierdut (RON)'],
@@ -153,7 +166,7 @@ export function AppointmentsPatientReport({ appointments, dateRange }: Appointme
     // Sheet 2: Detailed appointments
     const detailedData = [
       ['Programări Detaliate', '', '', '', '', '', '', ''],
-      ['Perioadă', `${format(dateRange.from, 'dd.MM.yyyy')} - ${format(dateRange.to, 'dd.MM.yyyy')}`, '', '', '', '', '', ''],
+      ['Perioadă', `${format(localFrom, 'dd.MM.yyyy')} - ${format(localTo, 'dd.MM.yyyy')}`, '', '', '', '', '', ''],
       ['', '', '', '', '', '', '', ''],
       ['Data', 'Pacient', 'Telefon', 'Tratament', 'Doctor', 'Status', 'Preț (RON)', 'Motiv Anulare'],
     ];
@@ -187,7 +200,7 @@ export function AppointmentsPatientReport({ appointments, dateRange }: Appointme
     // Sheet 3: Only cancelled with reasons
     const cancelledData = [
       ['Programări Anulate', '', '', '', '', '', ''],
-      ['Perioadă', `${format(dateRange.from, 'dd.MM.yyyy')} - ${format(dateRange.to, 'dd.MM.yyyy')}`, '', '', '', '', ''],
+      ['Perioadă', `${format(localFrom, 'dd.MM.yyyy')} - ${format(localTo, 'dd.MM.yyyy')}`, '', '', '', '', ''],
       ['', '', '', '', '', '', ''],
       ['Data', 'Pacient', 'Telefon', 'Tratament', 'Doctor', 'Preț (RON)', 'Motiv Anulare'],
     ];
@@ -215,7 +228,7 @@ export function AppointmentsPatientReport({ appointments, dateRange }: Appointme
     ];
     XLSX.utils.book_append_sheet(workbook, cancelledSheet, 'Anulate cu Motive');
 
-    const filename = `Raport_Programari_Pacienti_${format(dateRange.from, 'dd-MM-yyyy')}_${format(dateRange.to, 'dd-MM-yyyy')}.xlsx`;
+    const filename = `Raport_Programari_Pacienti_${format(localFrom, 'dd-MM-yyyy')}_${format(localTo, 'dd-MM-yyyy')}.xlsx`;
     XLSX.writeFile(workbook, filename);
   };
 
@@ -272,8 +285,46 @@ export function AppointmentsPatientReport({ appointments, dateRange }: Appointme
         </Card>
       </div>
 
-      {/* Filters */}
+      {/* Date Range & Filters */}
       <div className="flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className={cn("gap-2 w-[140px] justify-start text-left font-normal")}>
+                <CalendarIcon className="h-4 w-4" />
+                {format(localFrom, 'dd.MM.yyyy')}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 z-50" align="start">
+              <Calendar
+                mode="single"
+                selected={localFrom}
+                onSelect={(d) => d && setLocalFrom(d)}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+          <span className="text-muted-foreground text-sm">—</span>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className={cn("gap-2 w-[140px] justify-start text-left font-normal")}>
+                <CalendarIcon className="h-4 w-4" />
+                {format(localTo, 'dd.MM.yyyy')}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 z-50" align="start">
+              <Calendar
+                mode="single"
+                selected={localTo}
+                onSelect={(d) => d && setLocalTo(d)}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
         <div className="relative flex-1 min-w-[200px] max-w-[300px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
