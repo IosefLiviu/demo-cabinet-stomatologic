@@ -127,7 +127,7 @@ export function usePatients() {
       console.error('Error updating patient:', error);
       toast({
         title: 'Eroare',
-        description: 'Nu s-a putut actualiza pacientul',
+        description: error?.message || 'Nu s-a putut actualiza pacientul',
         variant: 'destructive',
       });
       return null;
