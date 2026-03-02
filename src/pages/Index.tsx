@@ -211,10 +211,18 @@ const Index = () => {
 
   // handlePatientFormSubmit, handleEditPatient, handleClosePatientForm
   const handlePatientFormSubmit = async (data: any) => {
+    // Clean up empty strings → null for optional fields to avoid DB type errors
+    const cleanedData = { ...data };
+    const optionalFields = ['date_of_birth', 'email', 'gender', 'address', 'city', 'cnp', 'registration_number', 'emergency_contact_name', 'emergency_contact_phone', 'notes'];
+    for (const field of optionalFields) {
+      if (cleanedData[field] === '' || cleanedData[field] === undefined) {
+        cleanedData[field] = null;
+      }
+    }
     if (editingPatient) {
-      return await updatePatient(editingPatient.id, data);
+      return await updatePatient(editingPatient.id, cleanedData);
     } else {
-      return await addPatient(data);
+      return await addPatient(cleanedData);
     }
   };
 
