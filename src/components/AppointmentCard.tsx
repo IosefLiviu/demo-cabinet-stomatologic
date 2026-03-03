@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Appointment, CABINETS } from '@/types/appointment';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useNewPatientStatus } from '@/hooks/useNewPatientStatus';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,6 +60,7 @@ export function AppointmentCard({
   isAdmin = false,
 }: AppointmentCardProps) {
   const cabinet = CABINETS.find((c) => c.id === appointment.cabinetId);
+  const { isNewPatient } = useNewPatientStatus();
 
   // Use doctor color if available, otherwise fall back to cabinet colors
   const hasDoctorColor = appointment.doctorColor;
@@ -112,7 +114,10 @@ export function AppointmentCard({
               </span>
             )}
           </div>
-          <h4 className="text-lg font-bold text-foreground truncate">
+          <h4 className="text-lg font-bold text-foreground truncate flex items-center gap-1">
+            {appointment.patientId && isNewPatient(appointment.patientId) && (
+              <span className="text-orange-500 font-extrabold">N</span>
+            )}
             {appointment.patientName}
           </h4>
           <p className="text-base font-medium text-muted-foreground">{appointment.treatment}</p>
