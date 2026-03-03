@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import perfectSmileLogo from '@/assets/perfect-smile-logo.png';
+import perfectSmileLogo from '@/assets/logoPerfectSmile.png';
 
 const usernameSchema = z.string().min(3, 'Numele de utilizator trebuie să aibă minim 3 caractere');
 const passwordSchema = z.string().min(6, 'Parola trebuie să aibă minim 6 caractere');
@@ -32,7 +32,7 @@ export default function Auth() {
 
   const validateForm = () => {
     const newErrors: { username?: string; password?: string } = {};
-    
+
     const usernameResult = usernameSchema.safeParse(username);
     if (!usernameResult.success) {
       newErrors.username = usernameResult.error.errors[0].message;
@@ -50,11 +50,11 @@ export default function Auth() {
   const logLoginAttempt = async (userId: string | null, success: boolean, errorMessage: string | null) => {
     try {
       await supabase.functions.invoke('log-login', {
-        body: { 
-          username, 
+        body: {
+          username,
           user_id: userId,
-          success, 
-          error_message: errorMessage 
+          success,
+          error_message: errorMessage
         }
       });
     } catch (err) {
@@ -67,7 +67,7 @@ export default function Auth() {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
-    
+
     try {
       // Use edge function to lookup email by username (bypasses RLS)
       const { data: lookupData, error: edgeFnError } = await supabase.functions.invoke('lookup-user-email', {
@@ -87,7 +87,7 @@ export default function Auth() {
 
       // Now sign in with the email
       const { error } = await signIn(lookupData.email, password);
-      
+
       if (error) {
         await logLoginAttempt(lookupData.user_id || null, false, error.message || 'Parolă incorectă');
       } else {
@@ -105,7 +105,7 @@ export default function Auth() {
         variant: 'destructive',
       });
     }
-    
+
     setIsSubmitting(false);
   };
 
@@ -125,10 +125,10 @@ export default function Auth() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <img 
-              src={perfectSmileLogo} 
-              alt="Perfect Smile Logo" 
-              className="h-20 w-20 object-contain"
+            <img
+              src={perfectSmileLogo}
+              alt="Perfect Smile Logo"
+              className="h-28 w-auto object-contain"
             />
           </div>
           <CardTitle className="text-2xl">Perfect Smile Glim</CardTitle>

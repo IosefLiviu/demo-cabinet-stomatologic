@@ -189,9 +189,10 @@ export function PatientInformation({ patients, doctors, initialPatientId }: Pati
                 gap: 5px;
               }
               .logo {
-                width: 120px;
-                height: 80px;
+                width: 140px;
+                height: auto;
                 object-fit: contain;
+                mix-blend-mode: multiply;
               }
               .clinic-contact {
                 text-align: right;
