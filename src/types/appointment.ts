@@ -1,6 +1,7 @@
 export interface Appointment {
   id: string;
   cabinetId: number;
+  patientId?: string;
   patientName: string;
   patientPhone: string;
   date: string;

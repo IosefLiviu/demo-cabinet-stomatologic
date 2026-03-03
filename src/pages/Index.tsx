@@ -571,6 +571,7 @@ const Index = () => {
     return {
       id: apt.id,
       cabinetId: apt.cabinet_id,
+      patientId: apt.patient_id,
       patientName: apt.patients ? `${apt.patients.first_name} ${apt.patients.last_name}` : 'Pacient necunoscut',
       patientPhone: apt.patients?.phone || '',
       date: apt.appointment_date,
