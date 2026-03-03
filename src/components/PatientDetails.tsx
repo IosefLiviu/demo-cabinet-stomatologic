@@ -64,6 +64,7 @@ import { PatientRadiographs } from './PatientRadiographs';
 import { escapeHtml, escapeHtmlArray, escapeNumberArray } from '@/lib/print-utils';
 import { cleanDentalNotes } from '@/lib/cleanDentalNotes';
 import { CLINIC, getClinicCopyright, getLogoPrintUrl } from '@/constants/clinic';
+import { useNewPatientStatus } from '@/hooks/useNewPatientStatus';
 
 interface ToothDataRecord {
   toothNumber: number;
@@ -109,6 +110,7 @@ interface PatientDetailsProps {
 type PeriodFilter = 'all' | '30days' | '3months' | '1year';
 
 export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatmentPlan, onEditTreatmentPlan, onCreateAppointment, initialTab }: PatientDetailsProps) {
+  const { isNewPatient } = useNewPatientStatus();
   
   const [treatmentHistory, setTreatmentHistory] = useState<TreatmentRecord[]>([]);
   const [dentalStatus, setDentalStatus] = useState<ToothData[]>([]);
@@ -892,8 +894,11 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                 <User className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
               </div>
               <div className="min-w-0">
-                <h2 className="text-base sm:text-xl font-bold text-foreground tracking-tight truncate">
+                <h2 className="text-base sm:text-xl font-bold text-foreground tracking-tight truncate flex items-center gap-2">
                   {patient.last_name} {patient.first_name}
+                  {isNewPatient(patient.id) && (
+                    <Badge className="bg-green-500 hover:bg-green-500 text-white text-[10px] px-1.5 py-0">Nou</Badge>
+                  )}
                 </h2>
                 <div className="flex items-center gap-3 mt-0.5">
                   {patient.date_of_birth && (

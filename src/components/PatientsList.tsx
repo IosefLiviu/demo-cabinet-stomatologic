@@ -60,6 +60,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSendWhatsApp } from '@/hooks/useSendWhatsApp';
 import { useAppSettings } from '@/hooks/useAppSettings';
 import { PatientReminderDialog } from './PatientReminderDialog';
+import { useNewPatientStatus } from '@/hooks/useNewPatientStatus';
 
 interface PatientsListProps {
   patients: Patient[];
@@ -97,6 +98,7 @@ export function PatientsList({
   const [whatsAppMessage, setWhatsAppMessage] = useState('');
   const { sendMessage, isSending } = useSendWhatsApp();
   const { getSetting } = useAppSettings();
+  const { isNewPatient } = useNewPatientStatus();
   
   // Reminder dialog state
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
@@ -387,8 +389,11 @@ export function PatientsList({
                         <User className="h-5 w-5 text-primary" />
                       </div>
                       <div>
-                        <div className="font-medium">
+                        <div className="font-medium flex items-center gap-2">
                           {patient.last_name} {patient.first_name}
+                          {isNewPatient(patient.id) && (
+                            <Badge className="bg-green-500 hover:bg-green-500 text-white text-[10px] px-1.5 py-0">Nou</Badge>
+                          )}
                         </div>
                         {patient.city && (
                           <div className="text-xs text-muted-foreground">
