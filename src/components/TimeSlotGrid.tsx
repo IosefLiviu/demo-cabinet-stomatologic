@@ -8,6 +8,7 @@ import { DoctorShift } from '@/hooks/useDoctorShifts';
 import { Doctor } from '@/hooks/useDoctors';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useNewPatientStatus } from '@/hooks/useNewPatientStatus';
 import {
   Tooltip,
   TooltipContent,
@@ -58,6 +59,7 @@ export function TimeSlotGrid({
   onAppointmentCancel,
   onEditPayment,
 }: TimeSlotGridProps) {
+  const { isNewPatient } = useNewPatientStatus();
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
   const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
   const gridRef = useRef<HTMLDivElement>(null);
@@ -445,6 +447,9 @@ export function TimeSlotGrid({
                             <div className="flex items-center gap-1 min-w-0 flex-1 overflow-hidden">
                              {appointmentStarting.status !== 'completed' && (
                                <User className="h-3 w-3 flex-shrink-0 text-foreground/70" />
+                             )}
+                             {appointmentStarting.patientId && appointmentStarting.status !== 'completed' && isNewPatient(appointmentStarting.patientId) && (
+                               <span className="text-orange-500 font-extrabold text-xs flex-shrink-0">N</span>
                              )}
                              <span className={cn(
                                "text-xs font-bold text-foreground whitespace-nowrap leading-tight",
