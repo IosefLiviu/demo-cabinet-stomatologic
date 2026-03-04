@@ -594,20 +594,26 @@ export function AppointmentForm({
     }
 
     // Convert interventions to treatment plan items
-    const planItems = interventions.map((i, index) => ({
-      treatmentId: i.treatmentId || undefined,
-      treatmentName: i.treatmentName,
-      toothNumber: i.selectedTeeth && i.selectedTeeth.length > 0 ? i.selectedTeeth[0] : null,
-      toothNumbers: i.selectedTeeth || [],
-      doctorId: formData.doctorId || '',
-      quantity: 1,
-      price: i.price,
-      duration: i.duration,
-      laborator: i.laborator || 0,
-      cas: i.cas || 0,
-      discountPercent: i.discountPercent || 0,
-      sortOrder: index,
-    }));
+    const planItems = interventions.map((i, index) => {
+      const teethCount = (i.selectedTeeth && i.selectedTeeth.length > 0) ? i.selectedTeeth.length : 1;
+      const basePrice = i.basePrice ?? i.price;
+      // price should be per-unit (per tooth), quantity = teeth count
+      const perUnitPrice = teethCount > 1 ? (basePrice || i.price / teethCount) : i.price;
+      return {
+        treatmentId: i.treatmentId || undefined,
+        treatmentName: i.treatmentName,
+        toothNumber: i.selectedTeeth && i.selectedTeeth.length > 0 ? i.selectedTeeth[0] : null,
+        toothNumbers: i.selectedTeeth || [],
+        doctorId: formData.doctorId || '',
+        quantity: teethCount,
+        price: perUnitPrice,
+        duration: i.duration,
+        laborator: i.laborator || 0,
+        cas: i.cas || 0,
+        discountPercent: i.discountPercent || 0,
+        sortOrder: index,
+      };
+    });
 
     const planId = await saveTreatmentPlan(
       formData.patientId,
