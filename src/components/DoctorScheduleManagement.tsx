@@ -17,6 +17,7 @@ import {
   CalendarDays,
   CalendarRange
 } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -93,6 +94,7 @@ export function DoctorScheduleManagement({
   const { cabinets } = useCabinets();
   const { user } = useAuth();
 
+  const isMobile = useIsMobile();
   const [doctorFilter, setDoctorFilter] = useState<string>(selectedDoctorId || 'all');
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
   const [currentWeekStart, setCurrentWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
@@ -488,31 +490,102 @@ export function DoctorScheduleManagement({
 
           {/* Calendar Grid */}
           {viewMode === 'week' ? (
-            <Card className="overflow-hidden overflow-x-auto scrollbar-hide">
-              <CardContent className="p-0 min-w-[600px] sm:min-w-0">
-                {/* Week header */}
-                <div className="grid grid-cols-7 border-b bg-muted/30">
-                  {weekDays.map(day => (
-                    <div key={day.toISOString()} className={cn(
-                      "px-1 sm:px-3 py-2 sm:py-3 text-center font-medium border-r last:border-r-0",
-                      isToday(day) ? "text-primary bg-primary/5" : "text-muted-foreground"
-                    )}>
-                      <div className="uppercase tracking-wider text-[10px] sm:text-xs">{format(day, 'EEE', { locale: ro })}</div>
-                      <div className={cn(
-                        "text-lg sm:text-2xl font-bold mt-0.5",
-                        isToday(day) ? "text-primary" : "text-foreground"
+            isMobile ? (
+              /* Mobile: vertical list of days */
+              <Card className="overflow-hidden">
+                <CardContent className="p-0">
+                  {weekDays.map(day => {
+                    const dayShifts = getShiftsForDay(day);
+                    const today = isToday(day);
+                    return (
+                      <div key={day.toISOString()} className={cn(
+                        "border-b last:border-b-0 p-3",
+                        today && "bg-primary/5"
                       )}>
-                        {format(day, 'd')}
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={cn(
+                            "inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold",
+                            today ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+                          )}>
+                            {format(day, 'd')}
+                          </span>
+                          <span className={cn(
+                            "text-sm font-medium uppercase",
+                            today ? "text-primary" : "text-muted-foreground"
+                          )}>
+                            {format(day, 'EEEE', { locale: ro })}
+                          </span>
+                        </div>
+                        <div className="space-y-1.5 pl-10">
+                          {dayShifts.length === 0 && (
+                            <p className="text-xs text-muted-foreground italic">Fără schimburi</p>
+                          )}
+                          {dayShifts.map(shift => {
+                            const doctor = getDoctorById(shift.doctor_id);
+                            const timeOff = doctor ? getTimeOffForDay(day, doctor.id) : null;
+                            const cabinetName = shift.cabinet_id
+                              ? cabinets.find(c => c.id === shift.cabinet_id)?.name
+                              : null;
+                            if (timeOff) return null;
+                            return (
+                              <div
+                                key={shift.id}
+                                className="rounded-md px-2.5 py-1.5 text-sm leading-snug group relative"
+                                style={{
+                                  backgroundColor: `${doctor?.color || '#888'}20`,
+                                  borderLeft: `4px solid ${doctor?.color || '#888'}`,
+                                }}
+                              >
+                                <div className="font-semibold">{doctor?.name?.replace('Dr. ', '')}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {shift.start_time.slice(0,5)} - {shift.end_time.slice(0,5)}
+                                  {cabinetName && <span className="ml-1 opacity-70">• {cabinetName}</span>}
+                                </div>
+                                {isAdmin && (
+                                  <button
+                                    className="absolute top-1 right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={() => deleteShift(shift.id)}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-                {/* Week body */}
-                <div className="grid grid-cols-7">
-                  {weekDays.map(day => renderDayCell(day, false))}
-                </div>
-              </CardContent>
-            </Card>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            ) : (
+              /* Desktop: 7-column grid */
+              <Card className="overflow-hidden">
+                <CardContent className="p-0">
+                  {/* Week header */}
+                  <div className="grid grid-cols-7 border-b bg-muted/30">
+                    {weekDays.map(day => (
+                      <div key={day.toISOString()} className={cn(
+                        "px-3 py-3 text-center font-medium border-r last:border-r-0",
+                        isToday(day) ? "text-primary bg-primary/5" : "text-muted-foreground"
+                      )}>
+                        <div className="uppercase tracking-wider text-xs">{format(day, 'EEE', { locale: ro })}</div>
+                        <div className={cn(
+                          "text-2xl font-bold mt-0.5",
+                          isToday(day) ? "text-primary" : "text-foreground"
+                        )}>
+                          {format(day, 'd')}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Week body */}
+                  <div className="grid grid-cols-7">
+                    {weekDays.map(day => renderDayCell(day, false))}
+                  </div>
+                </CardContent>
+              </Card>
+            )
           ) : (
             <Card className="overflow-hidden">
               <CardContent className="p-0">

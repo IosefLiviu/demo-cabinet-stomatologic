@@ -919,9 +919,9 @@ export function AppointmentForm({
               </div>
             )}
 
-            {/* Cabinet, Doctor, Time - Horizontal scroll on mobile */}
-            <div className="overflow-x-auto -mx-2 sm:mx-0 px-2 sm:px-0">
-              <div className="grid gap-3 sm:gap-4 grid-cols-3 min-w-[360px] sm:min-w-0">
+            {/* Cabinet, Doctor, Time */}
+            <div>
+              <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="cabinet" className="text-xs sm:text-sm">Cabinet *</Label>
                   <Select
@@ -976,7 +976,7 @@ export function AppointmentForm({
                     </Alert>
                   )}
                 </div>
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 col-span-2 sm:col-span-1">
                   <Label htmlFor="time" className="text-xs sm:text-sm">Interval orar *</Label>
                   <div className="flex items-center gap-2">
                     <Select

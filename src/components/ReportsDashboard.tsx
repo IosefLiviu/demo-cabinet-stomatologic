@@ -622,28 +622,30 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
 
   return (
     <Tabs defaultValue="financial" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-5 max-w-3xl">
-        <TabsTrigger value="financial" className="gap-2">
-          <DollarSign className="h-4 w-4" />
-          Financiar
-        </TabsTrigger>
-        <TabsTrigger value="pending" className="gap-2">
-          <AlertCircle className="h-4 w-4" />
-          Nefinalizate
-        </TabsTrigger>
-        <TabsTrigger value="laboratory" className="gap-2">
-          <FlaskConical className="h-4 w-4" />
-          Laborator
-        </TabsTrigger>
-        <TabsTrigger value="patients" className="gap-2">
-          <ClipboardList className="h-4 w-4" />
-          Pe Pacienți
-        </TabsTrigger>
-        <TabsTrigger value="discounts" className="gap-2">
-          <Percent className="h-4 w-4" />
-          Discounturi
-        </TabsTrigger>
-      </TabsList>
+      <div className="overflow-x-auto sm:overflow-visible">
+        <TabsList className="inline-flex w-auto sm:grid sm:w-full sm:grid-cols-5 max-w-3xl">
+          <TabsTrigger value="financial" className="gap-2">
+            <DollarSign className="h-4 w-4 hidden sm:block" />
+            Financiar
+          </TabsTrigger>
+          <TabsTrigger value="pending" className="gap-2">
+            <AlertCircle className="h-4 w-4 hidden sm:block" />
+            Nefinalizate
+          </TabsTrigger>
+          <TabsTrigger value="laboratory" className="gap-2">
+            <FlaskConical className="h-4 w-4 hidden sm:block" />
+            Laborator
+          </TabsTrigger>
+          <TabsTrigger value="patients" className="gap-2">
+            <ClipboardList className="h-4 w-4 hidden sm:block" />
+            Pe Pacienți
+          </TabsTrigger>
+          <TabsTrigger value="discounts" className="gap-2">
+            <Percent className="h-4 w-4 hidden sm:block" />
+            Discounturi
+          </TabsTrigger>
+        </TabsList>
+      </div>
 
       <TabsContent value="financial">
         <div className="space-y-6">

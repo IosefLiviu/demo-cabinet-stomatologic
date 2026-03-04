@@ -101,10 +101,10 @@ export function PatientRemindersPanel() {
         <TableRow>
           <TableHead>Pacient</TableHead>
           <TableHead>Telefon</TableHead>
-          <TableHead>Tip</TableHead>
-          <TableHead>La cine</TableHead>
-          <TableHead>Data</TableHead>
-          <TableHead>Notă</TableHead>
+          <TableHead className="hidden sm:table-cell">Tip</TableHead>
+          <TableHead className="hidden md:table-cell">La cine</TableHead>
+          <TableHead className="hidden md:table-cell">Data</TableHead>
+          <TableHead className="hidden lg:table-cell">Notă</TableHead>
           <TableHead className="text-right">Acțiuni</TableHead>
         </TableRow>
       </TableHeader>
@@ -135,7 +135,7 @@ export function PatientRemindersPanel() {
                   {reminder.patient?.phone}
                 </a>
               </TableCell>
-              <TableCell>
+              <TableCell className="hidden sm:table-cell">
                 <div className="flex flex-wrap gap-1">
                   {(reminder.recall_type || []).map((type) => (
                     <Badge key={type} variant="outline" className="text-xs">
@@ -147,18 +147,18 @@ export function PatientRemindersPanel() {
                   )}
                 </div>
               </TableCell>
-              <TableCell>
+              <TableCell className="hidden md:table-cell">
                 <span className="text-sm">
                   {reminder.doctor?.name || '-'}
                 </span>
               </TableCell>
-              <TableCell>
+              <TableCell className="hidden md:table-cell">
                 <div className="flex items-center gap-2">
                   <span>{format(new Date(reminder.reminder_date), 'd MMM yyyy', { locale: ro })}</span>
                   {getDateBadge(reminder.reminder_date)}
                 </div>
               </TableCell>
-              <TableCell className="max-w-[200px]">
+              <TableCell className="max-w-[200px] hidden lg:table-cell">
                 <span className="text-sm text-muted-foreground truncate block">
                   {reminder.note || '-'}
                 </span>
@@ -177,7 +177,7 @@ export function PatientRemindersPanel() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-8 w-8 hidden sm:inline-flex"
                     onClick={() => setEditingReminder(reminder)}
                     title="Editează"
                   >
@@ -245,30 +245,32 @@ export function PatientRemindersPanel() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="all">
-            <TabsList className="mb-4">
-              <TabsTrigger value="all" className="gap-2">
-                Toate
-                <Badge variant="outline" className="ml-1">{reminders.length}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="overdue" className="gap-2">
-                Întârziate
-                {overdueReminders.length > 0 && (
-                  <Badge variant="destructive" className="ml-1">{overdueReminders.length}</Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="today" className="gap-2">
-                Azi
-                {todayReminders.length > 0 && (
-                  <Badge className="ml-1 bg-orange-500">{todayReminders.length}</Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="upcoming" className="gap-2">
-                Viitoare
-                {upcomingReminders.length > 0 && (
-                  <Badge variant="secondary" className="ml-1">{upcomingReminders.length}</Badge>
-                )}
-              </TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto mb-4 -mx-2 px-2 sm:mx-0 sm:px-0 flex justify-center">
+              <TabsList className="inline-flex w-auto">
+                <TabsTrigger value="all" className="gap-1 text-xs sm:text-sm px-2 sm:px-3">
+                  Toate
+                  <Badge variant="outline" className="ml-0.5 text-[10px] px-1">{reminders.length}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="overdue" className="gap-1 text-xs sm:text-sm px-2 sm:px-3">
+                  Întârziate
+                  {overdueReminders.length > 0 && (
+                    <Badge variant="destructive" className="ml-0.5 text-[10px] px-1">{overdueReminders.length}</Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="today" className="gap-1 text-xs sm:text-sm px-2 sm:px-3">
+                  Azi
+                  {todayReminders.length > 0 && (
+                    <Badge className="ml-0.5 bg-orange-500 text-[10px] px-1">{todayReminders.length}</Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="upcoming" className="gap-1 text-xs sm:text-sm px-2 sm:px-3">
+                  Viitoare
+                  {upcomingReminders.length > 0 && (
+                    <Badge variant="secondary" className="ml-0.5 text-[10px] px-1">{upcomingReminders.length}</Badge>
+                  )}
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="all">
               <ReminderTable items={reminders} />

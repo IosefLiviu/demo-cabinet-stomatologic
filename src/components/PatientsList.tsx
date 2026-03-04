@@ -328,7 +328,7 @@ export function PatientsList({
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead
-                className="w-[250px] cursor-pointer hover:bg-muted/80 transition-colors text-xs uppercase tracking-wide font-semibold text-muted-foreground"
+                className="w-[180px] sm:w-[250px] cursor-pointer hover:bg-muted/80 transition-colors text-xs uppercase tracking-wide font-semibold text-muted-foreground"
                 onClick={() => handleSort('name')}
               >
                 <div className="flex items-center gap-2">
@@ -364,7 +364,7 @@ export function PatientsList({
                   <SortIcon field="created_at" />
                 </div>
               </TableHead>
-              <TableHead className="w-[100px] sm:w-[120px] text-right text-xs uppercase tracking-wide font-semibold text-muted-foreground">Acțiuni</TableHead>
+              <TableHead className="w-[60px] sm:w-[120px] text-right text-xs uppercase tracking-wide font-semibold text-muted-foreground">Acțiuni</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -454,28 +454,7 @@ export function PatientsList({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-orange-500 hover:text-orange-600 hover:bg-orange-50"
-                        onClick={() => {
-                          setSelectedPatientForReminder(patient);
-                          setReminderDialogOpen(true);
-                        }}
-                        title="Setează reminder rechemare"
-                      >
-                        <Bell className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
-                        onClick={() => handleOpenWhatsAppDialog(patient)}
-                        title="Trimite mesaj WhatsApp"
-                      >
-                        <MessageCircle className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
+                        className="h-8 w-8 hidden sm:inline-flex"
                         onClick={() => onEdit(patient)}
                       >
                         <Edit className="h-4 w-4" />

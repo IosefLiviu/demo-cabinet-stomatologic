@@ -66,10 +66,15 @@ export function TimeSlotGrid({
   const [currentTimeTop, setCurrentTimeTop] = useState<number | null>(null);
   const [currentTimeLabel, setCurrentTimeLabel] = useState(() => format(new Date(), 'HH:mm'));
   const isMobile = useIsMobile();
+  const [mobileCabinetId, setMobileCabinetId] = useState<number | null>(null);
 
-  const cabinetsToShow = selectedCabinet
-    ? cabinets.filter((c) => c.id === selectedCabinet)
-    : cabinets;
+  // On mobile, when "Toate" is selected, show one cabinet at a time
+  const effectiveMobileCabinetId = mobileCabinetId ?? cabinets[0]?.id ?? 1;
+  const cabinetsToShow = isMobile && !selectedCabinet
+    ? cabinets.filter((c) => c.id === effectiveMobileCabinetId)
+    : selectedCabinet
+      ? cabinets.filter((c) => c.id === selectedCabinet)
+      : cabinets;
 
   // Update current time indicator position
   useEffect(() => {
@@ -234,8 +239,28 @@ export function TimeSlotGrid({
 
   return (
     <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
+      {/* Mobile cabinet switcher - only when "Toate" is selected */}
+      {isMobile && !selectedCabinet && cabinets.length > 1 && (
+        <div className="flex items-center gap-1 px-2 py-1.5 border-b border-border bg-muted/30 overflow-x-auto">
+          {cabinets.map((cab) => (
+            <button
+              key={cab.id}
+              onClick={() => setMobileCabinetId(cab.id)}
+              className={cn(
+                "flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors",
+                effectiveMobileCabinetId === cab.id
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "bg-muted text-muted-foreground"
+              )}
+            >
+              <span className={cn("w-2 h-2 rounded-full flex-shrink-0", cabinetBgColors[cab.id])} />
+              {cab.name}
+            </button>
+          ))}
+        </div>
+      )}
       {/* Outer scroll container for horizontal scroll on mobile */}
-      <div className={cn("overflow-x-auto relative", isMobile && "mobile-scroll-hint")} ref={gridRef}>
+      <div className={cn("overflow-x-auto relative", isMobile && !selectedCabinet ? "" : isMobile && "mobile-scroll-hint")} ref={gridRef}>
         {/* Current time indicator */}
         {isToday && currentTimeTop !== null && (
           <div
@@ -252,10 +277,12 @@ export function TimeSlotGrid({
         )}
         {/* Inner container with minimum width for mobile horizontal scroll */}
         <div
-          className="min-w-[600px] md:min-w-0"
-          style={{ 
+          className={cn(isMobile && cabinetsToShow.length === 1 ? "min-w-0" : "min-w-[600px] md:min-w-0")}
+          style={{
             display: 'grid',
-            gridTemplateColumns: `60px repeat(${cabinetsToShow.length}, minmax(120px, 1fr))`,
+            gridTemplateColumns: isMobile && cabinetsToShow.length === 1
+              ? '44px 1fr'
+              : `60px repeat(${cabinetsToShow.length}, minmax(120px, 1fr))`,
           }}
         >
           {/* Header row */}
@@ -474,8 +501,8 @@ export function TimeSlotGrid({
                             </span>
                           )}
                         </button>
-                        {appointmentStarting.status !== 'completed' && appointmentStarting.status !== 'cancelled' && (
-                          <div className="flex gap-0.5 sm:gap-0.5 flex-shrink-0">
+                        {!isMobile && appointmentStarting.status !== 'completed' && appointmentStarting.status !== 'cancelled' && (
+                          <div className="flex gap-0.5 flex-shrink-0">
                             {onAppointmentComplete && (
                               <TooltipProvider>
                                 <Tooltip>
@@ -485,12 +512,9 @@ export function TimeSlotGrid({
                                         e.stopPropagation();
                                         onAppointmentComplete(appointmentStarting.id);
                                       }}
-                                      className={cn(
-                                        "rounded hover:bg-green-200 dark:hover:bg-green-800 transition-colors",
-                                        isMobile ? "p-1.5" : "p-0.5"
-                                      )}
+                                      className="p-0.5 rounded hover:bg-green-200 dark:hover:bg-green-800 transition-colors"
                                     >
-                                      <CheckCircle2 className={cn(isMobile ? "h-4.5 w-4.5" : "h-3.5 w-3.5 sm:h-4 sm:w-4", "text-green-600")} />
+                                      <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600" />
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -508,12 +532,9 @@ export function TimeSlotGrid({
                                         e.stopPropagation();
                                         onAppointmentCancel(appointmentStarting.id);
                                       }}
-                                      className={cn(
-                                        "rounded hover:bg-red-200 dark:hover:bg-red-800 transition-colors",
-                                        isMobile ? "p-1.5" : "p-0.5"
-                                      )}
+                                      className="p-0.5 rounded hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
                                     >
-                                      <XCircle className={cn(isMobile ? "h-4.5 w-4.5" : "h-3.5 w-3.5 sm:h-4 sm:w-4", "text-red-500")} />
+                                      <XCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-500" />
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -527,7 +548,7 @@ export function TimeSlotGrid({
                         {appointmentStarting.status === 'completed' && (
                           <div className="flex gap-0.5 flex-shrink-0">
                             <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600" />
-                            {onEditPayment && (
+                            {!isMobile && onEditPayment && (
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
