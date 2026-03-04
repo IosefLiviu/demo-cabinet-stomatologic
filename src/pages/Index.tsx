@@ -855,20 +855,29 @@ const Index = () => {
             nextAppointmentDate: plan.nextAppointmentDate,
             nextAppointmentTime: plan.nextAppointmentTime,
             discountPercent: plan.discountPercent,
-            items: plan.items.map(item => ({
-              treatmentId: item.treatmentId,
-              treatmentName: item.treatmentName,
-              toothNumbers: item.toothNumbers || [],
-              doctorId: item.doctorId,
-              duration: item.duration || 30,
-              initialPrice: item.price,
-              laborator: item.laborator || 0,
-              cas: item.cas || 0,
-              discountPercent: item.discountPercent || 0,
-              completedAt: item.completedAt,
-              paymentStatus: item.paymentStatus,
-              paidAmount: item.paidAmount || 0,
-            })),
+            items: plan.items.map(item => {
+              const teethCount = item.toothNumbers?.length || 0;
+              const savedQuantity = item.quantity || 1;
+              // If quantity=1 but multiple teeth exist, price was saved as total — derive per-unit
+              let perUnitPrice = item.price;
+              if (teethCount > 1 && savedQuantity === 1) {
+                perUnitPrice = item.price / teethCount;
+              }
+              return {
+                treatmentId: item.treatmentId,
+                treatmentName: item.treatmentName,
+                toothNumbers: item.toothNumbers || [],
+                doctorId: item.doctorId,
+                duration: item.duration || 30,
+                initialPrice: perUnitPrice,
+                laborator: item.laborator || 0,
+                cas: item.cas || 0,
+                discountPercent: item.discountPercent || 0,
+                completedAt: item.completedAt,
+                paymentStatus: item.paymentStatus,
+                paidAmount: item.paidAmount || 0,
+              };
+            }),
           });
           setTreatmentPlanSourcePatient(patient);
           setSelectedPatient(null);
