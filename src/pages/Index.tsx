@@ -45,6 +45,7 @@ import { useCabinets } from '@/hooks/useCabinets';
 import { useDoctors } from '@/hooks/useDoctors';
 import { useDoctorShifts, DoctorShift } from '@/hooks/useDoctorShifts';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { TIME_SLOTS, Appointment } from '@/types/appointment';
 
 interface NavigationState {
@@ -55,6 +56,7 @@ interface NavigationState {
 
 const Index = () => {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedCabinet, setSelectedCabinet] = useState<number | null>(null);
   const [selectedDoctorFilter, setSelectedDoctorFilter] = useState<string | null>(null);
@@ -166,6 +168,13 @@ const Index = () => {
   const { unreadCount } = useWhatsAppMessages();
   const urgentRemindersCount = useUrgentRemindersCount();
   
+  // On mobile, auto-select first cabinet (no "Toate" view)
+  useEffect(() => {
+    if (isMobile && selectedCabinet === null && cabinets.length > 0) {
+      setSelectedCabinet(cabinets[0].id);
+    }
+  }, [isMobile, cabinets]);
+
   // Reception user = not admin AND not a doctor
   const isReception = !isAdmin && !doctorId;
 
@@ -777,7 +786,7 @@ const Index = () => {
               {activeTab !== 'calendar' && TAB_META[activeTab] && (() => {
                 const { title, Icon } = TAB_META[activeTab];
                 return (
-                  <div className="flex items-center gap-3 mb-6">
+                  <div className="sticky top-14 sm:top-16 z-30 bg-background -mx-3 sm:-mx-4 lg:-mx-6 px-3 sm:px-4 lg:px-6 py-3 mb-4 border-b border-border flex items-center gap-3">
                     <SidebarTrigger />
                     <div className="h-6 w-px bg-border" />
                     <Icon className="h-5 w-5 text-muted-foreground" />

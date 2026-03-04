@@ -15,13 +15,21 @@ const cabinetColors: Record<number, string> = {
   5: 'bg-cabinet-5',
 };
 
+const cabinetSelectedStyles: Record<number, string> = {
+  1: 'bg-cabinet-1 text-white shadow-md',
+  2: 'bg-cabinet-2 text-white shadow-md',
+  3: 'bg-cabinet-3 text-white shadow-md',
+  4: 'bg-cabinet-4 text-white shadow-md',
+  5: 'bg-cabinet-5 text-white shadow-md',
+};
+
 export function CabinetTabs({ selectedCabinet, onSelectCabinet, cabinets }: CabinetTabsProps) {
   return (
-    <div className="flex flex-wrap gap-1.5 sm:gap-2 overflow-x-auto pb-1">
+    <div className="flex gap-1 sm:gap-2 sm:flex-wrap overflow-x-auto pb-1">
       <button
         onClick={() => onSelectCabinet(null)}
         className={cn(
-          "px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm transition-all whitespace-nowrap",
+          "px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm transition-all whitespace-nowrap hidden sm:inline-flex",
           selectedCabinet === null
             ? "bg-primary text-primary-foreground shadow-md"
             : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
@@ -34,20 +42,19 @@ export function CabinetTabs({ selectedCabinet, onSelectCabinet, cabinets }: Cabi
           key={cabinet.id}
           onClick={() => onSelectCabinet(cabinet.id)}
           className={cn(
-            "px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm transition-all flex items-center gap-1.5 sm:gap-2 whitespace-nowrap",
+            "px-3 sm:px-4 py-1.5 sm:py-2 rounded-full sm:rounded-lg font-semibold text-xs sm:text-sm transition-all flex items-center gap-1.5 sm:gap-2 whitespace-nowrap",
             selectedCabinet === cabinet.id
-              ? "bg-primary text-primary-foreground shadow-md"
+              ? cabinetSelectedStyles[cabinet.id] || "bg-primary text-primary-foreground shadow-md"
               : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
           )}
         >
           <span
             className={cn(
               "w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0",
-              cabinetColors[cabinet.id] || 'bg-gray-400'
+              selectedCabinet === cabinet.id ? 'bg-white/50' : (cabinetColors[cabinet.id] || 'bg-gray-400')
             )}
           />
-          <span className="hidden sm:inline">{cabinet.name}</span>
-          <span className="sm:hidden">C{cabinet.id}</span>
+          {cabinet.name}
         </button>
       ))}
     </div>
