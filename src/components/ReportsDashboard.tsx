@@ -3,10 +3,6 @@ import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-f
 import { ro } from 'date-fns/locale';
 import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChart, UserCircle, Filter, Download, FlaskConical, ClipboardList, Percent, AlertCircle, Banknote } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AppointmentsPatientReport } from './AppointmentsPatientReport';
-import { DiscountedAppointmentsReport } from './DiscountedAppointmentsReport';
-import { LaboratoryReport } from './LaboratoryReport';
-import { PendingAppointmentsByDoctorReport } from './PendingAppointmentsByDoctorReport';
 import { OutstandingDebtsReport } from './OutstandingDebtsReport';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -566,30 +562,14 @@ export function ReportsDashboard({ appointments, loading, onFetchRange, onPatien
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
       <div className="overflow-x-auto sm:overflow-visible">
-        <TabsList className="inline-flex w-auto sm:grid sm:w-full sm:grid-cols-6 max-w-4xl">
+        <TabsList className="inline-flex w-auto sm:grid sm:w-full sm:grid-cols-2 max-w-md">
           <TabsTrigger value="financial" className="gap-2">
             <DollarSign className="h-4 w-4 hidden sm:block" />
             Financiar
           </TabsTrigger>
-          <TabsTrigger value="pending" className="gap-2">
-            <AlertCircle className="h-4 w-4 hidden sm:block" />
-            Nefinalizate
-          </TabsTrigger>
           <TabsTrigger value="debts" className="gap-2">
             <Banknote className="h-4 w-4 hidden sm:block" />
             Restanțe
-          </TabsTrigger>
-          <TabsTrigger value="laboratory" className="gap-2">
-            <FlaskConical className="h-4 w-4 hidden sm:block" />
-            Laborator
-          </TabsTrigger>
-          <TabsTrigger value="patients" className="gap-2">
-            <ClipboardList className="h-4 w-4 hidden sm:block" />
-            Pe Pacienți
-          </TabsTrigger>
-          <TabsTrigger value="discounts" className="gap-2">
-            <Percent className="h-4 w-4 hidden sm:block" />
-            Discounturi
           </TabsTrigger>
         </TabsList>
       </div>
@@ -1018,38 +998,9 @@ export function ReportsDashboard({ appointments, loading, onFetchRange, onPatien
         </div>
       </TabsContent>
 
-      <TabsContent value="pending">
-        <PendingAppointmentsByDoctorReport 
-          appointments={appointments} 
-          dateRange={dateRange}
-        />
-      </TabsContent>
-
       <TabsContent value="debts">
         <OutstandingDebtsReport
           onPatientClick={onPatientClick}
-        />
-      </TabsContent>
-
-      <TabsContent value="laboratory">
-        <LaboratoryReport 
-          appointments={filteredAppointments} 
-          dateRange={dateRange}
-        />
-      </TabsContent>
-
-      <TabsContent value="patients">
-        <AppointmentsPatientReport 
-          appointments={appointments} 
-          dateRange={dateRange}
-          onFetchRange={onFetchRange}
-        />
-      </TabsContent>
-
-      <TabsContent value="discounts">
-        <DiscountedAppointmentsReport 
-          appointments={appointments} 
-          dateRange={dateRange}
         />
       </TabsContent>
     </Tabs>
