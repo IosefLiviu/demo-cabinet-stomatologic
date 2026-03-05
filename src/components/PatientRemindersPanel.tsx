@@ -95,11 +95,22 @@ export function PatientRemindersPanel() {
     control_aparat: 'Control aparat',
   };
 
+  const getDoctorInitials = (name: string | undefined) => {
+    if (!name) return '';
+    return name
+      .split(' ')
+      .map((word) => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   const ReminderTable = ({ items }: { items: PatientReminder[] }) => (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead>Pacient</TableHead>
+          <TableHead className="md:hidden w-[40px] px-1 text-center">Dr</TableHead>
           <TableHead>Telefon</TableHead>
           <TableHead className="hidden sm:table-cell">Tip</TableHead>
           <TableHead className="hidden md:table-cell">La cine</TableHead>
@@ -111,7 +122,7 @@ export function PatientRemindersPanel() {
       <TableBody>
         {items.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+            <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
               Nu există remindere în această categorie
             </TableCell>
           </TableRow>
@@ -125,6 +136,18 @@ export function PatientRemindersPanel() {
                     {reminder.patient?.last_name} {reminder.patient?.first_name}
                   </span>
                 </div>
+              </TableCell>
+              <TableCell className="md:hidden w-[40px] px-1 text-center">
+                {reminder.doctor?.name ? (
+                  <span
+                    className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-primary/15 text-primary text-[10px] font-semibold"
+                    title={reminder.doctor.name}
+                  >
+                    {getDoctorInitials(reminder.doctor.name)}
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground text-xs">-</span>
+                )}
               </TableCell>
               <TableCell>
                 <a
