@@ -1,90 +1,124 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { format, differenceInDays } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Download, Search, Filter } from 'lucide-react';
+import { Download, Search, Filter, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AppointmentDB } from '@/hooks/useAppointmentsDB';
+import { supabase } from '@/integrations/supabase/client';
+import { useDoctors } from '@/hooks/useDoctors';
 import * as XLSX from 'xlsx';
 
 interface OutstandingDebtsReportProps {
-  appointments: AppointmentDB[];
   onPatientClick?: (patientId: string) => void;
 }
 
-export function OutstandingDebtsReport({ appointments, onPatientClick }: OutstandingDebtsReportProps) {
+interface DebtRow {
+  id: string;
+  patientId: string;
+  patientName: string;
+  patientPhone: string;
+  appointmentDate: string;
+  billingMonth: string;
+  treatmentDetails: string;
+  doctorId: string;
+  doctorName: string;
+  totalAmount: number;
+  paidAmount: number;
+  debt: number;
+  daysOverdue: number;
+}
+
+export function OutstandingDebtsReport({ onPatientClick }: OutstandingDebtsReportProps) {
+  const { doctors } = useDoctors();
   const [searchName, setSearchName] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'over30'>('all');
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>('all');
+  const [debtsData, setDebtsData] = useState<DebtRow[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Calculate outstanding debts from all completed appointments
-  const debtsData = useMemo(() => {
-    const today = new Date();
+  // Fetch ALL completed appointments with outstanding debts
+  useEffect(() => {
+    const fetchDebts = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('appointments')
+          .select(`
+            *,
+            patients (id, first_name, last_name, phone),
+            treatments (id, name),
+            doctors (id, name),
+            appointment_treatments (id, treatment_name, price, decont, discount_percent)
+          `)
+          .eq('status', 'completed')
+          .eq('is_paid', false)
+          .order('appointment_date', { ascending: false });
 
-    return appointments
-      .filter(a => {
-        if (a.status !== 'completed') return false;
+        if (error) throw error;
 
-        // Calculate payable amount
-        const payableAmount = a.appointment_treatments?.length
-          ? a.appointment_treatments.reduce((sum, t) => {
-              const tPrice = t.price || 0;
-              const tCas = t.decont || 0;
-              const discountPercent = (t as any).discount_percent || 0;
-              const priceAfterCas = tPrice - tCas;
-              const discountAmount = priceAfterCas * (discountPercent / 100);
-              return sum + (priceAfterCas - discountAmount);
-            }, 0)
-          : (a.price || 0);
+        const today = new Date();
+        const rows: DebtRow[] = [];
 
-        const paidAmount = a.paid_amount ?? (a.is_paid ? payableAmount : 0);
-        const debt = Math.max(0, payableAmount - paidAmount);
-        return debt > 0;
-      })
-      .map(a => {
-        const payableAmount = a.appointment_treatments?.length
-          ? a.appointment_treatments.reduce((sum, t) => {
-              const tPrice = t.price || 0;
-              const tCas = t.decont || 0;
-              const discountPercent = (t as any).discount_percent || 0;
-              const priceAfterCas = tPrice - tCas;
-              const discountAmount = priceAfterCas * (discountPercent / 100);
-              return sum + (priceAfterCas - discountAmount);
-            }, 0)
-          : (a.price || 0);
+        for (const a of data || []) {
+          const payableAmount = a.appointment_treatments?.length
+            ? a.appointment_treatments.reduce((sum: number, t: any) => {
+                const tPrice = t.price || 0;
+                const tCas = t.decont || 0;
+                const discountPercent = t.discount_percent || 0;
+                const priceAfterCas = tPrice - tCas;
+                const discountAmount = priceAfterCas * (discountPercent / 100);
+                return sum + (priceAfterCas - discountAmount);
+              }, 0)
+            : (a.price || 0);
 
-        const paidAmount = a.paid_amount ?? (a.is_paid ? payableAmount : 0);
-        const debt = Math.max(0, payableAmount - paidAmount);
-        const aptDate = new Date(a.appointment_date);
-        const daysOverdue = differenceInDays(today, aptDate);
+          const paidAmount = a.paid_amount ?? 0;
+          const debt = Math.max(0, payableAmount - paidAmount);
+          if (debt <= 0) continue;
 
-        const treatmentNames = a.appointment_treatments?.length
-          ? a.appointment_treatments.map(t => t.treatment_name).join(', ')
-          : (a.treatments?.name || 'N/A');
+          const aptDate = new Date(a.appointment_date);
+          const treatmentNames = a.appointment_treatments?.length
+            ? a.appointment_treatments.map((t: any) => t.treatment_name).join(', ')
+            : ((a.treatments as any)?.name || 'N/A');
 
-        return {
-          id: a.id,
-          patientId: a.patient_id,
-          patientName: a.patients ? `${a.patients.last_name} ${a.patients.first_name}` : 'N/A',
-          patientPhone: a.patients?.phone || '',
-          appointmentDate: a.appointment_date,
-          billingMonth: format(aptDate, 'MMMM yyyy', { locale: ro }),
-          treatmentDetails: treatmentNames,
-          doctorName: a.doctors?.name || 'N/A',
-          totalAmount: payableAmount,
-          paidAmount,
-          debt,
-          daysOverdue,
-        };
-      })
-      .sort((a, b) => b.debt - a.debt);
-  }, [appointments]);
+          rows.push({
+            id: a.id,
+            patientId: a.patient_id,
+            patientName: a.patients ? `${(a.patients as any).last_name} ${(a.patients as any).first_name}` : 'N/A',
+            patientPhone: (a.patients as any)?.phone || '',
+            appointmentDate: a.appointment_date,
+            billingMonth: format(aptDate, 'MMMM yyyy', { locale: ro }),
+            treatmentDetails: treatmentNames,
+            doctorId: a.doctor_id || '',
+            doctorName: (a.doctors as any)?.name || 'N/A',
+            totalAmount: payableAmount,
+            paidAmount,
+            debt,
+            daysOverdue: differenceInDays(today, aptDate),
+          });
+        }
+
+        rows.sort((a, b) => b.debt - a.debt);
+        setDebtsData(rows);
+      } catch (error) {
+        console.error('Error fetching outstanding debts:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDebts();
+  }, []);
 
   // Apply filters
   const filteredDebts = useMemo(() => {
     let result = debtsData;
+
+    if (selectedDoctorId !== 'all') {
+      result = result.filter(d => d.doctorId === selectedDoctorId);
+    }
 
     if (searchName.trim()) {
       const search = searchName.toLowerCase();
@@ -96,7 +130,7 @@ export function OutstandingDebtsReport({ appointments, onPatientClick }: Outstan
     }
 
     return result;
-  }, [debtsData, searchName, statusFilter]);
+  }, [debtsData, searchName, statusFilter, selectedDoctorId]);
 
   const totalDebt = filteredDebts.reduce((sum, d) => sum + d.debt, 0);
   const totalAmount = filteredDebts.reduce((sum, d) => sum + d.totalAmount, 0);
@@ -132,6 +166,15 @@ export function OutstandingDebtsReport({ appointments, onPatientClick }: Outstan
     XLSX.writeFile(wb, `Restante_${format(new Date(), 'dd-MM-yyyy')}.xlsx`);
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-muted-foreground">Se încarcă restanțele...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {/* Filters */}
@@ -148,6 +191,17 @@ export function OutstandingDebtsReport({ appointments, onPatientClick }: Outstan
 
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select value={selectedDoctorId} onValueChange={setSelectedDoctorId}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Doctor" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toți doctorii</SelectItem>
+              {doctors.map(d => (
+                <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select value={statusFilter} onValueChange={(v: 'all' | 'over30') => setStatusFilter(v)}>
             <SelectTrigger className="w-[220px]">
               <SelectValue />
@@ -199,7 +253,7 @@ export function OutstandingDebtsReport({ appointments, onPatientClick }: Outstan
         <CardContent className="p-0">
           {filteredDebts.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
-              Nu există restanțe pentru perioada și filtrele selectate.
+              Nu există restanțe.
             </p>
           ) : (
             <Table>
@@ -217,8 +271,8 @@ export function OutstandingDebtsReport({ appointments, onPatientClick }: Outstan
               </TableHeader>
               <TableBody>
                 {filteredDebts.map(d => (
-                  <TableRow 
-                    key={d.id} 
+                  <TableRow
+                    key={d.id}
                     className={onPatientClick ? 'cursor-pointer hover:bg-muted/80' : ''}
                     onClick={() => onPatientClick?.(d.patientId)}
                   >
