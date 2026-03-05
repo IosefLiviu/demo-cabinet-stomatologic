@@ -316,14 +316,14 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
   // ── Memoised derivations ────────────────────────────────────────────────────
 
   // Overall stats always derived from full history (unaffected by filter)
-  const completedApts  = useMemo(() => appointmentHistory.filter(aptIsCompleted),  [appointmentHistory]);
-  const cancelledApts  = useMemo(() => appointmentHistory.filter(aptIsCancelled),  [appointmentHistory]);
-  const scheduledApts  = useMemo(() => appointmentHistory.filter(aptIsScheduled),  [appointmentHistory]);
+  const completedApts = useMemo(() => appointmentHistory.filter(aptIsCompleted), [appointmentHistory]);
+  const cancelledApts = useMemo(() => appointmentHistory.filter(aptIsCancelled), [appointmentHistory]);
+  const scheduledApts = useMemo(() => appointmentHistory.filter(aptIsScheduled), [appointmentHistory]);
 
   const totalTreatments = useMemo(() => completedApts.reduce((s, a) => s + a.treatments.length, 0), [completedApts]);
-  const totalSpent      = useMemo(() => completedApts.reduce((s, a) => s + getNetPrice(a), 0), [completedApts]);
-  const totalCas        = useMemo(() => completedApts.reduce((s, a) => s + getTotalCas(a), 0), [completedApts]);
-  const totalDebt       = useMemo(() => unpaidAppointments.reduce((s, a) => s + a.remaining, 0), [unpaidAppointments]);
+  const totalSpent = useMemo(() => completedApts.reduce((s, a) => s + getNetPrice(a), 0), [completedApts]);
+  const totalCas = useMemo(() => completedApts.reduce((s, a) => s + getTotalCas(a), 0), [completedApts]);
+  const totalDebt = useMemo(() => unpaidAppointments.reduce((s, a) => s + a.remaining, 0), [unpaidAppointments]);
 
   // Filter applied before grouping
   const filteredHistory = useMemo(() =>
@@ -350,10 +350,10 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
         const [y, m] = key.split('-').map(Number);
         const raw = format(new Date(y, m - 1, 1), 'MMMM yyyy', { locale: ro });
         const label = raw.charAt(0).toUpperCase() + raw.slice(1);
-        const completedCount  = apts.filter(aptIsCompleted).length;
-        const cancelledCount  = apts.filter(aptIsCancelled).length;
-        const scheduledCount  = apts.filter(aptIsScheduled).length;
-        const totalRevenue    = apts.filter(aptIsCompleted).reduce((s, a) => s + getNetPrice(a), 0);
+        const completedCount = apts.filter(aptIsCompleted).length;
+        const cancelledCount = apts.filter(aptIsCancelled).length;
+        const scheduledCount = apts.filter(aptIsScheduled).length;
+        const totalRevenue = apts.filter(aptIsCompleted).reduce((s, a) => s + getNetPrice(a), 0);
         return { key, label, appointments: apts, completedCount, cancelledCount, scheduledCount, totalRevenue };
       });
   }, [filteredHistory]);
@@ -369,13 +369,13 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
   }
 
   const content = (
-    <div className={cn('space-y-8', fullscreen && 'h-full overflow-y-auto')}>
+    <div className={cn('space-y-3 sm:space-y-8 max-w-full overflow-hidden', fullscreen && 'h-full overflow-y-auto')}>
 
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-foreground tracking-tight">{patientName}</h2>
-          <p className="text-xs text-muted-foreground">Fișă pacient consolidată</p>
+          <h2 className="text-sm sm:text-lg font-bold text-foreground tracking-tight">{patientName}</h2>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">Fișă pacient consolidată</p>
         </div>
         <Button
           variant="ghost"
@@ -389,106 +389,106 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="rounded-2xl border bg-card/50 p-4 space-y-2 hover:shadow-sm transition-shadow">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
-              <Stethoscope className="h-4 w-4 text-primary" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 sm:gap-4">
+        <div className="rounded-xl sm:rounded-2xl border bg-card/50 p-2 sm:p-4 space-y-0.5 sm:space-y-2 hover:shadow-sm transition-shadow">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="flex h-5 w-5 sm:h-8 sm:w-8 items-center justify-center rounded-lg sm:rounded-xl bg-primary/10">
+              <Stethoscope className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
             </div>
-            <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Tratamente</span>
+            <span className="text-[9px] sm:text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Tratamente</span>
           </div>
-          <p className="text-2xl font-bold text-foreground pl-10">{totalTreatments}</p>
+          <p className="text-lg sm:text-2xl font-bold text-foreground pl-6 sm:pl-10">{totalTreatments}</p>
         </div>
 
-        <div className="rounded-2xl border bg-card/50 p-4 space-y-2 hover:shadow-sm transition-shadow">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
-              <FileText className="h-4 w-4 text-primary" />
+        <div className="rounded-xl sm:rounded-2xl border bg-card/50 p-2 sm:p-4 space-y-0.5 sm:space-y-2 hover:shadow-sm transition-shadow">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="flex h-5 w-5 sm:h-8 sm:w-8 items-center justify-center rounded-lg sm:rounded-xl bg-primary/10">
+              <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
             </div>
-            <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Total</span>
+            <span className="text-[9px] sm:text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Total</span>
           </div>
-          <p className="text-2xl font-bold text-foreground pl-10">
-            {totalSpent.toLocaleString()} <span className="text-sm font-normal text-muted-foreground">RON</span>
+          <p className="text-lg sm:text-2xl font-bold text-foreground pl-6 sm:pl-10">
+            {totalSpent.toLocaleString()} <span className="text-[10px] sm:text-sm font-normal text-muted-foreground">RON</span>
           </p>
         </div>
 
-        <div className="rounded-2xl border bg-card/50 p-4 space-y-2 hover:shadow-sm transition-shadow">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-100 dark:bg-cyan-900/30">
-              <Badge variant="outline" className="h-4 w-4 p-0 flex items-center justify-center text-[8px] border-cyan-500 text-cyan-600">C</Badge>
+        <div className="rounded-xl sm:rounded-2xl border bg-card/50 p-2 sm:p-4 space-y-0.5 sm:space-y-2 hover:shadow-sm transition-shadow">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="flex h-5 w-5 sm:h-8 sm:w-8 items-center justify-center rounded-lg sm:rounded-xl bg-cyan-100 dark:bg-cyan-900/30">
+              <Badge variant="outline" className="h-3.5 w-3.5 sm:h-4 sm:w-4 p-0 flex items-center justify-center text-[7px] sm:text-[8px] border-cyan-500 text-cyan-600">C</Badge>
             </div>
-            <span className="text-[11px] font-medium uppercase tracking-wider text-cyan-600">CAS</span>
+            <span className="text-[9px] sm:text-[11px] font-medium uppercase tracking-wider text-cyan-600">CAS</span>
           </div>
-          <p className="text-2xl font-bold text-cyan-600 pl-10">
-            {totalCas.toLocaleString()} <span className="text-sm font-normal opacity-70">RON</span>
+          <p className="text-lg sm:text-2xl font-bold text-cyan-600 pl-6 sm:pl-10">
+            {totalCas.toLocaleString()} <span className="text-[10px] sm:text-sm font-normal opacity-70">RON</span>
           </p>
         </div>
 
         <div className={cn(
-          'rounded-2xl border p-4 space-y-2 hover:shadow-sm transition-shadow',
+          'rounded-xl sm:rounded-2xl border p-2 sm:p-4 space-y-0.5 sm:space-y-2 hover:shadow-sm transition-shadow',
           totalDebt > 0 ? 'border-orange-200 dark:border-orange-800 bg-orange-50/30 dark:bg-orange-950/10' : 'bg-card/50',
         )}>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <div className={cn(
-              'flex h-8 w-8 items-center justify-center rounded-xl',
+              'flex h-5 w-5 sm:h-8 sm:w-8 items-center justify-center rounded-lg sm:rounded-xl',
               totalDebt > 0 ? 'bg-orange-100 dark:bg-orange-900/30' : 'bg-muted',
             )}>
-              <AlertCircle className={cn('h-4 w-4', totalDebt > 0 ? 'text-orange-500' : 'text-muted-foreground')} />
+              <AlertCircle className={cn('h-3 w-3 sm:h-4 sm:w-4', totalDebt > 0 ? 'text-orange-500' : 'text-muted-foreground')} />
             </div>
-            <span className={cn('text-[11px] font-medium uppercase tracking-wider', totalDebt > 0 ? 'text-orange-600' : 'text-muted-foreground')}>
+            <span className={cn('text-[9px] sm:text-[11px] font-medium uppercase tracking-wider', totalDebt > 0 ? 'text-orange-600' : 'text-muted-foreground')}>
               Restanțe
             </span>
           </div>
-          <p className={cn('text-2xl font-bold pl-10', totalDebt > 0 ? 'text-orange-600' : 'text-muted-foreground')}>
-            {totalDebt > 0 ? totalDebt.toLocaleString() : '0'} <span className="text-sm font-normal opacity-70">RON</span>
+          <p className={cn('text-lg sm:text-2xl font-bold pl-6 sm:pl-10', totalDebt > 0 ? 'text-orange-600' : 'text-muted-foreground')}>
+            {totalDebt > 0 ? totalDebt.toLocaleString() : '0'} <span className="text-[10px] sm:text-sm font-normal opacity-70">RON</span>
           </p>
         </div>
       </div>
 
       {/* Main content */}
-      <div className={cn('grid gap-6', fullscreen ? 'md:grid-cols-2' : 'grid-cols-1')}>
+      <div className={cn('grid gap-3 sm:gap-6', fullscreen ? 'md:grid-cols-2' : 'grid-cols-1')}>
 
         {/* ── Appointment history ─────────────────────────────────────────── */}
-        <section className="space-y-4">
+        <section className="space-y-2 sm:space-y-4">
 
           {/* Section header */}
-          <div className="flex items-center gap-3 pb-1">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
-              <Calendar className="h-4 w-4 text-primary" />
+          <div className="flex items-center gap-2 sm:gap-3 pb-0 sm:pb-1">
+            <div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-lg sm:rounded-xl bg-primary/10">
+              <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
             </div>
-            <h3 className="text-sm font-semibold text-foreground">Istoricul programărilor</h3>
+            <h3 className="text-xs sm:text-sm font-semibold text-foreground">Istoricul programărilor</h3>
             <Badge variant="secondary" className="text-[10px] ml-auto rounded-full">
               {appointmentHistory.length}
             </Badge>
           </div>
 
           {/* Status summary badges (always based on full history) */}
-          <div className="flex flex-wrap gap-2">
-            <div className="inline-flex items-center gap-1.5 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-full px-3 py-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
-              <span className="text-xs font-medium text-green-700 dark:text-green-400">{completedApts.length} finalizate</span>
-              <span className="text-xs font-bold text-green-700 dark:text-green-400">{totalSpent.toLocaleString()} RON</span>
+          <div className="flex flex-wrap gap-1 sm:gap-2">
+            <div className="inline-flex items-center gap-1 sm:gap-1.5 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-full px-1.5 sm:px-3 py-0.5 sm:py-1.5">
+              <CheckCircle2 className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-green-600 shrink-0" />
+              <span className="text-[10px] sm:text-xs font-medium text-green-700 dark:text-green-400">{completedApts.length} fin.</span>
+              <span className="text-[10px] sm:text-xs font-bold text-green-700 dark:text-green-400">{totalSpent.toLocaleString()} RON</span>
             </div>
-            <div className="inline-flex items-center gap-1.5 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-full px-3 py-1.5">
-              <XCircle className="h-3.5 w-3.5 text-red-500" />
-              <span className="text-xs font-medium text-red-600 dark:text-red-400">{cancelledApts.length} anulate</span>
+            <div className="inline-flex items-center gap-1 sm:gap-1.5 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-full px-1.5 sm:px-3 py-0.5 sm:py-1.5">
+              <XCircle className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-red-500 shrink-0" />
+              <span className="text-[10px] sm:text-xs font-medium text-red-600 dark:text-red-400">{cancelledApts.length} anulate</span>
             </div>
             {scheduledApts.length > 0 && (
-              <div className="inline-flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-full px-3 py-1.5">
-                <Clock className="h-3.5 w-3.5 text-blue-500" />
-                <span className="text-xs font-medium text-blue-600 dark:text-blue-400">{scheduledApts.length} programate</span>
+              <div className="inline-flex items-center gap-1 sm:gap-1.5 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-full px-1.5 sm:px-3 py-0.5 sm:py-1.5">
+                <Clock className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-blue-500 shrink-0" />
+                <span className="text-[10px] sm:text-xs font-medium text-blue-600 dark:text-blue-400">{scheduledApts.length} prog.</span>
               </div>
             )}
           </div>
 
           {/* Filter pills */}
-          <div className="flex gap-1.5 flex-wrap">
+          <div className="flex gap-1 sm:gap-1.5 flex-wrap">
             {(['all', 'completed', 'cancelled', 'scheduled'] as StatusFilter[]).map((f) => (
               <button
                 key={f}
                 onClick={() => setStatusFilter(f)}
                 className={cn(
-                  'text-[11px] px-3 py-1 rounded-full transition-colors',
+                  'text-[10px] sm:text-[11px] px-2 sm:px-3 py-0.5 sm:py-1 rounded-full transition-colors',
                   statusFilter === f
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-muted-foreground hover:bg-muted/80',
@@ -515,32 +515,32 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
                 >
                   {/* Month header trigger */}
                   <CollapsibleTrigger asChild>
-                    <button className="w-full flex items-center justify-between rounded-xl px-4 py-3 bg-muted/40 hover:bg-muted/60 transition-colors group border border-transparent hover:border-border">
-                      <div className="flex items-center gap-3">
-                        <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90" />
-                        <span className="text-sm font-semibold text-foreground">{group.label}</span>
+                    <button className="w-full flex items-center justify-between rounded-xl px-2 sm:px-4 py-1.5 sm:py-3 bg-muted/40 hover:bg-muted/60 transition-colors group border border-transparent hover:border-border gap-1 sm:gap-2">
+                      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+                        <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90" />
+                        <span className="text-xs sm:text-sm font-semibold text-foreground">{group.label}</span>
                         <Badge variant="outline" className="text-[10px] px-1.5 py-0 rounded-full">
                           {group.appointments.length}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-end min-w-0">
                         {group.completedCount > 0 && (
-                          <span className="text-[10px] font-medium text-green-600 bg-green-50 dark:bg-green-950/30 px-2 py-0.5 rounded-full">
+                          <span className="text-[10px] font-medium text-green-600 bg-green-50 dark:bg-green-950/30 px-1.5 py-0.5 rounded-full whitespace-nowrap">
                             {group.completedCount} fin.
                           </span>
                         )}
                         {group.cancelledCount > 0 && (
-                          <span className="text-[10px] font-medium text-red-500 bg-red-50 dark:bg-red-950/30 px-2 py-0.5 rounded-full">
+                          <span className="text-[10px] font-medium text-red-500 bg-red-50 dark:bg-red-950/30 px-1.5 py-0.5 rounded-full whitespace-nowrap">
                             {group.cancelledCount} ann.
                           </span>
                         )}
                         {group.scheduledCount > 0 && (
-                          <span className="text-[10px] font-medium text-blue-500 bg-blue-50 dark:bg-blue-950/30 px-2 py-0.5 rounded-full">
+                          <span className="text-[10px] font-medium text-blue-500 bg-blue-50 dark:bg-blue-950/30 px-1.5 py-0.5 rounded-full whitespace-nowrap">
                             {group.scheduledCount} prog.
                           </span>
                         )}
                         {group.totalRevenue > 0 && (
-                          <span className="text-xs font-semibold text-foreground ml-1">
+                          <span className="text-[10px] sm:text-xs font-semibold text-foreground whitespace-nowrap">
                             {group.totalRevenue.toLocaleString()} RON
                           </span>
                         )}
@@ -550,63 +550,73 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
 
                   {/* Appointment rows */}
                   <CollapsibleContent>
-                    <div className="mt-1.5 ml-4 pl-4 border-l-2 border-muted space-y-1.5 pb-2">
+                    <div className="mt-1 ml-2 sm:ml-4 pl-2 sm:pl-4 border-l-2 border-muted space-y-1 sm:space-y-1.5 pb-1 sm:pb-2">
                       {group.appointments.map((apt) => {
-                        const netPrice       = getNetPrice(apt);
+                        const netPrice = getNetPrice(apt);
                         const treatmentLabel = apt.treatments.length > 0
                           ? apt.treatments.map((t) => t.name).join(', ')
                           : 'N/A';
                         const completed = aptIsCompleted(apt);
                         const cancelled = aptIsCancelled(apt);
                         const scheduled = aptIsScheduled(apt);
-                        const comment   = cleanNotes(apt.notes);
+                        const comment = cleanNotes(apt.notes);
 
                         return (
                           <div
                             key={apt.id}
                             className={cn(
-                              'rounded-xl px-4 py-3 transition-colors',
+                              'rounded-xl px-2 sm:px-4 py-1.5 sm:py-3 transition-colors',
                               completed && 'bg-green-50/40 dark:bg-green-950/10 hover:bg-green-50/60',
                               cancelled && 'bg-red-50/50 dark:bg-red-950/10 border border-red-100 dark:border-red-900/30',
                               scheduled && 'bg-muted/30 hover:bg-muted/50 border border-transparent',
                             )}
                           >
-                            <div className="flex items-start gap-3">
+                            <div className="flex items-start gap-2 sm:gap-3">
                               {/* Status icon */}
                               <div className="mt-0.5 shrink-0">
-                                {completed && <CheckCircle2 className="h-4 w-4 text-green-500" />}
-                                {cancelled && <XCircle className="h-4 w-4 text-red-500" />}
-                                {scheduled && <Clock className="h-4 w-4 text-blue-400" />}
+                                {completed && <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-500" />}
+                                {cancelled && <XCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-500" />}
+                                {scheduled && <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-400" />}
                               </div>
 
                               {/* Info block */}
                               <div className="flex-1 min-w-0">
-                                {/* First line: date · treatment · doctor */}
-                                <div className="flex items-center gap-x-2 flex-wrap text-sm">
-                                  <span className="font-medium">
-                                    {format(new Date(apt.appointment_date), 'd MMM yyyy', { locale: ro })}
-                                  </span>
-                                  {apt.start_time && (
-                                    <span className="text-muted-foreground text-[11px]">
-                                      {apt.start_time.slice(0, 5)}
+                                {/* Date + price row */}
+                                <div className="flex items-center justify-between gap-1">
+                                  <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm min-w-0">
+                                    <span className="font-medium shrink-0">
+                                      {format(new Date(apt.appointment_date), 'd MMM yyyy', { locale: ro })}
                                     </span>
-                                  )}
-                                  <span className="text-muted-foreground/40">·</span>
-                                  <span className={cn('truncate', cancelled ? 'text-muted-foreground' : 'text-foreground')}>
-                                    {treatmentLabel}
+                                    {apt.start_time && (
+                                      <span className="text-muted-foreground text-[10px] sm:text-[11px] shrink-0">
+                                        {apt.start_time.slice(0, 5)}
+                                      </span>
+                                    )}
+                                    {apt.doctor_name && (
+                                      <>
+                                        <span className="text-muted-foreground/40 hidden sm:inline">·</span>
+                                        <span className="text-primary/80 shrink-0 hidden sm:inline">Dr. {apt.doctor_name}</span>
+                                      </>
+                                    )}
+                                  </div>
+                                  <span className={cn(
+                                    'text-xs sm:text-sm font-semibold shrink-0',
+                                    cancelled ? 'text-muted-foreground' : 'text-foreground',
+                                  )}>
+                                    {netPrice.toLocaleString()} RON
                                   </span>
-                                  {apt.doctor_name && (
-                                    <>
-                                      <span className="text-muted-foreground/40">·</span>
-                                      <span className="text-primary/80 shrink-0">Dr. {apt.doctor_name}</span>
-                                    </>
-                                  )}
                                 </div>
+
+                                {/* Treatment label */}
+                                <p className={cn('text-[11px] sm:text-xs truncate mt-0.5', cancelled ? 'text-muted-foreground' : 'text-foreground/80')}>
+                                  {treatmentLabel}
+                                  {apt.doctor_name && <span className="sm:hidden text-primary/70"> · Dr. {apt.doctor_name}</span>}
+                                </p>
 
                                 {/* Cancellation reason */}
                                 {cancelled && apt.cancellation_reason && (
-                                  <p className="text-[11px] text-red-600 dark:text-red-400 mt-0.5 font-medium">
-                                    Motiv anulare: {apt.cancellation_reason}
+                                  <p className="text-[11px] text-red-600 dark:text-red-400 mt-0.5 font-medium truncate">
+                                    Motiv: {apt.cancellation_reason}
                                   </p>
                                 )}
 
@@ -614,18 +624,10 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
                                 {comment && (
                                   <div className="flex items-start gap-1.5 mt-1">
                                     <MessageSquare className="h-3 w-3 mt-0.5 shrink-0 text-muted-foreground/50" />
-                                    <span className="text-[11px] text-muted-foreground italic">{comment}</span>
+                                    <span className="text-[11px] text-muted-foreground italic line-clamp-2">{comment}</span>
                                   </div>
                                 )}
                               </div>
-
-                              {/* Price */}
-                              <span className={cn(
-                                'text-sm font-semibold shrink-0 mt-0.5',
-                                cancelled ? 'text-muted-foreground' : 'text-foreground',
-                              )}>
-                                {netPrice.toLocaleString()} RON
-                              </span>
                             </div>
                           </div>
                         );
@@ -639,16 +641,16 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
         </section>
 
         {/* ── Restanțe de plată ────────────────────────────────────────────── */}
-        <div className="space-y-8">
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 pb-3">
+        <div className="space-y-3 sm:space-y-8">
+          <section className="space-y-2 sm:space-y-4">
+            <div className="flex items-center gap-2 sm:gap-3 pb-0 sm:pb-3">
               <div className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-xl',
+                'flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-lg sm:rounded-xl',
                 unpaidAppointments.length > 0 ? 'bg-orange-100 dark:bg-orange-900/30' : 'bg-muted',
               )}>
-                <AlertCircle className={cn('h-4 w-4', unpaidAppointments.length > 0 ? 'text-orange-500' : 'text-muted-foreground')} />
+                <AlertCircle className={cn('h-3.5 w-3.5 sm:h-4 sm:w-4', unpaidAppointments.length > 0 ? 'text-orange-500' : 'text-muted-foreground')} />
               </div>
-              <h3 className="text-sm font-semibold text-foreground">Restanțe de plată</h3>
+              <h3 className="text-xs sm:text-sm font-semibold text-foreground">Restanțe de plată</h3>
               {unpaidAppointments.length > 0 && (
                 <Badge className="bg-orange-500 text-white text-[10px] ml-auto rounded-full">
                   {unpaidAppointments.length}
@@ -667,33 +669,33 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
                 {unpaidAppointments.map((apt) => (
                   <div
                     key={apt.id}
-                    className="p-4 rounded-2xl border border-orange-200 dark:border-orange-800 bg-orange-50/30 dark:bg-orange-950/10 hover:border-orange-300 dark:hover:border-orange-700 transition-all hover:shadow-sm"
+                    className="p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border border-orange-200 dark:border-orange-800 bg-orange-50/30 dark:bg-orange-950/10 hover:border-orange-300 dark:hover:border-orange-700 transition-all hover:shadow-sm"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="space-y-1 min-w-0">
-                        <div className="text-sm font-medium">
+                    <div className="space-y-1.5 min-w-0">
+                      <div className="flex items-center justify-between gap-1">
+                        <div className="text-xs sm:text-sm font-medium truncate">
                           {format(new Date(apt.appointment_date), 'd MMM yyyy', { locale: ro })}
                           <span className="text-muted-foreground font-normal"> · {apt.start_time.slice(0, 5)}</span>
                         </div>
-                        <div className="text-[11px] text-muted-foreground">
-                          {apt.treatments.join(', ')}
-                          {apt.doctor_name && ` · Dr. ${apt.doctor_name}`}
-                        </div>
-                        <div className="text-[11px] space-x-3">
-                          <span>Total: <strong>{apt.price.toLocaleString()} RON</strong></span>
-                          {apt.paid_amount > 0 && (
-                            <span className="text-green-600">Achitat: {apt.paid_amount.toLocaleString()} RON</span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-end gap-2 shrink-0">
-                        <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-xs">
+                        <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-[11px] sm:text-xs shrink-0 px-1.5 sm:px-2">
                           {apt.remaining.toLocaleString()} RON
                         </Badge>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground truncate">
+                        {apt.treatments.join(', ')}
+                        {apt.doctor_name && ` · Dr. ${apt.doctor_name}`}
+                      </p>
+                      <div className="flex items-center justify-between gap-1">
+                        <div className="text-[10px] sm:text-[11px] space-x-2 min-w-0 truncate">
+                          <span>Total: <strong>{apt.price.toLocaleString()}</strong></span>
+                          {apt.paid_amount > 0 && (
+                            <span className="text-green-600">Achitat: {apt.paid_amount.toLocaleString()}</span>
+                          )}
+                        </div>
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-7 text-xs gap-1 border-orange-300 hover:bg-orange-100 dark:border-orange-700 dark:hover:bg-orange-900/30"
+                          className="h-6 sm:h-7 text-[11px] sm:text-xs gap-1 border-orange-300 hover:bg-orange-100 dark:border-orange-700 dark:hover:bg-orange-900/30 shrink-0 px-2 sm:px-3"
                           onClick={() => { setSelectedUnpaid(apt); setEditPaymentOpen(true); }}
                         >
                           <Banknote className="h-3 w-3" />
@@ -704,9 +706,9 @@ export function PatientRecordTab({ patientId, patientName }: PatientRecordTabPro
                   </div>
                 ))}
 
-                <div className="flex items-center justify-between bg-orange-100 dark:bg-orange-950/30 rounded-2xl px-5 py-3.5 mt-3">
+                <div className="flex items-center justify-between bg-orange-100 dark:bg-orange-950/30 rounded-2xl px-3 sm:px-5 py-3 sm:py-3.5 mt-3">
                   <span className="font-medium text-sm text-orange-700 dark:text-orange-400">Total restanțe</span>
-                  <Badge className="bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm px-3">
+                  <Badge className="bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs sm:text-sm px-2 sm:px-3">
                     {totalDebt.toLocaleString()} RON
                   </Badge>
                 </div>

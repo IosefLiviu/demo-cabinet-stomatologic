@@ -111,7 +111,7 @@ type PeriodFilter = 'all' | '30days' | '3months' | '1year';
 
 export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatmentPlan, onEditTreatmentPlan, onCreateAppointment, initialTab }: PatientDetailsProps) {
   const { isNewPatient } = useNewPatientStatus();
-  
+
   const [treatmentHistory, setTreatmentHistory] = useState<TreatmentRecord[]>([]);
   const [dentalStatus, setDentalStatus] = useState<ToothData[]>([]);
   const [showDentalFullscreen, setShowDentalFullscreen] = useState(false);
@@ -119,7 +119,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
   const [showPlansFullscreen, setShowPlansFullscreen] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all');
-  
+
   // Payment dialog state
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
@@ -131,16 +131,16 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<string | null>(null);
   const { loading: loadingPlans, fetchPatientTreatmentPlans, deleteTreatmentPlan } = useTreatmentPlans();
-  
+
   // Track completed teeth per plan item
   const [completedTeethByPlanItem, setCompletedTeethByPlanItem] = useState<Map<string, Set<number>>>(new Map());
 
   const getFilteredHistory = () => {
     if (periodFilter === 'all') return treatmentHistory;
-    
+
     const now = new Date();
     let cutoffDate: Date;
-    
+
     switch (periodFilter) {
       case '30days':
         cutoffDate = subDays(now, 30);
@@ -154,8 +154,8 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
       default:
         return treatmentHistory;
     }
-    
-    return treatmentHistory.filter(record => 
+
+    return treatmentHistory.filter(record =>
       isAfter(new Date(record.appointment_date), cutoffDate)
     );
   };
@@ -178,7 +178,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
     if (!patient) return;
     const plans = await fetchPatientTreatmentPlans(patient.id);
     setTreatmentPlans(plans);
-    
+
     // Fetch completed teeth for each plan item
     const planItemIds = plans.flatMap(p => p.items.map(i => i.id)).filter(Boolean) as string[];
     if (planItemIds.length > 0) {
@@ -191,7 +191,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
         `)
         .in('plan_item_id', planItemIds)
         .eq('appointments.status', 'completed');
-      
+
       const teethMap = new Map<string, Set<number>>();
       if (completedTreatments) {
         completedTreatments.forEach(ct => {
@@ -235,7 +235,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
     }, 0);
     const discountAmount = totalDePlataPrint * (discountPercent / 100);
     const total = Math.max(0, totalDePlataPrint - discountAmount);
-    
+
     // Collect all selected teeth from the plan - use toothNumbers array if available
     const selectedTeeth = new Set<number>();
     plan.items.forEach(item => {
@@ -245,7 +245,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
         selectedTeeth.add(item.toothNumber);
       }
     });
-    
+
     const renderTooth = (tooth: number, isDeciduous: boolean = false) => {
       const isSelected = selectedTeeth.has(tooth);
       const deciduousClass = isDeciduous ? 'deciduous' : '';
@@ -254,7 +254,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
         <span>${tooth}</span>
       </div>`;
     };
-    
+
     const printWindow = window.open('', '', 'width=800,height=600');
     if (!printWindow) return;
 
@@ -349,10 +349,10 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
               </thead>
               <tbody>
               ${plan.items.map(item => {
-                  const teethDisplay = item.toothNumbers && item.toothNumbers.length > 0 
-                    ? escapeNumberArray(item.toothNumbers, ', ')
-                    : (item.toothNumber || '-');
-                  return `
+      const teethDisplay = item.toothNumbers && item.toothNumbers.length > 0
+        ? escapeNumberArray(item.toothNumbers, ', ')
+        : (item.toothNumber || '-');
+      return `
                   <tr>
                     <td>${teethDisplay}</td>
                     <td>${escapeHtml(item.treatmentName)}</td>
@@ -393,7 +393,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
 
   const handlePrintHistory = () => {
     if (!patient) return;
-    
+
     const printWindow = window.open('', '', 'width=800,height=600');
     if (!printWindow) return;
 
@@ -407,7 +407,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
       return acc;
     }, {} as Record<string, typeof filteredHistory>);
 
-    const sortedDates = Object.keys(groupedByDate).sort((a, b) => 
+    const sortedDates = Object.keys(groupedByDate).sort((a, b) =>
       new Date(b).getTime() - new Date(a).getTime()
     );
 
@@ -417,10 +417,10 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
       .filter(r => r.payment_method === 'unpaid')
       .reduce((sum, r) => sum + (r.price || 0), 0);
 
-    const periodLabel = periodFilter === 'all' ? 'Toate' 
+    const periodLabel = periodFilter === 'all' ? 'Toate'
       : periodFilter === '30days' ? 'Ultimele 30 zile'
-      : periodFilter === '3months' ? 'Ultimele 3 luni'
-      : 'Ultimul an';
+        : periodFilter === '3months' ? 'Ultimele 3 luni'
+          : 'Ultimul an';
 
     printWindow.document.write(`
       <html>
@@ -509,10 +509,10 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
           <h3 style="color: #b8860b; margin: 20px 0 10px;">Istoric Tratamente</h3>
 
           ${sortedDates.map(dateKey => {
-            const records = groupedByDate[dateKey];
-            const dateTotal = records.reduce((sum, r) => sum + (r.price || 0), 0);
-            
-            return `
+      const records = groupedByDate[dateKey];
+      const dateTotal = records.reduce((sum, r) => sum + (r.price || 0), 0);
+
+      return `
               <div class="date-section">
                 <div class="date-header">
                   <span>${format(new Date(dateKey), 'd MMMM yyyy', { locale: ro })}</span>
@@ -532,17 +532,17 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                   </thead>
                   <tbody>
                     ${records.map(record => {
-                      const paymentClass = record.payment_method === 'unpaid' ? 'payment-unpaid' 
-                        : (record.payment_method === 'partial_card' || record.payment_method === 'partial_cash') ? 'payment-partial' 
-                        : 'payment-paid';
-                      const paymentLabel = record.payment_method === 'unpaid' ? 'Neachitat'
-                        : record.payment_method === 'card' ? 'Card'
-                        : record.payment_method === 'cash' ? 'Cash'
-                        : record.payment_method === 'partial_card' ? 'Parțial Card'
-                        : record.payment_method === 'partial_cash' ? 'Parțial Cash'
-                        : '-';
-                      
-                      return `
+        const paymentClass = record.payment_method === 'unpaid' ? 'payment-unpaid'
+          : (record.payment_method === 'partial_card' || record.payment_method === 'partial_cash') ? 'payment-partial'
+            : 'payment-paid';
+        const paymentLabel = record.payment_method === 'unpaid' ? 'Neachitat'
+          : record.payment_method === 'card' ? 'Card'
+            : record.payment_method === 'cash' ? 'Cash'
+              : record.payment_method === 'partial_card' ? 'Parțial Card'
+                : record.payment_method === 'partial_cash' ? 'Parțial Cash'
+                  : '-';
+
+        return `
                         <tr>
                           <td>${escapeHtml(record.start_time.slice(0, 5))}</td>
                           <td>${escapeHtml(record.treatment_name)}</td>
@@ -555,12 +555,12 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                           </td>
                         </tr>
                       `;
-                    }).join('')}
+      }).join('')}
                   </tbody>
                 </table>
               </div>
             `;
-          }).join('')}
+    }).join('')}
 
           <div class="summary">
             <div class="summary-row">
@@ -662,7 +662,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
       data?.forEach((appointment: any) => {
         // Use payment_method column first, fallback to notes parsing
         let paymentMethod: PaymentMethod | null = appointment.payment_method || null;
-        
+
         // Fallback to notes parsing for old data
         if (!paymentMethod && appointment.notes) {
           if (appointment.notes.includes('[Plată: Card]')) {
@@ -730,7 +730,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
 
   const handleConfirmPayment = async (method: 'card' | 'cash' | 'partial_card' | 'partial_cash', partialAmount?: number) => {
     if (!selectedAppointmentId) return;
-    
+
     setIsUpdatingPayment(true);
     try {
       // Get current appointment data including price and paid_amount
@@ -742,7 +742,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
 
       const totalPrice = appointment?.price || 0;
       const currentPaidAmount = appointment?.paid_amount || 0;
-      
+
       const isPartial = method === 'partial_card' || method === 'partial_cash';
       const newPaidAmount = isPartial ? currentPaidAmount + (partialAmount || 0) : totalPrice;
       const isFullyPaid = newPaidAmount >= totalPrice;
@@ -758,21 +758,21 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
       let newNotes = appointment?.notes || '';
       // Remove old payment info (including partial payments)
       newNotes = newNotes.replace(/\[Plată: [^\]]+\]/g, '').trim();
-      
+
       // Add new payment info
       let paymentLabel = '';
       if (isFullyPaid) {
         paymentLabel = finalMethod === 'card' ? 'Card' : 'Cash';
       } else {
-        paymentLabel = method === 'partial_card' 
-          ? `Parțial Card ${newPaidAmount} RON` 
+        paymentLabel = method === 'partial_card'
+          ? `Parțial Card ${newPaidAmount} RON`
           : `Parțial Cash ${newPaidAmount} RON`;
       }
       newNotes = newNotes ? `${newNotes}\n[Plată: ${paymentLabel}]` : `[Plată: ${paymentLabel}]`;
 
       const { error } = await supabase
         .from('appointments')
-        .update({ 
+        .update({
           is_paid: isFullyPaid,
           paid_amount: newPaidAmount,
           payment_method: isFullyPaid ? finalMethod : method,
@@ -783,9 +783,9 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
       if (error) throw error;
 
       // Update local state
-      setTreatmentHistory(prev => 
-        prev.map(record => 
-          record.appointment_id === selectedAppointmentId 
+      setTreatmentHistory(prev =>
+        prev.map(record =>
+          record.appointment_id === selectedAppointmentId
             ? { ...record, payment_method: isFullyPaid ? finalMethod : method, paid_amount: newPaidAmount }
             : record
         )
@@ -811,7 +811,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
     // Remaining is based on discounted payable amount (CAS already subtracted per line)
     const payableAmount = appointmentTotalPayable || 0;
     const remaining = payableAmount - (paidAmount || 0);
-    
+
     switch (method) {
       case 'card':
         return (
@@ -882,195 +882,197 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-[95vw] xl:max-w-[1400px] overflow-y-auto p-0">
-        {/* Modern Header Bar */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-3 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
+      <SheetContent className="!w-[100vw] sm:!w-[95vw] xl:!w-[1400px] !max-w-none sm:!max-w-full !p-0 !overflow-hidden">
+        <style>{`.patient-sheet-scroll::-webkit-scrollbar { display: none !important; }`}</style>
+        <div className="patient-sheet-scroll h-full overflow-y-auto overflow-x-hidden" style={{ scrollbarWidth: 'none' } as React.CSSProperties}>
+          {/* Modern Header Bar */}
+          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-3 sm:px-6 py-2 sm:py-4">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 sm:gap-4 min-w-0">
                 <Button variant="ghost" size="icon" className="sm:hidden shrink-0 h-8 w-8" onClick={onClose}>
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
-              <div className="flex h-10 w-10 sm:h-14 sm:w-14 items-center justify-center rounded-xl sm:rounded-2xl bg-primary/10 border border-primary/20 shrink-0">
-                <User className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
-              </div>
-              <div className="min-w-0">
-                <h2 className="text-base sm:text-xl font-bold text-foreground tracking-tight truncate flex items-center gap-2">
-                  {patient.last_name} {patient.first_name}
-                  {isNewPatient(patient.id) && (
-                    <Badge className="bg-green-500 hover:bg-green-500 text-white text-[10px] px-1.5 py-0">Nou</Badge>
-                  )}
-                </h2>
-                <div className="flex items-center gap-3 mt-0.5">
-                  {patient.date_of_birth && (
-                    <span className="text-sm text-muted-foreground">{calculateAge(patient.date_of_birth)} ani</span>
-                  )}
-                  {patient.gender && (
-                    <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                      {patient.gender === 'M' ? '♂ Masculin' : '♀ Feminin'}
-                    </span>
-                  )}
-                  {patient.registration_number && (
-                    <span className="text-xs text-muted-foreground font-mono">Nr. {patient.registration_number}</span>
-                  )}
+                <div className="flex h-10 w-10 sm:h-14 sm:w-14 items-center justify-center rounded-xl sm:rounded-2xl bg-primary/10 border border-primary/20 shrink-0">
+                  <User className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-base sm:text-xl font-bold text-foreground tracking-tight truncate flex items-center gap-2">
+                    {patient.last_name} {patient.first_name}
+                    {isNewPatient(patient.id) && (
+                      <Badge className="bg-green-500 hover:bg-green-500 text-white text-[10px] px-1.5 py-0">Nou</Badge>
+                    )}
+                  </h2>
+                  <div className="flex items-center gap-3 mt-0.5">
+                    {patient.date_of_birth && (
+                      <span className="text-sm text-muted-foreground">{calculateAge(patient.date_of_birth)} ani</span>
+                    )}
+                    {patient.gender && (
+                      <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                        {patient.gender === 'M' ? '♂ Masculin' : '♀ Feminin'}
+                      </span>
+                    )}
+                    {patient.registration_number && (
+                      <span className="text-xs text-muted-foreground font-mono">Nr. {patient.registration_number}</span>
+                    )}
+                  </div>
                 </div>
               </div>
+              <div className="flex items-center gap-2">
+                {/* Quick Action Buttons */}
+                <Button variant="outline" size="sm" className="gap-2 hidden sm:flex" onClick={() => setShowDentalFullscreen(true)}>
+                  <Stethoscope className="h-4 w-4" />
+                  Status Dentar
+                </Button>
+                <Button variant="outline" size="sm" className="gap-2 hidden sm:flex" onClick={() => setShowRadiographsFullscreen(true)}>
+                  <FileImage className="h-4 w-4" />
+                  Radiografii
+                </Button>
+                <Button variant="outline" size="sm" className="gap-2 hidden sm:flex" onClick={() => setShowPlansFullscreen(true)}>
+                  <ClipboardList className="h-4 w-4" />
+                  Planuri
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => onEdit(patient)}>
+                  <Edit className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Editează</span>
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              {/* Quick Action Buttons */}
-              <Button variant="outline" size="sm" className="gap-2 hidden sm:flex" onClick={() => setShowDentalFullscreen(true)}>
-                <Stethoscope className="h-4 w-4" />
+            {/* Mobile action buttons */}
+            <div className="flex sm:hidden gap-2 mt-2 overflow-x-auto pb-0.5">
+              <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={() => setShowDentalFullscreen(true)}>
+                <Stethoscope className="h-3.5 w-3.5" />
                 Status Dentar
               </Button>
-              <Button variant="outline" size="sm" className="gap-2 hidden sm:flex" onClick={() => setShowRadiographsFullscreen(true)}>
-                <FileImage className="h-4 w-4" />
+              <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={() => setShowRadiographsFullscreen(true)}>
+                <FileImage className="h-3.5 w-3.5" />
                 Radiografii
               </Button>
-              <Button variant="outline" size="sm" className="gap-2 hidden sm:flex" onClick={() => setShowPlansFullscreen(true)}>
-                <ClipboardList className="h-4 w-4" />
+              <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={() => setShowPlansFullscreen(true)}>
+                <ClipboardList className="h-3.5 w-3.5" />
                 Planuri
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => onEdit(patient)}>
-                <Edit className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Editează</span>
               </Button>
             </div>
           </div>
-          {/* Mobile action buttons */}
-          <div className="flex sm:hidden gap-2 mt-3 overflow-x-auto pb-1">
-            <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={() => setShowDentalFullscreen(true)}>
-              <Stethoscope className="h-3.5 w-3.5" />
-              Status Dentar
-            </Button>
-            <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={() => setShowRadiographsFullscreen(true)}>
-              <FileImage className="h-3.5 w-3.5" />
-              Radiografii
-            </Button>
-            <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={() => setShowPlansFullscreen(true)}>
-              <ClipboardList className="h-3.5 w-3.5" />
-              Planuri
-            </Button>
-          </div>
-        </div>
 
-        <div className="px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
-          {/* Patient Info - Two Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Contact Info */}
-            <div className="rounded-2xl border bg-card/50 p-5 space-y-3">
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Contact</h4>
-              <div className="space-y-2.5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                    <Phone className="h-3.5 w-3.5 text-primary" />
-                  </div>
-                  <a href={`tel:${patient.phone}`} className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-                    {patient.phone}
-                  </a>
-                </div>
-                {patient.email && (
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                      <Mail className="h-3.5 w-3.5 text-primary" />
+          <div className="px-3 sm:px-6 py-2 sm:py-6 space-y-2 sm:space-y-6 max-w-full overflow-hidden">
+            {/* Patient Info - Two Column Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-4">
+              {/* Contact Info */}
+              <div className="rounded-2xl border bg-card/50 p-2.5 sm:p-5 space-y-1.5 sm:space-y-3">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Contact</h4>
+                <div className="space-y-1.5 sm:space-y-2.5">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-primary/10">
+                      <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" />
                     </div>
-                    <a href={`mailto:${patient.email}`} className="text-sm text-foreground hover:text-primary transition-colors truncate">
-                      {patient.email}
+                    <a href={`tel:${patient.phone}`} className="text-xs sm:text-sm font-medium text-foreground hover:text-primary transition-colors">
+                      {patient.phone}
                     </a>
                   </div>
-                )}
-                {(patient.address || patient.city) && (
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
-                      <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                  {patient.email && (
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-primary/10">
+                        <Mail className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" />
+                      </div>
+                      <a href={`mailto:${patient.email}`} className="text-xs sm:text-sm text-foreground hover:text-primary transition-colors truncate">
+                        {patient.email}
+                      </a>
                     </div>
-                    <span className="text-sm text-muted-foreground">{[patient.address, patient.city].filter(Boolean).join(', ')}</span>
+                  )}
+                  {(patient.address || patient.city) && (
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-muted">
+                        <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground" />
+                      </div>
+                      <span className="text-xs sm:text-sm text-muted-foreground">{[patient.address, patient.city].filter(Boolean).join(', ')}</span>
+                    </div>
+                  )}
+                  {patient.cnp && (
+                    <div className="text-xs text-muted-foreground font-mono mt-1">CNP: {patient.cnp}</div>
+                  )}
+                  <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 pt-1">
+                    <Calendar className="h-3 w-3" />
+                    Înregistrat {format(new Date(patient.created_at), 'd MMM yyyy', { locale: ro })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Medical Alerts */}
+              <div className="rounded-2xl border bg-card/50 p-2.5 sm:p-5 space-y-1.5 sm:space-y-3">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Informații medicale</h4>
+                {((patient.allergies && patient.allergies.length > 0) ||
+                  (patient.medical_conditions && patient.medical_conditions.length > 0)) ? (
+                  <div className="space-y-3">
+                    {patient.allergies && patient.allergies.length > 0 && (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-1.5 text-destructive">
+                          <AlertTriangle className="h-3.5 w-3.5" />
+                          <span className="text-[11px] font-semibold uppercase">Alergii</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {patient.allergies.map((allergy, i) => (
+                            <Badge key={i} variant="destructive" className="text-[10px] rounded-full">{allergy}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {patient.medical_conditions && patient.medical_conditions.length > 0 && (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-1.5 text-warning">
+                          <Heart className="h-3.5 w-3.5" />
+                          <span className="text-[11px] font-semibold uppercase">Condiții</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {patient.medical_conditions.map((condition, i) => (
+                            <Badge key={i} variant="secondary" className="text-[10px] rounded-full">{condition}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Fără alerte medicale</p>
+                )}
+                {patient.medications && patient.medications.length > 0 && (
+                  <div className="space-y-1.5 pt-1 border-t">
+                    <div className="flex items-center gap-1.5 text-muted-foreground pt-2">
+                      <Pill className="h-3.5 w-3.5" />
+                      <span className="text-[11px] font-semibold uppercase">Medicație</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {patient.medications.map((med, i) => (
+                        <Badge key={i} variant="outline" className="text-[10px] rounded-full">{med}</Badge>
+                      ))}
+                    </div>
                   </div>
                 )}
-                {patient.cnp && (
-                  <div className="text-xs text-muted-foreground font-mono mt-1">CNP: {patient.cnp}</div>
+              </div>
+
+              {/* Notes & Emergency */}
+              <div className="rounded-2xl border bg-card/50 p-2.5 sm:p-5 space-y-1.5 sm:space-y-3">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Observații</h4>
+                {patient.notes ? (
+                  <p className="text-sm text-muted-foreground leading-relaxed">{patient.notes}</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">Fără observații</p>
                 )}
-                <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 pt-1">
-                  <Calendar className="h-3 w-3" />
-                  Înregistrat {format(new Date(patient.created_at), 'd MMM yyyy', { locale: ro })}
-                </div>
+                {patient.emergency_contact_name && (
+                  <div className="pt-2 border-t space-y-1">
+                    <span className="text-[11px] font-semibold text-muted-foreground uppercase">Contact urgență</span>
+                    <p className="text-sm">{patient.emergency_contact_name}
+                      {patient.emergency_contact_phone && <span className="text-muted-foreground"> — {patient.emergency_contact_phone}</span>}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Medical Alerts */}
-            <div className="rounded-2xl border bg-card/50 p-5 space-y-3">
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Informații medicale</h4>
-              {((patient.allergies && patient.allergies.length > 0) ||
-                (patient.medical_conditions && patient.medical_conditions.length > 0)) ? (
-                <div className="space-y-3">
-                  {patient.allergies && patient.allergies.length > 0 && (
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-1.5 text-destructive">
-                        <AlertTriangle className="h-3.5 w-3.5" />
-                        <span className="text-[11px] font-semibold uppercase">Alergii</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {patient.allergies.map((allergy, i) => (
-                          <Badge key={i} variant="destructive" className="text-[10px] rounded-full">{allergy}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {patient.medical_conditions && patient.medical_conditions.length > 0 && (
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-1.5 text-warning">
-                        <Heart className="h-3.5 w-3.5" />
-                        <span className="text-[11px] font-semibold uppercase">Condiții</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {patient.medical_conditions.map((condition, i) => (
-                          <Badge key={i} variant="secondary" className="text-[10px] rounded-full">{condition}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">Fără alerte medicale</p>
-              )}
-              {patient.medications && patient.medications.length > 0 && (
-                <div className="space-y-1.5 pt-1 border-t">
-                  <div className="flex items-center gap-1.5 text-muted-foreground pt-2">
-                    <Pill className="h-3.5 w-3.5" />
-                    <span className="text-[11px] font-semibold uppercase">Medicație</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {patient.medications.map((med, i) => (
-                      <Badge key={i} variant="outline" className="text-[10px] rounded-full">{med}</Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Notes & Emergency */}
-            <div className="rounded-2xl border bg-card/50 p-5 space-y-3">
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Observații</h4>
-              {patient.notes ? (
-                <p className="text-sm text-muted-foreground leading-relaxed">{patient.notes}</p>
-              ) : (
-                <p className="text-sm text-muted-foreground italic">Fără observații</p>
-              )}
-              {patient.emergency_contact_name && (
-                <div className="pt-2 border-t space-y-1">
-                  <span className="text-[11px] font-semibold text-muted-foreground uppercase">Contact urgență</span>
-                  <p className="text-sm">{patient.emergency_contact_name}
-                    {patient.emergency_contact_phone && <span className="text-muted-foreground"> — {patient.emergency_contact_phone}</span>}
-                  </p>
-                </div>
-              )}
-            </div>
+            {/* Consolidated Record */}
+            <PatientRecordTab
+              patientId={patient.id}
+              patientName={`${patient.first_name} ${patient.last_name}`}
+            />
           </div>
-
-          {/* Consolidated Record */}
-          <PatientRecordTab
-            patientId={patient.id}
-            patientName={`${patient.first_name} ${patient.last_name}`}
-          />
-        </div>
 
           {/* Dental Status - Full Screen Dialog */}
           {showDentalFullscreen && (
@@ -1106,9 +1108,9 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                     <span className="truncate">Radiografii — {patient.first_name} {patient.last_name}</span>
                   </DialogTitle>
                 </DialogHeader>
-                <PatientRadiographs 
-                  patientId={patient.id} 
-                  patientName={`${patient.first_name} ${patient.last_name}`} 
+                <PatientRadiographs
+                  patientId={patient.id}
+                  patientName={`${patient.first_name} ${patient.last_name}`}
                 />
               </DialogContent>
             </Dialog>
@@ -1164,7 +1166,7 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                         }, 0);
                         const total = Math.max(0, totalDePlata * (1 - planDiscount / 100));
                         const totalCas = plan.items.reduce((sum, item) => sum + (item.cas || 0), 0);
-                        
+
                         return (
                           <Collapsible key={plan.id} defaultOpen={false}>
                             <div className="border rounded-lg overflow-hidden">
@@ -1205,17 +1207,17 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                                         </tr>
                                       </thead>
                                       <tbody>
-                                      {plan.items.map((item, idx) => {
+                                        {plan.items.map((item, idx) => {
                                           const isCompleted = !!item.completedAt;
                                           const paymentStatus = item.paymentStatus || 'neachitat';
                                           const totalTeeth = item.toothNumbers?.length || 0;
                                           const completedTeeth = completedTeethByPlanItem.get(item.id || '')?.size || 0;
                                           const hasPartialProgress = totalTeeth > 0 && completedTeeth > 0 && completedTeeth < totalTeeth;
                                           const allTeethDone = totalTeeth > 0 && completedTeeth >= totalTeeth;
-                                          
+
                                           return (
-                                            <tr 
-                                              key={item.id || idx} 
+                                            <tr
+                                              key={item.id || idx}
                                               className={cn(
                                                 'border-t',
                                                 (isCompleted || allTeethDone) && 'bg-success/10',
@@ -1244,11 +1246,11 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                                               </td>
                                               <td className="px-3 py-2 text-center">
                                                 {(isCompleted || allTeethDone) ? (
-                                                  <Badge 
+                                                  <Badge
                                                     variant="outline"
                                                     className={
                                                       paymentStatus === 'achitat' || paymentStatus === 'card' || paymentStatus === 'cash'
-                                                        ? 'bg-success/15 text-success border-success/30' 
+                                                        ? 'bg-success/15 text-success border-success/30'
                                                         : paymentStatus === 'partial' || paymentStatus === 'partial_card' || paymentStatus === 'partial_cash'
                                                           ? 'bg-warning/15 text-warning border-warning/30'
                                                           : 'bg-destructive/15 text-destructive border-destructive/30'
@@ -1296,17 +1298,17 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
                                           const interventions: SelectedIntervention[] = plan.items
                                             .filter((i) => !i.completedAt)
                                             .map((item, index) => ({
-                                            id: `plan-item-${index}`,
-                                            treatmentId: item.treatmentId || '',
-                                            treatmentName: item.treatmentName,
-                                            price: item.price * item.quantity,
-                                            cas: (item.cas || 0) * item.quantity,
-                                            laborator: (item.laborator || 0) * item.quantity,
-                                            duration: item.duration || 30,
-                                            discountPercent: item.discountPercent || plan.discountPercent || 0,
-                                            selectedTeeth: item.toothNumbers || [],
-                                            planItemId: item.id,
-                                          }));
+                                              id: `plan-item-${index}`,
+                                              treatmentId: item.treatmentId || '',
+                                              treatmentName: item.treatmentName,
+                                              price: item.price * item.quantity,
+                                              cas: (item.cas || 0) * item.quantity,
+                                              laborator: (item.laborator || 0) * item.quantity,
+                                              duration: item.duration || 30,
+                                              discountPercent: item.discountPercent || plan.discountPercent || 0,
+                                              selectedTeeth: item.toothNumbers || [],
+                                              planItemId: item.id,
+                                            }));
                                           setShowPlansFullscreen(false);
                                           onClose();
                                           onCreateAppointment(patient, treatmentNames, interventions, plan.doctorId);
@@ -1365,100 +1367,101 @@ export function PatientDetails({ patient, open, onClose, onEdit, onOpenTreatment
           )}
 
 
-        {paymentDialogOpen && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center">
-            <div 
-              className="absolute inset-0 bg-black/50" 
-              onClick={() => {
-                setPaymentDialogOpen(false);
-                setSelectedAppointmentId(null);
-              }}
-            />
-            <div className="relative bg-background rounded-lg p-6 shadow-xl max-w-sm w-full mx-4 z-10">
-              <h3 className="text-lg font-semibold mb-2">Marchează ca achitat</h3>
-              <p className="text-sm font-medium mb-2">Plată integrală:</p>
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <button
-                  onClick={() => handleConfirmPayment('card')}
-                  disabled={isUpdatingPayment}
-                  className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-border hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all disabled:opacity-50"
-                >
-                  <CreditCard className="h-6 w-6 text-blue-600" />
-                  <span className="text-sm font-medium">Card</span>
-                </button>
-                <button
-                  onClick={() => handleConfirmPayment('cash')}
-                  disabled={isUpdatingPayment}
-                  className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-border hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950/30 transition-all disabled:opacity-50"
-                >
-                  <Banknote className="h-6 w-6 text-green-600" />
-                  <span className="text-sm font-medium">Cash</span>
-                </button>
-              </div>
-              
-              <div className="border-t pt-4">
-                <p className="text-sm font-medium mb-2">Plată parțială:</p>
-                <div className="flex gap-2 mb-3">
-                  <input
-                    type="number"
-                    placeholder="Sumă plătită (RON)"
-                    value={partialPaymentAmount}
-                    onChange={(e) => setPartialPaymentAmount(e.target.value)}
-                    className="flex-1 px-3 py-2 border rounded-lg text-sm bg-background"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => handleConfirmPayment('partial_card', parseFloat(partialPaymentAmount) || 0)}
-                    disabled={isUpdatingPayment || !partialPaymentAmount || parseFloat(partialPaymentAmount) <= 0}
-                    className="flex flex-col items-center justify-center gap-2 p-3 rounded-lg border-2 border-border hover:border-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-950/30 transition-all disabled:opacity-50"
-                  >
-                    <CreditCard className="h-5 w-5 text-cyan-600" />
-                    <span className="text-xs font-medium">Parțial Card</span>
-                  </button>
-                  <button
-                    onClick={() => handleConfirmPayment('partial_cash', parseFloat(partialPaymentAmount) || 0)}
-                    disabled={isUpdatingPayment || !partialPaymentAmount || parseFloat(partialPaymentAmount) <= 0}
-                    className="flex flex-col items-center justify-center gap-2 p-3 rounded-lg border-2 border-border hover:border-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-950/30 transition-all disabled:opacity-50"
-                  >
-                    <Banknote className="h-5 w-5 text-cyan-600" />
-                    <span className="text-xs font-medium">Parțial Cash</span>
-                  </button>
-                </div>
-              </div>
-              
-              <button
+          {paymentDialogOpen && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center">
+              <div
+                className="absolute inset-0 bg-black/50"
                 onClick={() => {
                   setPaymentDialogOpen(false);
                   setSelectedAppointmentId(null);
-                  setPartialPaymentAmount('');
                 }}
-                disabled={isUpdatingPayment}
-                className="w-full mt-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Anulează
-              </button>
-            </div>
-          </div>
-        )}
+              />
+              <div className="relative bg-background rounded-lg p-6 shadow-xl max-w-sm w-full mx-4 z-10">
+                <h3 className="text-lg font-semibold mb-2">Marchează ca achitat</h3>
+                <p className="text-sm font-medium mb-2">Plată integrală:</p>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <button
+                    onClick={() => handleConfirmPayment('card')}
+                    disabled={isUpdatingPayment}
+                    className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-border hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all disabled:opacity-50"
+                  >
+                    <CreditCard className="h-6 w-6 text-blue-600" />
+                    <span className="text-sm font-medium">Card</span>
+                  </button>
+                  <button
+                    onClick={() => handleConfirmPayment('cash')}
+                    disabled={isUpdatingPayment}
+                    className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-border hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950/30 transition-all disabled:opacity-50"
+                  >
+                    <Banknote className="h-6 w-6 text-green-600" />
+                    <span className="text-sm font-medium">Cash</span>
+                  </button>
+                </div>
 
-        {/* Delete Plan Confirmation Dialog */}
-        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Șterge planul de tratament?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Această acțiune nu poate fi anulată. Planul de tratament va fi șters definitiv.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Anulează</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeletePlan} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                Șterge
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+                <div className="border-t pt-4">
+                  <p className="text-sm font-medium mb-2">Plată parțială:</p>
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      type="number"
+                      placeholder="Sumă plătită (RON)"
+                      value={partialPaymentAmount}
+                      onChange={(e) => setPartialPaymentAmount(e.target.value)}
+                      className="flex-1 px-3 py-2 border rounded-lg text-sm bg-background"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => handleConfirmPayment('partial_card', parseFloat(partialPaymentAmount) || 0)}
+                      disabled={isUpdatingPayment || !partialPaymentAmount || parseFloat(partialPaymentAmount) <= 0}
+                      className="flex flex-col items-center justify-center gap-2 p-3 rounded-lg border-2 border-border hover:border-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-950/30 transition-all disabled:opacity-50"
+                    >
+                      <CreditCard className="h-5 w-5 text-cyan-600" />
+                      <span className="text-xs font-medium">Parțial Card</span>
+                    </button>
+                    <button
+                      onClick={() => handleConfirmPayment('partial_cash', parseFloat(partialPaymentAmount) || 0)}
+                      disabled={isUpdatingPayment || !partialPaymentAmount || parseFloat(partialPaymentAmount) <= 0}
+                      className="flex flex-col items-center justify-center gap-2 p-3 rounded-lg border-2 border-border hover:border-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-950/30 transition-all disabled:opacity-50"
+                    >
+                      <Banknote className="h-5 w-5 text-cyan-600" />
+                      <span className="text-xs font-medium">Parțial Cash</span>
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setPaymentDialogOpen(false);
+                    setSelectedAppointmentId(null);
+                    setPartialPaymentAmount('');
+                  }}
+                  disabled={isUpdatingPayment}
+                  className="w-full mt-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Anulează
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Delete Plan Confirmation Dialog */}
+          <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Șterge planul de tratament?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Această acțiune nu poate fi anulată. Planul de tratament va fi șters definitiv.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Anulează</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeletePlan} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Șterge
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </SheetContent>
     </Sheet>
   );

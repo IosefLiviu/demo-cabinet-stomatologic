@@ -143,11 +143,22 @@ All colors MUST be HSL.
 
 /* Utility: hide scrollbar but keep scrolling */
 .scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
 }
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;
+  display: none !important;
+}
+
+/* Hide scrollbar on mobile only */
+@media (max-width: 767px) {
+  .mobile-scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .mobile-scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* Mobile-specific enhancements */
