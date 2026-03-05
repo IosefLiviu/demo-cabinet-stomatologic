@@ -132,10 +132,10 @@ interface AppointmentFormProps {
   isAdmin?: boolean;
   userDoctorId?: string | null; // Doctor ID associated with the current user
   checkOverlap?: (
-    date: string, 
-    startTime: string, 
-    endTime: string, 
-    cabinetId: number, 
+    date: string,
+    startTime: string,
+    endTime: string,
+    cabinetId: number,
     excludeId?: string
   ) => { hasOverlap: boolean; conflictingAppointment?: { start_time: string; duration: number; patients?: { first_name: string; last_name: string } } };
 }
@@ -173,17 +173,17 @@ export function AppointmentForm({
   const [patientSearch, setPatientSearch] = useState('');
   const [patientPopoverOpen, setPatientPopoverOpen] = useState(false);
   const [isNewPatient, setIsNewPatient] = useState(false);
-  
+
   const [interventions, setInterventions] = useState<SelectedIntervention[]>([]);
   const [patientPlans, setPatientPlans] = useState<TreatmentPlan[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
-  
+
   const { remainingBudget } = useCasBudget();
   const isCasDisabled = remainingBudget <= 0;
-  
+
   const { fetchPatientTreatmentPlans, saveTreatmentPlan, loading: savingPlan } = useTreatmentPlans();
   const { timeOffRequests } = useDoctorTimeOff();
-  
+
   const [formData, setFormData] = useState({
     patientId: '',
     patientName: '',
@@ -212,16 +212,16 @@ export function AppointmentForm({
     }
     const [startHours, startMinutes] = startTime.split(':').map(Number);
     const [endHours, endMinutes] = endTime.split(':').map(Number);
-    
+
     // Check for NaN values
     if (isNaN(startHours) || isNaN(startMinutes) || isNaN(endHours) || isNaN(endMinutes)) {
       return 30; // Default to 30 minutes
     }
-    
+
     const startTotalMinutes = startHours * 60 + startMinutes;
     const endTotalMinutes = endHours * 60 + endMinutes;
     const duration = endTotalMinutes - startTotalMinutes;
-    
+
     // Ensure we always return a valid positive duration
     return duration > 0 ? duration : 30;
   };
@@ -236,7 +236,7 @@ export function AppointmentForm({
   const doctorTimeOffWarning = useMemo(() => {
     if (!formData.doctorId) return null;
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
-    return timeOffRequests.find(request => 
+    return timeOffRequests.find(request =>
       request.doctor_id === formData.doctorId &&
       request.status === 'approved' &&
       dateStr >= request.start_date &&
@@ -265,22 +265,22 @@ export function AppointmentForm({
   // Handle treatment plan selection
   const handleSelectPlan = async (planId: string) => {
     setSelectedPlanId(planId);
-    
+
     if (planId === 'none') {
       return;
     }
-    
+
     const selectedPlan = patientPlans.find(p => p.id === planId);
     if (selectedPlan) {
       // Get already completed teeth from completed appointments for this plan's items
       const planItemIds = selectedPlan.items.map(item => item.id).filter(Boolean);
-      
+
       let completedTeethByPlanItem: Map<string, Set<number>> = new Map();
       let completedTeethByTreatmentName: Map<string, Set<number>> = new Map();
-      
+
       // Get patient ID for legacy reconciliation
       const patientId = formData.patientId;
-      
+
       // Query ALL completed treatments for this patient to handle legacy records without plan_item_id
       const { data: allCompletedTreatments } = await supabase
         .from('appointment_treatments')
@@ -292,11 +292,11 @@ export function AppointmentForm({
         `)
         .eq('appointments.patient_id', patientId)
         .eq('appointments.status', 'completed');
-      
+
       if (allCompletedTreatments) {
         allCompletedTreatments.forEach(ct => {
           const teeth = ct.tooth_numbers || [];
-          
+
           // Track by plan_item_id if available
           if (ct.plan_item_id && planItemIds.includes(ct.plan_item_id)) {
             if (!completedTeethByPlanItem.has(ct.plan_item_id)) {
@@ -306,7 +306,7 @@ export function AppointmentForm({
               completedTeethByPlanItem.get(ct.plan_item_id)!.add(t);
             });
           }
-          
+
           // Also track by treatment_name for legacy reconciliation
           const treatmentKey = ct.treatment_name.toLowerCase().trim();
           if (!completedTeethByTreatmentName.has(treatmentKey)) {
@@ -317,45 +317,45 @@ export function AppointmentForm({
           });
         });
       }
-      
+
       // Convert plan items to interventions - expand items with multiple teeth into separate entries
       // Only include teeth that are NOT already completed
       const planInterventions: SelectedIntervention[] = [];
-      
+
       selectedPlan.items.forEach((item, itemIndex) => {
         const toothNumbers = item.toothNumbers || [];
-        
+
         // Get completed teeth: first check by plan_item_id, then by treatment name (legacy fallback)
         const completedByPlanItem = completedTeethByPlanItem.get(item.id || '') || new Set();
         const treatmentKey = item.treatmentName.toLowerCase().trim();
         const completedByName = completedTeethByTreatmentName.get(treatmentKey) || new Set();
-        
+
         // Merge both sources of completed teeth
         const completedTeeth = new Set([...completedByPlanItem, ...completedByName]);
-        
+
         // Filter out completed teeth
         const remainingTeeth = toothNumbers.filter(t => !completedTeeth.has(t));
-        
+
         // Skip this item entirely if all teeth are completed
         if (toothNumbers.length > 0 && remainingTeeth.length === 0) {
           return;
         }
-        
+
         // If item has no teeth (like PRF), check if it's marked as completed
         if (toothNumbers.length === 0 && item.completedAt) {
           return;
         }
-        
+
         // item.price is already the price per tooth (initialPrice from treatment plan)
         // So we use it directly without dividing
         const originalTeethCount = toothNumbers.length || 1;
         const basePricePerTooth = item.price || 0; // Price is already per-tooth!
-        
+
         if (remainingTeeth.length > 1) {
           // Multiple teeth: create one entry per remaining tooth, dividing CAS evenly
           const casPerTooth = (item.cas || 0) / originalTeethCount;
           const laboratorPerTooth = (item.laborator || 0) / originalTeethCount;
-          
+
           remainingTeeth.forEach((toothNumber, toothIndex) => {
             planInterventions.push({
               id: `plan-${item.id || itemIndex}-tooth-${toothNumber}-${Date.now()}-${toothIndex}`,
@@ -375,7 +375,7 @@ export function AppointmentForm({
           // Single remaining tooth
           const casPerTooth = (item.cas || 0) / originalTeethCount;
           const laboratorPerTooth = (item.laborator || 0) / originalTeethCount;
-          
+
           planInterventions.push({
             id: `plan-${item.id || itemIndex}-${Date.now()}`,
             treatmentId: item.treatmentId || '',
@@ -406,9 +406,9 @@ export function AppointmentForm({
           });
         }
       });
-      
+
       setInterventions(planInterventions);
-      
+
       // Set doctor from plan if available
       if (selectedPlan.doctorId) {
         setFormData(prev => ({ ...prev, doctorId: selectedPlan.doctorId || '' }));
@@ -504,7 +504,7 @@ export function AppointmentForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Check for overlapping appointments
     if (checkOverlap) {
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
@@ -515,19 +515,19 @@ export function AppointmentForm({
         formData.cabinetId,
         editingAppointment?.id
       );
-      
+
       if (hasOverlap && conflictingAppointment) {
-        const patientName = conflictingAppointment.patients 
+        const patientName = conflictingAppointment.patients
           ? `${conflictingAppointment.patients.first_name} ${conflictingAppointment.patients.last_name}`
           : 'Alt pacient';
-        const endMinutes = 
-          parseInt(conflictingAppointment.start_time.split(':')[0]) * 60 + 
-          parseInt(conflictingAppointment.start_time.split(':')[1]) + 
+        const endMinutes =
+          parseInt(conflictingAppointment.start_time.split(':')[0]) * 60 +
+          parseInt(conflictingAppointment.start_time.split(':')[1]) +
           (conflictingAppointment.duration || 30);
         const endHours = Math.floor(endMinutes / 60);
         const endMins = endMinutes % 60;
         const endTime = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
-        
+
         toast({
           title: 'Suprapunere detectată',
           description: `Intervalul se suprapune cu programarea lui ${patientName} (${conflictingAppointment.start_time} - ${endTime})`,
@@ -536,7 +536,7 @@ export function AppointmentForm({
         return;
       }
     }
-    
+
     // Convert interventions to selectedTreatments format
     const selectedTreatments: SelectedTreatment[] = interventions.map(i => ({
       treatmentId: i.treatmentId,
@@ -648,7 +648,7 @@ export function AppointmentForm({
             {editingAppointment ? 'Editare programare' : 'Programare nouă'}
           </DialogTitle>
         </DialogHeader>
-        
+
         <ScrollArea className="flex-1 -mx-2 sm:-mx-6 px-2 sm:px-6">
           <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-3 pb-2">
             {/* Patient Selection */}
@@ -669,8 +669,8 @@ export function AppointmentForm({
                   </PopoverTrigger>
                   <PopoverContent className="w-[calc(100vw-2rem)] sm:w-[400px] p-0" align="start">
                     <Command>
-                      <CommandInput 
-                        placeholder="Caută după nume sau telefon..." 
+                      <CommandInput
+                        placeholder="Caută după nume sau telefon..."
                         value={patientSearch}
                         onValueChange={setPatientSearch}
                         className="text-sm"
@@ -679,10 +679,10 @@ export function AppointmentForm({
                         <CommandEmpty>
                           <div className="p-2 text-center">
                             <p className="text-xs sm:text-sm text-muted-foreground mb-2">Niciun pacient găsit</p>
-                            <Button 
-                              type="button" 
-                              variant="outline" 
-                              size="sm" 
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
                               onClick={handleNewPatient}
                               className="gap-2 text-xs sm:text-sm"
                             >
@@ -711,7 +711,7 @@ export function AppointmentForm({
                           ))}
                         </CommandGroup>
                         <CommandGroup>
-                          <CommandItem 
+                          <CommandItem
                             onSelect={handleNewPatient}
                             className="cursor-pointer text-primary text-sm"
                           >
@@ -927,7 +927,7 @@ export function AppointmentForm({
 
             {/* Cabinet, Doctor, Time */}
             <div>
-              <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3">
+              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="cabinet" className="text-xs sm:text-sm">Cabinet *</Label>
                   <Select
@@ -963,8 +963,8 @@ export function AppointmentForm({
                       {doctors.filter(d => d.specialization !== 'Asistentă').map((doctor) => (
                         <SelectItem key={doctor.id} value={doctor.id} className="text-sm">
                           <div className="flex items-center gap-2">
-                            <div 
-                              className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0" 
+                            <div
+                              className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0"
                               style={{ backgroundColor: doctor.color }}
                             />
                             <span className="truncate">{doctor.name}</span>
@@ -982,7 +982,7 @@ export function AppointmentForm({
                     </Alert>
                   )}
                 </div>
-                <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                <div className="space-y-1.5">
                   <Label htmlFor="time" className="text-xs sm:text-sm">Interval orar *</Label>
                   <div className="flex items-center gap-2">
                     <Select
@@ -990,8 +990,8 @@ export function AppointmentForm({
                       onValueChange={(value) => {
                         // When start time changes, adjust end time if needed
                         const availableEndTimes = getAvailableEndTimes(value);
-                        const newEndTime = availableEndTimes.includes(formData.endTime) 
-                          ? formData.endTime 
+                        const newEndTime = availableEndTimes.includes(formData.endTime)
+                          ? formData.endTime
                           : availableEndTimes[0] || value;
                         setFormData({ ...formData, time: value, endTime: newEndTime });
                       }}
@@ -1170,9 +1170,9 @@ export function AppointmentForm({
             <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2 sm:gap-3 pt-2 sm:pt-4">
               <div className="flex gap-2">
                 {editingAppointment && onDelete && (isAdmin || editingAppointment.status === 'cancelled') && (
-                  <Button 
-                    type="button" 
-                    variant="destructive" 
+                  <Button
+                    type="button"
+                    variant="destructive"
                     onClick={onDelete}
                     className="gap-2 w-full sm:w-auto text-sm h-9 sm:h-10"
                   >
@@ -1181,8 +1181,8 @@ export function AppointmentForm({
                   </Button>
                 )}
                 {editingAppointment && editingAppointment.status === 'completed' && onUncomplete && (
-                  <Button 
-                    type="button" 
+                  <Button
+                    type="button"
                     variant="outline"
                     onClick={onUncomplete}
                     className="gap-2 w-full sm:w-auto text-sm h-9 sm:h-10 border-orange-300 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
@@ -1195,9 +1195,9 @@ export function AppointmentForm({
               </div>
               <div className="flex gap-2 sm:gap-3">
                 {formData.patientId && interventions.length > 0 && (
-                  <Button 
-                    type="button" 
-                    variant="secondary" 
+                  <Button
+                    type="button"
+                    variant="secondary"
                     onClick={handleSaveAsPlan}
                     disabled={savingPlan}
                     className="gap-1.5 text-sm h-9 sm:h-10"
@@ -1210,7 +1210,7 @@ export function AppointmentForm({
                 <Button type="button" variant="outline" onClick={onClose} className="flex-1 sm:flex-none text-sm h-9 sm:h-10">
                   Anulează
                 </Button>
-                <Button 
+                <Button
                   type="submit"
                   disabled={!formData.patientName}
                   className="flex-1 sm:flex-none text-sm h-9 sm:h-10"

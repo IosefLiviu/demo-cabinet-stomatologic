@@ -142,7 +142,7 @@ export function InterventionSelector({
   const [patientDentalStatus, setPatientDentalStatus] = useState<PatientToothStatus[]>([]);
   // Tooth condition codes for overlay rendering
   const [toothConditionCodes, setToothConditionCodes] = useState<Record<number, string[]>>({});
-  
+
   const activeStatuses = TOOTH_STATUSES;
 
   // Load patient dental status and tooth conditions when patientId changes
@@ -199,7 +199,7 @@ export function InterventionSelector({
   const getPatientToothStatus = (toothNumber: number): PatientToothStatus | undefined => {
     return patientDentalStatus.find(t => t.tooth_number === toothNumber);
   };
-  
+
   // Build dynamic status colors and labels from database
   const getStatusColor = (statusName: string): string => {
     const dbStatus = activeStatuses.find(s => s.name.toLowerCase() === statusName.toLowerCase());
@@ -208,11 +208,11 @@ export function InterventionSelector({
     }
     return fallbackStatusColors[statusName] || fallbackStatusColors.healthy;
   };
-  
+
   const getStatusHexColor = (statusName: string): string | null => {
     return getStatusHexColorUtil(statusName);
   };
-  
+
   const getStatusLabel = (statusName: string): string => {
     const dbStatus = activeStatuses.find(s => s.name.toLowerCase() === statusName.toLowerCase());
     return dbStatus?.name || statusName;
@@ -292,7 +292,7 @@ export function InterventionSelector({
       // Add tooth with default status and log to history
       const treatmentName = intervention.treatmentName;
       const defaultStatus = 'Tratament planificat';
-      
+
       // Log to dental_status_history (with duplicate check)
       if (patientId) {
         // Check if a similar entry was created in the last 10 seconds to prevent duplicates
@@ -331,7 +331,7 @@ export function InterventionSelector({
       const existingDetails = intervention.teethDetails || [];
       const newSelectedTeeth = [...intervention.selectedTeeth, toothNumber];
       const basePrice = intervention.basePrice ?? intervention.price;
-      
+
       let newPrice: number;
       if (intervention.isArchMode) {
         const archGroupCount = countArchGroups(newSelectedTeeth);
@@ -367,11 +367,11 @@ export function InterventionSelector({
   const openToothDialog = (interventionId: string, toothNumber: number) => {
     const intervention = interventions.find(i => i.id === interventionId);
     const existingDetail = intervention?.teethDetails?.find(t => t.toothNumber === toothNumber);
-    
+
     // Support both legacy single status and new multiple statuses
-    const existingStatuses = existingDetail?.statuses || 
+    const existingStatuses = existingDetail?.statuses ||
       (existingDetail?.status && existingDetail.status !== 'healthy' ? [existingDetail.status] : []);
-    
+
     setToothDialog({
       open: true,
       interventionId,
@@ -401,11 +401,11 @@ export function InterventionSelector({
     if (patientId) {
       const oldStatusStr = oldStatuses.length > 0 ? oldStatuses.join(', ') : null;
       const newStatusStr = newStatuses.join(', ');
-      
+
       // Only log if status actually changed
       if (oldStatusStr !== newStatusStr) {
         // Format statuses for notes field (multi-status support)
-        const notesWithStatuses = newStatuses.length > 1 
+        const notesWithStatuses = newStatuses.length > 1
           ? `[STATUSES: ${JSON.stringify(newStatuses)}]${toothDialog.notes ? ' ' + toothDialog.notes : ''}`
           : toothDialog.notes || null;
 
@@ -430,15 +430,15 @@ export function InterventionSelector({
     onInterventionsChange(
       interventions.map(i => {
         if (i.id !== toothDialog.interventionId) return i;
-        
+
         const isAlreadySelected = i.selectedTeeth.includes(toothDialog.toothNumber);
         const existingDetails = i.teethDetails || [];
         const otherDetails = existingDetails.filter(t => t.toothNumber !== toothDialog.toothNumber);
-        
-        const newSelectedTeeth = isAlreadySelected 
-          ? i.selectedTeeth 
+
+        const newSelectedTeeth = isAlreadySelected
+          ? i.selectedTeeth
           : [...i.selectedTeeth, toothDialog.toothNumber];
-        
+
         // Calculate new price based on mode
         const basePrice = i.basePrice ?? i.price;
         let newPrice: number;
@@ -451,7 +451,7 @@ export function InterventionSelector({
           const teethCount = newSelectedTeeth.length;
           newPrice = teethCount > 0 ? basePrice * teethCount : basePrice;
         }
-        
+
         return {
           ...i,
           selectedTeeth: newSelectedTeeth,
@@ -473,17 +473,17 @@ export function InterventionSelector({
 
     setToothDialog(null);
   };
-  
+
   // Toggle status in multi-select mode
   const toggleToothStatus = (statusName: string) => {
     setToothDialog(prev => {
       if (!prev) return null;
       const currentStatuses = prev.statuses || [];
       const isSelected = currentStatuses.includes(statusName);
-      
+
       return {
         ...prev,
-        statuses: isSelected 
+        statuses: isSelected
           ? currentStatuses.filter(s => s !== statusName)
           : [...currentStatuses, statusName],
       };
@@ -494,10 +494,10 @@ export function InterventionSelector({
     onInterventionsChange(
       interventions.map(i => {
         if (i.id !== interventionId) return i;
-        
+
         const newSelectedTeeth = i.selectedTeeth.filter(t => t !== toothNumber);
         const basePrice = i.basePrice ?? i.price;
-        
+
         let newPrice: number;
         if (i.isArchMode) {
           // In arch mode, count complete arch groups
@@ -508,7 +508,7 @@ export function InterventionSelector({
           const teethCount = newSelectedTeeth.length;
           newPrice = teethCount > 0 ? basePrice * teethCount : basePrice;
         }
-        
+
         return {
           ...i,
           selectedTeeth: newSelectedTeeth,
@@ -546,13 +546,13 @@ export function InterventionSelector({
     onInterventionsChange(
       interventions.map(i => {
         if (i.id !== interventionId) return i;
-        
+
         // Check if all teeth in this group are already selected
         const allSelected = teethToToggle.every(t => i.selectedTeeth.includes(t));
-        
+
         let newSelectedTeeth: number[];
         let newTeethDetails = i.teethDetails || [];
-        
+
         if (allSelected) {
           // Deselect all teeth in the group
           newSelectedTeeth = i.selectedTeeth.filter(t => !teethToToggle.includes(t));
@@ -571,12 +571,12 @@ export function InterventionSelector({
             }
           }
         }
-        
+
         // In arch mode, price = basePrice * number of selected arch groups (not teeth)
         const basePrice = i.basePrice ?? i.price;
         const archGroupCount = countArchGroups(newSelectedTeeth);
         const newPrice = newSelectedTeeth.length > 0 ? basePrice * archGroupCount : basePrice;
-        
+
         return {
           ...i,
           selectedTeeth: newSelectedTeeth,
@@ -595,19 +595,19 @@ export function InterventionSelector({
     const toothDetails = getToothDetails(intervention, toothNumber);
     const isHovered = hoveredTooth?.interventionId === interventionId && hoveredTooth?.toothNumber === toothNumber;
     const toothImage = getToothImage(toothNumber);
-    
+
     // Get patient's saved dental status for this tooth
     const patientStatus = getPatientToothStatus(toothNumber);
-    
+
     // Use intervention status if selected, otherwise use patient's saved status
-    const status = isSelected 
+    const status = isSelected
       ? (toothDetails?.status || patientStatus?.status || 'Sănătos')
       : (patientStatus?.status || 'Sănătos');
-    
+
     const hexColor = getStatusHexColor(status);
     const hasPatientStatus = patientStatus && patientStatus.status !== 'Sănătos';
     const isMissingTooth = status === 'Absent' || status === 'missing';
-    
+
     return (
       <div key={toothNumber} className="relative flex flex-col items-center">
         {/* Tooth number - show above for upper teeth */}
@@ -619,7 +619,7 @@ export function InterventionSelector({
             {toothNumber}
           </span>
         )}
-        
+
         <button
           type="button"
           onClick={() => openToothDialog(interventionId, toothNumber)}
@@ -636,17 +636,17 @@ export function InterventionSelector({
               : 'w-6 h-8 sm:w-9 sm:h-13'
           )}
           style={
-            isSelected && hexColor 
+            isSelected && hexColor
               ? { boxShadow: `0 0 0 2px ${hexColor}` }
-              : hasPatientStatus && hexColor 
+              : hasPatientStatus && hexColor
                 ? { boxShadow: `0 0 0 1px ${hexColor}` }
                 : undefined
           }
         >
           {/* Tooth image */}
           {toothImage ? (
-            <img 
-              src={toothImage} 
+            <img
+              src={toothImage}
               alt={`Dinte ${toothNumber}`}
               className={cn(
                 "w-full h-full object-contain",
@@ -662,24 +662,24 @@ export function InterventionSelector({
               {toothNumber}
             </div>
           )}
-          
+
           {/* Status overlay when selected */}
           {isSelected && hexColor && (
-            <div 
+            <div
               className="absolute inset-0 rounded-md"
               style={{ backgroundColor: `${hexColor}40` }}
             />
           )}
-          
+
           {/* Patient status overlay when NOT selected but has status */}
           {!isSelected && hasPatientStatus && hexColor && !isMissingTooth && (
-            <div 
+            <div
               className="absolute inset-0 rounded-md"
               style={{ backgroundColor: `${hexColor}30` }}
             />
           )}
         </button>
-        
+
         {/* Tooth number - show below for lower teeth */}
         {isLower && (
           <span className={cn(
@@ -689,7 +689,7 @@ export function InterventionSelector({
             {toothNumber}
           </span>
         )}
-        
+
         {/* Tooltip */}
         {isHovered && (
           <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded bg-popover border shadow-lg text-xs whitespace-nowrap">
@@ -704,16 +704,16 @@ export function InterventionSelector({
 
   // Render an arch/quadrant selection button
   const renderArchButton = (
-    interventionId: string, 
-    intervention: SelectedIntervention, 
-    teethGroup: number[], 
+    interventionId: string,
+    intervention: SelectedIntervention,
+    teethGroup: number[],
     label: string,
     description: string
   ) => {
     const selectedCount = teethGroup.filter(t => intervention.selectedTeeth.includes(t)).length;
     const allSelected = selectedCount === teethGroup.length;
     const someSelected = selectedCount > 0 && selectedCount < teethGroup.length;
-    
+
     return (
       <button
         type="button"
@@ -721,8 +721,8 @@ export function InterventionSelector({
         className={cn(
           'p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 hover:scale-105',
           allSelected ? 'bg-primary/20 border-primary text-primary' :
-          someSelected ? 'bg-warning/20 border-warning text-warning' :
-          'bg-muted/30 border-muted-foreground/30 hover:border-primary/50'
+            someSelected ? 'bg-warning/20 border-warning text-warning' :
+              'bg-muted/30 border-muted-foreground/30 hover:border-primary/50'
         )}
       >
         <span className="font-bold text-lg">{label}</span>
@@ -757,154 +757,171 @@ export function InterventionSelector({
         <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
           {interventions.map((intervention) => {
             return (
-            <Collapsible 
-              key={intervention.id} 
-              open={expandedInterventions.has(intervention.id)}
-              onOpenChange={() => toggleExpanded(intervention.id)}
-              className="border rounded-lg overflow-hidden"
-            >
-              {/* Intervention Header */}
-              <CollapsibleTrigger asChild>
-                <div className="bg-muted/30 p-2 cursor-pointer hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <ChevronDown 
-                      className={cn(
-                        "h-4 w-4 shrink-0 transition-transform duration-200",
-                        expandedInterventions.has(intervention.id) ? "rotate-0" : "-rotate-90"
-                      )} 
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate">{intervention.treatmentName}</div>
-                      {intervention.selectedTeeth.length > 0 && (
-                        <div className="text-xs text-muted-foreground">
-                          Dinți: {intervention.selectedTeeth.sort((a, b) => a - b).join(', ')}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm shrink-0">
-                      <span className="font-medium">{Number(intervention.price).toFixed(2)} lei</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-destructive hover:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveIntervention(intervention.id);
-                        }}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+              <Collapsible
+                key={intervention.id}
+                open={expandedInterventions.has(intervention.id)}
+                onOpenChange={() => toggleExpanded(intervention.id)}
+                className="border rounded-lg overflow-hidden"
+              >
+                {/* Intervention Header */}
+                <CollapsibleTrigger asChild>
+                  <div className="bg-muted/30 p-2 cursor-pointer hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <ChevronDown
+                        className={cn(
+                          "h-4 w-4 shrink-0 transition-transform duration-200",
+                          expandedInterventions.has(intervention.id) ? "rotate-0" : "-rotate-90"
+                        )}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm truncate">{intervention.treatmentName}</div>
+                        {intervention.selectedTeeth.length > 0 && (
+                          <div className="text-xs text-muted-foreground">
+                            Dinți: {intervention.selectedTeeth.sort((a, b) => a - b).join(', ')}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-sm shrink-0">
+                        <span className="font-medium">{Number(intervention.price).toFixed(2)} lei</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-destructive hover:text-destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveIntervention(intervention.id);
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CollapsibleTrigger>
+                </CollapsibleTrigger>
 
-              {/* Collapsible Content */}
-              <CollapsibleContent>
-                <div className="p-2 space-y-2 border-t">
-                  {/* Mini Dental Chart for tooth selection */}
-                  <div>
-                    <div className="bg-muted/30 rounded-lg p-1.5">
-                      <MiniToothSelector
-                        selectedTeeth={intervention.selectedTeeth}
-                        onToothClick={(toothNumber) => handleQuickToggleTooth(intervention.id, toothNumber)}
-                        toothConditionCodes={toothConditionCodes}
-                        patientDentalStatus={patientDentalStatus}
-                        getStatusHexColor={getStatusHexColor}
-                      />
+                {/* Collapsible Content */}
+                <CollapsibleContent>
+                  <div className="p-2 space-y-2 border-t">
+                    {/* Mini Dental Chart for tooth selection */}
+                    <div>
+                      <div className="bg-muted/30 rounded-lg p-1.5">
+                        <MiniToothSelector
+                          selectedTeeth={intervention.selectedTeeth}
+                          onToothClick={(toothNumber) => handleQuickToggleTooth(intervention.id, toothNumber)}
+                          toothConditionCodes={toothConditionCodes}
+                          patientDentalStatus={patientDentalStatus}
+                          getStatusHexColor={getStatusHexColor}
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Prices Row */}
-                  <div className="grid grid-cols-6 gap-1.5">
-                    <div className="space-y-0.5">
-                      <Label className="text-xs">Preț inițial</Label>
-                      <Input
-                        type="number"
-                        value={intervention.price}
-                        onChange={(e) =>
-                          handleUpdateIntervention(intervention.id, 'price', parseFloat(e.target.value) || 0)
-                        }
-                        className="h-8"
-                      />
-                    </div>
-                    <div className="space-y-0.5">
-                      <Label className="text-xs text-purple-600">Laborator</Label>
-                      <Input
-                        type="number"
-                        value={intervention.laborator || 0}
-                        onChange={(e) =>
-                          handleUpdateIntervention(intervention.id, 'laborator', parseFloat(e.target.value) || 0)
-                        }
-                        className="h-8"
-                      />
-                    </div>
-                    <div className="space-y-0.5">
-                      <Label className="text-xs">Preț</Label>
-                      <Input
-                        type="number"
-                        value={intervention.price - (intervention.laborator || 0)}
-                        readOnly
-                        disabled
-                        className="h-8 bg-muted"
-                      />
-                    </div>
-                    <div className="space-y-0.5">
-                      <Label className={`text-xs ${isCasDisabled ? 'text-muted-foreground' : 'text-green-600'}`}>CAS</Label>
-                      <Input
-                        type="number"
-                        value={intervention.cas}
-                        onChange={(e) =>
-                          handleUpdateIntervention(intervention.id, 'cas', parseFloat(e.target.value) || 0)
-                        }
-                        className={`h-8 ${isCasDisabled ? 'bg-muted cursor-not-allowed opacity-50' : ''}`}
-                        disabled={isCasDisabled}
-                      />
-                    </div>
-                    <div className="space-y-0.5">
-                      <Label className="text-xs text-pink-600">Discount %</Label>
-                      <Input
-                        type="number"
-                        value={intervention.discountPercent || 0}
-                        onChange={(e) =>
-                          handleUpdateIntervention(intervention.id, 'discountPercent', Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))
-                        }
-                        className="h-8"
-                        min={0}
-                        max={100}
-                      />
-                    </div>
-                    <div className="space-y-0.5">
-                      <Label className="text-xs text-orange-600">De plată</Label>
-                      <Input
-                        type="number"
-                        value={(() => {
-                          const priceAfterCas = intervention.price - intervention.cas;
-                          const discountAmount = priceAfterCas * ((intervention.discountPercent || 0) / 100);
-                          return (priceAfterCas - discountAmount).toFixed(0);
-                        })()}
-                        readOnly
-                        disabled
-                        className="h-8 bg-muted"
-                      />
+                    {/* Prices Row */}
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+                      <div className="space-y-0.5">
+                        <Label className="text-xs">Preț inițial</Label>
+                        <Input
+                          type="number"
+                          value={intervention.price}
+                          onChange={(e) =>
+                            handleUpdateIntervention(intervention.id, 'price', parseFloat(e.target.value) || 0)
+                          }
+                          className="h-8"
+                        />
+                      </div>
+                      <div className="space-y-0.5">
+                        <Label className="text-xs text-purple-600">Laborator</Label>
+                        <Input
+                          type="number"
+                          value={intervention.laborator || 0}
+                          onChange={(e) =>
+                            handleUpdateIntervention(intervention.id, 'laborator', parseFloat(e.target.value) || 0)
+                          }
+                          className="h-8"
+                        />
+                      </div>
+                      <div className="space-y-0.5">
+                        <Label className="text-xs">Preț</Label>
+                        <Input
+                          type="number"
+                          value={intervention.price - (intervention.laborator || 0)}
+                          readOnly
+                          disabled
+                          className="h-8 bg-muted"
+                        />
+                      </div>
+                      <div className="space-y-0.5">
+                        <Label className={`text-xs ${isCasDisabled ? 'text-muted-foreground' : 'text-green-600'}`}>CAS</Label>
+                        <Input
+                          type="number"
+                          value={intervention.cas}
+                          onChange={(e) =>
+                            handleUpdateIntervention(intervention.id, 'cas', parseFloat(e.target.value) || 0)
+                          }
+                          className={`h-8 ${isCasDisabled ? 'bg-muted cursor-not-allowed opacity-50' : ''}`}
+                          disabled={isCasDisabled}
+                        />
+                      </div>
+                      <div className="space-y-0.5">
+                        <Label className="text-xs text-pink-600">Discount %</Label>
+                        <Input
+                          type="number"
+                          value={intervention.discountPercent || 0}
+                          onChange={(e) =>
+                            handleUpdateIntervention(intervention.id, 'discountPercent', Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))
+                          }
+                          className="h-8"
+                          min={0}
+                          max={100}
+                        />
+                      </div>
+                      <div className="space-y-0.5">
+                        <Label className="text-xs text-orange-600">De plată</Label>
+                        <Input
+                          type="number"
+                          value={(() => {
+                            const priceAfterCas = intervention.price - intervention.cas;
+                            const discountAmount = priceAfterCas * ((intervention.discountPercent || 0) / 100);
+                            return (priceAfterCas - discountAmount).toFixed(0);
+                          })()}
+                          readOnly
+                          disabled
+                          className="h-8 bg-muted"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
+                </CollapsibleContent>
+              </Collapsible>
             );
           })}
 
           {/* Totals */}
-          <div className="bg-muted/50 rounded-lg p-3 overflow-x-auto scrollbar-hide">
-            <div className="grid grid-cols-6 gap-2 text-sm min-w-[500px] sm:min-w-0">
+          <div className="bg-muted/50 rounded-lg p-2 sm:p-3">
+            {/* Desktop: single row */}
+            <div className="hidden sm:grid grid-cols-6 gap-2 text-sm">
               <div className="font-bold">TOTAL</div>
               <div className="text-right font-bold">{totalPretInitial.toFixed(2)} lei</div>
               <div className="text-right font-bold text-purple-600">{totalLaborator.toFixed(2)} lei</div>
               <div className="text-right font-bold">{totalPret.toFixed(2)} lei</div>
               <div className="text-right font-bold text-green-600">{totalCas.toFixed(2)} lei</div>
               <div className="text-right font-bold text-orange-600">{totalDePlata.toFixed(2)} lei</div>
+            </div>
+            {/* Mobile: stacked rows */}
+            <div className="sm:hidden space-y-1 text-xs">
+              <div className="font-bold text-sm pb-1">TOTAL</div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
+                <span className="text-muted-foreground">Preț inițial:</span>
+                <span className="text-right font-semibold">{totalPretInitial.toFixed(2)} lei</span>
+                <span className="text-muted-foreground text-purple-600">Laborator:</span>
+                <span className="text-right font-semibold text-purple-600">{totalLaborator.toFixed(2)} lei</span>
+                <span className="text-muted-foreground">Preț:</span>
+                <span className="text-right font-semibold">{totalPret.toFixed(2)} lei</span>
+                <span className="text-muted-foreground text-green-600">CAS:</span>
+                <span className="text-right font-semibold text-green-600">{totalCas.toFixed(2)} lei</span>
+                <span className="text-muted-foreground text-orange-600">De plată:</span>
+                <span className="text-right font-bold text-orange-600">{totalDePlata.toFixed(2)} lei</span>
+              </div>
             </div>
           </div>
         </div>
@@ -930,7 +947,7 @@ export function InterventionSelector({
           <DialogHeader>
             <DialogTitle>Dinte {toothDialog?.toothNumber}</DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
 
             <div className="space-y-2">
