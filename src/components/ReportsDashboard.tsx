@@ -1,12 +1,13 @@
 import { useState, useMemo, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChart, UserCircle, Filter, Download, FlaskConical, ClipboardList, Percent, AlertCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, TrendingUp, Users, DollarSign, Clock, PieChart, UserCircle, Filter, Download, FlaskConical, ClipboardList, Percent, AlertCircle, Banknote } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AppointmentsPatientReport } from './AppointmentsPatientReport';
 import { DiscountedAppointmentsReport } from './DiscountedAppointmentsReport';
 import { LaboratoryReport } from './LaboratoryReport';
 import { PendingAppointmentsByDoctorReport } from './PendingAppointmentsByDoctorReport';
+import { OutstandingDebtsReport } from './OutstandingDebtsReport';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -623,7 +624,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
   return (
     <Tabs defaultValue="financial" className="space-y-6">
       <div className="overflow-x-auto sm:overflow-visible">
-        <TabsList className="inline-flex w-auto sm:grid sm:w-full sm:grid-cols-5 max-w-3xl">
+        <TabsList className="inline-flex w-auto sm:grid sm:w-full sm:grid-cols-6 max-w-4xl">
           <TabsTrigger value="financial" className="gap-2">
             <DollarSign className="h-4 w-4 hidden sm:block" />
             Financiar
@@ -631,6 +632,10 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
           <TabsTrigger value="pending" className="gap-2">
             <AlertCircle className="h-4 w-4 hidden sm:block" />
             Nefinalizate
+          </TabsTrigger>
+          <TabsTrigger value="debts" className="gap-2">
+            <Banknote className="h-4 w-4 hidden sm:block" />
+            Restanțe
           </TabsTrigger>
           <TabsTrigger value="laboratory" className="gap-2">
             <FlaskConical className="h-4 w-4 hidden sm:block" />
@@ -1116,6 +1121,13 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
 
       <TabsContent value="pending">
         <PendingAppointmentsByDoctorReport 
+          appointments={appointments} 
+          dateRange={dateRange}
+        />
+      </TabsContent>
+
+      <TabsContent value="debts">
+        <OutstandingDebtsReport 
           appointments={appointments} 
           dateRange={dateRange}
         />
