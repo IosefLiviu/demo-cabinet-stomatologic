@@ -24,11 +24,12 @@ interface ReportsDashboardProps {
   appointments: AppointmentDB[];
   loading: boolean;
   onFetchRange: (startDate: string, endDate: string) => Promise<void>;
+  onPatientClick?: (patientId: string) => void;
 }
 
 const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
-export function ReportsDashboard({ appointments, loading, onFetchRange }: ReportsDashboardProps) {
+export function ReportsDashboard({ appointments, loading, onFetchRange, onPatientClick }: ReportsDashboardProps) {
   const { doctors } = useDoctors();
   const { isAdmin, doctorId } = useAuth();
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
@@ -1129,7 +1130,7 @@ export function ReportsDashboard({ appointments, loading, onFetchRange }: Report
       <TabsContent value="debts">
         <OutstandingDebtsReport 
           appointments={appointments} 
-          dateRange={dateRange}
+          onPatientClick={onPatientClick}
         />
       </TabsContent>
 
