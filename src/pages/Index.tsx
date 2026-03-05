@@ -20,6 +20,7 @@ import { CabinetSettings } from '@/components/CabinetSettings';
 import { CompleteAppointmentDialog, PaymentData } from '@/components/CompleteAppointmentDialog';
 import { EditPaymentDialog } from '@/components/EditPaymentDialog';
 import { CancelAppointmentDialog } from '@/components/CancelAppointmentDialog';
+import { MobileCalendarSwiper } from '@/components/MobileCalendarSwiper';
 
 import { AvailableSlotsSearch } from '@/components/AvailableSlotsSearch';
 import { AppointmentSearch } from '@/components/AppointmentSearch';
@@ -611,19 +612,41 @@ const Index = () => {
       case 'calendar':
         return (
           <div className="mt-2">
-            <TimeSlotGrid
-              selectedDate={selectedDate}
-              selectedCabinet={selectedCabinet}
-              appointments={filteredAppointments}
-              cabinets={cabinets}
-              doctorShifts={doctorShifts}
-              doctors={doctors}
-              onSlotClick={handleSlotClick}
-              onAppointmentClick={handleAppointmentClick}
-              onAppointmentComplete={handleAppointmentComplete}
-              onAppointmentCancel={handleAppointmentCancelClick}
-              onEditPayment={handleEditPayment}
-            />
+            {isMobile ? (
+              <MobileCalendarSwiper
+                selectedCabinet={selectedCabinet}
+                onSelectCabinet={setSelectedCabinet}
+                cabinets={cabinets}
+              >
+                <TimeSlotGrid
+                  selectedDate={selectedDate}
+                  selectedCabinet={selectedCabinet}
+                  appointments={filteredAppointments}
+                  cabinets={cabinets}
+                  doctorShifts={doctorShifts}
+                  doctors={doctors}
+                  onSlotClick={handleSlotClick}
+                  onAppointmentClick={handleAppointmentClick}
+                  onAppointmentComplete={handleAppointmentComplete}
+                  onAppointmentCancel={handleAppointmentCancelClick}
+                  onEditPayment={handleEditPayment}
+                />
+              </MobileCalendarSwiper>
+            ) : (
+              <TimeSlotGrid
+                selectedDate={selectedDate}
+                selectedCabinet={selectedCabinet}
+                appointments={filteredAppointments}
+                cabinets={cabinets}
+                doctorShifts={doctorShifts}
+                doctors={doctors}
+                onSlotClick={handleSlotClick}
+                onAppointmentClick={handleAppointmentClick}
+                onAppointmentComplete={handleAppointmentComplete}
+                onAppointmentCancel={handleAppointmentCancelClick}
+                onEditPayment={handleEditPayment}
+              />
+            )}
           </div>
         );
       case 'patients':
