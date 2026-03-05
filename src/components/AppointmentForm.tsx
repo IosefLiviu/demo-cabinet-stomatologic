@@ -649,7 +649,7 @@ export function AppointmentForm({
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 -mx-2 sm:-mx-6 px-2 sm:px-6">
+        <ScrollArea className="flex-1 -mx-1.5 sm:-mx-6 px-1.5 sm:px-6">
           <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-3 pb-2">
             {/* Patient Selection */}
             <div className="space-y-2">
