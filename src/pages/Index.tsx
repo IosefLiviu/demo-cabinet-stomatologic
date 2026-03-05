@@ -658,6 +658,12 @@ const Index = () => {
               appointments={appointments}
               loading={appointmentsLoading}
               onFetchRange={fetchAppointmentsRange}
+              onPatientClick={(patientId) => {
+                const patient = patients.find(p => p.id === patientId);
+                if (patient) {
+                  setSelectedPatient(patient);
+                }
+              }}
             />
           </div>
         );

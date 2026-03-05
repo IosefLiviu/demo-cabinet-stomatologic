@@ -12,10 +12,10 @@ import * as XLSX from 'xlsx';
 
 interface OutstandingDebtsReportProps {
   appointments: AppointmentDB[];
-  dateRange: { from: Date; to: Date };
+  onPatientClick?: (patientId: string) => void;
 }
 
-export function OutstandingDebtsReport({ appointments, dateRange }: OutstandingDebtsReportProps) {
+export function OutstandingDebtsReport({ appointments, onPatientClick }: OutstandingDebtsReportProps) {
   const [searchName, setSearchName] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'over30'>('all');
 
@@ -26,8 +26,6 @@ export function OutstandingDebtsReport({ appointments, dateRange }: OutstandingD
     return appointments
       .filter(a => {
         if (a.status !== 'completed') return false;
-        const aptDate = new Date(a.appointment_date);
-        if (aptDate < dateRange.from || aptDate > dateRange.to) return false;
 
         // Calculate payable amount
         const payableAmount = a.appointment_treatments?.length
@@ -68,6 +66,7 @@ export function OutstandingDebtsReport({ appointments, dateRange }: OutstandingD
 
         return {
           id: a.id,
+          patientId: a.patient_id,
           patientName: a.patients ? `${a.patients.last_name} ${a.patients.first_name}` : 'N/A',
           patientPhone: a.patients?.phone || '',
           appointmentDate: a.appointment_date,
@@ -81,7 +80,7 @@ export function OutstandingDebtsReport({ appointments, dateRange }: OutstandingD
         };
       })
       .sort((a, b) => b.debt - a.debt);
-  }, [appointments, dateRange]);
+  }, [appointments]);
 
   // Apply filters
   const filteredDebts = useMemo(() => {
@@ -106,7 +105,6 @@ export function OutstandingDebtsReport({ appointments, dateRange }: OutstandingD
   const exportToExcel = () => {
     const data = [
       ['Raport Restanțe', '', '', '', '', '', ''],
-      ['Perioadă', `${format(dateRange.from, 'dd.MM.yyyy')} - ${format(dateRange.to, 'dd.MM.yyyy')}`, '', '', '', '', ''],
       ['Filtru', statusFilter === 'over30' ? 'Restanțe peste 30 zile' : 'Toate restanțele', '', '', '', '', ''],
       ['', '', '', '', '', '', ''],
       ['Pacient', 'Detalii Programare', 'Doctor', 'Luna Facturării', 'Sumă Totală (RON)', 'Sumă Achitată (RON)', 'Restanță (RON)', 'Zile Restante'],
@@ -131,7 +129,7 @@ export function OutstandingDebtsReport({ appointments, dateRange }: OutstandingD
     ];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Restanțe');
-    XLSX.writeFile(wb, `Restante_${format(dateRange.from, 'dd-MM-yyyy')}_${format(dateRange.to, 'dd-MM-yyyy')}.xlsx`);
+    XLSX.writeFile(wb, `Restante_${format(new Date(), 'dd-MM-yyyy')}.xlsx`);
   };
 
   return (
@@ -219,8 +217,12 @@ export function OutstandingDebtsReport({ appointments, dateRange }: OutstandingD
               </TableHeader>
               <TableBody>
                 {filteredDebts.map(d => (
-                  <TableRow key={d.id}>
-                    <TableCell className="font-medium">{d.patientName}</TableCell>
+                  <TableRow 
+                    key={d.id} 
+                    className={onPatientClick ? 'cursor-pointer hover:bg-muted/80' : ''}
+                    onClick={() => onPatientClick?.(d.patientId)}
+                  >
+                    <TableCell className="font-medium text-primary underline-offset-2 hover:underline">{d.patientName}</TableCell>
                     <TableCell className="max-w-[200px] truncate text-sm">{d.treatmentDetails}</TableCell>
                     <TableCell>{d.doctorName}</TableCell>
                     <TableCell className="capitalize">{d.billingMonth}</TableCell>
