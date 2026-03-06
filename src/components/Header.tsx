@@ -35,10 +35,6 @@ export function Header() {
             alt="Demo Cabinet Dentar"
             className="h-9 w-auto sm:h-11 sm:w-auto object-contain shrink-0"
           />
-          <div className="min-w-0 hidden xs:block">
-            <h1 className="text-sm sm:text-lg font-bold text-foreground truncate">Cabinet Dentar</h1>
-            <p className="text-[10px] sm:text-xs text-muted-foreground truncate hidden sm:block">Demo Version</p>
-          </div>
         </Link>
 
         {/* Desktop Navigation */}
