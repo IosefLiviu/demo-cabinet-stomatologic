@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.png", "images/perfect-smile-logo.png"],
+      includeAssets: ["favicon.png", "images/demo-logo.svg"],
       workbox: {
         navigateFallbackDenylist: [/^\/~oauth/],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
@@ -27,9 +27,9 @@ export default defineConfig(({ mode }) => ({
         clientsClaim: true,
       },
       manifest: {
-        name: "PerfectSmileGlim",
-        short_name: "PSGlim",
-        description: "Sistem Management Cabinet Stomatologic",
+        name: "Cabinet Dentar Demo",
+        short_name: "DemoApp",
+        description: "Demo - Sistem Management Cabinet Stomatologic",
         theme_color: "#7a4a2a",
         background_color: "#f5f0eb",
         display: "standalone",
@@ -42,14 +42,14 @@ export default defineConfig(({ mode }) => ({
             type: "image/png",
           },
           {
-            src: "/images/perfect-smile-logo.png",
+            src: "/images/demo-logo.svg",
             sizes: "512x512",
-            type: "image/png",
+            type: "image/svg+xml",
           },
           {
-            src: "/images/perfect-smile-logo.png",
+            src: "/images/demo-logo.svg",
             sizes: "512x512",
-            type: "image/png",
+            type: "image/svg+xml",
             purpose: "maskable",
           },
         ],

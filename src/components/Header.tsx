@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { LogOut, Users, LogIn, Menu, User, Download } from 'lucide-react';
-import perfectSmileLogo from '@/assets/logoPerfectSmile.png';
+import demoLogo from '@/assets/demo-logo.svg';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { CasBudgetDisplay } from './CasBudgetDisplay';
@@ -31,13 +31,13 @@ export function Header() {
       <div className="container flex h-14 sm:h-16 items-center justify-between gap-2 sm:gap-4 px-2 sm:px-4">
         <Link to="/" className="flex items-center gap-2 sm:gap-3 min-w-0">
           <img
-            src={perfectSmileLogo}
-            alt="Perfect Smile Logo"
+            src={demoLogo}
+            alt="Demo Cabinet Dentar"
             className="h-9 w-auto sm:h-11 sm:w-auto object-contain shrink-0"
           />
           <div className="min-w-0 hidden xs:block">
-            <h1 className="text-sm sm:text-lg font-bold text-foreground truncate">Perfect Smile Glim</h1>
-            <p className="text-[10px] sm:text-xs text-muted-foreground truncate hidden sm:block">Sistem Management Cabinet Stomatologic</p>
+            <h1 className="text-sm sm:text-lg font-bold text-foreground truncate">Cabinet Dentar</h1>
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate hidden sm:block">Demo Version</p>
           </div>
         </Link>
 

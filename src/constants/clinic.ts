@@ -1,19 +1,19 @@
 // Clinic contact information - centralized for easy updates
 export const CLINIC = {
-  name: 'PERFECT SMILE GLIM SRL',
-  shortName: 'PERFECT SMILE GLIM',
-  address: 'Strada București 68-70, Măgurele, România',
-  phone: '0721 702 820',
-  email: 'office@perfectsmileglim.ro',
-  website: 'www.perfectsmileglim.ro',
-  
+  name: 'CABINET DENTAR DEMO SRL',
+  shortName: 'CABINET DENTAR DEMO',
+  address: 'Strada Exemplu 1, București, România',
+  phone: '0700 000 000',
+  email: 'office@demo-cabinet.ro',
+  website: 'demo-cabinet-stomatologic.vercel.app',
+
   // Legal info
-  regNumber: 'J23/5347/2023',
-  fiscalCode: '48655560',
-  
+  regNumber: 'J00/0000/2024',
+  fiscalCode: '00000000',
+
   // Logo paths
-  logoPrint: '/images/perfect-smile-logo-print.jpg',
-  logo: '/images/perfect-smile-logo.png',
+  logoPrint: '/images/demo-logo.svg',
+  logo: '/images/demo-logo.svg',
 } as const;
 
 // Helper function to get copyright text

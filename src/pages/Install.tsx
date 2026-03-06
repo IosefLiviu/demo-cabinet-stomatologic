@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Download, Check, Smartphone, Monitor } from 'lucide-react';
-import perfectSmileLogo from '@/assets/perfect-smile-logo.png';
+import demoLogo from '@/assets/demo-logo.svg';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -45,8 +45,8 @@ export default function Install() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="max-w-md w-full">
         <CardHeader className="text-center">
-          <img src={perfectSmileLogo} alt="Perfect Smile" className="h-20 w-20 mx-auto mb-4 object-contain" />
-          <CardTitle className="text-2xl">PerfectSmileGlim</CardTitle>
+          <img src={demoLogo} alt="Demo Cabinet Dentar" className="h-20 w-auto mx-auto mb-4 object-contain" />
+          <CardTitle className="text-2xl">Cabinet Dentar Demo</CardTitle>
           <CardDescription>Instalează aplicația pe telefonul tău</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

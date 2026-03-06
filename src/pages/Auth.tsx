@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import perfectSmileLogo from '@/assets/logoPerfectSmile.png';
+import demoLogo from '@/assets/demo-logo.svg';
 
 const usernameSchema = z.string().min(3, 'Numele de utilizator trebuie să aibă minim 3 caractere');
 const passwordSchema = z.string().min(6, 'Parola trebuie să aibă minim 6 caractere');
@@ -126,12 +126,12 @@ export default function Auth() {
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <img
-              src={perfectSmileLogo}
-              alt="Perfect Smile Logo"
+              src={demoLogo}
+              alt="Demo Cabinet Dentar"
               className="h-28 w-auto object-contain"
             />
           </div>
-          <CardTitle className="text-2xl">Perfect Smile Glim</CardTitle>
+          <CardTitle className="text-2xl">Cabinet Dentar Demo</CardTitle>
           <CardDescription>
             Sistem de management pentru cabinetul stomatologic
           </CardDescription>
