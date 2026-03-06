@@ -230,35 +230,42 @@ function seedTreatments(): any[] {
   }));
 }
 
+// ─── Time slot helper for realistic scheduling ─────────────────────
+function generateTimeSlots(count: number): string[] {
+  // Generate non-overlapping time slots across a workday (08:00 - 20:00)
+  const allSlots: string[] = [];
+  for (let h = 8; h <= 19; h++) {
+    for (const m of [0, 15, 30, 45]) {
+      allSlots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+    }
+  }
+  // Spread appointments across the day realistically
+  const step = Math.max(1, Math.floor(allSlots.length / count));
+  const slots: string[] = [];
+  for (let i = 0; i < count && i * step < allSlots.length; i++) {
+    const idx = i * step + randomInt(0, Math.min(step - 1, 2));
+    slots.push(allSlots[Math.min(idx, allSlots.length - 1)]);
+  }
+  return slots;
+}
+
 // ─── Appointments ──────────────────────────────────────────────────
 function seedAppointments(): { appointments: any[]; appointmentTreatments: any[]; treatmentRecords: any[] } {
   const appointments: any[] = [];
   const appointmentTreatments: any[] = [];
   const treatmentRecords: any[] = [];
 
-  const statuses = ['completed', 'completed', 'completed', 'completed', 'scheduled', 'confirmed', 'cancelled', 'no_show'];
-  const paymentMethods = ['Cash', 'Card', 'Transfer bancar', null];
+  const paymentMethods = ['Cash', 'Card', 'Transfer bancar'];
+  const allTreatments = seedTreatments();
 
-  for (let i = 0; i < 500; i++) {
+  function addAppointment(date: string, time: string, status: string, daysOffset: number) {
     const appointmentId = uuid();
     const patientId = pick(PATIENT_IDS);
     const doctorId = pick(DOCTOR_IDS);
     const doctorIdx = DOCTOR_IDS.indexOf(doctorId);
     const cabinetId = CABINET_IDS[doctorIdx] || pick(CABINET_IDS);
     const treatmentId = pick(TREATMENT_IDS);
-
-    const isPast = i < 350; // 350 past, 150 future
-    const daysOffset = isPast ? -randomInt(1, 180) : randomInt(1, 60);
-    const date = randomDate(daysOffset, daysOffset);
-    const time = randomTime();
     const duration = pick([15, 30, 30, 45, 45, 60, 60, 90]);
-
-    let status: string;
-    if (isPast) {
-      status = pick(['completed', 'completed', 'completed', 'completed', 'completed', 'cancelled', 'no_show']);
-    } else {
-      status = pick(['scheduled', 'scheduled', 'confirmed', 'confirmed']);
-    }
 
     const price = pick([100, 150, 200, 250, 300, 400, 500, 800, 900, 1000, 1500]);
     const isPaid = status === 'completed' ? Math.random() > 0.15 : false;
@@ -281,8 +288,8 @@ function seedAppointments(): { appointments: any[]; appointmentTreatments: any[]
       is_paid: isPaid,
       debt_amount: debtAmount > 0 ? debtAmount : null,
       debt_paid_at: null,
-      notes: Math.random() > 0.85 ? pick(['Pacient la prima vizită', 'Continuare tratament', 'Control periodic', 'Urgență dentară']) : null,
-      reminder_sent_at: isPast && Math.random() > 0.5 ? isoDate(daysOffset - 1) : null,
+      notes: Math.random() > 0.85 ? pick(['Pacient la prima vizită', 'Continuare tratament', 'Control periodic', 'Urgență dentară', 'Pacient CAS', 'Refacere lucrare']) : null,
+      reminder_sent_at: status === 'completed' && Math.random() > 0.5 ? isoDate(daysOffset - 1) : null,
       cancellation_reason: status === 'cancelled' ? pick(['Pacientul a anulat', 'Reprogramare', 'Urgență medicală', 'Indisponibilitate doctor']) : null,
       cancelled_at: status === 'cancelled' ? isoDate(daysOffset) : null,
       created_at: isoDate(daysOffset - randomInt(1, 7)),
@@ -296,12 +303,11 @@ function seedAppointments(): { appointments: any[]; appointmentTreatments: any[]
     const treatmentIdsForAppt = pickN(TREATMENT_IDS, numTreatments);
     for (const tId of treatmentIdsForAppt) {
       const tIdx = TREATMENT_IDS.indexOf(tId);
-      const treatmentData = seedTreatments()[tIdx];
+      const treatmentData = allTreatments[tIdx];
       if (!treatmentData) continue;
 
-      const atId = uuid();
       appointmentTreatments.push({
-        id: atId,
+        id: uuid(),
         appointment_id: appointmentId,
         treatment_id: tId,
         treatment_name: treatmentData.name,
@@ -325,9 +331,9 @@ function seedAppointments(): { appointments: any[]; appointmentTreatments: any[]
         patient_id: patientId,
         appointment_id: appointmentId,
         treatment_id: treatmentId,
-        treatment_name: seedTreatments()[TREATMENT_IDS.indexOf(treatmentId)]?.name || 'Consultație',
+        treatment_name: allTreatments[TREATMENT_IDS.indexOf(treatmentId)]?.name || 'Consultație',
         performed_at: date,
-        diagnosis: Math.random() > 0.5 ? pick(['Carie profundă', 'Pulpită acută', 'Parodontită cronică', 'Gingivită', 'Dinte fracturat']) : null,
+        diagnosis: Math.random() > 0.5 ? pick(['Carie profundă', 'Pulpită acută', 'Parodontită cronică', 'Gingivită', 'Dinte fracturat', 'Carie medie', 'Pericoronarită', 'Granulom']) : null,
         description: null,
         tooth_numbers: Math.random() > 0.5 ? [randomInt(11, 48)] : null,
         notes: null,
@@ -336,6 +342,69 @@ function seedAppointments(): { appointments: any[]; appointmentTreatments: any[]
         created_at: isoDate(daysOffset),
       });
     }
+  }
+
+  // ─── March 1-15, 2026: Dense appointments (10-15 per day) ─────────
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+
+  for (let day = 1; day <= 15; day++) {
+    const dateStr = `2026-03-${String(day).padStart(2, '0')}`;
+    const dateObj = new Date(2026, 2, day); // March = month 2 (0-indexed)
+    const dayOfWeek = dateObj.getDay();
+
+    // Skip Sundays (0), lighter on Saturdays (6)
+    if (dayOfWeek === 0) continue;
+    const numAppointments = dayOfWeek === 6 ? randomInt(6, 8) : randomInt(10, 15);
+
+    const timeSlots = generateTimeSlots(numAppointments);
+    const isPastDate = dateStr <= todayStr;
+
+    for (let j = 0; j < numAppointments; j++) {
+      const time = timeSlots[j] || randomTime();
+      let status: string;
+      if (isPastDate) {
+        // Past days in March: mostly completed, some cancelled/no_show
+        status = pick(['completed', 'completed', 'completed', 'completed', 'completed', 'completed', 'completed', 'cancelled', 'no_show']);
+      } else {
+        // Future days: scheduled/confirmed
+        status = pick(['scheduled', 'scheduled', 'confirmed', 'confirmed', 'confirmed']);
+      }
+
+      // Calculate days offset from today for isoDate helper
+      const diffMs = dateObj.getTime() - today.getTime();
+      const daysOffset = Math.round(diffMs / 86400000);
+
+      addAppointment(dateStr, time, status, daysOffset);
+    }
+  }
+
+  // ─── Historical appointments (Oct 2025 - Feb 2026) ────────────────
+  for (let i = 0; i < 300; i++) {
+    const daysAgo = randomInt(7, 180);
+    const d = new Date();
+    d.setDate(d.getDate() - daysAgo);
+    const date = d.toISOString().split('T')[0];
+
+    // Skip if it falls in March 1-15 (already covered above)
+    if (date >= '2026-03-01' && date <= '2026-03-15') continue;
+
+    const status = pick(['completed', 'completed', 'completed', 'completed', 'completed', 'cancelled', 'no_show']);
+    addAppointment(date, randomTime(), status, -daysAgo);
+  }
+
+  // ─── Future appointments (March 16+ and April) ─────────────────────
+  for (let i = 0; i < 80; i++) {
+    const daysAhead = randomInt(10, 45);
+    const d = new Date();
+    d.setDate(d.getDate() + daysAhead);
+    const date = d.toISOString().split('T')[0];
+
+    // Skip if it falls in March 1-15 (already covered above)
+    if (date >= '2026-03-01' && date <= '2026-03-15') continue;
+
+    const status = pick(['scheduled', 'scheduled', 'confirmed', 'confirmed']);
+    addAppointment(date, randomTime(), status, daysAhead);
   }
 
   return { appointments, appointmentTreatments, treatmentRecords };
