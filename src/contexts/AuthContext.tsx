@@ -1,11 +1,29 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+// Simple types for mock auth (no Supabase dependency)
+interface MockUser {
+  id: string;
+  email: string;
+  app_metadata: Record<string, any>;
+  user_metadata: Record<string, any>;
+  aud: string;
+  created_at: string;
+}
+
+interface MockSession {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  expires_at: number;
+  token_type: string;
+  user: MockUser;
+}
+
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
+  user: MockUser | null;
+  session: MockSession | null;
   loading: boolean;
   isAdmin: boolean;
   doctorId: string | null;
@@ -19,8 +37,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<MockUser | null>(null);
+  const [session, setSession] = useState<MockSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [doctorId, setDoctorId] = useState<string | null>(null);
@@ -32,38 +50,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (event: string, session: MockSession | null) => {
         if (!mounted) return;
 
-        // Ignore token refresh events that don't change the user
-        // This prevents unnecessary re-renders and state updates
         if (event === 'TOKEN_REFRESHED' && session?.user) {
           setSession(session);
           return;
         }
 
-        // For SIGNED_OUT, only process if it's a real logout (not a failed refresh)
         if (event === 'SIGNED_OUT') {
-          // Double-check: if we had a user, verify the session is truly gone
-          // before logging out (protects against rate-limit induced logouts)
-          if (user) {
-            supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-              if (!mounted) return;
-              if (!currentSession) {
-                // Truly signed out
-                setSession(null);
-                setUser(null);
-                setIsAdmin(false);
-                setDoctorId(null);
-                setMustChangePassword(false);
-                setDisplayName(null);
-              } else {
-                // False alarm - session still valid, restore it
-                setSession(currentSession);
-              }
-            });
-            return;
-          }
           setSession(null);
           setUser(null);
           setIsAdmin(false);
@@ -93,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: any) => {
       if (!mounted) return;
       setSession(session);
       setUser(session?.user ?? null);
@@ -152,7 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('user_id', userId)
         .maybeSingle();
       if (error) throw error;
-      setMustChangePassword(data?.must_change_password !== false);
+      setMustChangePassword(data?.must_change_password === true);
     } catch (error) {
       console.error('Error checking password change requirement:', error);
       setMustChangePassword(false);
@@ -196,8 +191,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    // Always clear local state, even if server signOut fails
-    // (e.g. session already expired/deleted on server)
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.warn('SignOut request failed, clearing local state anyway:', error.message);
